@@ -56,15 +56,15 @@ static void paceFor(const ClaudeData& d, char* buf, size_t n) {
 // ── Region paint helpers (also called from draw()) ──
 
 // Right column, beside the hero %:
-//   y 32..72   Clawd 72×40 — mood follows the project board (tick); level with
-//              the TUẦN label, 10 px clear of the status bar
+//   y 68..108  Clawd 72×40 — mood follows the project board (tick); stands
+//              right on the countdown, so Clawd + time left hug the bar
 //   y 112      4d / 3h 14m   JBMono-12B      time left, right above the bar (tick)
 // The hero repaint clears only x < kHeroRight, so this column is never wiped.
 static constexpr int kHeroRight = 150;      // "100%" ends near x 138
 static constexpr int kResetY    = 112;      // bottom 126; the bar starts at 128
 static constexpr int kClawdS = 4;                              // 18×10 cells → 72×40
 static constexpr int kClawdX = SCREEN_W - 12 - 18 * kClawdS;   // 156; "100%" ends near 138
-static constexpr int kClawdY = 32;
+static constexpr int kClawdY = 68;
 static uint8_t s_clawdFrame = 0xFF;
 
 // Clawd's mood from the project board: alarmed for an approval, sad for an

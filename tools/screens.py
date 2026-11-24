@@ -177,7 +177,7 @@ def claude(sc, *, hero_used=38, hero_label="TUáº¦N", reset="4d", sec_label="PHIÃ
     sc.status_bar("Claude", meta, CORAL, meta_color)
     sc.text("JBMono-11", hero_label, 12, 32, MUTED)
     # right column: Clawd (mood from the board); countdown above the bar
-    clawd(sc, W - 12 - 72, 32, 4, eyes=mood)
+    clawd(sc, W - 12 - 72, 68, 4, eyes=mood)
     sc.text("JBMono-12B", reset, W - 12, 112, CORAL, "TR")
     # hero
     remaining = 100 - hero_used if hero_used >= 0 else -1
