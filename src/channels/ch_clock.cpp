@@ -1,8 +1,8 @@
 // Clock — design-true from ClockScreen, with partial-redraw tick().
 //
-//   y=8..18   "TUE · MAY 17" DMMono-11 left  ·  "17°C" right
+//   y=8..18   "TUE · MAY 17" JBMono-11 left  ·  "17°C" right
 //   y=42..130 huge VT323-86 HH:MM, ":" CORAL between
-//   y=148     "good morning, friend" PixelifySans-14
+//   y=148     "good morning, friend" JBMono-13
 //   y=178     24-dot day-progress strip
 //   y=210..   footer row Pip happy + week info
 
@@ -11,27 +11,29 @@
 #include "theme.h"
 #include "config.h"
 #include "clockfmt.h"
+#include "utf8.h"
 #include <time.h>
 
 static int  s_lastHH = -1, s_lastMM = -1;
-static char s_lastDate[20]  = "";
-static char s_lastGreet[40] = "";
+static char s_lastDate[32]  = "";
+static char s_lastGreet[64] = "";
 static int  s_lastDayHour = -1;
 
 static constexpr int CLOCK_Y  = 42;
 static constexpr int CLOCK_H  = 86;
 static const char*   CLOCK_FN = "VT323-86";
 
-static char s_greetBuf[40];
+static char s_greetBuf[64];
 static const char* greetingFor(int hour, const char* name) {
-    const char* who = (name && name[0]) ? name : "friend";
+    const char* who = (name && name[0]) ? name : "bạn";
     const char* prefix;
-    if (hour < 5)       prefix = "rest well";
-    else if (hour < 12) prefix = "good morning";
-    else if (hour < 17) prefix = "good afternoon";
-    else if (hour < 21) prefix = "good evening";
-    else                prefix = "winding down";
+    if (hour < 5)       prefix = "ngủ ngon nhé";
+    else if (hour < 12) prefix = "chào buổi sáng";
+    else if (hour < 17) prefix = "chào buổi chiều";
+    else if (hour < 21) prefix = "chào buổi tối";
+    else                prefix = "nghỉ ngơi thôi";
     snprintf(s_greetBuf, sizeof(s_greetBuf), "%s, %s", prefix, who);
+    Utf8::trimPartial(s_greetBuf);          // a long name may be cut mid-letter
     return s_greetBuf;
 }
 
@@ -79,20 +81,20 @@ static void paintColon() {
 // Date left; AM/PM right in 12-hour mode.
 static void paintDateRow(const char* date, int hour, bool h24) {
     tft.fillRect(0, 6, SCREEN_W, 16, Theme::BG);
-    Display::useFont("DMMono-11");
+    Display::useFont("JBMono-11");
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(Theme::MUTED, Theme::BG);
     tft.drawString(date, 10, 8);
     if (!h24) {
         tft.setTextDatum(TR_DATUM);
         tft.setTextColor(Theme::AMBER, Theme::BG);
-        tft.drawString(hour < 12 ? "AM" : "PM", SCREEN_W - 10, 8);
+        tft.drawString(ClockFmt::ampm(hour), SCREEN_W - 10, 8);
     }
 }
 
 static void paintGreeting(const char* msg) {
     tft.fillRect(0, 138, SCREEN_W, 22, Theme::BG);
-    Display::useFont("PixelifySans-14");
+    Display::useFont("JBMono-13");
     tft.setTextDatum(MC_DATUM);
     tft.setTextColor(Theme::INK_DIM, Theme::BG);
     tft.drawString(msg, SCREEN_W/2, 148);
@@ -122,9 +124,8 @@ void chClockDraw(const ChannelCtx& ctx) {
     struct tm tmv;
     localtime_r(&now, &tmv);
 
-    char date[20];
-    strftime(date, sizeof(date), "%a · %b %d", &tmv);
-    for (char* p = date; *p; p++) if (*p >= 'a' && *p <= 'z') *p -= 32;
+    char date[32];
+    ClockFmt::date(tmv, " · ", date, sizeof(date));
     const bool h24 = ctx.settings->clock24h;
     paintDateRow(date, tmv.tm_hour, h24);
     strncpy(s_lastDate, date, sizeof(s_lastDate) - 1);
@@ -144,12 +145,12 @@ void chClockDraw(const ChannelCtx& ctx) {
     paintDayStrip(tmv.tm_hour);
 
     // Footer (mascot removed in v0.13)
-    Display::useFont("DMMono-11");
+    Display::useFont("JBMono-11");
     tft.setTextDatum(TR_DATUM);
     tft.setTextColor(Theme::MUTED, Theme::BG);
     char weekBuf[16];
     char isoBuf[8]; strftime(isoBuf, sizeof(isoBuf), "%V", &tmv);
-    snprintf(weekBuf, sizeof(weekBuf), "w/ %s", isoBuf);
+    snprintf(weekBuf, sizeof(weekBuf), "tuần %s", isoBuf);
     tft.drawString(weekBuf, SCREEN_W - 10, 208);
 
     // End with VT323-86 loaded so tick() doesn't need to switch
@@ -170,9 +171,8 @@ void chClockTick(const ChannelCtx& ctx) {
         paintHH(tmv.tm_hour, h24);
         s_lastHH = tmv.tm_hour;
 
-        char date[20];
-        strftime(date, sizeof(date), "%a · %b %d", &tmv);
-        for (char* p = date; *p; p++) if (*p >= 'a' && *p <= 'z') *p -= 32;
+        char date[32];
+        ClockFmt::date(tmv, " · ", date, sizeof(date));
         // AM/PM flips at noon/midnight even when the date doesn't.
         if (strcmp(date, s_lastDate) != 0 || (!h24 && (tmv.tm_hour == 0 || tmv.tm_hour == 12))) {
             paintDateRow(date, tmv.tm_hour, h24);

@@ -18,12 +18,29 @@ inline void hourField(int hour24, bool h24, char* buf, size_t n) {
     snprintf(buf, n, h24 ? "%02d" : "%2d", displayHour(hour24, h24));
 }
 
+// 12-hour suffix (English AM/PM is kept on the Vietnamese UI).
+inline const char* ampm(int hour24) { return hour24 < 12 ? "AM" : "PM"; }
+
+// "THỨ HAI" … "CHỦ NHẬT" (full) or "T2" … "CN" (short). UTF-8.
+inline const char* weekday(int wday, bool full) {
+    static const char* const kFull[7]  = {"CHỦ NHẬT", "THỨ HAI", "THỨ BA", "THỨ TƯ",
+                                          "THỨ NĂM", "THỨ SÁU", "THỨ BẢY"};
+    static const char* const kShort[7] = {"CN", "T2", "T3", "T4", "T5", "T6", "T7"};
+    if (wday < 0 || wday > 6) wday = 0;
+    return full ? kFull[wday] : kShort[wday];
+}
+
+// "THỨ HAI<sep>24/11" — Vietnamese order, day before month. buf ≥ 24.
+inline void date(const struct tm& tm, const char* sep, char* buf, size_t n) {
+    snprintf(buf, n, "%s%s%d/%d", weekday(tm.tm_wday, true), sep, tm.tm_mday, tm.tm_mon + 1);
+}
+
 // "17:48" or "5:48PM".
 inline void hm(time_t t, bool h24, char* buf, size_t n) {
     struct tm tm; localtime_r(&t, &tm);
     if (h24) snprintf(buf, n, "%02d:%02d", tm.tm_hour, tm.tm_min);
     else     snprintf(buf, n, "%d:%02d%s", displayHour(tm.tm_hour, false), tm.tm_min,
-                      tm.tm_hour < 12 ? "AM" : "PM");
+                      ampm(tm.tm_hour));
 }
 
 }  // namespace ClockFmt

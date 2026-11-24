@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -43,48 +43,48 @@
   </header>
 
   <nav class="tv-nav">
-    <button x-bind:class="{active: page==='status'}"   x-on:click="page='status'">Status</button>
+    <button x-bind:class="{active: page==='status'}"   x-on:click="page='status'">Trạng thái</button>
     <button x-bind:class="{active: page==='wifi'}"     x-on:click="page='wifi'">Wi-Fi</button>
-    <button x-bind:class="{active: page==='accounts'}" x-on:click="page='accounts'">Accounts</button>
-    <button x-bind:class="{active: page==='screen'}"   x-on:click="page='screen'">Screen</button>
-    <button x-bind:class="{active: page==='place'}"    x-on:click="page='place'">Place &amp; time</button>
-    <button x-bind:class="{active: page==='agents'}"   x-on:click="page='agents'; refreshCards()">Agents</button>
-    <button x-bind:class="{active: page==='device'}"   x-on:click="page='device'">Device</button>
+    <button x-bind:class="{active: page==='accounts'}" x-on:click="page='accounts'">Tài khoản</button>
+    <button x-bind:class="{active: page==='screen'}"   x-on:click="page='screen'">Màn hình</button>
+    <button x-bind:class="{active: page==='place'}"    x-on:click="page='place'">Vị trí &amp; giờ</button>
+    <button x-bind:class="{active: page==='agents'}"   x-on:click="page='agents'; refreshCards()">Tác tử</button>
+    <button x-bind:class="{active: page==='device'}"   x-on:click="page='device'">Thiết bị</button>
   </nav>
 
   <!-- STATUS -->
   <section x-show="page==='status'" class="split">
     <article>
-      <h2>Live state</h2>
+      <h2>Trạng thái trực tiếp</h2>
       <div class="info-row"><span class="k">Wi-Fi</span><span class="v" x-text="state.wifi || '—'"></span></div>
       <div class="info-row"><span class="k">SSID</span><span class="v" x-text="state.ssid || '—'"></span></div>
       <div class="info-row"><span class="k">IP</span><span class="v" x-text="state.ip || '—'"></span></div>
-      <div class="info-row"><span class="k">Signal</span><span class="v mint" x-text="state.rssi != null ? state.rssi + ' dBm' : '—'"></span></div>
-      <div class="info-row"><span class="k">Uptime</span><span class="v" x-text="formatUptime(state.uptime_s)"></span></div>
-      <div class="info-row"><span class="k">Free heap</span><span class="v amber" x-text="state.heap != null ? Math.round(state.heap/1024) + 'K' : '—'"></span></div>
-      <div class="info-row"><span class="k">Claude</span><span class="v" x-bind:class="state.claude_configured ? 'mint' : 'muted'" x-text="state.claude_configured ? 'configured' : 'not configured'"></span></div>
-      <div class="info-row"><span class="k">Codex</span><span class="v" x-bind:class="state.codex_configured ? 'mint' : 'muted'" x-text="state.codex_configured ? 'configured' : 'not configured'"></span></div>
-      <div class="info-row"><span class="k">On screen</span><span class="v" x-text="state.active_channel || '—'"></span></div>
+      <div class="info-row"><span class="k">Tín hiệu</span><span class="v mint" x-text="state.rssi != null ? state.rssi + ' dBm' : '—'"></span></div>
+      <div class="info-row"><span class="k">Thời gian chạy</span><span class="v" x-text="formatUptime(state.uptime_s)"></span></div>
+      <div class="info-row"><span class="k">Heap trống</span><span class="v amber" x-text="state.heap != null ? Math.round(state.heap/1024) + 'K' : '—'"></span></div>
+      <div class="info-row"><span class="k">Claude</span><span class="v" x-bind:class="state.claude_configured ? 'mint' : 'muted'" x-text="state.claude_configured ? 'đã cấu hình' : 'chưa cấu hình'"></span></div>
+      <div class="info-row"><span class="k">Codex</span><span class="v" x-bind:class="state.codex_configured ? 'mint' : 'muted'" x-text="state.codex_configured ? 'đã cấu hình' : 'chưa cấu hình'"></span></div>
+      <div class="info-row"><span class="k">Đang hiển thị</span><span class="v" x-text="chLabel(state.active_channel) || '—'"></span></div>
       <button x-on:click="triggerRefresh()" class="secondary" style="margin-top: 12px;"
-              x-bind:disabled="refreshing" x-text="refreshing ? 'Refreshing...' : 'Refresh Now'"></button>
+              x-bind:disabled="refreshing" x-text="refreshing ? 'Đang làm mới...' : 'Làm mới ngay'"></button>
       <div class="channel-switch">
         <select x-model="switchTo">
           <template x-for="c in channelNames" :key="c">
-            <option :value="c" x-text="c"></option>
+            <option :value="c" x-text="chLabel(c)"></option>
           </template>
         </select>
-        <button type="button" class="secondary" x-on:click="showChannel(switchTo)">Show</button>
-        <button type="button" class="secondary" x-on:click="showChannel(null)">Next</button>
+        <button type="button" class="secondary" x-on:click="showChannel(switchTo)">Hiển thị</button>
+        <button type="button" class="secondary" x-on:click="showChannel(null)">Tiếp</button>
       </div>
     </article>
 
     <article>
-      <h2>Diagnostics</h2>
-      <div class="info-row"><span class="k">Max heap block</span><span class="v" x-bind:class="(state.maxblk||0) < 20480 ? 'coral' : 'mint'" x-text="kb(state.maxblk)"></span></div>
-      <div class="info-row"><span class="k">Lowest max block</span><span class="v" x-text="state.min_maxblk > 1e9 ? '—' : kb(state.min_maxblk)"></span></div>
-      <div class="info-row"><span class="k">Heap-deferred fetches</span><span class="v" x-text="state.heap_refusals ?? '—'"></span></div>
-      <div class="info-row"><span class="k">Last reset</span><span class="v" x-text="state.reset_reason || '—'"></span></div>
-      <div class="info-row"><span class="k">Next fetch</span><span class="v" x-text="state.next_fetch_s != null ? 'in ' + state.next_fetch_s + 's' : '—'"></span></div>
+      <h2>Chẩn đoán</h2>
+      <div class="info-row"><span class="k">Khối heap lớn nhất</span><span class="v" x-bind:class="(state.maxblk||0) < 20480 ? 'coral' : 'mint'" x-text="kb(state.maxblk)"></span></div>
+      <div class="info-row"><span class="k">Khối lớn nhất thấp nhất</span><span class="v" x-text="state.min_maxblk > 1e9 ? '—' : kb(state.min_maxblk)"></span></div>
+      <div class="info-row"><span class="k">Lượt tải hoãn do heap</span><span class="v" x-text="state.heap_refusals ?? '—'"></span></div>
+      <div class="info-row"><span class="k">Lần khởi động lại gần nhất</span><span class="v" x-text="state.reset_reason || '—'"></span></div>
+      <div class="info-row"><span class="k">Lần tải tiếp theo</span><span class="v" x-text="state.next_fetch_s != null ? 'sau ' + state.next_fetch_s + 's' : '—'"></span></div>
       <template x-for="[name, s] in Object.entries(state.sources || {})" :key="name">
         <div class="info-row">
           <span class="k" x-text="name"></span>
@@ -93,12 +93,12 @@
       </template>
       <template x-for="[name, v] in Object.entries(state.vendor_status || {})" :key="'vs-' + name">
         <div class="info-row">
-          <span class="k" x-text="name + ' status'"></span>
+          <span class="k" x-text="'Trạng thái ' + name"></span>
           <span class="v" x-bind:class="v.level === 'operational' ? 'mint' : (v.level === 'unknown' ? 'muted' : 'amber')"
                 x-text="v.description || v.level"></span>
         </div>
       </template>
-      <div class="hint" x-text="'build ' + (state.build || '—')"></div>
+      <div class="hint" x-text="'bản dựng ' + (state.build || '—')"></div>
     </article>
 
   </section>
@@ -108,14 +108,14 @@
     <article>
       <h2>Wi-Fi</h2>
       <label>SSID</label>
-      <input x-model="settings.wifiSSID" placeholder="home network">
-      <label>Password</label>
+      <input x-model="settings.wifiSSID" placeholder="mạng nhà">
+      <label>Mật khẩu</label>
       <div class="input-toggle" x-data="{show:false}">
         <input x-bind:type="show ? 'text' : 'password'" x-model="settings.wifiPass" placeholder="****">
-        <button type="button" class="toggle-vis" x-on:click="show=!show" x-text="show ? 'hide' : 'show'"></button>
+        <button type="button" class="toggle-vis" x-on:click="show=!show" x-text="show ? 'ẩn' : 'hiện'"></button>
       </div>
-      <div class="hint">Save &amp; Restart applies new Wi-Fi credentials. Device will reboot.</div>
-      <button x-on:click="saveSettings(true)" class="primary" x-bind:disabled="saving" x-text="saving ? 'Saving...' : 'Save & Restart'"></button>
+      <div class="hint">Lưu &amp; khởi động lại để áp dụng thông tin Wi-Fi mới. Thiết bị sẽ khởi động lại.</div>
+      <button x-on:click="saveSettings(true)" class="primary" x-bind:disabled="saving" x-text="saving ? 'Đang lưu...' : 'Lưu & khởi động lại'"></button>
     </article>
   </section>
 
@@ -129,30 +129,30 @@
           <label>Session key</label>
           <div class="input-toggle" x-data="{show:false}">
             <input x-bind:type="show ? 'text' : 'password'" x-model="settings.claudeKey" placeholder="sk-ant-sid02-...">
-            <button type="button" class="toggle-vis" x-on:click="show=!show" x-text="show ? 'hide' : 'show'"></button>
+            <button type="button" class="toggle-vis" x-on:click="show=!show" x-text="show ? 'ẩn' : 'hiện'"></button>
           </div>
           <div class="hint">claude.ai → DevTools → Application → Cookies → <code>sessionKey</code></div>
           <div class="field-inline">
-            <span>Large number</span>
+            <span>Số lớn</span>
             <select x-model="claudeHero">
-              <option value="session">5-hour window</option>
-              <option value="weekly">Weekly</option>
+              <option value="session">Khung 5 giờ</option>
+              <option value="weekly">Tuần</option>
             </select>
           </div>
         </article>
         <article>
-          <h2>Checks</h2>
+          <h2>Kiểm tra</h2>
           <div class="field-inline">
-            <span>Check usage every</span>
+            <span>Kiểm tra mức dùng mỗi</span>
             <select x-model.number="settings.refreshMin">
               <template x-for="o in withCurrent([1, 2, 5, 10, 15, 30, 60], settings.refreshMin)" :key="o">
-                <option :value="o" x-text="o + ' min'" :selected="o === settings.refreshMin"></option>
+                <option :value="o" x-text="o + ' phút'" :selected="o === settings.refreshMin"></option>
               </template>
             </select>
           </div>
-          <div class="hint">One HTTPS call per account. Weather follows, at most every 10 min.</div>
-          <label class="row"><input type="checkbox" x-model="settings.showStatus">Flag provider outages</label>
-          <div class="hint">Checks status.claude.com / status.openai.com every 15 min.</div>
+          <div class="hint">Mỗi tài khoản một lệnh gọi HTTPS. Thời tiết cập nhật theo, tối đa 10 phút một lần.</div>
+          <label class="row"><input type="checkbox" x-model="settings.showStatus">Báo khi nhà cung cấp gặp sự cố</label>
+          <div class="hint">Kiểm tra status.claude.com / status.openai.com mỗi 15 phút.</div>
         </article>
       </div>
       <div class="col">
@@ -162,22 +162,22 @@
           <label>Bearer token</label>
           <div class="input-toggle" x-data="{show:false}">
             <input x-bind:type="show ? 'text' : 'password'" x-model="settings.codexToken" placeholder="eyJ...">
-            <button type="button" class="toggle-vis" x-on:click="show=!show" x-text="show ? 'hide' : 'show'"></button>
+            <button type="button" class="toggle-vis" x-on:click="show=!show" x-text="show ? 'ẩn' : 'hiện'"></button>
           </div>
-          <div class="hint">chatgpt.com → DevTools → Network → a <code>backend-api</code> request → <code>authorization</code> (after "Bearer ").</div>
-          <label>Device ID</label>
+          <div class="hint">chatgpt.com → DevTools → Network → một request <code>backend-api</code> → <code>authorization</code> (phần sau "Bearer ").</div>
+          <label>ID thiết bị</label>
           <input x-model="settings.codexDeviceId" placeholder="uuid">
-          <div class="hint">Same request → <code>oai-device-id</code>.</div>
+          <div class="hint">Cùng request đó → <code>oai-device-id</code>.</div>
           <div class="field-inline">
-            <span>Status-bar label</span>
+            <span>Nhãn thanh trạng thái</span>
             <input class="short" x-model="settings.codexModelLabel" placeholder="GPT-5" maxlength="10">
           </div>
-          <label class="row"><input type="checkbox" x-model="settings.codexWeeklyHero">Second window as large number</label>
-          <div class="hint">Only if Codex reports two windows again; today it has one.</div>
+          <label class="row"><input type="checkbox" x-model="settings.codexWeeklyHero">Dùng khung thứ hai làm số lớn</label>
+          <div class="hint">Chỉ khi Codex lại báo hai khung; hiện tại chỉ có một.</div>
         </article>
       </div>
     </div>
-    <div class="save-bar"><button x-on:click="saveSettings(false)" class="primary" x-bind:disabled="saving" x-text="saving ? 'Saving...' : 'Save'"></button></div>
+    <div class="save-bar"><button x-on:click="saveSettings(false)" class="primary" x-bind:disabled="saving" x-text="saving ? 'Đang lưu...' : 'Lưu'"></button></div>
   </section>
 
   <!-- SCREEN — what is shown, how it moves, how it looks, at night -->
@@ -185,72 +185,72 @@
     <div class="cols">
       <div class="col">
         <article>
-          <h2>Channels</h2>
+          <h2>Kênh</h2>
           <template x-for="c in channelToggles()" :key="c.key">
             <div class="channel-row">
               <label class="row"><input type="checkbox" x-model="settings[c.key]"><span x-text="c.label"></span></label>
               <span class="needs" x-bind:class="c.ready ? 'ok' : 'missing'" x-text="c.needs"></span>
             </div>
           </template>
-          <div class="hint">In rotation order. Night, Setup and agent cards appear on their own.</div>
+          <div class="hint">Theo thứ tự chuyển kênh. Ban đêm, Cài đặt và thẻ tác tử tự xuất hiện khi cần.</div>
         </article>
       </div>
       <div class="col">
         <article>
-          <h2>Rotation &amp; look</h2>
-          <label class="row"><input type="checkbox" x-model="settings.autoRotate">Rotate through channels</label>
+          <h2>Chuyển kênh &amp; giao diện</h2>
+          <label class="row"><input type="checkbox" x-model="settings.autoRotate">Tự động chuyển kênh</label>
           <div class="field-inline" x-bind:class="{disabled: !settings.autoRotate}">
-            <span>Each channel for</span>
+            <span>Mỗi kênh hiển thị</span>
             <select x-model.number="settings.channelSec" x-bind:disabled="!settings.autoRotate">
               <template x-for="o in withCurrent([3, 5, 8, 10, 15, 20, 30, 60], settings.channelSec)" :key="o">
-                <option :value="o" x-text="o + ' sec'" :selected="o === settings.channelSec"></option>
+                <option :value="o" x-text="o + ' giây'" :selected="o === settings.channelSec"></option>
               </template>
             </select>
           </div>
           <div class="field-inline">
-            <span>Brightness</span>
+            <span>Độ sáng</span>
             <select x-model.number="settings.brightness">
               <template x-for="o in withCurrent([10, 25, 50, 75, 80, 100], settings.brightness)" :key="o">
                 <option :value="o" x-text="o + '%'" :selected="o === settings.brightness"></option>
               </template>
             </select>
           </div>
-          <label class="row"><input type="checkbox" x-model="settings.clock24h">24-hour clock</label>
-          <label class="row"><input type="checkbox" x-model="settings.invertDisplay">Invert colors</label>
-          <div class="hint">Only if colors look washed out on your panel.</div>
+          <label class="row"><input type="checkbox" x-model="settings.clock24h">Đồng hồ 24 giờ</label>
+          <label class="row"><input type="checkbox" x-model="settings.invertDisplay">Đảo màu</label>
+          <div class="hint">Chỉ bật nếu màu trên màn hình của bạn trông bị nhạt.</div>
         </article>
         <article>
-          <h2>Night</h2>
+          <h2>Ban đêm</h2>
           <div class="field-inline">
-            <span>At night</span>
+            <span>Vào ban đêm</span>
             <select x-model.number="settings.nightMode">
-              <option value="0">Do nothing</option>
-              <option value="1">Dim, keep rotating</option>
-              <option value="2">Dim clock only</option>
-              <option value="3">Screen off</option>
+              <option value="0">Không làm gì</option>
+              <option value="1">Giảm sáng, vẫn chuyển kênh</option>
+              <option value="2">Chỉ đồng hồ, giảm sáng</option>
+              <option value="3">Tắt màn hình</option>
             </select>
           </div>
           <div class="pair" x-bind:class="{disabled: !settings.nightMode}">
-            <div><label>From</label>
+            <div><label>Từ</label>
               <input type="time" x-bind:disabled="!settings.nightMode" x-bind:value="minToHHMM(settings.nightStartMin)"
                      x-on:change="settings.nightStartMin = hhmmToMin($event.target.value)"></div>
-            <div><label>Until</label>
+            <div><label>Đến</label>
               <input type="time" x-bind:disabled="!settings.nightMode" x-bind:value="minToHHMM(settings.nightEndMin)"
                      x-on:change="settings.nightEndMin = hhmmToMin($event.target.value)"></div>
           </div>
           <div class="field-inline" x-bind:class="{disabled: settings.nightMode !== 1 && settings.nightMode !== 2}">
-            <span>Night brightness</span>
+            <span>Độ sáng ban đêm</span>
             <select x-model.number="settings.nightBright" x-bind:disabled="settings.nightMode !== 1 && settings.nightMode !== 2">
               <template x-for="o in withCurrent([5, 10, 15, 30, 50], settings.nightBright)" :key="o">
                 <option :value="o" x-text="o + '%'" :selected="o === settings.nightBright"></option>
               </template>
             </select>
           </div>
-          <div class="hint" x-show="settings.nightMode >= 2">Rotation pauses; only red or urgent cards interrupt.</div>
+          <div class="hint" x-show="settings.nightMode >= 2">Tạm dừng chuyển kênh; chỉ thẻ đỏ hoặc khẩn cấp mới chen ngang.</div>
         </article>
       </div>
     </div>
-    <div class="save-bar"><button x-on:click="saveSettings(false)" class="primary" x-bind:disabled="saving" x-text="saving ? 'Saving...' : 'Save'"></button></div>
+    <div class="save-bar"><button x-on:click="saveSettings(false)" class="primary" x-bind:disabled="saving" x-text="saving ? 'Đang lưu...' : 'Lưu'"></button></div>
   </section>
 
   <!-- PLACE & TIME -->
@@ -258,24 +258,24 @@
     <div class="cols">
       <div class="col">
         <article>
-          <h2>You</h2>
-          <label>Your name</label>
+          <h2>Bạn</h2>
+          <label>Tên của bạn</label>
           <input x-model="settings.userName" placeholder="Avi" maxlength="16">
-          <div class="hint">On the boot greeting and the Clock channel.</div>
-          <label>Timezone</label>
+          <div class="hint">Hiện trên lời chào khi khởi động và kênh Đồng hồ.</div>
+          <label>Múi giờ</label>
           <select x-model.number="settings.tzMinutes">
             <template x-for="tz in withCurrentTz(settings.tzMinutes)" :key="tz.min">
               <option :value="tz.min" x-text="tz.label" :selected="tz.min === settings.tzMinutes"></option>
             </template>
           </select>
-          <div class="hint">Fixed offset — no automatic daylight-saving switch.</div>
+          <div class="hint">Độ lệch cố định — không tự chuyển giờ mùa hè.</div>
         </article>
       </div>
       <div class="col">
         <article>
-          <h2>Weather</h2>
-          <label>City search</label>
-          <input x-model="weatherCity" placeholder="Search city..." x-on:input.debounce.500ms="searchCity()">
+          <h2>Thời tiết</h2>
+          <label>Tìm thành phố</label>
+          <input x-model="weatherCity" placeholder="Tìm thành phố..." x-on:input.debounce.500ms="searchCity()">
           <template x-if="cityResults && cityResults.length > 0">
             <div class="city-results">
               <template x-for="c in cityResults" :key="c.id">
@@ -284,18 +284,18 @@
             </div>
           </template>
           <div class="pair">
-            <div><label>Latitude</label><input type="number" step="0.0001" x-model.number="settings.weatherLat" placeholder="22.5726"></div>
-            <div><label>Longitude</label><input type="number" step="0.0001" x-model.number="settings.weatherLon" placeholder="88.3639"></div>
+            <div><label>Vĩ độ</label><input type="number" step="0.0001" x-model.number="settings.weatherLat" placeholder="22.5726"></div>
+            <div><label>Kinh độ</label><input type="number" step="0.0001" x-model.number="settings.weatherLon" placeholder="88.3639"></div>
           </div>
-          <div class="hint" x-text="hasLocation() ? 'Used by Weather, Forecast and Home.' : 'No location — Weather and Forecast stay hidden.'"></div>
+          <div class="hint" x-text="hasLocation() ? 'Dùng cho Thời tiết, Dự báo và Trang chủ.' : 'Chưa có vị trí — Thời tiết và Dự báo sẽ bị ẩn.'"></div>
           <div class="field-inline">
-            <label class="row"><input type="checkbox" x-model="settings.useFahrenheit">Show °F</label>
-            <button type="button" class="secondary small" x-show="hasLocation()" x-on:click="clearLocation()">Clear location</button>
+            <label class="row"><input type="checkbox" x-model="settings.useFahrenheit">Hiển thị °F</label>
+            <button type="button" class="secondary small" x-show="hasLocation()" x-on:click="clearLocation()">Xóa vị trí</button>
           </div>
         </article>
       </div>
     </div>
-    <div class="save-bar"><button x-on:click="saveSettings(false)" class="primary" x-bind:disabled="saving" x-text="saving ? 'Saving...' : 'Save'"></button></div>
+    <div class="save-bar"><button x-on:click="saveSettings(false)" class="primary" x-bind:disabled="saving" x-text="saving ? 'Đang lưu...' : 'Lưu'"></button></div>
   </section>
 
   <!-- AGENTS — what agents show on the device, and how to connect them -->
@@ -303,94 +303,94 @@
     <div class="cols">
       <div class="col">
         <article>
-          <h2>On the display now</h2>
+          <h2>Đang trên màn hình</h2>
           <template x-if="cardsLocked">
-            <div class="hint">Enter this device's API token below (this browser remembers it) to see and dismiss cards.</div>
+            <div class="hint">Nhập API token của thiết bị ở bên dưới (trình duyệt này sẽ ghi nhớ) để xem và đóng thẻ.</div>
           </template>
           <template x-if="!cardsLocked && cards.length === 0">
-            <div class="hint">Nothing queued.</div>
+            <div class="hint">Không có thẻ nào trong hàng đợi.</div>
           </template>
           <template x-for="c in cards" :key="c.id">
             <div class="card-row">
-              <span class="kind" x-bind:class="'k-' + c.kind" x-text="c.kind"></span>
+              <span class="kind" x-bind:class="'k-' + c.kind" x-text="kindLabel(c.kind)"></span>
               <span class="what">
                 <b x-text="c.title"></b><span x-show="c.value" x-text="' ' + c.value"></span>
                 <span class="muted" x-text="(c.body ? ' · ' + c.body : '') + ' · ' + (c.agent !== 'other' ? c.agent + ' · ' : '') + ago(Date.now() / 1000 - c.age_s)"></span>
               </span>
-              <button type="button" class="secondary small" x-on:click="clearCard(c.id)">Dismiss</button>
+              <button type="button" class="secondary small" x-on:click="clearCard(c.id)">Đóng</button>
             </div>
           </template>
           <div class="channel-switch">
-            <button type="button" class="secondary" x-on:click="sendTestApproval()">Send test approval</button>
-            <button type="button" class="secondary" x-show="cards.length" x-on:click="clearCard(null)">Clear all</button>
+            <button type="button" class="secondary" x-on:click="sendTestApproval()">Gửi phê duyệt thử</button>
+            <button type="button" class="secondary" x-show="cards.length" x-on:click="clearCard(null)">Xóa tất cả</button>
           </div>
         </article>
         <article>
-          <h2>Send a card</h2>
-          <label>Title</label>
-          <input x-model="pushForm.title" placeholder="TESTS PASSED" maxlength="27">
-          <label>Big value (optional)</label>
-          <input x-model="pushForm.value" placeholder="142/142" maxlength="15">
-          <label>Detail (optional)</label>
-          <input x-model="pushForm.body" placeholder="main · 4 min" maxlength="39">
+          <h2>Gửi thẻ</h2>
+          <label>Tiêu đề</label>
+          <input x-model="pushForm.title" placeholder="TESTS PASSED" maxlength="47">
+          <label>Giá trị lớn (tùy chọn)</label>
+          <input x-model="pushForm.value" placeholder="142/142" maxlength="23">
+          <label>Chi tiết (tùy chọn)</label>
+          <input x-model="pushForm.body" placeholder="main · 4 min" maxlength="63">
           <div class="pair">
-            <div><label>Kind</label>
+            <div><label>Loại</label>
               <select x-model="pushForm.kind">
                 <template x-for="k in ['info','success','warning','error','progress','input','approval']" :key="k">
-                  <option :value="k" x-text="k" :selected="k === pushForm.kind"></option>
+                  <option :value="k" x-text="kindLabel(k)" :selected="k === pushForm.kind"></option>
                 </template>
               </select></div>
-            <div><label>Shown for</label>
+            <div><label>Hiển thị trong</label>
               <select x-model.number="pushForm.ttl_s">
-                <option value="30">30 sec</option>
-                <option value="120">2 min</option>
-                <option value="600">10 min</option>
-                <option value="0">until dismissed</option>
+                <option value="30">30 giây</option>
+                <option value="120">2 phút</option>
+                <option value="600">10 phút</option>
+                <option value="0">đến khi đóng</option>
               </select></div>
           </div>
-          <button x-on:click="sendPush()" class="secondary">Send to display</button>
+          <button x-on:click="sendPush()" class="secondary">Gửi lên màn hình</button>
         </article>
       </div>
       <div class="col">
         <article>
-          <h2>Approvals</h2>
-          <label class="row"><input type="checkbox" x-model="settings.pinApprovals">Hold the screen until answered</label>
-          <div class="hint">Rotation pauses on the card while an agent waits on you. The bottom strip turns amber on every screen either way.</div>
+          <h2>Phê duyệt</h2>
+          <label class="row"><input type="checkbox" x-model="settings.pinApprovals">Giữ màn hình đến khi được trả lời</label>
+          <div class="hint">Dừng chuyển kênh ở thẻ trong lúc tác tử chờ bạn. Dù bật hay tắt, dải dưới cùng vẫn chuyển màu hổ phách trên mọi màn hình.</div>
           <div class="field-inline">
-            <span>Give up after</span>
+            <span>Bỏ qua sau</span>
             <select x-model.number="settings.approvalTtlMin">
               <template x-for="o in withCurrent([5, 10, 15, 30, 60, 120, 240], settings.approvalTtlMin)" :key="o">
-                <option :value="o" x-text="o + ' min'" :selected="o === settings.approvalTtlMin"></option>
+                <option :value="o" x-text="o + ' phút'" :selected="o === settings.approvalTtlMin"></option>
               </template>
             </select>
           </div>
-          <label class="row"><input type="checkbox" x-model="settings.agentDoneCards">"DONE" card when an agent finishes</label>
-          <label class="row"><input type="checkbox" x-model="settings.agentNightShow">Show approvals at night too</label>
-          <div class="hint">Off: only the strip lights up at night.</div>
+          <label class="row"><input type="checkbox" x-model="settings.agentDoneCards">Thẻ "DONE" khi tác tử xong việc</label>
+          <label class="row"><input type="checkbox" x-model="settings.agentNightShow">Hiện phê duyệt cả vào ban đêm</label>
+          <div class="hint">Tắt: ban đêm chỉ có dải sáng lên.</div>
         </article>
         <article>
           <h2>API token</h2>
-          <label>Bearer token (optional)</label>
+          <label>Bearer token (tùy chọn)</label>
           <div class="input-toggle" x-data="{show:false}">
-            <input x-bind:type="show ? 'text' : 'password'" x-model="settings.apiToken" placeholder="leave blank for unauthenticated">
-            <button type="button" class="toggle-vis" x-on:click="show=!show" x-text="show ? 'hide' : 'show'"></button>
+            <input x-bind:type="show ? 'text' : 'password'" x-model="settings.apiToken" placeholder="để trống nếu không cần xác thực">
+            <button type="button" class="toggle-vis" x-on:click="show=!show" x-text="show ? 'ẩn' : 'hiện'"></button>
           </div>
-          <div class="hint">Required by push, hooks and MCP when set (<code>Authorization: Bearer …</code>). This browser remembers it.</div>
+          <div class="hint">Khi đã đặt, push, hook và MCP đều phải gửi kèm (<code>Authorization: Bearer …</code>). Trình duyệt này sẽ ghi nhớ.</div>
         </article>
       </div>
     </div>
-    <div class="save-bar inline"><button x-on:click="saveSettings(false)" class="primary" x-bind:disabled="saving" x-text="saving ? 'Saving...' : 'Save approvals & token'"></button></div>
+    <div class="save-bar inline"><button x-on:click="saveSettings(false)" class="primary" x-bind:disabled="saving" x-text="saving ? 'Đang lưu...' : 'Lưu phê duyệt & token'"></button></div>
     <article>
-      <h2>Connect your agents</h2>
-      <div class="hint"><b>1. Hook script</b> — forwards approval prompts to this display (needs <code>curl</code> and <code>jq</code>):</div>
+      <h2>Kết nối tác tử của bạn</h2>
+      <div class="hint"><b>1. Script hook</b> — chuyển yêu cầu phê duyệt tới màn hình này (cần <code>curl</code> và <code>jq</code>):</div>
       <pre class="snippet" x-text="installSnippet()"></pre>
-      <div class="hint"><b>2a. Claude Code</b> — merge into <code>~/.claude/settings.json</code> (all projects) or a project's <code>.claude/settings.json</code>:</div>
+      <div class="hint"><b>2a. Claude Code</b> — gộp vào <code>~/.claude/settings.json</code> (mọi dự án) hoặc <code>.claude/settings.json</code> của một dự án:</div>
       <pre class="snippet" x-text="claudeHooksSnippet()"></pre>
-      <div class="hint"><b>2b. Codex</b> — save as <code>~/.codex/hooks.json</code>; Codex asks you to trust new hooks once:</div>
+      <div class="hint"><b>2b. Codex</b> — lưu thành <code>~/.codex/hooks.json</code>; Codex sẽ hỏi bạn tin cậy hook mới một lần:</div>
       <pre class="snippet" x-text="codexHooksSnippet()"></pre>
-      <div class="hint"><b>3. MCP</b> — lets agents push their own cards (progress, done, failed). Add to <code>.mcp.json</code>:</div>
+      <div class="hint"><b>3. MCP</b> — cho phép tác tử tự gửi thẻ (tiến độ, xong, lỗi). Thêm vào <code>.mcp.json</code>:</div>
       <pre class="snippet" x-text="mcpSnippet()"></pre>
-      <div class="hint">Or from a script:</div>
+      <div class="hint">Hoặc từ một script:</div>
       <pre class="snippet" x-text="curlSnippet()"></pre>
     </article>
   </section>
@@ -399,26 +399,26 @@
   <section x-show="page==='device'">
     <article>
       <h2>Firmware</h2>
-      <div class="info-row"><span class="k">Version</span><span class="v" x-text="state.fw || '—'"></span></div>
+      <div class="info-row"><span class="k">Phiên bản</span><span class="v" x-text="state.fw || '—'"></span></div>
       <div class="hint" style="margin-top: 16px;">
-        OTA firmware upload: <a href="/update" style="color: var(--sky);">/update</a>
+        Tải firmware qua OTA: <a href="/update" style="color: var(--sky);">/update</a>
       </div>
     </article>
     <article>
-      <h2>Config backup</h2>
-      <button x-on:click="exportConfig()" class="secondary">Download config.json</button>
+      <h2>Sao lưu cấu hình</h2>
+      <button x-on:click="exportConfig()" class="secondary">Tải xuống config.json</button>
       <input type="file" x-ref="importFile" x-on:change="importConfig" accept=".json" style="display:none">
-      <button x-on:click="$refs.importFile.click()" class="secondary" style="margin-top: 8px;">Import config.json</button>
-      <div class="hint">Export before flashing the LittleFS image (fonts/web UI updates).</div>
+      <button x-on:click="$refs.importFile.click()" class="secondary" style="margin-top: 8px;">Nhập config.json</button>
+      <div class="hint">Hãy xuất cấu hình trước khi nạp ảnh LittleFS (cập nhật phông chữ/giao diện web).</div>
     </article>
     <article>
-      <h2>Power</h2>
-      <button x-on:click="reboot()" class="secondary">Reboot device</button>
-      <div class="hint">Restarts the device. Config preserved.</div>
+      <h2>Nguồn</h2>
+      <button x-on:click="reboot()" class="secondary">Khởi động lại thiết bị</button>
+      <div class="hint">Khởi động lại thiết bị. Cấu hình được giữ nguyên.</div>
     </article>
     <article>
-      <h2>Danger zone</h2>
-      <button x-on:click="factoryReset()" class="danger">Factory reset</button>
+      <h2>Vùng nguy hiểm</h2>
+      <button x-on:click="factoryReset()" class="danger">Khôi phục cài đặt gốc</button>
     </article>
   </section>
 
@@ -470,16 +470,29 @@ function app() {
     channelToggles() {
       const st = this.settings, cl = !!st.claudeKey, cx = !!st.codexToken, loc = this.hasLocation();
       return [
-        {key: 'showHome',     label: 'Home dashboard', needs: 'ready', ready: true},
-        {key: 'showClaude',   label: 'Claude usage',   needs: cl ? 'ready' : 'needs Claude key', ready: cl},
-        {key: 'showCodex',    label: 'Codex usage',    needs: cx ? 'ready' : 'needs Codex token', ready: cx},
-        {key: 'showAiDash',   label: 'AI dashboard',   needs: cl && cx ? 'ready' : 'needs both accounts', ready: cl && cx},
-        {key: 'showTrend',    label: '7-day trend',    needs: cl || cx ? 'fills in over days' : 'needs an account', ready: cl || cx},
-        {key: 'showWeather',  label: 'Weather now',    needs: loc ? 'ready' : 'needs location', ready: loc},
-        {key: 'showForecast', label: '3-day forecast', needs: loc ? 'ready' : 'needs location', ready: loc},
-        {key: 'showClock',    label: 'Clock',          needs: 'ready', ready: true},
-        {key: 'showInfo',     label: 'Device info',    needs: 'ready', ready: true},
+        {key: 'showHome',     label: 'Bảng Trang chủ', needs: 'sẵn sàng', ready: true},
+        {key: 'showClaude',   label: 'Mức dùng Claude', needs: cl ? 'sẵn sàng' : 'cần khóa Claude', ready: cl},
+        {key: 'showCodex',    label: 'Mức dùng Codex', needs: cx ? 'sẵn sàng' : 'cần token Codex', ready: cx},
+        {key: 'showAiDash',   label: 'Bảng AI',        needs: cl && cx ? 'sẵn sàng' : 'cần cả hai tài khoản', ready: cl && cx},
+        {key: 'showTrend',    label: 'Xu hướng 7 ngày', needs: cl || cx ? 'đầy dần theo ngày' : 'cần một tài khoản', ready: cl || cx},
+        {key: 'showWeather',  label: 'Thời tiết hiện tại', needs: loc ? 'sẵn sàng' : 'cần vị trí', ready: loc},
+        {key: 'showForecast', label: 'Dự báo 3 ngày', needs: loc ? 'sẵn sàng' : 'cần vị trí', ready: loc},
+        {key: 'showClock',    label: 'Đồng hồ',        needs: 'sẵn sàng', ready: true},
+        {key: 'showInfo',     label: 'Thông tin thiết bị', needs: 'sẵn sàng', ready: true},
       ];
+    },
+
+    // Display labels only — channel names and card kinds sent to / compared
+    // with the device stay English.
+    chLabel(c) {
+      return {Home: 'Trang chủ', Claude: 'Claude', Codex: 'Codex', AI: 'AI', Trend: 'Xu hướng',
+              Weather: 'Thời tiết', Forecast: 'Dự báo', Clock: 'Đồng hồ', Info: 'Thông tin',
+              Setup: 'Cài đặt', Night: 'Ban đêm', Agents: 'Tác tử', Attention: 'Thông báo'}[c] || c;
+    },
+    kindLabel(k) {
+      return {info: 'thông tin', success: 'thành công', warning: 'cảnh báo', error: 'lỗi',
+              progress: 'tiến độ', input: 'câu hỏi', approval: 'phê duyệt', urgent: 'khẩn cấp',
+              done: 'xong'}[k] || k;
     },
 
     // The device masks the API token as "***" on read. The real value is kept
@@ -492,7 +505,7 @@ function app() {
     authHeaders(extra = {}) {
       let t = this.localToken();
       if (!t && this.settings.apiToken === '***') {
-        t = prompt('API token for this device') || '';
+        t = prompt('API token của thiết bị này') || '';
         if (t) { try { localStorage.setItem('glimmer.apiToken', t); } catch (e) {} }
       }
       return t ? {...extra, Authorization: 'Bearer ' + t} : extra;
@@ -516,7 +529,7 @@ function app() {
       try {
         const r = await fetch('/api/settings');
         if (r.ok) this.settings = await r.json();
-      } catch (e) { this.showToast('Failed to load settings', true); }
+      } catch (e) { this.showToast('Không tải được cài đặt', true); }
     },
 
     async saveSettings(restart) {
@@ -532,12 +545,12 @@ function app() {
           body: JSON.stringify({...this.settings, _restart: restart})
         });
         if (r.ok) {
-          this.showToast(restart ? 'Saved — restarting...' : 'Saved');
+          this.showToast(restart ? 'Đã lưu — đang khởi động lại...' : 'Đã lưu');
           if (restart) setTimeout(() => location.reload(), 3000);
         } else {
-          this.showToast('Save failed', true);
+          this.showToast('Lưu thất bại', true);
         }
-      } catch (e) { this.showToast('Network error', true); }
+      } catch (e) { this.showToast('Lỗi mạng', true); }
       finally { this.saving = false; }
     },
 
@@ -552,9 +565,9 @@ function app() {
       this.refreshing = true;
       try {
         const r = await fetch('/api/refresh', {method: 'POST', headers: this.authHeaders()});
-        if (r.ok) this.showToast('Refresh triggered');
-        else this.showToast('Refresh failed (HTTP ' + r.status + ')', true);
-      } catch (e) { this.showToast('Network error', true); }
+        if (r.ok) this.showToast('Đã yêu cầu làm mới');
+        else this.showToast('Làm mới thất bại (HTTP ' + r.status + ')', true);
+      } catch (e) { this.showToast('Lỗi mạng', true); }
       finally { this.refreshing = false; }
     },
 
@@ -565,48 +578,48 @@ function app() {
           headers: this.authHeaders({'Content-Type': 'application/json'}),
           body: JSON.stringify(name ? {name} : {action: 'next'})
         });
-        if (r.ok) { const d = await r.json(); this.showToast('Showing ' + d.active); this.refreshState(); }
-        else if (r.status === 404) this.showToast(name + ' is not enabled', true);
-        else this.showToast('Switch failed (HTTP ' + r.status + ')', true);
-      } catch (e) { this.showToast('Network error', true); }
+        if (r.ok) { const d = await r.json(); this.showToast('Đang hiển thị ' + this.chLabel(d.active)); this.refreshState(); }
+        else if (r.status === 404) this.showToast(this.chLabel(name) + ' chưa được bật', true);
+        else this.showToast('Chuyển kênh thất bại (HTTP ' + r.status + ')', true);
+      } catch (e) { this.showToast('Lỗi mạng', true); }
     },
 
     kb(n) { return n != null ? Math.round(n / 1024) + 'K' : '—'; },
     ago(epoch) {
-      if (!epoch) return 'never';
+      if (!epoch) return 'chưa bao giờ';
       const s = Math.max(0, Math.round(Date.now() / 1000 - epoch));
-      if (s < 90) return s + 's ago';
-      if (s < 5400) return Math.round(s / 60) + 'm ago';
-      return Math.round(s / 3600) + 'h ago';
+      if (s < 90) return s + 's trước';
+      if (s < 5400) return Math.round(s / 60) + 'm trước';
+      return Math.round(s / 3600) + 'h trước';
     },
     // Plain-language credential status for the Accounts tab.
     credChip(name) {
       const s = (this.state.sources || {})[name] || {};
       const exp = s.expires_at ? new Date(s.expires_at * 1000) : null;
-      const day = exp ? exp.toLocaleDateString(undefined, {day: 'numeric', month: 'short'}) : '';
+      const day = exp ? exp.toLocaleDateString('vi-VN', {day: 'numeric', month: 'short'}) : '';
       const inDays = exp ? Math.max(0, Math.round((exp - Date.now()) / 86400000)) : 0;
-      const resets = s.resets ? ` · ${s.resets.left} reset credit${s.resets.left > 1 ? 's' : ''}` : '';
+      const resets = s.resets ? ` · ${s.resets.left} lượt đặt lại` : '';
       switch (s.cred) {
-        case 'not_set':  return {cls: 'muted', text: 'Not set'};
-        case 'checking': return {cls: 'muted', text: 'Checking…'};
-        case 'ok':       return {cls: 'mint',  text: 'Working' + (day ? ` · expires ${day}` : '') + resets};
-        case 'expiring': return {cls: 'amber', text: `Expires ${day} (in ${inDays}d) — paste a fresh one soon` + resets};
-        case 'expired':  return {cls: 'coral', text: `Expired ${day} — paste a new one below`};
-        case 'rejected': return {cls: 'coral', text: `Rejected (HTTP ${s.code}) — paste a new one below`};
-        case 'blocked':  return {cls: 'amber', text: 'Blocked by a Cloudflare challenge — the key itself is fine; retrying every 15 min'};
+        case 'not_set':  return {cls: 'muted', text: 'Chưa đặt'};
+        case 'checking': return {cls: 'muted', text: 'Đang kiểm tra…'};
+        case 'ok':       return {cls: 'mint',  text: 'Hoạt động' + (day ? ` · hết hạn ${day}` : '') + resets};
+        case 'expiring': return {cls: 'amber', text: `Hết hạn ${day} (còn ${inDays} ngày) — sớm dán khóa mới nhé` + resets};
+        case 'expired':  return {cls: 'coral', text: `Đã hết hạn ${day} — dán khóa mới bên dưới`};
+        case 'rejected': return {cls: 'coral', text: `Bị từ chối (HTTP ${s.code}) — dán khóa mới bên dưới`};
+        case 'blocked':  return {cls: 'amber', text: 'Bị chặn bởi thử thách Cloudflare — khóa vẫn ổn; thử lại mỗi 15 phút'};
         default:         return {cls: 'muted', text: ''};
       }
     },
     sourceText(s) {
       if (s.cred && !['ok', 'checking', 'not_set'].includes(s.cred)) return this.credChipText(s);
-      let t = s.valid ? 'ok · ' + this.ago(s.last_ok) : (s.err || 'waiting');
-      if (s.resets) t += ' · ' + s.resets.left + ' reset' + (s.resets.left > 1 ? 's' : '');
-      if (s.fails) t += ' · ' + s.fails + ' fail' + (s.fails > 1 ? 's' : '') + ', retry ' + s.backoff_s + 's';
+      let t = s.valid ? 'ok · ' + this.ago(s.last_ok) : (s.err || 'đang chờ');
+      if (s.resets) t += ' · ' + s.resets.left + ' lượt đặt lại';
+      if (s.fails) t += ' · ' + s.fails + ' lần lỗi, thử lại sau ' + s.backoff_s + 's';
       return t;
     },
     credChipText(s) {
-      return {expiring: 'token expiring', expired: 'token expired', rejected: 'token rejected (' + s.code + ')',
-              blocked: 'blocked by Cloudflare'}[s.cred] || s.cred;
+      return {expiring: 'token sắp hết hạn', expired: 'token hết hạn', rejected: 'token bị từ chối (' + s.code + ')',
+              blocked: 'bị Cloudflare chặn'}[s.cred] || s.cred;
     },
     sourceClass(s) {
       if (s.cred === 'expired' || s.cred === 'rejected' || s.auth_bad) return 'coral';
@@ -624,25 +637,25 @@ function app() {
     },
 
     async factoryReset() {
-      if (!confirm('Erase all config and reboot?')) return;
+      if (!confirm('Xóa toàn bộ cấu hình và khởi động lại?')) return;
       try {
         await fetch('/api/factory-reset', {method: 'POST'});
-        this.showToast('Resetting...');
+        this.showToast('Đang khôi phục...');
       } catch (e) {}
     },
 
     async reboot() {
-      if (!confirm('Reboot device?')) return;
+      if (!confirm('Khởi động lại thiết bị?')) return;
       try {
         await fetch('/api/reboot', {method: 'POST'});
-        this.showToast('Rebooting...');
+        this.showToast('Đang khởi động lại...');
       } catch (e) {}
     },
 
     async searchCity() {
       if (!this.weatherCity || this.weatherCity.length < 2) { this.cityResults = []; return; }
       try {
-        const r = await fetch('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(this.weatherCity) + '&count=5&language=en');
+        const r = await fetch('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(this.weatherCity) + '&count=5&language=vi');
         const d = await r.json();
         this.cityResults = d.results || [];
       } catch (e) { this.cityResults = []; }
@@ -656,7 +669,7 @@ function app() {
     },
 
     async exportConfig() {
-      if (!confirm('This file contains your API keys and Wi-Fi password in plain text. Continue?')) return;
+      if (!confirm('Tệp này chứa khóa API và mật khẩu Wi-Fi của bạn ở dạng văn bản thường. Tiếp tục?')) return;
       const r = await fetch('/api/export');
       const blob = await r.blob();
       const url = URL.createObjectURL(blob);
@@ -675,10 +688,10 @@ function app() {
         body: text
       });
       if (r.ok) {
-        this.showToast('Imported — restarting...');
+        this.showToast('Đã nhập — đang khởi động lại...');
         setTimeout(() => location.reload(), 3000);
       } else {
-        this.showToast('Import failed', true);
+        this.showToast('Nhập thất bại', true);
       }
     },
 
@@ -708,7 +721,7 @@ function app() {
         [60, 'UTC+01:00'], [120, 'UTC+02:00'], [180, 'UTC+03:00'],
         [210, 'UTC+03:30 (Iran)'], [240, 'UTC+04:00'],
         [270, 'UTC+04:30 (Afghanistan)'], [300, 'UTC+05:00'],
-        [330, 'UTC+05:30 (India, Sri Lanka)'], [345, 'UTC+05:45 (Nepal)'],
+        [330, 'UTC+05:30 (Ấn Độ, Sri Lanka)'], [345, 'UTC+05:45 (Nepal)'],
         [360, 'UTC+06:00'], [390, 'UTC+06:30 (Myanmar)'],
         [420, 'UTC+07:00'], [480, 'UTC+08:00'],
         [525, 'UTC+08:45 (Eucla)'], [540, 'UTC+09:00'],
@@ -782,8 +795,8 @@ export GLIMMER_URL=${this.deviceUrl()}` + (tok ? `\nexport GLIMMER_TOKEN=${tok}`
           method: 'POST', headers: this.authHeaders({'Content-Type': 'application/json'}),
           body: JSON.stringify(id ? {id} : {all: true})
         });
-        if (!r.ok) this.showToast('Clear failed (HTTP ' + r.status + ')', true);
-      } catch (e) { this.showToast('Network error', true); }
+        if (!r.ok) this.showToast('Xóa thất bại (HTTP ' + r.status + ')', true);
+      } catch (e) { this.showToast('Lỗi mạng', true); }
       this.refreshCards();
     },
     async sendTestApproval() {
@@ -796,9 +809,9 @@ export GLIMMER_URL=${this.deviceUrl()}` + (tok ? `\nexport GLIMMER_TOKEN=${tok}`
           method: 'POST', headers: this.authHeaders({'Content-Type': 'application/json'}),
           body: JSON.stringify(card)
         });
-        if (r.ok) this.showToast('Shown on device');
-        else this.showToast('Push failed (HTTP ' + r.status + ')', true);
-      } catch (e) { this.showToast('Network error', true); }
+        if (r.ok) this.showToast('Đã hiển thị trên thiết bị');
+        else this.showToast('Gửi thất bại (HTTP ' + r.status + ')', true);
+      } catch (e) { this.showToast('Lỗi mạng', true); }
       this.refreshCards();
     },
 

@@ -47,11 +47,13 @@ namespace Display {
     //   "VT323-64"        large numerics
     //   "VT323-44"        medium numerics (Claude/Codex %)
     //   "VT323-32"        small numerics + retro headlines
-    //   "Silkscreen-16"   status-bar titles, section labels (TITLE)
-    //   "Silkscreen-12"   compact headings
-    //   "PixelifySans-22" soft headlines (greetings, friendly copy)
-    //   "PixelifySans-14" softer body
-    //   "DMMono-11"       tabular data, IP/RSSI/uptime rows (BODY)
+    //   "JBMono-16B"      headlines, card titles (TITLE)   JetBrains Mono Bold
+    //   "JBMono-12B"      status-bar titles, labels        JetBrains Mono Bold
+    //   "JBMono-13"       greeting, weather condition       JetBrains Mono
+    //   "JBMono-11"       tabular data, detail lines (BODY) JetBrains Mono
+    // VT323 and JetBrains Mono both ship every Vietnamese letter natively.
+    // The JBMono files keep the line boxes of the fonts they replaced
+    // (Silkscreen-16/12, PixelifySans-14, DMMono-11) — see tools/genfonts.py.
     //
     // FontTier shortcuts (Display::drawText uses these). For per-screen tuning,
     // call useFont() directly with a name from the list above.
@@ -67,7 +69,7 @@ namespace Display {
     // ── Design-system primitives (added v0.8) ──
     //
     // Universal 22-px status bar across the top of every channel screen.
-    //   center:      title text, Silkscreen-feel
+    //   center:      title text, JBMono-12B
     //   right slot:  small meta text (model name, location code, etc.)
     //   y=22:        1-px accent under-line in the channel's color
     void statusBar(const char* title, const char* rightMeta, uint16_t accent,

@@ -30,8 +30,9 @@ user's desk display. Use it only for things worth a glance:
 - When it ends: push the SAME id with kind=success or kind=error, a short
   title ("TESTS PASSED"), optional value ("142/142"), ttl_s=120.
 - Blocked on a decision outside a permission prompt: push kind=input,
-  title = the question in <= 27 chars; clear_card it once the user answers.
-- Limits: title 27, value 15, body 39, project 15, id 23 chars.
+  title = the question in <= 47 bytes; clear_card it once the user answers.
+- Limits (UTF-8 bytes; ASCII = 1, a Vietnamese letter = 2-3): title 47,
+  value 23, body 63, project 23, id 23.
 - Never send secrets, tokens, file contents or personal data. No cards for
   routine steps.
 ```
@@ -41,17 +42,19 @@ user's desk display. Use it only for things worth a glance:
 ## Card reference
 
 `push_card` (MCP) and `POST /push` (HTTP JSON) take the same fields. Longer
-strings are cut to the limit; on screen, lines that don't fit end in `...`.
+strings are cut to the limit (in UTF-8 bytes, never mid-character); on
+screen, lines that don't fit end in `...`. The panel renders ASCII,
+`°` `·` and every Vietnamese letter; other characters are skipped.
 
 | field | type | meaning |
 |---|---|---|
-| `title` | string ≤ 27 | headline (required by MCP) |
-| `value` | string ≤ 15 | optional big text, e.g. `142/142`, `PASSED` |
-| `body` | string ≤ 39 | optional detail line |
+| `title` | string ≤ 47 B | headline (required by MCP) |
+| `value` | string ≤ 23 B | optional big text, e.g. `142/142`, `PASSED` |
+| `body` | string ≤ 63 B | optional detail line |
 | `kind` | `approval` · `error` · `input` · `progress` · `warning` · `success` · `info` | colour and priority, highest first. Default `info` |
 | `id` | string ≤ 23 | stable id; re-sending it **updates the card in place** (no new interruption unless the kind gets more urgent). Default: a new `push:<n>` card each time |
 | `agent` | `claude` · `codex` · `other` | coloured square + name on the card. Default `other` |
-| `project` | string ≤ 15 | e.g. the repo name |
+| `project` | string ≤ 23 B | e.g. the repo name |
 | `progress` | 0–100 | progress bar; also the value (`64%`) when no `value` |
 | `ttl_s` | seconds | lifetime; `0` = until cleared; max 86400. Default by kind: approval/input = the user's "Give up after" (30 min by default), error 300, warning 60, progress 3600, success/info 30 |
 | `display` | `interrupt` · `queue` | `interrupt` takes the screen for up to 30 s (or `ttl_s`, if shorter), then stays on the **Agents** list; `queue` is only listed. Default `interrupt`, except `progress` → `queue` |
@@ -124,8 +127,10 @@ curl -X POST http://glimmer.local/push/clear -H 'Content-Type: application/json'
 
 ## Approvals via hooks (how it works)
 
-[`tools/agents/glimmer-hook.sh`](../tools/agents/glimmer-hook.sh) runs as a
-Claude Code / Codex hook (configs:
+[`tools/agents/glimmer-hook.mjs`](../tools/agents/glimmer-hook.mjs) (Node,
+installed per machine by `node tools/agents/install.mjs`) or the older
+[`tools/agents/glimmer-hook.sh`](../tools/agents/glimmer-hook.sh) (sh + curl +
+jq) runs as a Claude Code / Codex hook (configs:
 [`claude-settings.json`](../tools/agents/claude-settings.json),
 [`codex-hooks.json`](../tools/agents/codex-hooks.json)). It reads the event
 on stdin and sends a small summary — event, notification type, session, cwd,
@@ -133,8 +138,16 @@ tool, a 60-char command/path, an 80-char message — to
 `POST /hook?agent=claude|codex`. **Never post the raw event**: a PostToolUse
 carries the whole tool output, far beyond the device's RAM (bodies > 2 KB are
 ignored). The script needs `curl` + `jq`, reads `GLIMMER_URL` /
-`GLIMMER_TOKEN`, gives up after 2 s and always exits 0; `/hook` always
+`GLIMMER_TOKEN` (the .mjs also `~/.glimmer/config.json`, default
+`http://glimmer.local`), gives up after 2 s and always exits 0; `/hook` always
 answers 200, so the display can never block or decide anything.
+
+Every event also updates the **project board** (`projects_core.h`): the
+latest state per project (cwd basename) + agent — approval, input, error,
+working, done — shown in the Claude screen's bottom rows. DONE/error stay
+6 h, working hides after 30 min without events, 4 projects max. Pushed
+cards that set `project` feed it too (success → done, error, progress →
+working with its %).
 
 Because the command and message end up on a desk screen, the script masks
 anything credential-shaped before sending: `key=…`, `token: …`,

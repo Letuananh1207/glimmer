@@ -169,7 +169,7 @@ static void recomputeActive() {
 
 static void drawActive() {
     if (g_activeCount == 0) {
-        Display::drawError("No channels", "Configure web UI");
+        Display::drawError("CHƯA CÓ KÊNH", "bật kênh trên trang web");
         return;
     }
     // Re-arm splash/connecting/OTA partial-redraw state in case we re-enter
@@ -359,6 +359,11 @@ static void schedulerTick(uint32_t now) {
     for (int i = 0; i < JOB_COUNT; i++) {
         Job j = (Job)i;
         if (!jobEnabled(j) || (int32_t)(now - g_jobDue[j]) < 0) continue;
+        // TLS drops the VLW font anyway (Api::tlsGetStream); drop it before
+        // measuring. Its metric arrays (7 mallocs, ~2.8 KB with the 231-glyph
+        // Vietnamese fonts) sit inside the big free block and made the gate
+        // refuse forever (maxblk 18 K < 20 K) though the heap had room.
+        if (j != JOB_WEATHER) Display::releaseFont();
         uint32_t blk = ESP.getMaxFreeBlockSize();
         if (blk < g_minMaxBlk) g_minMaxBlk = blk;
         if (j != JOB_WEATHER && blk < Api::kTlsFloor) {
@@ -503,30 +508,30 @@ static bool notice(int prov, CredState::NoticeReason r, const char* title, const
 static void noticesTick() {
     if (!timeSynced() || nightNow()) return;
     time_t now = time(nullptr);
-    char sub[40]; snprintf(sub, sizeof(sub), "update at %s.local", MDNS_HOSTNAME);
+    char sub[40]; snprintf(sub, sizeof(sub), "cập nhật tại %s.local", MDNS_HOSTNAME);
     struct P { const char* title; Cred cred; time_t exp; const ResetGrant* g; } ps[2] = {
-        {"CLAUDE KEY",  g_claude.cred, 0,              &g_claude.resets},
-        {"CODEX TOKEN", g_codex.cred,  g_codex.jwtExp, &g_codex.resets},
+        {"KHÓA CLAUDE", g_claude.cred, 0,              &g_claude.resets},
+        {"TOKEN CODEX", g_codex.cred,  g_codex.jwtExp, &g_codex.resets},
     };
     for (int i = 0; i < 2; i++) {
         const P& p = ps[i];
         if (CredState::bad(p.cred)) {
-            const char* v = p.cred == Cred::EXPIRED ? "EXPIRED"
-                          : p.cred == Cred::REJECTED ? "REJECTED" : "BLOCKED";
-            const char* s2 = p.cred == Cred::BLOCKED ? "key is fine - retrying" : sub;
+            const char* v = p.cred == Cred::EXPIRED ? "HẾT HẠN"
+                          : p.cred == Cred::REJECTED ? "BỊ TỪ CHỐI" : "BỊ CHẶN";
+            const char* s2 = p.cred == Cred::BLOCKED ? "khóa vẫn tốt - đang thử lại" : sub;
             if (notice(i, CredState::NOTICE_BAD, p.title, v, s2, credColor(p.cred))) return;
         } else if (p.cred == Cred::EXPIRING) {
             long left = (long)(p.exp - now);
-            char v[16];
-            if (left >= 86400L) snprintf(v, sizeof(v), "%ld DAY%s", left / 86400L, left >= 172800L ? "S" : "");
-            else                snprintf(v, sizeof(v), "%ldH LEFT", left / 3600L > 0 ? left / 3600L : 1);
+            char v[24];
+            if (left >= 86400L) snprintf(v, sizeof(v), "CÒN %ld NGÀY", left / 86400L);
+            else                snprintf(v, sizeof(v), "CÒN %ld GIỜ", left / 3600L > 0 ? left / 3600L : 1);
             if (notice(i, CredState::NOTICE_EXPIRING, p.title, v, sub, Theme::AMBER)) return;
         }
         // An unused limit-reset credit that lapses within 48 h.
         if (p.g->left && p.g->endsAt > now && p.g->endsAt - now < 48L * 3600L) {
-            char v[16]; snprintf(v, sizeof(v), "%u RESET%s", p.g->left, p.g->left > 1 ? "S" : "");
+            char v[24]; snprintf(v, sizeof(v), "%u LƯỢT", p.g->left);
             char d[8];  TimeUtil::shortDuration((long)(p.g->endsAt - now), d, sizeof(d));
-            char s3[40]; snprintf(s3, sizeof(s3), "unused - expires in %s", d);
+            char s3[40]; snprintf(s3, sizeof(s3), "chưa dùng - hết hạn sau %s", d);
             const char* who = i == 0 ? "CLAUDE" : "CODEX";
             if (notice(i, CredState::NOTICE_RESET, who, v, s3, Theme::AMBER)) return;
         }
@@ -540,7 +545,7 @@ void setup() {
     Serial.println(F("\n=== glimmer v" FW_VERSION " ==="));
 
     Display::begin();
-    Display::drawSplash("booting...");
+    Display::drawSplash("đang khởi động...");
     delay(400);
 
     Storage::begin();
@@ -551,11 +556,11 @@ void setup() {
     UsageHistory::begin();
     Api::refreshCred(g_settings, g_claude, g_codex);
 
-    Display::drawSplash("connecting WiFi");
+    Display::drawSplash("đang kết nối Wi-Fi");
     if (!tryConnect()) {
         startAPMode();
     } else {
-        Display::drawSplash("Syncing time");
+        Display::drawSplash("đang đồng bộ giờ");
         onStaUp();
     }
 
@@ -565,7 +570,8 @@ void setup() {
         // Personalized greeting splash
         if (!g_settings.userName.isEmpty()) {
             char greet[40];
-            snprintf(greet, sizeof(greet), "Hi, %s", g_settings.userName.c_str());
+            snprintf(greet, sizeof(greet), "Xin chào, %s", g_settings.userName.c_str());
+            Utf8::trimPartial(greet);
             Display::drawSplash(greet);
             delay(900);
         }

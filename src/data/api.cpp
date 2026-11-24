@@ -9,11 +9,11 @@ String Api::formatCountdown(time_t t) {
     time_t now = time(nullptr);
     if (now < 1000000000L) return "--";                 // clock not synced yet
     long diff = (long)(t - now);
-    if (diff <= 0) return "now";
+    if (diff <= 0) return "ngay";
     long h = diff / 3600;
     long m = (diff % 3600) / 60;
     if (h >= 24) { char b[8]; snprintf_P(b, sizeof(b), PSTR("%ldd"), (h + 12) / 24); return b; }
-    if (h >= 1)  { char b[10]; snprintf_P(b, sizeof(b), PSTR("%ldh %ldm"), h, m);   return b; }
+    if (h >= 1)  { char b[12]; snprintf_P(b, sizeof(b), PSTR("%ldh %ldm"), h, m);   return b; }
     char b[8]; snprintf_P(b, sizeof(b), PSTR("%ldm"), m); return b;
 }
 
@@ -28,13 +28,13 @@ bool Api::isStale(time_t lastOk, const Settings& s) {
 void Api::staleText(time_t lastOk, const Settings& s, char* buf, size_t n) {
     if (!isStale(lastOk, s)) { if (n) buf[0] = '\0'; return; }
     char d[8]; TimeUtil::shortDuration((long)(time(nullptr) - lastOk), d, sizeof(d));
-    snprintf_P(buf, n, PSTR("STALE %s"), d);
+    snprintf_P(buf, n, PSTR("CŨ %s"), d);
 }
 
 
 
 static const char* provName(bool claude, bool token) {
-    return claude ? (token ? "CLAUDE KEY" : "CLAUDE") : (token ? "CODEX TOKEN" : "CODEX");
+    return claude ? (token ? "KHÓA CLAUDE" : "CLAUDE") : (token ? "TOKEN CODEX" : "CODEX");
 }
 
 void Api::adviceText(const ClaudeData& cl, const CodexData& cx, char* buf, size_t n) {
@@ -43,8 +43,8 @@ void Api::adviceText(const ClaudeData& cl, const CodexData& cx, char* buf, size_
     if (CredState::bad(cl.cred) || CredState::bad(cx.cred)) {
         bool claude = CredState::bad(cl.cred);
         Cred c = claude ? cl.cred : cx.cred;
-        if (c == Cred::BLOCKED) snprintf_P(buf, n, PSTR("%s BLOCKED \xC2\xB7 RETRYING"), provName(claude, false));
-        else snprintf_P(buf, n, PSTR("%s %s"), provName(claude, true), c == Cred::EXPIRED ? "EXPIRED" : "REJECTED");
+        if (c == Cred::BLOCKED) snprintf_P(buf, n, PSTR("%s BỊ CHẶN \xC2\xB7 THỬ LẠI"), provName(claude, false));
+        else snprintf_P(buf, n, PSTR("%s %s"), provName(claude, true), c == Cred::EXPIRED ? "HẾT HẠN" : "BỊ TỪ CHỐI");
         return;
     }
     if (!cl.valid || !cx.valid || cl.weeklyPct < 0 || cx.primaryPct < 0) return;
@@ -57,7 +57,7 @@ void Api::adviceText(const ClaudeData& cl, const CodexData& cx, char* buf, size_
     // 2. Nearly out, but a limit-reset credit can be spent right now.
     for (auto& k : c) {
         if (k.pct < 15.0f && k.g->left && k.g->usable) {
-            snprintf_P(buf, n, PSTR("%s: %u RESET%s AVAILABLE"), k.name, k.g->left, k.g->left > 1 ? "S" : "");
+            snprintf_P(buf, n, PSTR("%s: CÓ %u LƯỢT ĐẶT LẠI"), k.name, k.g->left);
             return;
         }
     }
@@ -70,12 +70,12 @@ void Api::adviceText(const ClaudeData& cl, const CodexData& cx, char* buf, size_
     }
     if (pick >= 0) {
         char d[8]; TimeUtil::shortDuration((long)(c[pick].reset - now), d, sizeof(d));
-        snprintf_P(buf, n, PSTR("USE %s \xC2\xB7 RESETS %s"), c[pick].name, d);
+        snprintf_P(buf, n, PSTR("DÙNG %s \xC2\xB7 ĐẶT LẠI %s"), c[pick].name, d);
         return;
     }
     int most = c[0].pct >= c[1].pct ? 0 : 1;
-    if (c[most].pct < 15.0f) { snprintf_P(buf, n, PSTR("BOTH LOW")); return; }
-    snprintf_P(buf, n, PSTR("MOST ROOM: %s %.0f%%"), c[most].name, c[most].pct);
+    if (c[most].pct < 15.0f) { snprintf_P(buf, n, PSTR("CẢ HAI SẮP HẾT")); return; }
+    snprintf_P(buf, n, PSTR("%s CÒN %.0f%%"), c[most].name, c[most].pct);
 }
 
 // ── shared TLS GET ───────────────────────────────────────────────────────────
@@ -214,7 +214,7 @@ static bool failSource(FetchPolicy::State& pol, D& out, const Api::TlsResult& r,
 }
 
 static void transportErr(int code, char* e, size_t n) {
-    if (code < 0) snprintf_P(e, n, PSTR("Offline"));
+    if (code < 0) snprintf_P(e, n, PSTR("Mất mạng"));
     else          snprintf_P(e, n, PSTR("HTTP %d"), code);
 }
 

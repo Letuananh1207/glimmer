@@ -9,6 +9,8 @@
 #include "timeutil.h"
 #include "attention_core.h"
 #include "attention_json.h"
+#include "utf8.h"
+#include "projects_core.h"
 
 void setUp() {}
 void tearDown() {}
@@ -196,8 +198,8 @@ void test_pace_empty_before_reset() {
     History::Pace p = History::pace(ring, History::CLAUDE_WEEK, 50, T0, T0 + 24 * 3600);
     TEST_ASSERT_EQUAL(History::Pace::EMPTY, p.kind);
     TEST_ASSERT_INT_WITHIN(60, 5 * 3600, p.sec);     // 50 left at 10/h ≈ 5 h
-    char buf[24]; History::paceText(p, buf, sizeof(buf));
-    TEST_ASSERT_EQUAL_STRING("EMPTY IN 5H", buf);
+    char buf[40]; History::paceText(p, buf, sizeof(buf));
+    TEST_ASSERT_EQUAL_STRING("HẾT SAU 5H", buf);
 }
 
 void test_pace_lasts_until_reset() {
@@ -206,8 +208,8 @@ void test_pace_lasts_until_reset() {
     History::Pace p = History::pace(ring, History::CLAUDE_WEEK, 80, T0, T0 + 10 * 3600);
     TEST_ASSERT_EQUAL(History::Pace::AT_RESET, p.kind);
     TEST_ASSERT_EQUAL(70, p.pct);                    // 1 point/h for 10 h
-    char buf[24]; History::paceText(p, buf, sizeof(buf));
-    TEST_ASSERT_EQUAL_STRING("~70% AT RESET", buf);
+    char buf[40]; History::paceText(p, buf, sizeof(buf));
+    TEST_ASSERT_EQUAL_STRING("~70% KHI ĐẶT LẠI", buf);
 }
 
 void test_pace_stops_at_window_reset_and_needs_span() {
@@ -306,11 +308,11 @@ void test_cred_derivation_order() {
 }
 
 void test_cred_meta_labels() {
-    char b[16];
+    char b[24];
     CredState::meta(Cred::EXPIRING, T0 + 2 * 86400L + 60, T0, b, sizeof(b));
-    TEST_ASSERT_EQUAL_STRING("EXPIRES 2D", b);
+    TEST_ASSERT_EQUAL_STRING("HẠN 2D", b);
     CredState::meta(Cred::REJECTED, 0, T0, b, sizeof(b));
-    TEST_ASSERT_EQUAL_STRING("RE-AUTH", b);
+    TEST_ASSERT_EQUAL_STRING("KHÓA LỖI", b);
     CredState::meta(Cred::OK, 0, T0, b, sizeof(b));
     TEST_ASSERT_EQUAL_STRING("", b);
 }
@@ -579,6 +581,101 @@ void test_night_brightness() {
     TEST_ASSERT_EQUAL(15, Night::brightness(Night::DARK, true,  true,  80, 15));
 }
 
+// ── UTF-8 (Vietnamese UI) ──────────────────────────────────────────────────
+
+void test_utf8_never_splits_a_letter() {
+    char b[6];
+    Utf8::copy(b, sizeof(b), "ĐANG CHỜ");          // Đ=2 bytes: "ĐANG" fits, " CHỜ" not
+    TEST_ASSERT_EQUAL_STRING("ĐANG", b);
+    char c[4];
+    Utf8::copy(c, sizeof(c), "aỜ");                  // Ờ is 3 bytes: only "a" fits
+    TEST_ASSERT_EQUAL_STRING("a", c);
+    const char* s = "lỗi";
+    TEST_ASSERT_EQUAL(1, (int)Utf8::prevChar(s, 4)); // step back over ỗ to its lead byte
+    Attention::Item it;                               // the queue truncates the same way
+    Attention::copyStr(it.value, sizeof(it.value), "TOKEN CODEX BỊ TỪ ỒN");    // 26 B into 24
+    TEST_ASSERT_EQUAL_STRING("TOKEN CODEX BỊ TỪ ", it.value);         // byte 23 is inside Ồ
+}
+
+void test_utf8_case_mapping_vietnamese() {
+    char a[] = "đang chờ bạn · ưu tiên ỹ";
+    Utf8::upper(a);
+    TEST_ASSERT_EQUAL_STRING("ĐANG CHỜ BẠN · ƯU TIÊN Ỹ", a);
+    char b[] = "ĐÃ XONG ĂN ƠN";
+    Utf8::sentence(b);
+    TEST_ASSERT_EQUAL_STRING("Đã xong ăn ơn", b);
+}
+
+void test_short_duration_units() {
+    char d[8];
+    TimeUtil::shortDuration(45 * 60, d, sizeof(d));      TEST_ASSERT_EQUAL_STRING("45M", d);
+    TimeUtil::shortDuration(6 * 3600, d, sizeof(d));     TEST_ASSERT_EQUAL_STRING("6H", d);
+    TimeUtil::shortDuration(3 * 86400, d, sizeof(d));    TEST_ASSERT_EQUAL_STRING("3D", d);
+}
+
+// ── Project board ─────────────────────────────────────────────────────────
+
+static Attention::HookEvent hev(const char* ev, const char* cwd, const char* ty = "", const char* tool = "") {
+    Attention::HookEvent e; e.event = ev; e.cwd = cwd; e.type = ty; e.tool = tool; return e;
+}
+
+void test_projects_follow_hook_events() {
+    Projects::Board b; Projects::clearAll(b);
+    const uint32_t t = 1000000;
+    TEST_ASSERT_TRUE(Projects::noteHook(b, Attention::AGENT_CLAUDE, hev("UserPromptSubmit", "/src/glimmer"), t));
+    TEST_ASSERT_TRUE(Projects::noteHook(b, Attention::AGENT_CLAUDE,
+                     hev("Notification", "/src/glimmer", "permission_prompt", "Bash"), t + 5));
+    int ord[Projects::kMax];
+    TEST_ASSERT_EQUAL(1, Projects::ordered(b, ord, t + 6));
+    const Projects::Entry& x = b.e[ord[0]];
+    TEST_ASSERT_EQUAL_STRING("glimmer", x.project);
+    TEST_ASSERT_EQUAL(Projects::P_APPROVAL, x.state);
+    TEST_ASSERT_EQUAL_STRING("Bash", x.detail);
+    // Approved → working → done; DONE stays for hours, unlike the 20 s card.
+    Projects::noteHook(b, Attention::AGENT_CLAUDE, hev("PostToolUse", "/src/glimmer", "", "Bash"), t + 9);
+    TEST_ASSERT_EQUAL(Projects::P_WORKING, b.e[ord[0]].state);
+    Projects::noteHook(b, Attention::AGENT_CLAUDE, hev("Stop", "/src/glimmer"), t + 60);
+    TEST_ASSERT_EQUAL(Projects::P_DONE, b.e[ord[0]].state);
+    TEST_ASSERT_EQUAL(1, Projects::ordered(b, ord, t + 60 + 3600));
+    TEST_ASSERT_EQUAL(0, Projects::ordered(b, ord, t + 60 + Projects::kKeepS));
+}
+
+void test_projects_order_idle_and_eviction() {
+    Projects::Board b; Projects::clearAll(b);
+    const uint32_t t = 2000000;
+    Projects::noteHook(b, Attention::AGENT_CLAUDE, hev("Stop", "/a/done"), t);
+    Projects::noteHook(b, Attention::AGENT_CODEX,  hev("PostToolUse", "/a/busy"), t + 1);
+    Projects::noteHook(b, Attention::AGENT_CLAUDE, hev("Notification", "/a/ask", "idle_prompt"), t + 2);
+    int ord[Projects::kMax];
+    TEST_ASSERT_EQUAL(3, Projects::ordered(b, ord, t + 3));
+    TEST_ASSERT_EQUAL_STRING("ask",  b.e[ord[0]].project);     // waiting on you first
+    TEST_ASSERT_EQUAL_STRING("busy", b.e[ord[1]].project);
+    TEST_ASSERT_EQUAL_STRING("done", b.e[ord[2]].project);
+    // A working project with no event for 30 min is hidden (agent gone quiet).
+    TEST_ASSERT_EQUAL(2, Projects::ordered(b, ord, t + 1 + Projects::kIdleS));
+    // Full board: the stalest entry makes room.
+    Projects::noteHook(b, Attention::AGENT_CLAUDE, hev("Stop", "/a/four"), t + 10);
+    Projects::noteHook(b, Attention::AGENT_CLAUDE, hev("Stop", "/a/five"), t + 11);
+    bool hasDone = false, hasFive = false;
+    for (auto& x : b.e) { if (!strcmp(x.project, "done")) hasDone = true; if (!strcmp(x.project, "five")) hasFive = true; }
+    TEST_ASSERT_FALSE(hasDone);
+    TEST_ASSERT_TRUE(hasFive);
+}
+
+void test_projects_from_pushed_cards() {
+    Projects::Board b; Projects::clearAll(b);
+    Attention::Item it;
+    Attention::copyStr(it.project, sizeof(it.project), "api");
+    it.kind = Attention::K_PROGRESS; it.progress = 62;
+    TEST_ASSERT_TRUE(Projects::noteItem(b, it, 3000000));
+    int ord[Projects::kMax];
+    TEST_ASSERT_EQUAL(1, Projects::ordered(b, ord, 3000001));
+    TEST_ASSERT_EQUAL_STRING("62%", b.e[ord[0]].detail);
+    Attention::Item sys; Attention::copyStr(sys.id, sizeof(sys.id), "sys:0:1");
+    Attention::copyStr(sys.project, sizeof(sys.project), "x"); sys.kind = Attention::K_ERROR;
+    TEST_ASSERT_FALSE(Projects::noteItem(b, sys, 3000002));     // device notices stay off the board
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_claude_limits_drive_windows_and_ignore_codenames);
@@ -614,5 +711,11 @@ int main(int, char**) {
     RUN_TEST(test_attention_json_legacy_and_new);
     RUN_TEST(test_night_window_wraps_and_disables);
     RUN_TEST(test_night_brightness);
+    RUN_TEST(test_utf8_never_splits_a_letter);
+    RUN_TEST(test_utf8_case_mapping_vietnamese);
+    RUN_TEST(test_short_duration_units);
+    RUN_TEST(test_projects_follow_hook_events);
+    RUN_TEST(test_projects_order_idle_and_eviction);
+    RUN_TEST(test_projects_from_pushed_cards);
     return UNITY_END();
 }

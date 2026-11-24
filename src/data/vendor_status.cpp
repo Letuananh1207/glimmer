@@ -69,10 +69,10 @@ static bool fresh(Vendor v) {
 const char* badge(Vendor v) {
     if (!fresh(v)) return "";
     switch (s_info[v].level) {
-        case MAINTENANCE: return "MAINT";
-        case MINOR:       return "DEGRADED";
+        case MAINTENANCE: return "BẢO TRÌ";
+        case MINOR:       return "CHẬP CHỜN";
         case MAJOR:
-        case CRITICAL:    return "OUTAGE";
+        case CRITICAL:    return "SỰ CỐ";
         default:          return "";
     }
 }

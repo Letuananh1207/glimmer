@@ -1,8 +1,8 @@
 // Weather — design-true from WeatherNowScreen.
 //
 //   y=0..22    StatusBar [Weather | CITY]
-//   y=32..118  big VT323-86 temp °  +  conditions PixelifySans-14
-//   y=32..96   right stack: feels/hum/wind DMMono-11
+//   y=32..118  big VT323-86 temp °  +  conditions JBMono-13
+//   y=32..96   right stack: feels/hum/wind JBMono-11
 //   y=128..220 3 mini day-card pills (today + 2)
 
 #include "channel.h"
@@ -28,53 +28,53 @@ static float   s_tickUv   = -2.f;
 static float   s_dayTmin[3] = {-999.f, -999.f, -999.f};
 static float   s_dayTmax[3] = {-999.f, -999.f, -999.f};
 static uint8_t s_dayCode[3] = {255, 255, 255};
-static char    s_meta[16] = "";
+static char    s_meta[24] = "";
 
 bool chWeatherEnabled(const ChannelCtx& ctx) {
     return ctx.settings && ctx.settings->showWeather && Weather::configured(*ctx.settings);
 }
 
-// Status-bar meta: STALE badge, else the next sun event ("SET 17:48").
+// Status-bar meta: CŨ badge, else the next sun event ("LẶN 17:48").
 static uint16_t metaFor(const Settings& s, char* buf, size_t n) {
     if (Weather::isStale(s)) {
         char d[8]; TimeUtil::shortDuration((long)(time(nullptr) - s_w.lastOk), d, sizeof(d));
-        snprintf_P(buf, n, PSTR("STALE %s"), d);
+        snprintf_P(buf, n, PSTR("CŨ %s"), d);
         return Theme::AMBER;
     }
     time_t now = time(nullptr);
     const WeatherDay& today = s_w.forecast[0];
     const char* tag; time_t at;
-    if (today.sunrise && now < today.sunrise)    { tag = "RISE"; at = today.sunrise; }
-    else if (today.sunset && now < today.sunset) { tag = "SET";  at = today.sunset; }
-    else                                         { tag = "RISE"; at = s_w.forecast[1].sunrise; }
-    if (!at) { snprintf_P(buf, n, PSTR("OUT")); return Theme::MUTED; }
+    if (today.sunrise && now < today.sunrise)    { tag = "MỌC"; at = today.sunrise; }
+    else if (today.sunset && now < today.sunset) { tag = "LẶN"; at = today.sunset; }
+    else                                         { tag = "MỌC"; at = s_w.forecast[1].sunrise; }
+    if (!at) { snprintf_P(buf, n, PSTR("--")); return Theme::MUTED; }
     char hm[10]; ClockFmt::hm(at, s.clock24h, hm, sizeof(hm));
     snprintf_P(buf, n, PSTR("%s %s"), tag, hm);
     return Theme::MUTED;
 }
 
 static void paintRightStack(bool f) {
-    Display::useFont("DMMono-11");
+    Display::useFont("JBMono-11");
     tft.setTextDatum(TR_DATUM);
     tft.setTextColor(Theme::MUTED, Theme::BG);
-    char line[24];
+    char line[32];
     int ry = 36;
     if (s_w.feelsC > -900.0f) {
-        snprintf_P(line, sizeof(line), PSTR("feels %.0f°"), Weather::toDisplay(s_w.feelsC, f));
+        snprintf_P(line, sizeof(line), PSTR("cảm giác %.0f°"), Weather::toDisplay(s_w.feelsC, f));
         tft.drawString(line, SCREEN_W - 12, ry); ry += 18;
     }
     if (s_w.humidity >= 0) {
-        snprintf_P(line, sizeof(line), PSTR("hum %d%%"), s_w.humidity);
+        snprintf_P(line, sizeof(line), PSTR("ẩm %d%%"), s_w.humidity);
         tft.drawString(line, SCREEN_W - 12, ry); ry += 18;
     }
     if (s_w.windKmh >= 0) {
-        snprintf_P(line, sizeof(line), PSTR("wind %.0fkm"), s_w.windKmh);
+        snprintf_P(line, sizeof(line), PSTR("gió %.0fkm"), s_w.windKmh);
         tft.drawString(line, SCREEN_W - 12, ry); ry += 18;
     }
     if (s_w.forecast[0].uvMax >= 0) {
         float uv = s_w.forecast[0].uvMax;
         tft.setTextColor(uv >= 8 ? Theme::CORAL : uv >= 6 ? Theme::AMBER : Theme::MUTED, Theme::BG);
-        snprintf_P(line, sizeof(line), PSTR("uv %.0f"), uv);
+        snprintf_P(line, sizeof(line), PSTR("UV %.0f"), uv);
         tft.drawString(line, SCREEN_W - 12, ry);
     }
 }
@@ -83,7 +83,7 @@ static void miniDay(int x, int y, int w, const WeatherDay& d, const char* label,
     tft.fillRect(x, y, w, 64, Theme::PANEL);
     tft.drawRect(x, y, w, 64, Theme::LINE);
 
-    Display::useFont("Silkscreen-12");
+    Display::useFont("JBMono-12B");
     tft.setTextDatum(MC_DATUM);
     tft.setTextColor(Theme::MUTED, Theme::PANEL);
     tft.drawString(label, x + w/2, y + 10);
@@ -98,7 +98,7 @@ static void miniDay(int x, int y, int w, const WeatherDay& d, const char* label,
         tft.drawString(buf, x + w/2, y + 30);
     }
 
-    Display::useFont("DMMono-11");
+    Display::useFont("JBMono-11");
     tft.setTextColor(Theme::MUTED, Theme::PANEL);
     tft.drawString(Weather::describe(d.code), x + w/2, y + 52);
 }
@@ -121,7 +121,7 @@ static void paintTemp(bool f, bool stale) {
 static void paintCondition() {
     tft.fillRect(10, 116, 160, 18, Theme::BG);
     WeatherIcon::draw(12, 117, s_w.code, Theme::SKY, 1, !s_w.isDay);
-    Display::useFont("PixelifySans-14");
+    Display::useFont("JBMono-13");
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(Theme::INK_DIM, Theme::BG);
     tft.drawString(Weather::describe(s_w.code), 32, 118);
@@ -130,13 +130,13 @@ static void paintCondition() {
 void chWeatherDraw(const ChannelCtx& ctx) {
     Display::clear();
     uint16_t mc = metaFor(*ctx.settings, s_meta, sizeof(s_meta));
-    Display::statusBar("Weather", s_meta, Theme::SKY, mc);
+    Display::statusBar("Thời tiết", s_meta, Theme::SKY, mc);
 
     if (!s_w.valid) {
-        Display::useFont("Silkscreen-16");
+        Display::useFont("JBMono-16B");
         tft.setTextDatum(MC_DATUM);
         tft.setTextColor(Theme::MUTED, Theme::BG);
-        tft.drawString(s_w.err[0] ? s_w.err : "fetching...", SCREEN_W/2, 110);
+        tft.drawString(s_w.err[0] ? s_w.err : "đang tải...", SCREEN_W/2, 110);
         return;
     }
 
@@ -152,7 +152,7 @@ void chWeatherDraw(const ChannelCtx& ctx) {
     const int gap = 4;
     int cw = (SCREEN_W - 24 - gap * 2) / 3;
     int y  = 150;
-    const char* labels[3] = { "TODAY", "+1", "+2" };
+    const char* labels[3] = { "HÔM NAY", "+1", "+2" };
     for (int i = 0; i < 3; i++) {
         miniDay(12 + i * (cw + gap), y, cw, s_w.forecast[i], labels[i], f);
         s_dayTmin[i] = s_w.forecast[i].tmin;
@@ -214,7 +214,7 @@ void chWeatherTick(const ChannelCtx& ctx) {
     // Forecast cards — repaint any day whose data changed
     const int gap = 4;
     int cw = (SCREEN_W - 24 - gap * 2) / 3;
-    const char* labels[3] = { "TODAY", "+1", "+2" };
+    const char* labels[3] = { "HÔM NAY", "+1", "+2" };
     for (int i = 0; i < 3; i++) {
         if (s_w.forecast[i].tmin != s_dayTmin[i] ||
             s_w.forecast[i].tmax != s_dayTmax[i] ||

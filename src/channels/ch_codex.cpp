@@ -18,9 +18,9 @@ static float s_secPct  = -2.f;
 static float s_credits = -2.f;
 static bool  s_stale   = false;
 static char  s_rightLine[16] = "";
-static char  s_secSub[24] = "";
-static char  s_pace[20] = "";
-static char  s_resets[28] = "";
+static char  s_secSub[40] = "";
+static char  s_pace[40]      = "";
+static char  s_resets[40] = "";
 static Cred  s_cred = Cred::NOT_SET;
 static uint32_t s_sparkHour = 0;
 static float s_sparkPct = -2.f;     // primaryPct the strip's current bar shows
@@ -38,8 +38,8 @@ bool chCodexEnabled(const ChannelCtx& ctx) {
 
 // Human label for a rate-limit window from its length in seconds.
 static void windowLabel(long sec, char* buf, size_t n) {
-    if      (sec >= 6L * 24 * 3600 - 3600) snprintf_P(buf, n, PSTR("WEEKLY"));
-    else if (sec >= 20L * 3600)            snprintf_P(buf, n, PSTR("DAILY"));
+    if      (sec >= 6L * 24 * 3600 - 3600) snprintf_P(buf, n, PSTR("TUẦN"));
+    else if (sec >= 20L * 3600)            snprintf_P(buf, n, PSTR("NGÀY"));
     else if (sec >= 3600)                  snprintf_P(buf, n, PSTR("%ldH"), sec / 3600);
     else if (sec > 0)                      snprintf_P(buf, n, PSTR("%ldM"), sec / 60);
     else                                   buf[0] = '\0';
@@ -76,7 +76,7 @@ static void paintRightStack(const CodexData& d, time_t heroReset) {
 static void paintPrimaryHero(float pct, bool stale) {
     char pctBuf[8];
     if (pct < 0) snprintf_P(pctBuf, sizeof(pctBuf), PSTR("--"));
-    else         snprintf_P(pctBuf, sizeof(pctBuf), PSTR("%.0f"), pct);
+    else         snprintf_P(pctBuf, sizeof(pctBuf), PSTR("%.0f"), Api::shownPct(pct));
     tft.fillRect(10, 46, SCREEN_W - 110, 76, Theme::BG);
 
     // Stale data stays visible but dimmed — it is not a live reading.
@@ -94,20 +94,20 @@ static void paintPrimaryHero(float pct, bool stale) {
     tft.drawString("%", 12 + heroW + 2, pctY);
 
     Display::pixelBar(12, 128, SCREEN_W - 24, 8,
-                     pct < 0 ? 0 : pct, uc);
+                     pct < 0 ? 0 : Api::shownPct(pct), uc);
 }
 
 static void paintSecondary(float pct, time_t secReset, const char* label) {
     tft.fillRect(0, 150, SCREEN_W, 20, Theme::BG);
 
-    Display::useFont("DMMono-11");
+    Display::useFont("JBMono-11");
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(Theme::MUTED, Theme::BG);
     tft.drawString(label, 12, 150);
 
     String right;
     if (secReset > 0) right = Api::formatCountdown(secReset);
-    else if (pct >= 0) right = String((int)pct) + "%";
+    else if (pct >= 0) right = String((int)(Api::shownPct(pct) + 0.5f)) + "%";
     else               right = "--";
     tft.setTextDatum(TR_DATUM);
     tft.setTextColor(Theme::INK_DIM, Theme::BG);
@@ -116,7 +116,7 @@ static void paintSecondary(float pct, time_t secReset, const char* label) {
 
     uint16_t uc = Display::usageColor(pct);
     Display::pixelBar(12, 164, SCREEN_W - 24, 4,
-                     pct < 0 ? 0 : pct, uc);
+                     pct < 0 ? 0 : Api::shownPct(pct), uc);
 }
 
 static void paceFor(const CodexData& d, char* buf, size_t n) {
@@ -139,23 +139,23 @@ static void paintSparkBar(const CodexData& d, const char* pace) {
     int y = 174;
     if (CredState::bad(d.cred)) { Chrome::credBanner(y, false, d.cred); y += 14; }
 
-    Display::useFont("DMMono-11");
+    Display::useFont("JBMono-11");
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(Theme::MUTED, Theme::BG);
     tft.drawString("24H", sx, y);
     if (pace[0]) {
         tft.setTextDatum(TR_DATUM);
-        tft.setTextColor(strncmp(pace, "EMPTY", 5) == 0 ? Theme::CORAL : Theme::INK_DIM, Theme::BG);
+        tft.setTextColor(strncmp(pace, "HẾT", strlen("HẾT")) == 0 ? Theme::CORAL : Theme::INK_DIM, Theme::BG);
         tft.drawString(pace, SCREEN_W - 12, y);
     }
     y += 14;
     strncpy(s_pace, pace, sizeof(s_pace) - 1);
 
-    char resets[28]; Chrome::resetsText(d.resets, resets, sizeof(resets));
+    char resets[40]; Chrome::resetsText(d.resets, resets, sizeof(resets));
     if (resets[0] && !CredState::bad(d.cred)) {
         tft.setTextDatum(TL_DATUM);
         tft.setTextColor(Theme::MINT, Theme::BG);
-        tft.drawString("RESETS", sx, y);
+        tft.drawString("ĐẶT LẠI", sx, y);
         tft.setTextDatum(TR_DATUM);
         tft.setTextColor(Theme::INK_DIM, Theme::BG);
         tft.drawString(resets, SCREEN_W - 12, y);
@@ -196,10 +196,10 @@ void chCodexDraw(const ChannelCtx& ctx) {
         return;
     }
     if (!d.valid) {
-        Display::useFont("Silkscreen-16");
+        Display::useFont("JBMono-16B");
         tft.setTextDatum(MC_DATUM);
         tft.setTextColor(Theme::MUTED, Theme::BG);
-        tft.drawString("Loading", SCREEN_W/2, 100);
+        tft.drawString("Đang tải", SCREEN_W/2, 100);
         Display::loadingDots(SCREEN_W/2 - 21, 128, 0, Theme::LILAC);
         s_loadDot = 0;
         return;
@@ -218,7 +218,7 @@ void chCodexDraw(const ChannelCtx& ctx) {
     const long  secWin   = swapped ? d.primaryWinSec   : d.secondaryWinSec;
 
     char heroLbl[12]; windowLabel(heroWin, heroLbl, sizeof(heroLbl));
-    Display::useFont("Silkscreen-12");
+    Display::useFont("JBMono-12B");
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(Theme::MUTED, Theme::BG);
     tft.drawString(heroLbl, 12, 32);
@@ -234,7 +234,7 @@ void chCodexDraw(const ChannelCtx& ctx) {
 
     Display::dotsDivider(12, 170, SCREEN_W - 24);
 
-    char pace[20]; paceFor(d, pace, sizeof(pace));
+    char pace[40]; paceFor(d, pace, sizeof(pace));
     paintSparkBar(d, pace);
     s_sparkPct = d.primaryPct;
 
@@ -310,8 +310,8 @@ void chCodexTick(const ChannelCtx& ctx) {
 
     // The strip shifts every hour; pace and resets move with each fetch.
     if (minTick || (uint32_t)(t / 3600) != s_sparkHour || d.cred != s_cred) {
-        char pace[20]; paceFor(d, pace, sizeof(pace));
-        char resets[28]; Chrome::resetsText(d.resets, resets, sizeof(resets));
+        char pace[40]; paceFor(d, pace, sizeof(pace));
+        char resets[40]; Chrome::resetsText(d.resets, resets, sizeof(resets));
         if ((uint32_t)(t / 3600) != s_sparkHour || strcmp(pace, s_pace) != 0
             || strcmp(resets, s_resets) != 0 || d.cred != s_cred
             || fabsf(d.primaryPct - s_sparkPct) > 0.4f) {

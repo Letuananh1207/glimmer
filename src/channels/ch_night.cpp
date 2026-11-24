@@ -50,12 +50,12 @@ static void paintTime(int hh, int mm, bool h24, bool hoursToo) {
 }
 
 static void paintDate(const struct tm& tmv, bool h24) {
-    char date[24];
-    strftime(date, sizeof(date), "%a %b %d", &tmv);
-    for (char* p = date; *p; p++) if (*p >= 'a' && *p <= 'z') *p -= 32;
-    if (!h24) strncat(date, tmv.tm_hour < 12 ? "  AM" : "  PM", sizeof(date) - strlen(date) - 1);
+    char date[40];
+    ClockFmt::date(tmv, " ", date, sizeof(date));
+    if (!h24) { strncat(date, "  ", sizeof(date) - strlen(date) - 1);
+                strncat(date, ClockFmt::ampm(tmv.tm_hour), sizeof(date) - strlen(date) - 1); }
     tft.fillRect(0, 164, SCREEN_W, 18, Theme::BG);
-    Display::useFont("DMMono-11");
+    Display::useFont("JBMono-11");
     tft.setTextDatum(TC_DATUM);
     tft.setTextColor(Theme::MUTED, Theme::BG);
     tft.drawString(date, SCREEN_W / 2, 168);

@@ -1,13 +1,15 @@
 // Claude — design-true layout from ClaudeUsageScreen (screens.jsx:199-234).
 //
 // Fonts (regenerated via tools/genfonts.py at exact em-px sizes):
-//   - "5-HOUR WINDOW" / "WEEKLY" / labels / sub-data : DMMono-11   (~13 px)
+//   - "PHIÊN 5 GIỜ" / "TUẦN" / labels / sub-data : JBMono-11   (~13 px)
 //   - countdowns "3h 2m"                              : VT323-32    (~26 px)
 //   - hero "%" digits                                 : VT323-86   (~70 px)
 //   - inline "%" suffix on hero                       : VT323-44   (~36 px)
 //
-//   y=176..218  bottom rows: weekly PACE (when the history has a trend) then
-//               per-model windows (2 when PACE shows, else 3).
+//   y=176..218  bottom rows: the project board (what each agent project is
+//               doing: Cần duyệt / Chờ bạn / Lỗi / Đang chạy / Xong), then
+//               the weekly pace if a row is free. Resets and per-model
+//               windows (FABLE / EXTRA) are no longer shown here.
 
 #include "channel.h"
 #include "chrome.h"
@@ -16,6 +18,9 @@
 #include "theme.h"
 #include "config.h"
 #include "layout.h"
+#include "attention.h"
+#include "timeutil.h"
+#include "utf8.h"
 #include <math.h>
 #include <time.h>
 
@@ -23,12 +28,9 @@
 static float  s_heroPct  = -2.f;
 static float  s_secPct   = -2.f;
 static bool   s_stale    = false;
-static char   s_heroReset[12] = "";
-static char   s_secSub[24]    = "";
-static float  s_modelPct[3]       = {-2.f, -2.f, -2.f};
-static char   s_modelLabel[3][12] = {"", "", ""};
-static char   s_pace[20]      = "";
-static char   s_resets[28]    = "";
+static char   s_heroReset[16] = "";
+static char   s_secSub[40]    = "";
+static char   s_pace[40]      = "";
 static Cred   s_cred          = Cred::NOT_SET;
 static MetaSlot s_meta;
 static int    s_loadDot = -1;
@@ -37,18 +39,11 @@ bool chClaudeEnabled(const ChannelCtx& ctx) {
     return ctx.settings && ctx.settings->showClaude && !ctx.settings->claudeKey.isEmpty();
 }
 
-// Lowest-remaining model label — the status bar's normal right meta.
-static const char* modelTag(const ClaudeData& d) {
-    if (!d.valid || !d.models[0].label[0]) return "";
-    int best = 0;
-    for (int i = 1; i < 3; i++)
-        if (d.models[i].pct >= 0 && d.models[i].pct < d.models[best].pct) best = i;
-    return d.models[best].label;
-}
-
+// Right meta carries only badges (CŨ / KHÓA LỖI / SỰ CỐ…); the per-model
+// label ("FABLE") was dropped — the model rows below already name it.
 static MetaSlot metaFor(const ChannelCtx& ctx) {
     return usageMeta(*ctx.settings, ctx.claude->lastOk, VendorStatus::CLAUDE,
-                     modelTag(*ctx.claude), ctx.claude->cred, 0);
+                     "", ctx.claude->cred, 0);   // no model tag: badges only
 }
 
 static void paceFor(const ClaudeData& d, char* buf, size_t n) {
@@ -72,7 +67,7 @@ static void paintSessReset(time_t resetEpoch) {
 static void paintSessHero(float pct, bool stale) {
     char pctBuf[8];
     if (pct < 0) snprintf_P(pctBuf, sizeof(pctBuf), PSTR("--"));
-    else         snprintf_P(pctBuf, sizeof(pctBuf), PSTR("%.0f"), pct);
+    else         snprintf_P(pctBuf, sizeof(pctBuf), PSTR("%.0f"), Api::shownPct(pct));
     // Clear hero band + suffix area
     tft.fillRect(10, 46, SCREEN_W - 20, 76, Theme::BG);
 
@@ -90,18 +85,18 @@ static void paintSessHero(float pct, bool stale) {
     int pctY = 46 + (heroH - tft.fontHeight()) - 4;
     tft.drawString("%", 12 + heroW + 2, pctY);
 
-    Display::useFont("DMMono-11");
+    Display::useFont("JBMono-11");
     tft.setTextDatum(TR_DATUM);
     tft.setTextColor(Theme::CORAL, Theme::BG);
     tft.drawString("CLAUDE", SCREEN_W - 12, 76);
 
     Display::pixelBar(12, 128, SCREEN_W - 24, 8,
-                     pct < 0 ? 0 : pct, uc);
+                     pct < 0 ? 0 : Api::shownPct(pct), uc);
 }
 
 static void paintWeeklyCompact(const char* label, float pct, time_t weekReset) {
     tft.fillRect(0, 150, SCREEN_W, 20, Theme::BG);
-    Display::useFont("DMMono-11");
+    Display::useFont("JBMono-11");
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(Theme::MUTED, Theme::BG);
     tft.drawString(label, 12, 150);
@@ -109,7 +104,7 @@ static void paintWeeklyCompact(const char* label, float pct, time_t weekReset) {
     String s;
     if (pct < 0) s = "--";
     else {
-        s = String((int)pct) + "%";
+        s = String((int)(Api::shownPct(pct) + 0.5f)) + "%";
         if (weekReset > 0) s += " \xC2\xB7 " + Api::formatCountdown(weekReset);
     }
     tft.setTextDatum(TR_DATUM);
@@ -118,11 +113,69 @@ static void paintWeeklyCompact(const char* label, float pct, time_t weekReset) {
     strncpy(s_secSub, s.c_str(), sizeof(s_secSub) - 1);
 
     uint16_t uc = Display::usageColor(pct);
-    Display::pixelBar(12, 164, SCREEN_W - 24, 4, pct < 0 ? 0 : pct, uc);
+    Display::pixelBar(12, 164, SCREEN_W - 24, 4, pct < 0 ? 0 : Api::shownPct(pct), uc);
 }
 
-// Bottom rows, in priority order: credential banner > WK PACE > RESETS >
-// per-model windows (3 rows total).
+// ── Project board rows ──
+//
+//   ■ glimmer     Cần duyệt · Bash    2M     square + status in the state colour
+//   ■ api         Xong                 14M
+//   NHỊP TUẦN                 HẾT SAU 5H     (weekly pace, only if a row is free)
+
+static const char* stateLabel(Projects::State s) {
+    switch (s) {
+        case Projects::P_APPROVAL: return "Cần duyệt";
+        case Projects::P_INPUT:    return "Chờ bạn";
+        case Projects::P_ERROR:    return "Lỗi";
+        case Projects::P_WORKING:  return "Đang chạy";
+        default:                   return "Xong";
+    }
+}
+
+static uint16_t stateColor(Projects::State s) {
+    switch (s) {
+        case Projects::P_APPROVAL: return Theme::AMBER;
+        case Projects::P_INPUT:    return Theme::SKY;
+        case Projects::P_ERROR:    return Theme::CORAL;
+        case Projects::P_WORKING:  return Theme::LILAC;
+        default:                   return Theme::MINT;
+    }
+}
+
+// Cut whole UTF-8 characters until s fits maxW (current font).
+static void fitTo(char* s, int maxW) {
+    size_t n = strlen(s);
+    while (n > 1 && tft.textWidth(s) > maxW) { n = Utf8::prevChar(s, n); s[n] = '\0'; }
+}
+
+static void paintProjectRow(const Projects::Entry& x, int y, uint32_t now) {
+    const uint16_t sc = stateColor(x.state);
+    tft.fillRect(12, y + 4, 5, 5, sc);
+
+    char age[8]; TimeUtil::shortDuration((long)(now - x.since), age, sizeof(age));
+    tft.setTextDatum(TR_DATUM);
+    tft.setTextColor(Theme::MUTED, Theme::BG);
+    tft.drawString(age, SCREEN_W - 12, y);
+    const int right = SCREEN_W - 12 - tft.textWidth(age) - 8;
+
+    char proj[24]; Utf8::copy(proj, sizeof(proj), x.project);
+    fitTo(proj, 84);                                  // ≤ 12 glyphs
+    tft.setTextDatum(TL_DATUM);
+    tft.setTextColor(Theme::INK_DIM, Theme::BG);
+    tft.drawString(proj, 22, y);
+    const int sx = 22 + tft.textWidth(proj) + 8;
+
+    char st[48];
+    if (x.detail[0]) snprintf_P(st, sizeof(st), PSTR("%s \xC2\xB7 %s"), stateLabel(x.state), x.detail);
+    else             snprintf_P(st, sizeof(st), PSTR("%s"), stateLabel(x.state));
+    fitTo(st, right - sx);
+    tft.setTextColor(sc, Theme::BG);
+    tft.drawString(st, sx, y);
+}
+
+static uint32_t s_boardRev = 0;
+
+// Bottom rows: credential banner > project board > weekly pace (3 rows).
 static void paintBottomRows(const ClaudeData& d, const char* pace) {
     const int startY = 176, rowH = 14;
     tft.fillRect(0, startY, SCREEN_W, rowH * 3, Theme::BG);
@@ -131,50 +184,33 @@ static void paintBottomRows(const ClaudeData& d, const char* pace) {
         Chrome::credBanner(startY, true, d.cred);
         row = 1;
     }
-    Display::useFont("DMMono-11");
-    if (pace[0]) {
+    s_cred = d.cred;
+    Display::useFont("JBMono-11");
+
+    const Projects::Board& b = AttentionQueue::projects();
+    const uint32_t now = AttentionQueue::now();
+    int ord[Projects::kMax], n = Projects::ordered(b, ord, now);
+    const int room = 3 - row;
+    const int show = n > room ? room : n;
+    for (int i = 0; i < show; i++, row++) paintProjectRow(b.e[ord[i]], startY + row * rowH, now);
+
+    if (row < 3 && pace[0]) {
         int y = startY + row * rowH;
         tft.setTextDatum(TL_DATUM);
         tft.setTextColor(Theme::MUTED, Theme::BG);
-        tft.drawString("WK PACE", 12, y);
+        tft.drawString("NHỊP TUẦN", 12, y);
         tft.setTextDatum(TR_DATUM);
-        tft.setTextColor(strncmp(pace, "EMPTY", 5) == 0 ? Theme::CORAL : Theme::INK_DIM, Theme::BG);
+        tft.setTextColor(strncmp(pace, "HẾT", strlen("HẾT")) == 0 ? Theme::CORAL : Theme::INK_DIM, Theme::BG);
         tft.drawString(pace, SCREEN_W - 12, y);
         row++;
     }
-    char resets[28]; Chrome::resetsText(d.resets, resets, sizeof(resets));
-    if (resets[0] && row < 3) {
-        int y = startY + row * rowH;
+    if (n == 0 && row < 3) {
         tft.setTextDatum(TL_DATUM);
-        tft.setTextColor(Theme::MINT, Theme::BG);
-        tft.drawString("RESETS", 12, y);
-        tft.setTextDatum(TR_DATUM);
-        tft.setTextColor(d.resets.usable ? Theme::INK_DIM : Theme::MUTED, Theme::BG);
-        tft.drawString(resets, SCREEN_W - 12, y);
-        row++;
+        tft.setTextColor(Theme::MUTED, Theme::BG);
+        tft.drawString("Chưa có hoạt động project", 12, startY + row * rowH);
     }
-    strncpy(s_resets, resets, sizeof(s_resets) - 1);
-    s_cred = d.cred;
-    for (int i = 0; i < 3 && row < 3; i++) {
-        if (d.models[i].pct < 0 || !d.models[i].label[0]) continue;
-        int y = startY + row * rowH;
-        tft.setTextDatum(TL_DATUM);
-        tft.setTextColor(Theme::INK_DIM, Theme::BG);
-        tft.drawString(d.models[i].label, 12, y);
-        uint16_t mc = Display::usageColor(d.models[i].pct);
-        Display::pixelBar(100, y + 3, 80, 5, d.models[i].pct, mc);
-        char buf[6]; snprintf_P(buf, sizeof(buf), PSTR("%d%%"), (int)d.models[i].pct);
-        tft.setTextDatum(TR_DATUM);
-        tft.setTextColor(mc, Theme::BG);
-        tft.drawString(buf, SCREEN_W - 12, y);
-        row++;
-    }
-    for (int i = 0; i < 3; i++) {
-        s_modelPct[i] = d.models[i].pct < 0 ? -2.f : d.models[i].pct;
-        strncpy(s_modelLabel[i], d.models[i].label, 11);
-        s_modelLabel[i][11] = '\0';
-    }
-    strncpy(s_pace, pace, sizeof(s_pace) - 1);
+    Utf8::copy(s_pace, sizeof(s_pace), pace);
+    s_boardRev = AttentionQueue::projectsRevision();
 }
 
 void chClaudeDraw(const ChannelCtx& ctx) {
@@ -192,10 +228,10 @@ void chClaudeDraw(const ChannelCtx& ctx) {
         return;
     }
     if (!d.valid) {
-        Display::useFont("Silkscreen-16");
+        Display::useFont("JBMono-16B");
         tft.setTextDatum(MC_DATUM);
         tft.setTextColor(Theme::MUTED, Theme::BG);
-        tft.drawString("Loading", SCREEN_W/2, 100);
+        tft.drawString("Đang tải", SCREEN_W/2, 100);
         Display::loadingDots(SCREEN_W/2 - 21, 128, 0, Theme::CORAL);
         s_loadDot = 0;
         s_heroPct = -2.f; s_secPct = -2.f;
@@ -210,19 +246,19 @@ void chClaudeDraw(const ChannelCtx& ctx) {
     const time_t secRst  = swapped ? d.sessionReset: d.weeklyReset;
     s_stale = dimData(*ctx.settings, d.lastOk, d.cred);
 
-    Display::useFont("DMMono-11");
+    Display::useFont("JBMono-11");
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString(swapped ? "WEEKLY" : "5-HOUR WINDOW", 12, 32);
+    tft.drawString(swapped ? "TUẦN" : "PHIÊN 5 GIỜ", 12, 32);
 
     paintSessReset(heroRst);
     paintSessHero(heroPct, s_stale);
     Display::dotsDivider(12, 146, SCREEN_W - 24);
 
-    const char* secLabel = swapped ? "5-HOUR WINDOW" : "WEEKLY";
+    const char* secLabel = swapped ? "PHIÊN 5 GIỜ" : "TUẦN";
     paintWeeklyCompact(secLabel, secPct, secRst);
     Display::dotsDivider(12, 170, SCREEN_W - 24);
-    char pace[20]; paceFor(d, pace, sizeof(pace));
+    char pace[40]; paceFor(d, pace, sizeof(pace));
     paintBottomRows(d, pace);
 
     s_heroPct = (heroPct < 0) ? -2.f : heroPct;
@@ -277,31 +313,24 @@ void chClaudeTick(const ChannelCtx& ctx) {
         String subFresh;
         if (secPct < 0) subFresh = "--";
         else {
-            subFresh = String((int)secPct) + "%";
+            subFresh = String((int)(Api::shownPct(secPct) + 0.5f)) + "%";   // as painted
             if (secRst > 0) subFresh += " \xC2\xB7 " + Api::formatCountdown(secRst);
         }
         if (strcmp(subFresh.c_str(), s_secSub) != 0) secDirty = true;
     }
     if (secDirty) {
-        const char* secLabel = swapped ? "5-HOUR WINDOW" : "WEEKLY";
+        const char* secLabel = swapped ? "PHIÊN 5 GIỜ" : "TUẦN";
         paintWeeklyCompact(secLabel, secPct, secRst);
         s_secPct = sp;
     }
 
-    bool rowsDirty = false;
-    for (int i = 0; i < 3; i++) {
-        float mp = d.models[i].pct < 0 ? -2.f : d.models[i].pct;
-        if (fabsf(mp - s_modelPct[i]) > 0.4f) rowsDirty = true;
-        if (strcmp(d.models[i].label, s_modelLabel[i]) != 0) rowsDirty = true;
+    // Bottom rows: the project board moved, the credential changed, or a new
+    // minute (ages "2M" tick, entries time out, pace may change).
+    bool rowsDirty = d.cred != s_cred || AttentionQueue::projectsRevision() != s_boardRev || minTick;
+    if (rowsDirty) {
+        char pace[40]; paceFor(d, pace, sizeof(pace));
+        paintBottomRows(d, pace);
     }
-    if (d.cred != s_cred) rowsDirty = true;
-    char pace[20] = "";
-    if (rowsDirty || minTick) {
-        paceFor(d, pace, sizeof(pace));
-        char resets[28]; Chrome::resetsText(d.resets, resets, sizeof(resets));
-        if (strcmp(pace, s_pace) != 0 || strcmp(resets, s_resets) != 0) rowsDirty = true;
-    }
-    if (rowsDirty) paintBottomRows(d, pace);
 
     s_cdMin = tm.tm_min;
 }

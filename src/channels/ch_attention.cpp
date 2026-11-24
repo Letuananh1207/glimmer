@@ -19,6 +19,7 @@
 #include "layout.h"
 #include "attention.h"
 #include "timeutil.h"
+#include "utf8.h"
 
 using namespace Attention;
 
@@ -74,10 +75,10 @@ bool chAttentionEnabled(const ChannelCtx&) {
 //
 // One focal element per card, centred, three type sizes at most:
 //
-//   y 44   ■ CLAUDE · glimmer          agent square + project, DMMono-11 muted
+//   y 44   ■ CLAUDE · glimmer          agent square + project, JBMono-11 muted
 //   y 78   Bash / 142/142 / 64%        focal, VT323-64 (44 when it won't fit)
-//   y 140  pio run -e nodemcuv2…       one detail line, DMMono-11 muted
-//   y 176  NEEDS YOU · 2M              status, Silkscreen-12 in the kind colour
+//   y 140  pio run -e nodemcuv2…       one detail line, JBMono-11 muted
+//   y 176  CẦN BẠN · 2M                status, JBMono-12B in the kind colour
 //   y 200  ● ○                         queue dots / time-left hairline
 //
 // (Result cards swap the last two: kind-coloured title at 146, detail at 166.)
@@ -87,26 +88,61 @@ static uint32_t s_shownRev = 0;
 static uint32_t s_cycleMs = 0;
 static int      s_cycleIdx = 0;
 static int      s_lastDrain = -1;
-static char     s_status[24] = "";
+static char     s_status[40] = "";
 
 static const char* agentName2(Agent a) {
     return a == AGENT_CLAUDE ? "CLAUDE" : a == AGENT_CODEX ? "CODEX" : nullptr;
 }
 
-// Truncate with an ellipsis until it fits maxW (current font).
+// Truncate with an ellipsis until it fits maxW (current font). Cuts whole
+// UTF-8 characters — a half Vietnamese letter would draw as garbage.
+static constexpr size_t kLine = 80;     // bytes; every line buffer holds kLine
 static void fitLine(char* s, int maxW) {
     if (tft.textWidth(s) <= maxW) return;
     size_t n = strlen(s);
     while (n > 1) {
-        s[--n] = '\0';
-        char t[48]; snprintf(t, sizeof(t), "%s...", s);
-        if (tft.textWidth(t) <= maxW) { snprintf(s, 48, "%s", t); return; }
+        n = Utf8::prevChar(s, n);
+        s[n] = '\0';
+        char t[kLine]; snprintf(t, sizeof(t), "%s...", s);
+        if (tft.textWidth(t) <= maxW) { snprintf(s, kLine, "%s", t); return; }
     }
+}
+
+// The queue keeps the hook's English titles/bodies (the API and MCP return
+// them to agents verbatim); the panel shows them in Vietnamese.
+static const char* kindLabel(Kind k) {
+    switch (k) {
+        case K_APPROVAL: return "phê duyệt";
+        case K_ERROR:    return "lỗi";
+        case K_INPUT:    return "chờ bạn";
+        case K_PROGRESS: return "tiến độ";
+        case K_WARNING:  return "cảnh báo";
+        case K_SUCCESS:  return "xong";
+        default:         return "thông tin";
+    }
+}
+
+static const char* titleText(const Item& it) {
+    if (!it.title[0])                       return kindLabel(it.kind);
+    if (!strcmp(it.title, "DONE"))          return "XONG";
+    if (!strcmp(it.title, "APPROVAL NEEDED")) return "CẦN DUYỆT";
+    if (!strcmp(it.title, "WAITING FOR YOU")) return "ĐANG CHỜ BẠN";
+    return it.title;
+}
+
+// "Claude finished" → "Claude đã xong"; anything else as sent.
+static const char* bodyText(const Item& it, char* buf, size_t n) {
+    const char* f = strstr(it.body, " finished");
+    if (f && !f[9] && f - it.body < 12) {
+        snprintf(buf, n, "%.*s đã xong", (int)(f - it.body), it.body);
+        return buf;
+    }
+    return it.body;
 }
 
 static void centerText(const char* font, const char* text, int y, uint16_t color, int maxW = 216) {
     Display::useFont(font);
-    char buf[48]; snprintf(buf, sizeof(buf), "%s", text);
+    char buf[kLine]; Utf8::copy(buf, sizeof(buf), text);
     fitLine(buf, maxW);
     tft.setTextDatum(TC_DATUM);
     tft.setTextColor(color, Theme::BG);
@@ -115,12 +151,12 @@ static void centerText(const char* font, const char* text, int y, uint16_t color
 
 // "■ CLAUDE · glimmer" — square in the agent colour, words muted.
 static void paintHeader(const Item& it) {
-    char line[40];
+    char line[64];
     const char* a = agentName2(it.agent);
     if (a && it.project[0]) snprintf_P(line, sizeof(line), PSTR("%s \xC2\xB7 %s"), a, it.project);
     else if (a)             snprintf_P(line, sizeof(line), PSTR("%s"), a);
     else                    snprintf_P(line, sizeof(line), PSTR("%s"), it.project[0] ? it.project : "glimmer");
-    Display::useFont("DMMono-11");
+    Display::useFont("JBMono-11");
     int w = tft.textWidth(line) + (a ? 12 : 0);
     int x = (SCREEN_W - w) / 2;
     if (a) { tft.fillRect(x, 48, 6, 6, agentColor(it.agent)); x += 12; }
@@ -139,31 +175,32 @@ static void focal(const char* text, int y) {
 }
 
 // "Bash: pio run" → tool "Bash", detail "pio run"; "wants to use Bash" → "Bash".
-static void toolAndDetail(const char* body, char tool[24], char detail[44]) {
+static constexpr size_t kTool = 24, kDetail = 64;
+static void toolAndDetail(const char* body, char tool[kTool], char detail[kDetail]) {
     tool[0] = detail[0] = '\0';
     const char* colon = strstr(body, ": ");
     if (colon && colon - body > 0 && colon - body < 20) {
-        snprintf(tool, 24, "%.*s", (int)(colon - body), body);
-        snprintf(detail, 44, "%s", colon + 2);
+        snprintf(tool, kTool, "%.*s", (int)(colon - body), body);
+        Utf8::copy(detail, kDetail, colon + 2);
         return;
     }
     const char* use = strstr(body, "use ");
-    if (use) { snprintf(tool, 24, "%s", use + 4); return; }
-    snprintf(detail, 44, "%s", body);
+    if (use) { Utf8::copy(tool, kTool, use + 4); return; }
+    Utf8::copy(detail, kDetail, body);
 }
 
 static void statusText(const Item& it, char* buf, size_t n) {
     uint32_t secs = AttentionQueue::now() - it.created;
-    char d[8];
+    char d[16];
     if (secs < 60) snprintf_P(d, sizeof(d), PSTR("%luS"), (unsigned long)secs);
     else           TimeUtil::shortDuration((long)secs, d, sizeof(d));
-    snprintf_P(buf, n, PSTR("%s \xC2\xB7 %s"), it.kind == K_APPROVAL ? "NEEDS YOU" : "WAITING", d);
+    snprintf_P(buf, n, PSTR("%s \xC2\xB7 %s"), it.kind == K_APPROVAL ? "CẦN BẠN" : "ĐANG CHỜ", d);
 }
 
 static void paintStatus(const Item& it) {
-    char s[24]; statusText(it, s, sizeof(s));
+    char s[40]; statusText(it, s, sizeof(s));
     tft.fillRect(0, 172, SCREEN_W, 20, Theme::BG);
-    centerText("Silkscreen-12", s, 176, kindColor(it.kind));
+    centerText("JBMono-12B", s, 176, kindColor(it.kind));
     snprintf(s_status, sizeof(s_status), "%s", s);
 }
 
@@ -175,15 +212,15 @@ static void paintDots(int n, uint16_t color) {
 
 static void paintWaiting(const Item& it, int n) {
     const bool custom = it.title[0] && strcmp(it.title, "APPROVAL NEEDED") && strcmp(it.title, "WAITING FOR YOU");
-    char tool[24], detail[44];
+    char tool[kTool], detail[kDetail];
     toolAndDetail(it.body, tool, detail);
     if (it.kind == K_INPUT) {
-        focal(custom ? it.title : "Your turn", 78);
-        if (!detail[0] && tool[0]) snprintf(detail, sizeof(detail), "%s", it.body);
+        focal(custom ? it.title : "Lượt bạn", 78);
+        if (!detail[0] && tool[0]) Utf8::copy(detail, sizeof(detail), it.body);
     } else {
-        focal(custom ? it.title : (tool[0] ? tool : "Approve?"), 78);
+        focal(custom ? it.title : (tool[0] ? tool : "Duyệt?"), 78);
     }
-    if (detail[0]) centerText("DMMono-11", detail, 140, Theme::MUTED);
+    if (detail[0]) centerText("JBMono-11", detail, 140, Theme::MUTED);
     paintStatus(it);
     paintDots(n, kindColor(it.kind));
 }
@@ -200,29 +237,29 @@ static void paintDrain(const Item& it) {
     s_lastDrain = w;
 }
 
-static void upper(char* s) { for (; *s; s++) if (*s >= 'a' && *s <= 'z') *s -= 32; }
-
 static void paintResult(const Item& it, int n) {
     const uint16_t kc = kindColor(it.kind);
-    char title[28]; snprintf(title, sizeof(title), "%s", it.title[0] ? it.title : kindName(it.kind));
-    upper(title);
+    char title[kLine]; Utf8::copy(title, sizeof(title), titleText(it));
+    Utf8::upper(title);
+    char bb[kLine]; const char* body = bodyText(it, bb, sizeof(bb));
     if (it.progress >= 0) {
         char pct[8]; snprintf_P(pct, sizeof(pct), PSTR("%d%%"), it.progress);
         focal(pct, 78);
         tft.fillRect(50, 146, 140, 4, Theme::PANEL);
         tft.fillRect(50, 146, 140 * it.progress / 100, 4, kc);
-        centerText("Silkscreen-12", title, 164, kc);
-        if (it.body[0]) centerText("DMMono-11", it.body, 184, Theme::MUTED);
+        centerText("JBMono-12B", title, 164, kc);
+        if (body[0]) centerText("JBMono-11", body, 184, Theme::MUTED);
     } else if (it.value[0]) {
         focal(it.value, 78);
-        centerText("Silkscreen-12", title, 146, kc);
-        if (it.body[0]) centerText("DMMono-11", it.body, 166, Theme::MUTED);
+        centerText("JBMono-12B", title, 146, kc);
+        if (body[0]) centerText("JBMono-11", body, 166, Theme::MUTED);
     } else {
         // No value: the title is the focal element, in the kind colour.
         Display::useFont("VT323-44");
-        const char* f = tft.textWidth(it.title[0] ? it.title : kindName(it.kind)) <= 216 ? "VT323-44" : "VT323-32";
-        centerText(f, it.title[0] ? it.title : kindName(it.kind), 92, kc);
-        if (it.body[0]) centerText("DMMono-11", it.body, 146, Theme::MUTED);
+        const char* t = titleText(it);
+        const char* f = tft.textWidth(t) <= 216 ? "VT323-44" : "VT323-32";
+        centerText(f, t, 92, kc);
+        if (body[0]) centerText("JBMono-11", body, 146, Theme::MUTED);
     }
     s_lastDrain = -1;
     if (n > 1) paintDots(n, kc);
@@ -268,7 +305,7 @@ void chAttentionTick(const ChannelCtx&) {
         return;
     }
     if (waitsOnUser(it.kind)) {
-        char s[24]; statusText(it, s, sizeof(s));
+        char s[40]; statusText(it, s, sizeof(s));
         if (strcmp(s, s_status)) paintStatus(it);
     } else if (n < 2 && it.progress < 0) {
         paintDrain(it);
@@ -277,11 +314,11 @@ void chAttentionTick(const ChannelCtx&) {
 
 // ── Agents list ─────────────────────────────────────────────────────────────
 //
-//            AGENTS                   Silkscreen-12 muted, no status bar
-//   ■ Needs you · Bash                DMMono-11 ink
-//     claude · glimmer · 2m           DMMono-11 muted
+//            TÁC TỬ                   JBMono-12B muted, no status bar
+//   ■ Cần bạn · Bash                  JBMono-11 ink
+//     claude · glimmer · 2m           JBMono-11 muted
 //   ─────────────────────             hairline
-//   (3 rows; a 4th+ becomes "+ N more")
+//   (3 rows; a 4th+ becomes "+ N mục khác")
 
 static uint32_t s_listRev = 0;
 static uint32_t s_listMin = 0xFFFFFFFF;
@@ -292,21 +329,21 @@ bool chAgentsEnabled(const ChannelCtx&) {
 
 static void listRow(const Item& it, int y, uint32_t now) {
     tft.fillRect(20, y + 4, 6, 6, kindColor(it.kind));
-    char line[48];
+    char line[kLine];
     if (waitsOnUser(it.kind)) {
-        char tool[24], detail[44];
+        char tool[kTool], detail[kDetail];
         toolAndDetail(it.body, tool, detail);
-        snprintf_P(line, sizeof(line), PSTR("%s%s%s"), it.kind == K_APPROVAL ? "Needs you" : "Your turn",
+        snprintf_P(line, sizeof(line), PSTR("%s%s%s"), it.kind == K_APPROVAL ? "Cần bạn" : "Lượt bạn",
                    tool[0] ? " \xC2\xB7 " : "", tool);
     } else {
-        char t[28]; snprintf(t, sizeof(t), "%s", it.title[0] ? it.title : kindName(it.kind));
+        char t[48]; Utf8::copy(t, sizeof(t), titleText(it));
         // Sentence case reads calmer than shouty caps in a list.
-        for (char* p = t + 1; *p; p++) if (*p >= 'A' && *p <= 'Z') *p += 32;
+        Utf8::sentence(t);
         if (it.progress >= 0)  snprintf_P(line, sizeof(line), PSTR("%s \xC2\xB7 %d%%"), t, it.progress);
         else if (it.value[0])  snprintf_P(line, sizeof(line), PSTR("%s \xC2\xB7 %s"), t, it.value);
         else                   snprintf_P(line, sizeof(line), PSTR("%s"), t);
     }
-    Display::useFont("DMMono-11");
+    Display::useFont("JBMono-11");
     fitLine(line, 190);
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(Theme::INK, Theme::BG);
@@ -314,7 +351,7 @@ static void listRow(const Item& it, int y, uint32_t now) {
 
     char age[8]; TimeUtil::shortDuration((long)(now - it.created), age, sizeof(age));
     for (char* p = age; *p; p++) if (*p >= 'A' && *p <= 'Z') *p += 32;
-    char meta[48];
+    char meta[kLine];
     const char* a = it.agent == AGENT_CLAUDE ? "claude" : it.agent == AGENT_CODEX ? "codex" : nullptr;
     if (a && it.project[0]) snprintf_P(meta, sizeof(meta), PSTR("%s \xC2\xB7 %s \xC2\xB7 %s"), a, it.project, age);
     else if (a)             snprintf_P(meta, sizeof(meta), PSTR("%s \xC2\xB7 %s"), a, age);
@@ -330,7 +367,7 @@ static void paintList() {
     uint32_t now = AttentionQueue::now();
     int ord[kMax], n = ordered(q, ord, now);
     tft.fillRect(0, 0, SCREEN_W, Layout::CONTENT_BOTTOM, Theme::BG);
-    centerText("Silkscreen-12", "AGENTS", 10, Theme::MUTED);
+    centerText("JBMono-12B", "TÁC TỬ", 10, Theme::MUTED);
     int shown = n > 3 ? 2 : n;
     for (int i = 0; i < shown; i++) {
         int y = 40 + i * 60;
@@ -338,8 +375,8 @@ static void paintList() {
         if (i < n - 1) tft.drawFastHLine(20, y + 44, 200, Theme::LINE);
     }
     if (n > shown) {
-        char more[24]; snprintf_P(more, sizeof(more), PSTR("+ %d more"), n - shown);
-        centerText("DMMono-11", more, 40 + shown * 60, Theme::MUTED);
+        char more[32]; snprintf_P(more, sizeof(more), PSTR("+ %d mục khác"), n - shown);
+        centerText("JBMono-11", more, 40 + shown * 60, Theme::MUTED);
     }
     s_listRev = AttentionQueue::revision();
     s_listMin = now / 60;

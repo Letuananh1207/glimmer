@@ -2,7 +2,7 @@
 //
 //   y=0..22    StatusBar [Trend | 7-DAY]
 //   per provider block (Claude, then Codex — whichever are configured):
-//     header   tag left, "TODAY n · PEAK TUE" right          (DMMono-11)
+//     header   tag left, "TODAY n · PEAK TUE" right          (JBMono-11)
 //     bars     7 columns, oldest left, today right in the accent colour
 //   y=168      weekday row
 //   y=188      caption
@@ -10,6 +10,7 @@
 // A bar = percentage points of that provider's weekly allowance used that day
 // (positive drops summed; a window reset never reads as negative use).
 
+#include "clockfmt.h"
 #include "channel.h"
 #include "display.h"
 #include "history.h"
@@ -60,7 +61,7 @@ static void paintBlock(int idx, const Block& b, const History::Trend& t, float s
     const int y = kBlockY[idx];
     tft.fillRect(0, y, SCREEN_W, kBarTop + kBarH + 2, Theme::BG);
 
-    Display::useFont("Silkscreen-12");
+    Display::useFont("JBMono-12B");
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(b.color, Theme::BG);
     tft.drawString(b.tag, kX0, y);
@@ -71,34 +72,31 @@ static void paintBlock(int idx, const Block& b, const History::Trend& t, float s
     //   no history yet:      "collecting data"        (muted)
     const bool bad = CredState::bad(b.cred);
     const time_t last = History::lastReading(UsageHistory::ring(), b.metric, time(nullptr));
-    char right[40] = "";
+    char right[64] = "";
     uint16_t rightColor = Theme::MUTED;
-    char peak[4] = "";
+    char peak[8] = "";
     if (t.heaviest >= 0) {
         time_t d = time(nullptr) - (6 - t.heaviest) * 86400L;
         struct tm tm; localtime_r(&d, &tm);
-        strftime(peak, sizeof(peak), "%a", &tm);
-        for (char* p = peak; *p; p++) if (*p >= 'a' && *p <= 'z') *p -= 32;
+        snprintf(peak, sizeof(peak), "%s", ClockFmt::weekday(tm.tm_wday, false));   // CN, T2 … T7
     }
     if (bad && last) {
         struct tm tm; localtime_r(&last, &tm);
-        char mon[4]; strftime(mon, sizeof(mon), "%b", &tm);
-        for (char* p = mon; *p; p++) if (*p >= 'a' && *p <= 'z') *p -= 32;
-        snprintf_P(right, sizeof(right), PSTR("%s \xC2\xB7 LAST %d %s"),
-                   b.cred == Cred::BLOCKED ? "BLOCKED" : b.cred == Cred::EXPIRED ? "EXPIRED" : "REJECTED",
-                   tm.tm_mday, mon);
+        snprintf_P(right, sizeof(right), PSTR("%s \xC2\xB7 CUỐI %d/%d"),
+                   b.cred == Cred::BLOCKED ? "BỊ CHẶN" : b.cred == Cred::EXPIRED ? "HẾT HẠN" : "BỊ TỪ CHỐI",
+                   tm.tm_mday, tm.tm_mon + 1);
         rightColor = credColor(b.cred);
     } else if (bad) {
         Chrome::credLine(b.isClaude, b.cred, right, sizeof(right));
         rightColor = credColor(b.cred);
     } else if (!last) {
-        snprintf_P(right, sizeof(right), PSTR("collecting data"));
+        snprintf_P(right, sizeof(right), PSTR("đang thu thập"));
     } else if (t.have[6] && peak[0]) {
-        snprintf_P(right, sizeof(right), PSTR("TODAY %.0f \xC2\xB7 PEAK %s"), t.burn[6], peak);
+        snprintf_P(right, sizeof(right), PSTR("HÔM NAY %.0f \xC2\xB7 ĐỈNH %s"), t.burn[6], peak);
     } else if (t.have[6]) {
-        snprintf_P(right, sizeof(right), PSTR("TODAY %.0f"), t.burn[6]);
+        snprintf_P(right, sizeof(right), PSTR("HÔM NAY %.0f"), t.burn[6]);
     }
-    Display::useFont("DMMono-11");
+    Display::useFont("JBMono-11");
     tft.setTextDatum(TR_DATUM);
     tft.setTextColor(rightColor, Theme::BG);
     tft.drawString(right, SCREEN_W - 12, y + 1);
@@ -119,7 +117,7 @@ static void paintBlock(int idx, const Block& b, const History::Trend& t, float s
 
 static void paintWeekdays() {
     tft.fillRect(0, 166, SCREEN_W, 14, Theme::BG);
-    Display::useFont("DMMono-11");
+    Display::useFont("JBMono-11");
     tft.setTextDatum(TC_DATUM);
     time_t now = time(nullptr);
     for (int i = 0; i < 7; i++) {
@@ -153,12 +151,12 @@ static void paintAll(const ChannelCtx& ctx) {
 
 void chTrendDraw(const ChannelCtx& ctx) {
     Display::clear();
-    Display::statusBar("Trend", "7-DAY", Theme::MINT);
+    Display::statusBar("Xu hướng", "7 NGÀY", Theme::MINT);
     paintAll(ctx);
-    Display::useFont("DMMono-11");
+    Display::useFont("JBMono-11");
     tft.setTextDatum(TC_DATUM);
     tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString("weekly % used per day", SCREEN_W / 2, 194);
+    tft.drawString("% hạn mức tuần dùng mỗi ngày", SCREEN_W / 2, 194);
 }
 
 void chTrendTick(const ChannelCtx& ctx) {

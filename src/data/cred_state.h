@@ -82,16 +82,17 @@ inline time_t jwtExp(const char* token) {
     return stage == 2 ? (time_t)val : 0;
 }
 
-// Status-bar meta (≤ 10 chars). "" when nothing credential-related to say.
+// Status-bar meta (≤ 10 glyphs, 76 px). "" when nothing credential-related
+// to say. UTF-8: callers' buffers are ≥ 16 bytes.
 inline void meta(Cred c, time_t jwtExp, time_t now, char* buf, size_t n) {
     if (n) buf[0] = '\0';
     switch (c) {
         case Cred::EXPIRED:
-        case Cred::REJECTED: snprintf(buf, n, "RE-AUTH"); break;
-        case Cred::BLOCKED:  snprintf(buf, n, "BLOCKED"); break;
+        case Cred::REJECTED: snprintf(buf, n, "KHÓA LỖI"); break;
+        case Cred::BLOCKED:  snprintf(buf, n, "BỊ CHẶN"); break;
         case Cred::EXPIRING: {
             char d[8]; TimeUtil::shortDuration((long)(jwtExp - now), d, sizeof(d));
-            snprintf(buf, n, "EXPIRES %s", d);
+            snprintf(buf, n, "HẠN %s", d);                                        // HẠN 2D
             break;
         }
         default: break;
@@ -101,10 +102,10 @@ inline void meta(Cred c, time_t jwtExp, time_t now, char* buf, size_t n) {
 // Full-card headline.
 inline const char* headline(Cred c, bool isClaude) {
     switch (c) {
-        case Cred::EXPIRED:  return isClaude ? "KEY EXPIRED" : "TOKEN EXPIRED";
-        case Cred::REJECTED: return isClaude ? "KEY REJECTED" : "TOKEN REJECTED";
-        case Cred::BLOCKED:  return "BLOCKED";
-        case Cred::NOT_SET:  return isClaude ? "NO KEY" : "NO TOKEN";
+        case Cred::EXPIRED:  return isClaude ? "KHÓA HẾT HẠN" : "TOKEN HẾT HẠN";
+        case Cred::REJECTED: return isClaude ? "KHÓA BỊ TỪ CHỐI" : "TOKEN BỊ TỪ CHỐI";
+        case Cred::BLOCKED:  return "BỊ CHẶN";
+        case Cred::NOT_SET:  return isClaude ? "CHƯA CÓ KHÓA" : "CHƯA CÓ TOKEN";
         default:             return "";
     }
 }
@@ -112,10 +113,10 @@ inline const char* headline(Cred c, bool isClaude) {
 // Short phrase for compact rows (Home meters, AI blocks, banners).
 inline const char* shortText(Cred c) {
     switch (c) {
-        case Cred::EXPIRED:  return "expired";
-        case Cred::REJECTED: return "rejected";
-        case Cred::BLOCKED:  return "blocked";
-        case Cred::NOT_SET:  return "not set";
+        case Cred::EXPIRED:  return "hết hạn";
+        case Cred::REJECTED: return "bị từ chối";
+        case Cred::BLOCKED:  return "bị chặn";
+        case Cred::NOT_SET:  return "chưa đặt";
         default:             return "";
     }
 }

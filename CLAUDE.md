@@ -74,14 +74,36 @@ secrets.
    fail here. Always pass `LittleFS`.
 3. **Silent failure**: a missing file prints to Serial and returns; later
    `drawString` uses the last loaded font, or GLCD 5×7. This ate days.
-4. **Glyphs**: ASCII 0x20–0x7E + `°` (U+00B0) + `·` (U+00B7) — `EXTRA` in
-   `tools/genfonts.py`, now also applied to Silkscreen. No `…`: write `...`.
-   Missing glyphs are skipped silently. Encode `·` as `"\xC2\xB7"` in C.
-5. **Heap**: `Api::tlsGetStream` calls `Display::releaseFont()` (frees ~2–5
-   KB) before every TLS handshake (~25 KB peak). Keep that.
-6. **Shipped** (`data/fonts/`): DMMono-11, PixelifySans-14/22, Silkscreen-12/16,
-   VT323-32/44/64/86. The generator's matrix has more (DMMono-9/10,
-   Silkscreen-10, VT323-110) — don't ship unused ones (1 MB FS).
+4. **Glyphs**: ASCII 0x20–0x7E + `°` + `·` (`EXTRA`) + all 134 Vietnamese
+   letters (`VIET`) in every font except VT323-86 (digits only). Only fonts
+   DRAWN with Vietnamese are used — VT323 and JetBrains Mono; accents
+   synthesized onto Silkscreen/DM Mono never looked tidy and were dropped.
+   `genfonts.py` refuses a font that lacks a letter. No `…`: write `...`.
+   Missing glyphs are skipped silently — check with `tools/vlwpreview.py`
+   (renders like the panel). The JBMono files carry the line box of the
+   font each replaced (DMMono-11 → JBMono-11, Silkscreen-12/16 →
+   JBMono-12B/16B, PixelifySans-14 → JBMono-13) so layouts did not move;
+   TFT_eSPI recomputes `maxDescent` from glyphs > U+00FF, so a deeper
+   glyph changes the line height of every string in that font.
+5. **Heap**: `Api::tlsGetStream` calls `Display::releaseFont()` (frees ~3–5
+   KB; 231 glyphs × 12 B of metrics) before every TLS handshake (~25 KB
+   peak). Keep that.
+
+## Vietnamese UI
+
+- Device strings are Vietnamese UTF-8 literals in source (GCC is fine).
+  Fixed `char[N]` are **bytes**: an accented letter is 2–3. Truncate with
+  `Utf8::copy` / `Utf8::prevChar` (`src/data/utf8.h`), never bare
+  `snprintf`/`strncpy` on text that can hold Vietnamese; case-map with
+  `Utf8::upper` / `Utf8::sentence` (ASCII-only `-= 32` corrupts it).
+- Short units: `P` phút, `G` giờ, `NG` ngày (`shortDuration`,
+  `formatCountdown`); 12 h suffix `SA`/`CH` and dates via `ClockFmt`.
+- API/MCP/JSON values and hook-generated card titles (`APPROVAL NEEDED`,
+  `DONE`…) stay English; `ch_attention.cpp` translates them on screen.
+- Before shipping a label, measure it against its slot (status title ≈ 88
+  px, right meta ≈ 72 px) — Vietnamese runs longer than the English did.
+6. **Shipped** (`data/fonts/`): JBMono-11/13/12B/16B, VT323-32/44/64/86. The
+   generator also builds VT323-110 (unused) — don't ship unused ones (1 MB FS).
 
 **VLW format** (verified against TFT_eSPI `Smooth_font.cpp`, big-endian):
 header 24 B — u32 glyphCount, version (=11), fontSize, reserved, ascent,
@@ -185,6 +207,11 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts.md`.
   status (`NEEDS YOU · 2M` / `WAITING · 2M`), queue dots or a time-left
   hairline.
 - Enums are `K_*` / `SHOW_*` — `INPUT` is an Arduino macro.
+- **Project board** (`projects_core.h`, owned in `attention.cpp`): latest
+  state per project from every `/hook` event + pushed cards with a
+  `project`; drawn in the Claude screen's bottom rows (replaced resets and
+  per-model rows). Hooks are installed per computer with
+  `node tools/agents/install.mjs` (Node only, `glimmer.local` by default).
 - Keep `docs/AGENTS-GLIMMER.md` in sync with `attention_json.h`,
   `attention_core.h` and the MCP schema in `web.cpp`.
 

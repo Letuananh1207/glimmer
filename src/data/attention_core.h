@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include "utf8.h"
 
 namespace Attention {
 
@@ -40,10 +41,13 @@ struct Item {
     Display  display = SHOW_INTERRUPT;
     bool     urgent = false;           // may wake the panel at night
     int8_t   progress = -1;            // -1 = none
-    char     title[28] = "";
-    char     value[16] = "";           // optional big value ("passed", "64%")
-    char     body[40] = "";
-    char     project[16] = "";
+    // Sizes are UTF-8 bytes: a Vietnamese letter is 2–3 bytes, so these hold
+    // ~20/10/30/10 accented letters (or 47/23/63/23 ASCII). copyStr never
+    // splits a character.
+    char     title[48] = "";
+    char     value[24] = "";           // optional big value ("passed", "64%")
+    char     body[64] = "";
+    char     project[24] = "";
     uint32_t created = 0;              // epoch
     uint32_t expires = 0;              // epoch, 0 = until cleared
     uint32_t interruptUntil = 0;       // epoch; card holds the screen until then
@@ -101,8 +105,7 @@ inline uint32_t defaultTtl(Kind k, uint32_t approvalTtlS) {
 }
 
 inline void copyStr(char* dst, size_t n, const char* src) {
-    if (!n) return;
-    snprintf(dst, n, "%s", src ? src : "");
+    Utf8::copy(dst, n, src);    // agents send Vietnamese too — never split a char
 }
 
 // ── queue operations ────────────────────────────────────────────────────────

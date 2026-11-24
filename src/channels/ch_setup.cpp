@@ -3,8 +3,8 @@
 // Claude and Codex off means "I don't use these", so it never nags).
 //
 //   y=0..22    StatusBar [glimmer | SETUP]
-//   y=36       "FINISH SETTING UP" (Silkscreen-12, AMBER)
-//   y=60..124  checklist rows: [ ] / [x] + item, DMMono-11
+//   y=36       "HOÀN TẤT CÀI ĐẶT" (JBMono-12B, AMBER)
+//   y=60..124  checklist rows: [ ] / [x] + item, JBMono-11
 //   y=146      dotted divider
 //   y=160      "open" + glimmer.local (SKY) + IP (muted)
 
@@ -25,7 +25,7 @@ static void checkRow(int y, bool done, const char* item, const char* hint) {
     const int bx = 24;
     tft.drawRect(bx, y + 1, 11, 11, done ? Theme::MINT : Theme::LINE);
     if (done) tft.fillRect(bx + 3, y + 4, 5, 5, Theme::MINT);
-    Display::useFont("DMMono-11");
+    Display::useFont("JBMono-11");
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(done ? Theme::INK_DIM : Theme::INK, Theme::BG);
     tft.drawString(item, bx + 20, y);
@@ -36,29 +36,29 @@ static void checkRow(int y, bool done, const char* item, const char* hint) {
 
 void chSetupDraw(const ChannelCtx& ctx) {
     Display::clear();
-    Display::statusBar("glimmer", "SETUP", Theme::AMBER, Theme::AMBER);
+    Display::statusBar("glimmer", "CÀI ĐẶT", Theme::AMBER, Theme::AMBER);
 
-    Display::useFont("Silkscreen-12");
+    Display::useFont("JBMono-12B");
     tft.setTextDatum(MC_DATUM);
     tft.setTextColor(Theme::AMBER, Theme::BG);
-    tft.drawString("FINISH SETTING UP", SCREEN_W / 2, 40);
+    tft.drawString("HOÀN TẤT CÀI ĐẶT", SCREEN_W / 2, 40);
 
     const Settings& s = *ctx.settings;
-    checkRow(62,  !s.claudeKey.isEmpty(),       "Claude key",  "Accounts");
-    checkRow(84,  !s.codexToken.isEmpty(),      "Codex token", "Accounts");
-    checkRow(106, Weather::configured(s),        "Weather",     "Place & time");
+    checkRow(62,  !s.claudeKey.isEmpty(),       "Khóa Claude",  "Tài khoản");
+    checkRow(84,  !s.codexToken.isEmpty(),      "Token Codex",  "Tài khoản");
+    checkRow(106, Weather::configured(s),        "Thời tiết",    "Vị trí & giờ");
 
     Display::dotsDivider(30, 140, SCREEN_W - 60);
 
-    Display::useFont("DMMono-11");
+    Display::useFont("JBMono-11");
     tft.setTextDatum(MC_DATUM);
     tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString("open in a browser", SCREEN_W / 2, 158);
-    Display::useFont("Silkscreen-16");
+    tft.drawString("mở trong trình duyệt", SCREEN_W / 2, 158);
+    Display::useFont("JBMono-16B");
     tft.setTextColor(Theme::SKY, Theme::BG);
     char url[32]; snprintf_P(url, sizeof(url), PSTR("%s.local"), MDNS_HOSTNAME);
     tft.drawString(url, SCREEN_W / 2, 180);
-    Display::useFont("DMMono-11");
+    Display::useFont("JBMono-11");
     tft.setTextColor(Theme::MUTED, Theme::BG);
     tft.drawString(WiFi.localIP().toString(), SCREEN_W / 2, 202);
 }

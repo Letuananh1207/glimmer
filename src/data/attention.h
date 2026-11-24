@@ -1,6 +1,7 @@
 #pragma once
 // Device-side owner of the attention queue (see attention_core.h for rules).
 #include "attention_core.h"
+#include "projects_core.h"
 
 namespace AttentionQueue {
     Attention::Queue& get();
@@ -24,4 +25,12 @@ namespace AttentionQueue {
     // True once after a put() that should take the screen (a new interrupt
     // card, or one that became more urgent). Main loop consumes it.
     bool takeInterrupt();
+
+    // Project board (latest state per project; see projects_core.h). Fed by
+    // the same hook events and pushed cards; projectsRevision() moves when
+    // anything on it changes.
+    const Projects::Board& projects();
+    void noteHook(Attention::Agent a, const Attention::HookEvent& e);
+    void noteItem(const Attention::Item& it);
+    uint32_t projectsRevision();
 }

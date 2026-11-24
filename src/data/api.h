@@ -20,6 +20,13 @@ namespace Api {
         return s.claudeWeeklyHero ? d.weeklyPct : d.sessionPct;
     }
 
+    // Every *Pct field is % REMAINING (history, pace, advice and colours are
+    // built on that). The screen shows % USED: convert only when drawing a
+    // number or filling a bar. Colour still comes from the remaining value.
+    inline float shownPct(float remaining) {
+        return remaining < 0 ? remaining : 100.0f - remaining;
+    }
+
     // Data counts as stale once it is older than 3 refresh intervals (with a
     // 15-minute floor so backoff on a 1-minute cadence doesn't flap). Stale
     // data stays on screen, dimmed, with a STALE badge.

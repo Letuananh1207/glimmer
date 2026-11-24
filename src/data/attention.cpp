@@ -50,4 +50,18 @@ int expire() {
     return n;
 }
 
+static Projects::Board s_board;
+static uint32_t        s_boardRev = 1;
+
+const Projects::Board& projects() { return s_board; }
+uint32_t projectsRevision()       { return s_boardRev; }
+
+void noteHook(Attention::Agent a, const Attention::HookEvent& e) {
+    if (Projects::noteHook(s_board, a, e, now())) s_boardRev++;
+}
+
+void noteItem(const Attention::Item& it) {
+    if (Projects::noteItem(s_board, it, now())) s_boardRev++;
+}
+
 }  // namespace AttentionQueue

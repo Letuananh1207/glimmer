@@ -13,15 +13,21 @@ from the OFL TTFs in `tools/ttf/`. Format details and loader gotchas:
 ## What's there
 
 - **Sources** (`tools/ttf/`): `VT323-Regular.ttf` (big numbers/hero),
-  `Silkscreen-Regular.ttf` + `-Bold` (UI pixel font), `PixelifySans.ttf`,
-  `DMMono-Regular.ttf` + `-Medium` (small tabular).
+  `JetBrainsMono-Regular.ttf` + `-Bold` (all small text; licence in
+  `JetBrainsMono-OFL.txt`). Silkscreen / Pixelify / DM Mono TTFs are legacy
+  and unused — they have no Vietnamese.
 - **Codepoints**: `ASCII` (0x20–0x7E) + `EXTRA` = `°` (U+00B0) and `·`
-  (U+00B7), for every font in `FONT_MATRIX` (Silkscreen included). There is
-  no `…` — code writes `...`.
-- **`FONT_MATRIX`** generates 13 fonts; only 9 ship:
-  `DMMono-11`, `PixelifySans-14/22`, `Silkscreen-12/16`, `VT323-32/44/64/86`.
-  The rest (`DMMono-9/10`, `Silkscreen-10`, `VT323-110`) are unused — don't
-  add them to `data/fonts/` (LittleFS is ~1 MB).
+  (U+00B7) + `VIET` (134 Vietnamese letters) for every font except the
+  digit-only VT323-86/110. There is no `…` — code writes `...`.
+- **Vietnamese**: only use a family drawn with all 134 letters — the
+  generator stops on one that lacks any. Synthesizing accents onto a
+  Latin-only pixel font was tried and rejected (patchy). Look at the result:
+  `python tools/vlwpreview.py out.png <file.vlw> "ĐANG CHỜ"`.
+- **Line box**: the 5th matrix field forces the header (ascent, descent).
+  Swapping a family? Give it the old font's box so TL/MC layouts don't move.
+- **`FONT_MATRIX`** generates 9 fonts; 8 ship: `JBMono-11/13/12B/16B`,
+  `VT323-32/44/64/86`. `VT323-110` is unused — don't add it to
+  `data/fonts/` (LittleFS is ~1 MB).
 
 To see what the code actually loads:
 
@@ -50,7 +56,7 @@ rg -o 'useFont\("[^"]+"' src | sort | uniq -c
 
    Each line shows `em`, glyph count, ascent, descent and size. A codepoint
    the TTF lacks is skipped silently — check the glyph count (ASCII alone is
-   95; + 2 with both extras).
+   95; + 2 with both extras; + 134 Vietnamese = 231).
 
 4. **Copy only the fonts the firmware uses** (changed or new):
 
@@ -83,7 +89,7 @@ rg -o 'useFont\("[^"]+"' src | sort | uniq -c
 ## Notes
 
 - **Sizing**: `set_pixel_sizes(0, N)` makes the EM square N px. For the pixel
-  fonts (VT323, Silkscreen, Pixelify) cap-height ≈ N.
+  font VT323 cap-height ≈ N; JetBrains Mono's is ~0.73 N.
 - **Missing glyph at runtime** → TFT_eSPI skips it silently. Partial text on
   screen usually means the character isn't in the font's codepoint list.
 - **Missing font file** → TFT_eSPI falls back to the last loaded font or GLCD

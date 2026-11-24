@@ -3,15 +3,16 @@
 // surfaces that summarise them (Home, AI): status-bar meta, credential cards,
 // credential banners. One place so every screen says the same thing.
 //
-// Right-meta priority: credential problem (RE-AUTH / BLOCKED) > STALE badge >
-// EXPIRES 2D > vendor status badge > the channel's normal meta.
+// Right-meta priority: credential problem (KHÓA LỖI / BỊ CHẶN) > CŨ badge >
+// HẠN 2D > vendor status badge > the channel's normal meta.
 #include <string.h>
 #include "api.h"
 #include "theme.h"
 #include "vendor_status.h"
+#include "utf8.h"
 
 struct MetaSlot {
-    char     text[16] = "";
+    char     text[24] = "";   // UTF-8 (Vietnamese)
     uint16_t color    = Theme::MUTED;
     bool operator!=(const MetaSlot& o) const { return color != o.color || strcmp(text, o.text); }
 };
@@ -38,11 +39,11 @@ inline MetaSlot usageMeta(const Settings& s, time_t lastOk, VendorStatus::Vendor
     }
     const char* b = s.showStatus ? VendorStatus::badge(v) : "";
     if (*b) {
-        strncpy(m.text, b, sizeof(m.text) - 1);
+        Utf8::copy(m.text, sizeof(m.text), b);
         m.color = VendorStatus::badgeColor(v);
         return m;
     }
-    strncpy(m.text, normal ? normal : "", sizeof(m.text) - 1);
+    Utf8::copy(m.text, sizeof(m.text), normal);
     return m;
 }
 
@@ -57,14 +58,14 @@ namespace Chrome {
     // surfaced network error (err). Paints y 24..220.
     void credCard(bool isClaude, Cred cred, time_t jwtExp, const char* err);
 
-    // 14-px banner over existing data: "KEY EXPIRED · glimmer.local".
+    // 14-px banner over existing data: "KHÓA HẾT HẠN · glimmer.local".
     void credBanner(int y, bool isClaude, Cred cred);
 
-    // Compact one-liner for Home/AI rows: "key expired · update",
-    // "blocked · retrying", "add key · glimmer.local". "" when nothing to say.
+    // Compact one-liner for Home/AI rows: "khóa hết hạn · cập nhật",
+    // "bị chặn · thử lại", "thêm khóa · glimmer.local". "" when nothing to say.
     void credLine(bool isClaude, Cred cred, char* buf, size_t n);
 
-    // Limit-reset credits: "2 LEFT · BY 12 OCT" (or "· 3D" inside a week);
+    // Limit-reset credits: "CÒN 2 · ĐẾN 12/10" (or "· 3D" inside a week);
     // "" when the account has none.
     void resetsText(const ResetGrant& g, char* buf, size_t n);
 }

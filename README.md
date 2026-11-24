@@ -71,8 +71,34 @@ Agents can also push their own cards over MCP or HTTP: progress that updates in
 place, "tests passed", "deploy failed". Up to five cards queue by priority; the
 **Agents** channel lists them.
 
-**Set up in three steps** (the device's **Agents** tab shows these with your
-URL and token filled in):
+**Moved to another computer or another Wi-Fi?** Run the interactive wizard
+(Vietnamese; it asks only for what it needs, Wi-Fi password typed hidden):
+
+```bash
+node tools/glimmer-setup.mjs        # 1 máy mới · 2 đổi Wi-Fi · 3 kiểm tra
+```
+
+In Claude Code, `/glimmer-setup` does the same checks for you
+([`.claude/skills/glimmer-setup`](.claude/skills/glimmer-setup/SKILL.md)).
+
+**Set up on each computer with one command** (Windows, macOS or Linux; needs
+only Node):
+
+```bash
+node tools/agents/install.mjs              # add --token <t> if the device has an API token
+```
+
+It copies [`glimmer-hook.mjs`](tools/agents/glimmer-hook.mjs) to `~/.glimmer/`,
+merges the hooks into `~/.claude/settings.json` (and `~/.codex/hooks.json` if
+Codex is installed) without touching your other settings, and pings the
+display. It talks to `http://glimmer.local`, so any machine on the display's
+Wi-Fi works with no further setup; rerun it after pulling updates, or
+`--uninstall` to remove everything. Hooks also feed the **project board** on
+the Claude screen: each project's latest state (Cần duyệt / Chờ bạn / Lỗi /
+Đang chạy / Xong).
+
+Or by hand (the device's **Agents** tab shows these with your URL and token
+filled in):
 
 1. **Hook script** — install
    [`tools/agents/glimmer-hook.sh`](tools/agents/glimmer-hook.sh) to
@@ -264,10 +290,8 @@ Terms of Service (Anthropic, OpenAI, etc.). See the Disclaimer above.
 - GeekMagic SmallTV-Ultra — the hardware.
 - [TFT_eSPI](https://github.com/Bodmer/TFT_eSPI) — display driver.
 - [VT323](https://fonts.google.com/specimen/VT323),
-  [Silkscreen](https://fonts.google.com/specimen/Silkscreen),
-  [DM Mono](https://fonts.google.com/specimen/DM+Mono),
-  [Pixelify Sans](https://fonts.google.com/specimen/Pixelify+Sans)
-  — typography (all OFL).
+  [JetBrains Mono](https://www.jetbrains.com/lp/mono/)
+  — typography (both OFL; both draw every Vietnamese letter).
 
 ---
 

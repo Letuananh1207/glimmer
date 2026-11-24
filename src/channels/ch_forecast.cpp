@@ -23,7 +23,7 @@ bool chForecastEnabled(const ChannelCtx& ctx) {
 }
 
 static void paintRow(int i, const WeatherDay& day, float gMin, float range, bool f) {
-    const char* labels[3] = { "TODAY", "+1 DAY", "+2 DAYS" };
+    const char* labels[3] = { "NAY", "MAI", "KIA" };   // hôm nay / ngày mai / ngày kia
     int rowH = 56;
     int top = 32;
     int y = top + i * rowH;
@@ -34,14 +34,14 @@ static void paintRow(int i, const WeatherDay& day, float gMin, float range, bool
     if (isToday) tft.fillRect(0, y, SCREEN_W, rowH - 4, Theme::PANEL);
     tft.fillRect(0, y, 2, rowH - 4, isToday ? Theme::CORAL : Theme::LINE);
 
-    Display::useFont("Silkscreen-16");
+    Display::useFont("JBMono-16B");
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(isToday ? Theme::INK : Theme::INK_DIM,
                      isToday ? Theme::PANEL : Theme::BG);
     tft.drawString(labels[i], 10, y + 4);
 
     WeatherIcon::draw(10, y + 26, day.code, isToday ? Theme::SKY : Theme::MUTED);
-    Display::useFont("DMMono-11");
+    Display::useFont("JBMono-11");
     tft.setTextColor(Theme::MUTED, isToday ? Theme::PANEL : Theme::BG);
     tft.drawString(Weather::describe(day.code), 28, y + 28);
 
@@ -67,7 +67,7 @@ static void paintRow(int i, const WeatherDay& day, float gMin, float range, bool
     else             snprintf(minBuf, sizeof(minBuf), "--");
     if (dMax > -900) snprintf(maxBuf, sizeof(maxBuf), "%.0f", Weather::toDisplay(dMax, f));
     else             snprintf(maxBuf, sizeof(maxBuf), "--");
-    Display::useFont("DMMono-11");
+    Display::useFont("JBMono-11");
     tft.setTextDatum(TR_DATUM);
     tft.setTextColor(Theme::MUTED, isToday ? Theme::PANEL : Theme::BG);
     tft.drawString(minBuf, SCREEN_W - 36, y + 28);
@@ -88,11 +88,11 @@ static void computeRange(const WeatherData* w, float& gMin, float& range) {
 
 void chForecastDraw(const ChannelCtx& ctx) {
     Display::clear();
-    Display::statusBar("Forecast", "3-DAY", Theme::SKY);
+    Display::statusBar("Dự báo", "3 NGÀY", Theme::SKY);
 
     const WeatherData* w = &Weather::snapshot();
     if (!w || !w->valid) {
-        Display::drawText("no forecast yet", SCREEN_W/2, 110, Theme::MUTED, Display::TITLE);
+        Display::drawText("chưa có dự báo", SCREEN_W/2, 110, Theme::MUTED, Display::TITLE);
         for (int i = 0; i < 3; i++) { s_fcMin[i] = -999; s_fcMax[i] = -999; s_fcCode[i] = 255; }
         return;
     }

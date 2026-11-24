@@ -1,6 +1,6 @@
 // Info channel — design-true from InfoScreen.
 //
-// Key-value rows with dotted-bottom dividers. All-DMMono.
+// Key-value rows with dotted-bottom dividers. All JBMono-11.
 
 #include "channel.h"
 #include "display.h"
@@ -30,7 +30,7 @@ bool chInfoEnabled(const ChannelCtx& ctx) {
 static void infoRow(int y, const char* k, const String& v, uint16_t valColor,
                     bool divider = true) {
     tft.fillRect(SCREEN_W/2, y, SCREEN_W/2 - 6, 14, Theme::BG);
-    Display::useFont("DMMono-11");
+    Display::useFont("JBMono-11");
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(Theme::MUTED, Theme::BG);
     tft.drawString(k, 12, y);
@@ -42,7 +42,7 @@ static void infoRow(int y, const char* k, const String& v, uint16_t valColor,
 
 void chInfoDraw(const ChannelCtx& ctx) {
     Display::clear();
-    Display::statusBar("Info", "DIAG", Theme::MINT);
+    Display::statusBar("Thông tin", "CHẨN ĐOÁN", Theme::MINT);
 
     int rssi = WiFi.RSSI();
     uint16_t sigCol = (rssi > -60) ? Theme::MINT
@@ -51,17 +51,17 @@ void chInfoDraw(const ChannelCtx& ctx) {
     int y = 36, step = 20;
     infoRow(y, "IP",       WiFi.localIP().toString(),              Theme::INK);          y += step;
     infoRow(y, "SSID",     WiFi.SSID(),                            Theme::INK);          y += step;
-    infoRow(y, "Signal",   String(rssi) + " dBm",                  sigCol);              y += step;
-    infoRow(y, "Uptime",   String(ctx.now_ms / 60000UL) + "m",     Theme::INK_DIM);      y += step;
-    infoRow(y, "Memory",   String(ESP.getFreeHeap()/1024) + "K free", Theme::AMBER);     y += step;
-    infoRow(y, "Max block", String(ESP.getMaxFreeBlockSize()/1024) + "K", Theme::INK_DIM); y += step;
+    infoRow(y, "Sóng",     String(rssi) + " dBm",                  sigCol);              y += step;
+    infoRow(y, "Đã chạy",  String(ctx.now_ms / 60000UL) + "m",     Theme::INK_DIM);      y += step;
+    infoRow(y, "Bộ nhớ",   String(ESP.getFreeHeap()/1024) + "K trống", Theme::AMBER);     y += step;
+    infoRow(y, "Khối lớn", String(ESP.getMaxFreeBlockSize()/1024) + "K", Theme::INK_DIM); y += step;
     infoRow(y, "Firmware", "v" FW_VERSION,                          Theme::INK_DIM);      y += step;
 
     int en = mainEnabledCount(), tot = mainTotalCount();
-    infoRow(y, "Channels", String(en) + " of " + String(tot),      Theme::INK_DIM);      y += step;
+    infoRow(y, "Kênh",     String(en) + " / " + String(tot),      Theme::INK_DIM);      y += step;
     uint32_t ago = (ctx.now_ms - mainLastRefreshMs()) / 60000UL;
-    infoRow(y, "Refreshed", String(ago) + "m ago",                  Theme::INK_DIM);      y += step;
-    infoRow(y, "Next",     "in " + String(mainNextFetchInMs() / 60000UL) + "m", Theme::MINT, false);
+    infoRow(y, "Cập nhật", String(ago) + "m trước",                     Theme::INK_DIM);      y += step;
+    infoRow(y, "Lần tới",  "sau " + String(mainNextFetchInMs() / 60000UL) + "m", Theme::MINT, false);
 
     // Seed cache
     s_rssi      = rssi;
@@ -81,33 +81,33 @@ void chInfoTick(const ChannelCtx& ctx) {
     if (rssi != s_rssi) {
         uint16_t sigCol = (rssi > -60) ? Theme::MINT
                         : (rssi > -75) ? Theme::AMBER : Theme::CORAL;
-        infoRow(36 + 2 * step, "Signal", String(rssi) + " dBm", sigCol);
+        infoRow(36 + 2 * step, "Sóng", String(rssi) + " dBm", sigCol);
         s_rssi = rssi;
     }
     if (upMin != s_upMin) {
-        infoRow(36 + 3 * step, "Uptime", String(upMin) + "m", Theme::INK_DIM);
+        infoRow(36 + 3 * step, "Đã chạy", String(upMin) + "m", Theme::INK_DIM);
         s_upMin = upMin;
     }
     if (heapKB != s_heapKB) {
-        infoRow(36 + 4 * step, "Memory", String(heapKB) + "K free", Theme::AMBER);
+        infoRow(36 + 4 * step, "Bộ nhớ", String(heapKB) + "K trống", Theme::AMBER);
         s_heapKB = heapKB;
     }
     int blkKB = ESP.getMaxFreeBlockSize() / 1024;
     if (blkKB != s_blkKB) {
-        infoRow(36 + 5 * step, "Max block", String(blkKB) + "K", Theme::INK_DIM);
+        infoRow(36 + 5 * step, "Khối lớn", String(blkKB) + "K", Theme::INK_DIM);
         s_blkKB = blkKB;
     }
     int en = mainEnabledCount();
     if (en != s_enabled) {
-        infoRow(36 + 7 * step, "Channels", String(en) + " of " + String(mainTotalCount()), Theme::INK_DIM);
+        infoRow(36 + 7 * step, "Kênh", String(en) + " / " + String(mainTotalCount()), Theme::INK_DIM);
         s_enabled = en;
     }
 
     uint32_t ago = (ctx.now_ms - mainLastRefreshMs()) / 60000UL;
     int nextMin = (int)(mainNextFetchInMs() / 60000UL);
     if ((int)ago != s_refreshAgo || nextMin != s_nextMin) {
-        infoRow(36 + 8 * step, "Refreshed", String(ago) + "m ago", Theme::INK_DIM);
-        infoRow(36 + 9 * step, "Next", "in " + String(nextMin) + "m", Theme::MINT, false);
+        infoRow(36 + 8 * step, "Cập nhật", String(ago) + "m trước", Theme::INK_DIM);
+        infoRow(36 + 9 * step, "Lần tới", "sau " + String(nextMin) + "m", Theme::MINT, false);
         s_refreshAgo = ago;
         s_nextMin = nextMin;
     }

@@ -174,26 +174,26 @@ void rainHint(const Settings& s, char* buf, size_t n) {
     if (best < 0 || bestPct < 40) return;
     time_t at = s_w.rainStart + best * 3600L;
     struct tm tm; localtime_r(&at, &tm);
-    if (at <= now)            snprintf_P(buf, n, PSTR("RAIN %d%% NOW"), bestPct);
-    else if (s.clock24h)      snprintf_P(buf, n, PSTR("RAIN %d%% %02d:00"), bestPct, tm.tm_hour);
+    if (at <= now)            snprintf_P(buf, n, PSTR("MƯA %d%% NGAY"), bestPct);
+    else if (s.clock24h)      snprintf_P(buf, n, PSTR("MƯA %d%% %02d:00"), bestPct, tm.tm_hour);
     else {
         int h12 = tm.tm_hour % 12; if (!h12) h12 = 12;
-        snprintf_P(buf, n, PSTR("RAIN %d%% %d%s"), bestPct, h12, tm.tm_hour < 12 ? "AM" : "PM");
+        snprintf_P(buf, n, PSTR("MƯA %d%% %d%s"), bestPct, h12, tm.tm_hour < 12 ? "AM" : "PM");
     }
 }
 
 const char* describe(uint8_t code) {
     // WMO weather interpretation codes — compressed to short labels
-    if (code == 0) return "Clear";
-    if (code == 1 || code == 2) return "Mostly clear";
-    if (code == 3) return "Cloudy";
-    if (code == 45 || code == 48) return "Fog";
-    if (code >= 51 && code <= 57) return "Drizzle";
-    if (code >= 61 && code <= 67) return "Rain";
-    if (code >= 71 && code <= 77) return "Snow";
-    if (code == 80 || code == 81 || code == 82) return "Showers";
-    if (code == 85 || code == 86) return "Snow showers";
-    if (code >= 95 && code <= 99) return "Thunder";
+    if (code == 0) return "Quang";
+    if (code == 1 || code == 2) return "Ít mây";
+    if (code == 3) return "Nhiều mây";
+    if (code == 45 || code == 48) return "Sương mù";
+    if (code >= 51 && code <= 57) return "Mưa phùn";
+    if (code >= 61 && code <= 67) return "Mưa";
+    if (code >= 71 && code <= 77) return "Tuyết";
+    if (code == 80 || code == 81 || code == 82) return "Mưa rào";
+    if (code == 85 || code == 86) return "Mưa tuyết";
+    if (code >= 95 && code <= 99) return "Dông";
     return "—";
 }
 

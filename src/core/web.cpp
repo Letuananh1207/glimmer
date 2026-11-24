@@ -370,6 +370,7 @@ static int pushFrom(JsonVariantConst d, char* idOut, size_t n) {
     Attention::Item it;
     Attention::fromJson(d, AttentionQueue::now(), mainApprovalTtlS(), ++s_seq, it);
     snprintf(idOut, n, "%s", it.id);
+    AttentionQueue::noteItem(it);           // project board (only if it names a project)
     return AttentionQueue::put(it);
 }
 
@@ -441,6 +442,7 @@ static void handleHook() {
     e.detail  = d["detail"]  | "";
     e.message = d["message"] | "";
     Attention::Agent agent = Attention::agentFrom(server.arg("agent").c_str());
+    AttentionQueue::noteHook(agent, e);     // project board: every event, even ones the queue ignores
     Attention::Item it, extra;
     switch (Attention::fromHook(agent, e, mainAgentDoneCards(), mainApprovalTtlS(),
                                 AttentionQueue::now(), it, &extra)) {

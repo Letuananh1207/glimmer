@@ -55,7 +55,8 @@ inline time_t parseHttpDate(const char* s) {
     return epochUtc(y, month, d, h, mi, se);
 }
 
-// Short uppercase duration for small screens: "45M", "6H", "2D".
+// Short uppercase duration for small screens: "45M", "6H", "2D" (the
+// English unit letters are kept on the Vietnamese UI). Fits char[8].
 inline void shortDuration(long sec, char* buf, size_t n) {
     if (sec < 0) sec = 0;
     if (sec < 3600)        snprintf(buf, n, "%ldM", sec / 60);

@@ -119,13 +119,13 @@ inline Pace pace(const Ring& r, Metric m, float curPct, time_t now, time_t reset
     return p;
 }
 
-// "EMPTY IN 6H" / "~62% AT RESET" / "" for NONE.
+// "HẾT SAU 6H" / "~62% KHI ĐẶT LẠI" / "" for NONE. UTF-8: ≤ 22 bytes.
 inline void paceText(const Pace& p, char* buf, size_t n) {
     if (p.kind == Pace::EMPTY) {
         char d[8]; TimeUtil::shortDuration(p.sec, d, sizeof(d));
-        snprintf(buf, n, "EMPTY IN %s", d);
+        snprintf(buf, n, "HẾT SAU %s", d);
     } else if (p.kind == Pace::AT_RESET) {
-        snprintf(buf, n, "~%d%% AT RESET", p.pct);
+        snprintf(buf, n, "~%d%% KHI ĐẶT LẠI", p.pct);
     } else if (n) {
         buf[0] = '\0';
     }
