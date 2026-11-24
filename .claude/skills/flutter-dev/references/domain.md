@@ -43,7 +43,8 @@ class PlaceOrderUseCase {
 
 ## Danh sách use case đã có
 
-_(chưa có — thêm mỗi use case mới một dòng: tên · làm gì · repository nào)_
+- `SwitchSkillUseCase` · đổi skill trên app + thiết bị, theo thiết bị khi lệch (R-SK-2, R-SK-4, R-SK-5) ·
+  `SkillRepository`, `DeviceRepository`
 
 ## Quy tắc nghiệp vụ
 

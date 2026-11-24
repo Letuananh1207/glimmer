@@ -12,6 +12,7 @@ thẳng từ thiết bị qua HTTP (`/api/*`, `/push` — hợp đồng do firmw
 | --- | --- | --- | --- |
 | `device_url` | string | `''` | Địa chỉ thiết bị trả lời lần trước, vd `http://192.168.100.40`. Không lưu AP cài đặt `192.168.4.1` (R-KN-1). |
 | `token` | string | `''` | API token của thiết bị (gửi `Authorization: Bearer …`); rỗng khi thiết bị không đặt token. Bí mật. |
+| `active_skill` | string | _(không có)_ | Id skill đang dùng (`agent`…, R-SK-1). Thiếu / không còn trong danh mục → `agent`. Thiết bị báo skill khác → ghi theo thiết bị (R-SK-5). |
 | `repo` | string | `Letuananh1207/glimmer` | Repo GitHub có bản phát hành `latest` chứa `firmware.bin` / `littlefs.bin`. |
 
 ## Tệp sao lưu cấu hình

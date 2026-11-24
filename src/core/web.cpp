@@ -22,6 +22,7 @@
 #include "vendor_status.h"
 #include "attention.h"
 #include "attention_json.h"
+#include "skill_core.h"
 #include <ESP8266HTTPUpdateServer.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
@@ -136,6 +137,13 @@ static void handleApiState() {
     d["reset_reason"]        = ESP.getResetReason();
     d["build"]               = __DATE__ " " __TIME__;
     d["active_channel"]      = mainActiveChannelName();
+    // Skills: the one owning the screen + every one this firmware has (the app hides the
+    // switch on firmware without these keys, R-SK-4).
+    d["skill"]               = Skill::active(pSettings ? pSettings->skill.c_str() : nullptr);
+    {
+        JsonArray sk = d["skills"].to<JsonArray>();
+        for (int i = 0; i < Skill::kCount; i++) sk.add(Skill::kAll[i]);
+    }
     d["night_face"]          = mainNightFace();
     d["next_fetch_s"]        = mainNextFetchInMs() / 1000;
     d["claude_configured"]   = pSettings && !pSettings->claudeKey.isEmpty();
@@ -254,6 +262,7 @@ static void handleApiGetSettings() {
     d["approvalTtlMin"] = s.approvalTtlMin;
     d["agentDoneCards"] = s.agentDoneCards;
     d["agentNightShow"] = s.agentNightShow;
+    d["skill"]          = Skill::active(s.skill.c_str());
     String out; serializeJson(d, out);
     server.send(200, "application/json", out);
 }
@@ -341,6 +350,9 @@ static void applyIfPresent(Settings& s, JsonDocument& d) {
     applyBool("useFahrenheit", s.useFahrenheit);
     applyFloat("weatherLat", s.weatherLat);
     applyFloat("weatherLon", s.weatherLon);
+    // Only a skill this firmware has channels for (R-SK-1); anything else is ignored.
+    if (d["skill"].is<const char*>() && Skill::known(d["skill"].as<const char*>()))
+        s.skill = d["skill"].as<const char*>();
 }
 
 static void handleApiPostSettings() {

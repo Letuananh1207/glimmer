@@ -25,6 +25,8 @@ class DeviceState {
     required this.claudeErr,
     required this.usage,
     required this.projects,
+    this.skill = '',
+    this.skills = const [],
   });
 
   factory DeviceState.fromJson(Map<String, dynamic> j) => DeviceState(
@@ -51,6 +53,8 @@ class DeviceState {
         projects: List.unmodifiable((j['projects'] as List? ?? const [])
             .whereType<Map<String, dynamic>>()
             .map(Project.fromJson)),
+        skill: jsonStr(j['skill']),
+        skills: List.unmodifiable((j['skills'] as List? ?? const []).whereType<String>()),
       );
 
   final String fw, build, wifi, ip, ssid, activeChannel, resetReason;
@@ -59,6 +63,12 @@ class DeviceState {
   final String claudeErr;
   final Usage usage;
   final List<Project> projects;
+
+  /// Skill owning the screen; '' on firmware without skills (R-SK-4).
+  final String skill;
+
+  /// Every skill the firmware has channels for; empty on firmware without skills.
+  final List<String> skills;
 
   /// In setup-AP mode the device reports wifi "ap".
   bool get inSetupMode => wifi == 'ap';

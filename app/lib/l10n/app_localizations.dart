@@ -1173,6 +1173,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Cập nhật lỗi: {error}'**
   String devUpdateFailed(String error);
+
+  /// Lỗi: firmware cũ không đổi được skill (R-SK-4)
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiết bị chưa hỗ trợ skill này — cập nhật firmware.'**
+  String get devErrSkillUnsupported;
 }
 
 class _AppLocalizationsDelegate

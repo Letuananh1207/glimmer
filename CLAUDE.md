@@ -125,9 +125,14 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
 
 ## Channels & PARTIAL REDRAW DISCIPLINE
 
-- `channel.h`: `Channel { name, enabled, draw, tick }`; `kChannels[]` in
+- `channel.h`: `Channel { name, enabled, draw, tick, skill }`; `kChannels[]` in
   `main.cpp` registers them (order = rotation order). `recomputeActive()` runs
   every rotation tick, so settings toggles apply within one slide.
+- **Skills** (`src/data/skill_core.h`): one feature pack owns the screen —
+  only channels tagged with `Settings::skill` (+ `skill = nullptr` system
+  channels: Attention, Night, Weather, Forecast, Clock, Info) rotate. Setting
+  `skill` (unknown → `agent`); `/api/state` reports `skill` + `skills`. New
+  pack = id in `Skill::kAll` + tag its channels. App rules `R-SK-*`.
 - `draw(ctx)` — full repaint on activation, may `Display::clear()`.
 - `tick(ctx)` — 5 Hz while active. **Never** `Display::clear()` /
   `tft.fillScreen()`. File-static caches with sentinels (`-1`, `-2.f`) +

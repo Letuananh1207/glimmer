@@ -15,6 +15,10 @@ class LocalStoreService {
   String get token => _p.getString('token') ?? '';
   set token(String v) => _p.setString('token', v);
 
+  /// Id of the skill in use (null = never chosen).
+  String? get activeSkill => _p.getString('active_skill');
+  set activeSkill(String? v) => v == null ? _p.remove('active_skill') : _p.setString('active_skill', v);
+
   /// GitHub repo whose `latest` release holds the firmware builds.
   String get repo => _p.getString('repo') ?? 'Letuananh1207/glimmer';
   set repo(String v) => _p.setString('repo', v);

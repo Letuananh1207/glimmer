@@ -60,3 +60,17 @@ Các quy tắc dưới đây ghi lại hành vi app đang có lúc chuyển sang
 | R-WF-1 | Gửi Wi-Fi mới thẳng cho thiết bị chỉ khi đang kết nối, thiết bị không ở chế độ cài đặt và trả lời ngay lúc đó; còn lại vào Wi-Fi glimmer-setup (cần quyền vị trí) rồi gửi qua đó. | Thiết bị đã rời mạng → đi qua glimmer-setup | ok |
 | R-WF-2 | Lệnh có khởi động lại (lưu Wi-Fi, khôi phục cấu hình, khởi động lại) mà thiết bị không kịp trả lời vẫn tính là thành công; lỗi HTTP vẫn là lỗi. | Gửi Wi-Fi, mất kết nối → bước tiếp | ok |
 | R-WF-3 | Gửi xong: rời glimmer-setup, tìm lại thiết bị trên mạng mới; không thấy → "Chưa thấy thiết bị trên …". Tên Wi-Fi điền sẵn bằng mạng điện thoại đang dùng (trừ glimmer-setup). | Không thấy sau ~4 phút → lỗi | ok |
+
+## 7. Skill (gói chức năng)
+
+Một skill = các màn của nó trong app + bộ kênh của nó trên màn thiết bị. Kế hoạch
+`docs/tasks/2026-11-25-he-sinh-thai-skill.md`. Kênh hệ thống (Thông báo, Ban đêm, Đồng hồ, Thời tiết, Dự báo,
+Thông tin) hiện ở mọi skill.
+
+| Mã | Quy tắc | Ví dụ | App |
+| --- | --- | --- | --- |
+| R-SK-1 | Mỗi lúc đúng một skill đang dùng; mặc định `agent`. Skill lưu trên máy không còn trong danh mục → về `agent`. | Mới cài app → Agent | ok |
+| R-SK-2 | Đổi skill trên app → lưu máy và gửi thiết bị (`skill` trong `/api/settings`); thiết bị chỉ xoay kênh của skill đó + kênh hệ thống. | Chọn Agent → thiết bị xoay Trang chủ, Claude, … + Đồng hồ | ok |
+| R-SK-3 | Thẻ cần duyệt / chờ trả lời vẫn chen ngang ở mọi skill. | Skill Nhạc, Claude Code xin duyệt → thẻ amber hiện | ok · miễn test (luật firmware: kênh Attention là kênh hệ thống, `test/test_logic` `test_skill_filter_and_default`) |
+| R-SK-4 | Thiết bị không báo `skill` (firmware cũ) → app chỉ có skill Agent, không cho đổi, không gửi gì. | Firmware 0.22 → không có nút đổi skill | ok |
+| R-SK-5 | Skill thiết bị đang dùng khác skill app lưu (đổi từ trang web thiết bị) → app theo thiết bị và lưu lại. | Web đổi sang X, app lưu Agent → app thành X | ok |

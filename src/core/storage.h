@@ -56,6 +56,9 @@ struct Settings {
 
     // Push API auth (also used for MCP)
     String   apiToken;                // bearer token for /push and /mcp
+
+    // Feature pack that owns the screen (Skill::kAll in skill_core.h; unknown → default).
+    String   skill          = "agent";
 };
 
 namespace Storage {

@@ -30,6 +30,7 @@
 #include "night_core.h"
 #include "chrome.h"
 #include "attention.h"
+#include "skill_core.h"
 
 // ── Channel registry — declared in their own .cpp files ─────────────────────
 extern bool chClaudeEnabled(const ChannelCtx&);  extern void chClaudeDraw(const ChannelCtx&);
@@ -59,16 +60,16 @@ extern void chInfoTick       (const ChannelCtx&);
 extern void chNightTick      (const ChannelCtx&);
 
 static const Channel kChannels[] = {
-    //  name        enabled              draw                  tick
+    //  name        enabled              draw                  tick           skill (nullptr = system)
     { "Attention",chAttentionEnabled,chAttentionDraw,chAttentionTick},
     { "Night",    chNightEnabled,    chNightDraw,    chNightTick    },
-    { "Setup",    chSetupEnabled,    chSetupDraw,    nullptr        },
-    { "Home",     chHomeEnabled,     chHomeDraw,     chHomeTick     },
-    { "Agents",   chAgentsEnabled,   chAgentsDraw,   chAgentsTick   },
-    { "Claude",   chClaudeEnabled,   chClaudeDraw,   chClaudeTick   },
-    { "Codex",    chCodexEnabled,    chCodexDraw,    chCodexTick    },
-    { "AI",       chAiDashEnabled,   chAiDashDraw,   chAiDashTick   },
-    { "Trend",    chTrendEnabled,    chTrendDraw,    chTrendTick    },
+    { "Setup",    chSetupEnabled,    chSetupDraw,    nullptr,        "agent" },
+    { "Home",     chHomeEnabled,     chHomeDraw,     chHomeTick,     "agent" },
+    { "Agents",   chAgentsEnabled,   chAgentsDraw,   chAgentsTick,   "agent" },
+    { "Claude",   chClaudeEnabled,   chClaudeDraw,   chClaudeTick,   "agent" },
+    { "Codex",    chCodexEnabled,    chCodexDraw,    chCodexTick,    "agent" },
+    { "AI",       chAiDashEnabled,   chAiDashDraw,   chAiDashTick,   "agent" },
+    { "Trend",    chTrendEnabled,    chTrendDraw,    chTrendTick,    "agent" },
     { "Weather",  chWeatherEnabled,  chWeatherDraw,  chWeatherTick  },
     { "Forecast", chForecastEnabled, chForecastDraw, chForecastTick },
     { "Clock",    chClockEnabled,    chClockDraw,    chClockTick    },
@@ -170,11 +171,14 @@ static void recomputeActive() {
     const char* cur = g_activeCount ? kChannels[g_activeIdx[g_activePtr]].name : nullptr;
     g_nightFace = nightNow() && g_settings.nightMode >= Night::CLOCK;
     ChannelCtx ctx = makeCtx();
+    const char* skill = Skill::active(g_settings.skill.c_str());
     g_activeCount = 0;
     for (int i = 0; i < kChannelCount; i++) {
         // The night face replaces rotation: only it (and an alert card) runs.
         if (g_nightFace && strcmp(kChannels[i].name, "Night") && strcmp(kChannels[i].name, "Attention"))
             continue;
+        // One skill owns the screen: its channels + system ones (R-SK-2).
+        if (!Skill::shows(kChannels[i].skill, skill)) continue;
         if (kChannels[i].enabled(ctx)) g_activeIdx[g_activeCount++] = i;
     }
     g_activePtr = 0;

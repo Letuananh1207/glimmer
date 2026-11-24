@@ -114,6 +114,7 @@ tiếp từ nhiệm vụ chưa đánh dấu.
 | Cài / đổi Wi-Fi, glimmer-setup   | `wifi_setup`, `wifi_service`, `device_repository`    |
 | Trạng thái chung của app (thiết bị, polling) | `device_repository`, `polling_lifecycle`  |
 | Màu, font, giao diện chung       | `themes`, `app_text`, `status_colors`, `labels`      |
+| Skill, gói chức năng (Agent, Nhạc…), skill đang dùng | `skill`, `skill_rules`, `switch_skill_use_case`, firmware `src/data/skill_core.h` |
 | Quy tắc nghiệp vụ, test quy tắc  | `docs/testing/quy_tac.md` (mã `R-…`), `lib/domain/rules/`, test ghi mã trong `test/` |
 
 Thêm tính năng hoặc thư mục mới → bổ sung một dòng vào bảng này cùng lúc.

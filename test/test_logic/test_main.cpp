@@ -10,6 +10,7 @@
 #include "attention_core.h"
 #include "attention_json.h"
 #include "utf8.h"
+#include "skill_core.h"
 #include "projects_core.h"
 
 void setUp() {}
@@ -709,6 +710,20 @@ void test_projects_from_pushed_cards() {
     TEST_ASSERT_FALSE(Projects::noteItem(b, sys, 3000002));     // device notices stay off the board
 }
 
+// R-SK-1 / R-SK-2: one skill owns the screen; system channels show under every skill.
+void test_skill_filter_and_default() {
+    TEST_ASSERT_TRUE(Skill::known("agent"));
+    TEST_ASSERT_FALSE(Skill::known("music"));
+    TEST_ASSERT_FALSE(Skill::known(nullptr));
+    TEST_ASSERT_EQUAL_STRING("agent", Skill::active("agent"));
+    TEST_ASSERT_EQUAL_STRING("agent", Skill::active("gone"));   // unknown → default
+    TEST_ASSERT_EQUAL_STRING("agent", Skill::active(""));
+    TEST_ASSERT_TRUE(Skill::shows(nullptr, "agent"));           // system channel (Clock, Attention…)
+    TEST_ASSERT_TRUE(Skill::shows(nullptr, "music"));
+    TEST_ASSERT_TRUE(Skill::shows("agent", "agent"));
+    TEST_ASSERT_FALSE(Skill::shows("agent", "music"));
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_claude_limits_drive_windows_and_ignore_codenames);
@@ -751,5 +766,6 @@ int main(int, char**) {
     RUN_TEST(test_projects_order_idle_and_eviction);
     RUN_TEST(test_projects_sessions_merge_per_project);
     RUN_TEST(test_projects_from_pushed_cards);
+    RUN_TEST(test_skill_filter_and_default);
     return UNITY_END();
 }

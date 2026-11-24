@@ -881,5 +881,9 @@
         "type": "String"
       }
     }
+  },
+  "devErrSkillUnsupported": "Thiết bị chưa hỗ trợ skill này — cập nhật firmware.",
+  "@devErrSkillUnsupported": {
+    "description": "Lỗi: firmware cũ không đổi được skill (R-SK-4)"
   }
 }

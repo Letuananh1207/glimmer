@@ -27,9 +27,14 @@ struct ChannelCtx {
 //
 // To add a new channel: drop one .cpp into src/channels/ + add a row to
 // main.cpp's kChannels[] table. No other code changes.
+//
+// skill: the feature pack the channel belongs to (Skill::kAll in skill_core.h);
+// nullptr = system channel, shown under every skill. Only channels of the
+// active skill (Settings::skill) + system channels rotate.
 struct Channel {
     const char*  name;
     bool       (*enabled)(const ChannelCtx&);
     void       (*draw)   (const ChannelCtx&);
     void       (*tick)   (const ChannelCtx&);   // may be nullptr
+    const char*  skill = nullptr;
 };

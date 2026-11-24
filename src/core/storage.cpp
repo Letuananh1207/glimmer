@@ -73,6 +73,7 @@ Settings Storage::load() {
     s.approvalTtlMin = doc["approval_ttl_min"] | 30;
     s.agentDoneCards = doc["agent_done_cards"] | false;
     s.agentNightShow = doc["agent_night_show"] | false;
+    s.skill          = doc["skill"]            | "agent";
     return s;
 }
 
@@ -128,6 +129,7 @@ bool Storage::save(const Settings& s) {
     doc["approval_ttl_min"] = s.approvalTtlMin;
     doc["agent_done_cards"] = s.agentDoneCards;
     doc["agent_night_show"] = s.agentNightShow;
+    doc["skill"]            = s.skill;
     return writeAtomic([&](File& f) { return serializeJson(doc, f); });
 }
 

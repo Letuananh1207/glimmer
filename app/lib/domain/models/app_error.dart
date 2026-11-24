@@ -48,6 +48,9 @@ enum AppErrorKind {
   /// The picked file is not a glimmer config; [AppError.detail] = parser message.
   invalidBackup,
 
+  /// The device's firmware cannot switch skills, or does not have skill [AppError.detail] (R-SK-4).
+  skillUnsupported,
+
   /// Anything else; [AppError.detail] = the error.
   other,
 }

@@ -48,6 +48,7 @@ extension Labels on AppLocalizations {
         AppErrorKind.noAnswerAfterFlash => devErrNoAnswerAfterFlash,
         AppErrorKind.configUnreadable => devErrConfigUnreadable,
         AppErrorKind.invalidBackup => devErrInvalidBackup,
+        AppErrorKind.skillUnsupported => devErrSkillUnsupported,
         AppErrorKind.other => e.detail,
       };
 }

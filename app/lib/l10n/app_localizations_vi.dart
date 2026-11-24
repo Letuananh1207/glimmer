@@ -629,4 +629,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String devUpdateFailed(String error) {
     return 'Cập nhật lỗi: $error';
   }
+
+  @override
+  String get devErrSkillUnsupported =>
+      'Thiết bị chưa hỗ trợ skill này — cập nhật firmware.';
 }
