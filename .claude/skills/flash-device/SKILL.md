@@ -16,7 +16,7 @@ Facts this relies on:
   `filesystem`. A firmware flash keeps the filesystem; a filesystem flash
   replaces everything on it (`/config.json`, usage history, fonts, web UI).
 - Prebuilt images (rolling `latest` release, rebuilt on every push to `main`):
-  `https://github.com/Avinava/glimmer/releases/download/latest/firmware.bin`
+  `https://github.com/Letuananh1207/glimmer/releases/download/latest/firmware.bin`
   and `.../latest/littlefs.bin`. Pinned versions: `.../download/vX.Y.Z/…`.
 - `GET /api/state` → `fw`, `wifi` (`connected`/`ap`), `ip`,
   `claude_configured`, `codex_configured`, `weather_configured`, `heap`, …
@@ -103,8 +103,8 @@ curl -s --max-time 3 http://<ip>/city.json | head -c 100
 
 ```bash
 W=$(mktemp -d) && cd "$W"
-curl -L -f -o littlefs.bin https://github.com/Avinava/glimmer/releases/download/latest/littlefs.bin
-curl -L -f -o firmware.bin https://github.com/Avinava/glimmer/releases/download/latest/firmware.bin
+curl -L -f -o littlefs.bin https://github.com/Letuananh1207/glimmer/releases/download/latest/littlefs.bin
+curl -L -f -o firmware.bin https://github.com/Letuananh1207/glimmer/releases/download/latest/firmware.bin
 ls -la firmware.bin littlefs.bin
 ```
 
@@ -173,7 +173,7 @@ web UI) between the device's `fw` and the target. If unsure, check
 
 ```bash
 W=$(mktemp -d) && cd "$W"
-curl -L -f -o firmware.bin https://github.com/Avinava/glimmer/releases/download/latest/firmware.bin
+curl -L -f -o firmware.bin https://github.com/Letuananh1207/glimmer/releases/download/latest/firmware.bin
 curl -F "firmware=@firmware.bin" http://<ip>/update
 for i in $(seq 1 40); do curl -sf --max-time 3 http://<ip>/api/state && break; done
 # Local build instead: pio run -e nodemcuv2, then .pio/build/nodemcuv2/firmware.bin

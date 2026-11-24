@@ -27,7 +27,7 @@ flash replaces it. `pio run -e ota` (espota) does **not** work — no ArduinoOTA
 
 Committed code: download CI builds from the rolling `latest` release instead
 of building —
-`https://github.com/Avinava/glimmer/releases/download/latest/{firmware,littlefs}.bin`.
+`https://github.com/Letuananh1207/glimmer/releases/download/latest/{firmware,littlefs}.bin`.
 Build locally only for uncommitted changes.
 
 **Firmware only** (no `data/` changes): just
@@ -109,7 +109,7 @@ secrets.
 header 24 B — u32 glyphCount, version (=11), fontSize, reserved, ascent,
 descent. Per glyph 28 B, sorted by codepoint — u32 codepoint, height, width,
 xAdvance, i32 dY (baseline→top, +up), i32 dX, u32 reserved. Then each
-glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts.md`.
+glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md`.
 
 ## Display polarity / panel quirks
 

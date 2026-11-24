@@ -382,7 +382,10 @@
     <div class="save-bar inline"><button x-on:click="saveSettings(false)" class="primary" x-bind:disabled="saving" x-text="saving ? 'Đang lưu...' : 'Lưu phê duyệt & token'"></button></div>
     <article>
       <h2>Kết nối tác tử của bạn</h2>
-      <div class="hint"><b>1. Script hook</b> — chuyển yêu cầu phê duyệt tới màn hình này (cần <code>curl</code> và <code>jq</code>):</div>
+      <div class="hint"><b>Cách nhanh</b> (Windows / macOS / Linux, chỉ cần Node) — chạy một lần trên mỗi máy. Trình cài gộp hook vào <code>~/.claude/settings.json</code> (và Codex nếu có) mà không đụng cài đặt khác, rồi thử kết nối tới màn hình này. Đổi máy hoặc đổi Wi-Fi: chạy <code>node tools/glimmer-setup.mjs</code>.</div>
+      <pre class="snippet" x-text="quickSnippet()"></pre>
+      <div class="hint"><b>Cách thủ công</b> (cần <code>curl</code> và <code>jq</code>):</div>
+      <div class="hint"><b>1. Script hook</b> — chuyển yêu cầu phê duyệt tới màn hình này:</div>
       <pre class="snippet" x-text="installSnippet()"></pre>
       <div class="hint"><b>2a. Claude Code</b> — gộp vào <code>~/.claude/settings.json</code> (mọi dự án) hoặc <code>.claude/settings.json</code> của một dự án:</div>
       <pre class="snippet" x-text="claudeHooksSnippet()"></pre>
@@ -749,10 +752,22 @@ function app() {
 
     deviceUrl() { return 'http://' + (this.state.ip || 'glimmer.local'); },
 
+    // One-command install from the user's repo (tools/agents/install.mjs).
+    // --url only when this page isn't reached by mDNS name (it defaults to
+    // glimmer.local); --token only when one is set.
+    quickSnippet() {
+      const tok = this.snippetToken();
+      const host = location.hostname;
+      const url = host && host !== 'glimmer.local' && host !== '192.168.4.1' ? ` --url ${this.deviceUrl()}` : '';
+      return `git clone https://github.com/Letuananh1207/glimmer.git
+cd glimmer
+node tools/agents/install.mjs${url}` + (tok ? ` --token ${tok}` : '');
+    },
+
     installSnippet() {
       const tok = this.snippetToken();
       return `mkdir -p ~/.local/bin
-curl -fsSL https://raw.githubusercontent.com/Avinava/glimmer/main/tools/agents/glimmer-hook.sh \\
+curl -fsSL https://raw.githubusercontent.com/Letuananh1207/glimmer/main/tools/agents/glimmer-hook.sh \\
   -o ~/.local/bin/glimmer-hook.sh && chmod +x ~/.local/bin/glimmer-hook.sh
 # in your shell profile:
 export GLIMMER_URL=${this.deviceUrl()}` + (tok ? `\nexport GLIMMER_TOKEN=${tok}` : '');

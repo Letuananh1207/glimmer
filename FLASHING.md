@@ -10,8 +10,8 @@ ESP8266's tiny buffers wedges curl mid-upload over the slow AP.
 1. Get the stock firmware onto your home Wi-Fi (one-time).
 2. Find the device's home-LAN IP.
 3. Download the prebuilt images (no toolchain needed):
-   `curl -L -O https://github.com/Avinava/glimmer/releases/download/latest/littlefs.bin`
-   `curl -L -O https://github.com/Avinava/glimmer/releases/download/latest/firmware.bin`
+   `curl -L -O https://github.com/Letuananh1207/glimmer/releases/download/latest/littlefs.bin`
+   `curl -L -O https://github.com/Letuananh1207/glimmer/releases/download/latest/firmware.bin`
 4. `curl -F "filesystem=@littlefs.bin" http://<device-ip>/update` (filesystem **first**)
 5. `curl -F "firmware=@firmware.bin"   http://<device-ip>/update`
 6. Device boots into glimmer's setup AP. Connect to it once to enter
@@ -94,17 +94,17 @@ nmap -sn 192.168.0.0/24
 ### Option A — download the prebuilt binaries (recommended, no toolchain)
 
 CI builds every push to `main` and publishes the images to the rolling
-[`latest`](https://github.com/Avinava/glimmer/releases/tag/latest) release.
+[`latest`](https://github.com/Letuananh1207/glimmer/releases/tag/latest) release.
 Grab them into your working directory:
 
 ```bash
-curl -L -O https://github.com/Avinava/glimmer/releases/download/latest/littlefs.bin
-curl -L -O https://github.com/Avinava/glimmer/releases/download/latest/firmware.bin
+curl -L -O https://github.com/Letuananh1207/glimmer/releases/download/latest/littlefs.bin
+curl -L -O https://github.com/Letuananh1207/glimmer/releases/download/latest/firmware.bin
 ```
 
 For a pinned version instead of the rolling latest, use a `v*` release's
 assets (when one exists):
-`https://github.com/Avinava/glimmer/releases/download/vX.Y.Z/firmware.bin`.
+`https://github.com/Letuananh1207/glimmer/releases/download/vX.Y.Z/firmware.bin`.
 
 ### Option B — build from source (for developers)
 
@@ -165,8 +165,8 @@ Steps:
 Download the latest images (or build them, Option B):
 
 ```bash
-curl -L -O https://github.com/Avinava/glimmer/releases/download/latest/firmware.bin
-curl -L -O https://github.com/Avinava/glimmer/releases/download/latest/littlefs.bin
+curl -L -O https://github.com/Letuananh1207/glimmer/releases/download/latest/firmware.bin
+curl -L -O https://github.com/Letuananh1207/glimmer/releases/download/latest/littlefs.bin
 ```
 
 **Firmware only** — keeps all settings. Enough unless fonts or the web UI

@@ -14,7 +14,7 @@ hooks) → read [`docs/AGENTS-GLIMMER.md`](docs/AGENTS-GLIMMER.md), not this.
   before any non-trivial change.
 - `src/channels/channel.h` — the channel API and the partial-redraw contract.
 - `FLASHING.md` — getting glimmer onto a device; `.claude/skills/` —
-  runbooks: `flash-device.md`, `regenerate-fonts.md`.
+  skills (`<name>/SKILL.md`): `flash-device`, `regenerate-fonts`, `glimmer-setup`.
 
 ## Repo layout
 
@@ -106,7 +106,7 @@ Builds firmware + LittleFS on every push to `main`, `v*` tag, PR to `main`, or
 manual dispatch. It does **not** run `pio test -e native` — run it yourself.
 
 - Push to `main` → replaces the rolling **`latest`** release:
-  `https://github.com/Avinava/glimmer/releases/download/latest/firmware.bin`
+  `https://github.com/Letuananh1207/glimmer/releases/download/latest/firmware.bin`
   (and `littlefs.bin`).
 - `v*` tag → permanent versioned release (doesn't take the "Latest" badge).
 - PR → build only, binaries as a 30-day CI artifact.

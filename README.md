@@ -187,12 +187,12 @@ The token is short-lived; glimmer reads its expiry and warns before it lapses.
 ### Flash the prebuilt images (no toolchain)
 
 Every push to `main` is built by CI and published to the rolling
-**[`latest`](https://github.com/Avinava/glimmer/releases/tag/latest)** release
+**[`latest`](https://github.com/Letuananh1207/glimmer/releases/tag/latest)** release
 (each `v*` tag also gets its own release):
 
 ```bash
-curl -L -O https://github.com/Avinava/glimmer/releases/download/latest/littlefs.bin
-curl -L -O https://github.com/Avinava/glimmer/releases/download/latest/firmware.bin
+curl -L -O https://github.com/Letuananh1207/glimmer/releases/download/latest/littlefs.bin
+curl -L -O https://github.com/Letuananh1207/glimmer/releases/download/latest/firmware.bin
 ```
 
 - **Stock SmallTV-Ultra → glimmer:** see **[FLASHING.md](./FLASHING.md)**
@@ -215,10 +215,10 @@ From a clone of this repo, run the `flash-device` skill:
 Or from anywhere, paste:
 
 > Please flash glimmer onto my GeekMagic SmallTV-Ultra. Follow the skill at
-> **https://github.com/Avinava/glimmer/blob/main/.claude/skills/flash-device.md**:
+> **https://github.com/Letuananh1207/glimmer/blob/main/.claude/skills/flash-device/SKILL.md**:
 > detect whether the device is stock or already on glimmer, verify every step
 > (curl `/api/state`), use the prebuilt
-> [`latest`](https://github.com/Avinava/glimmer/releases/tag/latest) images,
+> [`latest`](https://github.com/Letuananh1207/glimmer/releases/tag/latest) images,
 > keep my settings, and confirm with me before each step.
 > My device is `<next to me / at <ip> / glimmer.local>`; my OS is `<macOS / Linux / Windows>`.
 
@@ -286,6 +286,7 @@ Terms of Service (Anthropic, OpenAI, etc.). See the Disclaimer above.
 
 ## Acknowledgments
 
+- Fork of [Avinava/glimmer](https://github.com/Avinava/glimmer) (original firmware); this fork adds the Vietnamese UI, the project board and the cross-machine setup tools.
 - Inspired by [Clawdmeter](https://github.com/HermannBjorgvin/Clawdmeter) by Hermann Björgvin.
 - GeekMagic SmallTV-Ultra — the hardware.
 - [TFT_eSPI](https://github.com/Bodmer/TFT_eSPI) — display driver.
