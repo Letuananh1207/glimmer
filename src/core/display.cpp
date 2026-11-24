@@ -267,7 +267,34 @@ static int  s_connectLitDot    = -1;
 static int  s_otaChrome        = false;
 static int  s_otaLastPct       = -1;
 
+// ── Boot screen, Mac-style ──
+// Pure black, a white Clawd where the Apple logo would sit (a little above
+// centre), a thin rounded progress bar under it, no text. The bar only grows;
+// the logo is painted once, then each call fills just the new slice.
+static bool s_bootChrome = false;
+static int  s_bootFill   = -1;                 // px of the bar already white
+static constexpr int kBootBarX = 60, kBootBarY = 156, kBootBarW = 120, kBootBarH = 5;
+static constexpr uint16_t kBootTrack = 0x39C7; // #3A3A3C, macOS's track grey
+
+void Display::drawBoot(uint8_t pct) {
+    if (pct > 100) pct = 100;
+    if (!s_bootChrome) {
+        tft.fillScreen(0x0000);
+        drawClawd((SCREEN_W - 90) / 2, 70, 5, 0xFFFF, CLAWD_OPEN, false, 0x0000);
+        tft.fillRoundRect(kBootBarX, kBootBarY, kBootBarW, kBootBarH, 2, kBootTrack);
+        s_bootChrome = true;
+        s_bootFill = 0;
+    }
+    int w = kBootBarW * pct / 100;
+    if (w <= s_bootFill) return;
+    // Round the leading cap only once the fill is wider than the radius.
+    tft.fillRoundRect(kBootBarX, kBootBarY, w < kBootBarH ? kBootBarH : w, kBootBarH, 2, 0xFFFF);
+    s_bootFill = w;
+}
+
 void Display::resetSystemScreens() {
+    s_bootChrome = false;
+    s_bootFill   = -1;
     s_splashChrome      = false;
     s_splashLine[0]     = 0;
     s_connectSsid[0]    = 0;
