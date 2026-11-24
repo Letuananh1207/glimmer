@@ -17,10 +17,10 @@
 // Always exits 0 within ~4.5 s (runs async), so an offline display never blocks the agent.
 // `--dry-run` prints the payload instead of sending it.
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { lookup } from "node:dns/promises";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 
 const agent = process.argv[2] === "codex" ? "codex" : "claude";
 const dryRun = process.argv.includes("--dry-run");
@@ -72,6 +72,22 @@ function redact(s) {
     .replace(/(sk-[A-Za-z0-9_-]{8,}|eyJ[A-Za-z0-9_-]{10,}(\.[A-Za-z0-9_-]+){0,2}|gh[pousr]_[A-Za-z0-9]{10,}|xox[abprs]-[A-Za-z0-9-]{10,}|AKIA[0-9A-Z]{12,})/g, "***");
 }
 
+// The project is the repository, not the sub-folder a session runs in:
+// glimmer/app and glimmer/design are both "glimmer". Walk up to the nearest
+// folder holding .git (a dir, or a file in worktrees/submodules); no repo →
+// the cwd as is. The display takes the last path segment as the name.
+function projectRoot(cwd) {
+  if (!cwd) return cwd;
+  let dir = cwd;
+  for (let i = 0; i < 40; i++) {
+    if (existsSync(join(dir, ".git"))) return dir;
+    const up = dirname(dir);
+    if (up === dir) break;
+    dir = up;
+  }
+  return cwd;
+}
+
 function payload(ev) {
   const ti = ev.tool_input || {};
   const detail = ti.command ?? ti.file_path ?? ti.path ?? "";
@@ -80,7 +96,7 @@ function payload(ev) {
     event: ev.hook_event_name || "",
     type: ev.notification_type || "",
     session: ev.session_id || "",
-    cwd: (ev.cwd || "").replace(/\\/g, "/"),       // device takes the last "/" segment
+    cwd: projectRoot(ev.cwd || "").replace(/\\/g, "/"),   // repo root; device takes the last segment
     tool: ev.tool_name || "",
     detail: redact(typeof detail === "string" ? detail : JSON.stringify(detail)).slice(0, 60),
     message: redact(String(message).replace(/\s+/g, " ")).slice(0, 80),

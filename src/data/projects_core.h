@@ -6,6 +6,11 @@
 // task after 20 s; this answers "how are my projects doing", so DONE stays
 // visible for hours. Fed by the same hook events (and by pushed cards that
 // name a project). Pure C++ — host-testable.
+//
+// One entry per SESSION (project + agent + session id), shown one row per
+// PROJECT: two Claude Code sessions in glimmer/app and glimmer/design are
+// both "glimmer" (the hook sends the git root as cwd) and the row shows the
+// most urgent of them, so one finishing doesn't hide the other still running.
 #include <stdint.h>
 #include <string.h>
 #include "attention_core.h"
@@ -14,7 +19,7 @@ namespace Projects {
 
 enum State : uint8_t { P_APPROVAL, P_INPUT, P_ERROR, P_WORKING, P_DONE };  // display priority
 
-constexpr int      kMax       = 4;
+constexpr int      kMax       = 8;           // sessions tracked (rows shown: ≤ 3 on screen)
 constexpr uint32_t kKeepS     = 6 * 3600;   // DONE / ERROR stay this long
 constexpr uint32_t kIdleS     = 30 * 60;    // WORKING with no event this long → hidden
 
@@ -26,18 +31,20 @@ struct Entry {
     char             detail[24] = "";   // tool ("Bash") or progress ("62%")
     uint32_t         since = 0;         // state entered
     uint32_t         last = 0;          // last event of any kind
+    char             session[12] = "";  // first chars of the agent's session id
 };
 
 struct Board { Entry e[kMax]; };
 
 inline void clearAll(Board& b) { for (auto& x : b.e) x = Entry(); }
 
-// Slot for (project, agent): existing, else free, else the stalest.
-inline Entry& slot(Board& b, const char* project, Attention::Agent agent) {
+// Slot for (project, agent, session): existing, else free, else the stalest.
+inline Entry& slot(Board& b, const char* project, Attention::Agent agent, const char* session) {
     int free = -1, oldest = 0;
+    char sess[12]; Attention::copyStr(sess, sizeof(sess), session ? session : "");
     for (int i = 0; i < kMax; i++) {
         Entry& x = b.e[i];
-        if (x.used && x.agent == agent && !strcmp(x.project, project)) return x;
+        if (x.used && x.agent == agent && !strcmp(x.project, project) && !strcmp(x.session, sess)) return x;
         if (!x.used && free < 0) free = i;
         if (x.used && x.last < b.e[oldest].last) oldest = i;
     }
@@ -45,13 +52,14 @@ inline Entry& slot(Board& b, const char* project, Attention::Agent agent) {
     x = Entry();
     x.used = true;
     Attention::copyStr(x.project, sizeof(x.project), project);
+    Attention::copyStr(x.session, sizeof(x.session), sess);
     x.agent = agent;
     return x;
 }
 
 inline bool set(Board& b, const char* project, Attention::Agent agent, State st,
-                const char* detail, uint32_t now) {
-    Entry& x = slot(b, project, agent);
+                const char* detail, uint32_t now, const char* session = "") {
+    Entry& x = slot(b, project, agent, session);
     bool changed = !x.since || x.state != st;
     if (changed) x.since = now;
     x.state = st;
@@ -86,11 +94,12 @@ inline bool noteHook(Board& b, Attention::Agent agent, const Attention::HookEven
     bool working  = !strcmp(ev, "UserPromptSubmit") || !strcmp(ev, "PreToolUse")
                  || !strcmp(ev, "PostToolUse") || !strcmp(ev, "PostToolUseFailure");
 
-    if (approval) return set(b, p, agent, P_APPROVAL, e.tool ? e.tool : "", now);
-    if (input)    return set(b, p, agent, P_INPUT, "", now);
-    if (done)     return set(b, p, agent, P_DONE, "", now);
+    const char* s = e.session ? e.session : "";
+    if (approval) return set(b, p, agent, P_APPROVAL, e.tool ? e.tool : "", now, s);
+    if (input)    return set(b, p, agent, P_INPUT, "", now, s);
+    if (done)     return set(b, p, agent, P_DONE, "", now, s);
     if (working)  return set(b, p, agent, P_WORKING,
-                             !strcmp(ev, "UserPromptSubmit") ? "" : (e.tool ? e.tool : ""), now);
+                             !strcmp(ev, "UserPromptSubmit") ? "" : (e.tool ? e.tool : ""), now, s);
     return false;
 }
 
@@ -118,17 +127,34 @@ inline bool shown(const Entry& x, uint32_t now) {
     return true;                       // waiting on the user: until answered
 }
 
-// Visible entries, most urgent first; newest first within a state.
-inline int ordered(const Board& b, int out[kMax], uint32_t now) {
+// a shows before b: more urgent state, then the newer one.
+inline bool before(const Entry& a, const Entry& b) {
+    return a.state < b.state || (a.state == b.state && a.since > b.since);
+}
+
+// One row per project: of its visible sessions, the most urgent (ties: the
+// newest). Rows sorted most urgent first. [sessions], if given, receives how
+// many visible sessions each row stands for.
+inline int ordered(const Board& b, int out[kMax], uint32_t now, int sessions[kMax] = nullptr) {
     int n = 0;
-    for (int i = 0; i < kMax; i++) if (shown(b.e[i], now)) out[n++] = i;
+    for (int i = 0; i < kMax; i++) {
+        if (!shown(b.e[i], now)) continue;
+        int row = -1;
+        for (int k = 0; k < n; k++)
+            if (!strcmp(b.e[out[k]].project, b.e[i].project)) { row = k; break; }
+        if (row < 0) {
+            if (sessions) sessions[n] = 1;
+            out[n++] = i;
+        } else {
+            if (sessions) sessions[row]++;
+            if (before(b.e[i], b.e[out[row]])) out[row] = i;
+        }
+    }
     for (int i = 1; i < n; i++)
         for (int j = i; j > 0; j--) {
-            const Entry& a = b.e[out[j - 1]];
-            const Entry& c = b.e[out[j]];
-            bool swap = c.state < a.state || (c.state == a.state && c.since > a.since);
-            if (!swap) break;
+            if (!before(b.e[out[j]], b.e[out[j - 1]])) break;
             int t = out[j]; out[j] = out[j - 1]; out[j - 1] = t;
+            if (sessions) { int u = sessions[j]; sessions[j] = sessions[j - 1]; sessions[j - 1] = u; }
         }
     return n;
 }

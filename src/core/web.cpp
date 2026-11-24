@@ -165,10 +165,15 @@ static void handleApiState() {
         const Projects::Board& pb = AttentionQueue::projects();
         uint32_t pnow = AttentionQueue::now();
         static const char* const kSt[] = {"approval", "input", "error", "working", "done"};
+        // One row per project (sessions merged, most urgent wins) — what the
+        // screen shows; "sessions" = how many agent sessions are behind it.
         JsonArray pa = d["projects"].to<JsonArray>();
-        for (const auto& x : pb.e) {
-            if (!x.used) continue;
+        int ord[Projects::kMax], cnt[Projects::kMax];
+        int rows = Projects::ordered(pb, ord, pnow, cnt);
+        for (int r = 0; r < rows; r++) {
+            const Projects::Entry& x = pb.e[ord[r]];
             JsonObject o = pa.add<JsonObject>();
+            o["sessions"] = cnt[r];
             o["project"] = x.project;
             o["agent"]   = Attention::agentName(x.agent);
             o["state"]   = kSt[x.state];

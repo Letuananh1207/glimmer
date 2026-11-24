@@ -38,6 +38,14 @@ payload=$(jq -c 'def redact:
 }' 2>/dev/null) || exit 0
 [ -n "$payload" ] || exit 0
 
+# The project is the repository, not the sub-folder the session runs in
+# (glimmer/app and glimmer/design are both "glimmer"): send the git root.
+cwd=$(printf '%s' "$payload" | jq -r '.cwd' 2>/dev/null)
+if [ -n "$cwd" ] && command -v git >/dev/null 2>&1; then
+  root=$(git -C "$cwd" rev-parse --show-toplevel 2>/dev/null)
+  [ -n "$root" ] && payload=$(printf '%s' "$payload" | jq -c --arg r "$root" '.cwd = $r' 2>/dev/null)
+fi
+
 if [ -n "$GLIMMER_TOKEN" ]; then
   curl -s --max-time 2 -X POST -H 'Content-Type: application/json' \
        -H "Authorization: Bearer $GLIMMER_TOKEN" \

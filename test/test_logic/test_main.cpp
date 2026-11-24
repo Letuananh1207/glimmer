@@ -653,13 +653,46 @@ void test_projects_order_idle_and_eviction() {
     TEST_ASSERT_EQUAL_STRING("done", b.e[ord[2]].project);
     // A working project with no event for 30 min is hidden (agent gone quiet).
     TEST_ASSERT_EQUAL(2, Projects::ordered(b, ord, t + 1 + Projects::kIdleS));
-    // Full board: the stalest entry makes room.
-    Projects::noteHook(b, Attention::AGENT_CLAUDE, hev("Stop", "/a/four"), t + 10);
-    Projects::noteHook(b, Attention::AGENT_CLAUDE, hev("Stop", "/a/five"), t + 11);
-    bool hasDone = false, hasFive = false;
-    for (auto& x : b.e) { if (!strcmp(x.project, "done")) hasDone = true; if (!strcmp(x.project, "five")) hasFive = true; }
+    // Full board (kMax sessions): the stalest entry makes room.
+    static const char* more[] = {"/a/p4", "/a/p5", "/a/p6", "/a/p7", "/a/p8", "/a/p9"};
+    for (int i = 0; i < 6; i++) Projects::noteHook(b, Attention::AGENT_CLAUDE, hev("Stop", more[i]), t + 10 + i);
+    bool hasDone = false, hasLast = false;
+    for (auto& x : b.e) { if (!strcmp(x.project, "done")) hasDone = true; if (!strcmp(x.project, "p9")) hasLast = true; }
     TEST_ASSERT_FALSE(hasDone);
-    TEST_ASSERT_TRUE(hasFive);
+    TEST_ASSERT_TRUE(hasLast);
+}
+
+// Two sessions in one repo are one row; the most urgent session wins, so one
+// finishing doesn't hide the other still running.
+void test_projects_sessions_merge_per_project() {
+    Projects::Board b; Projects::clearAll(b);
+    const uint32_t t = 2500000;
+    Attention::HookEvent app = hev("PostToolUse", "C:/src/glimmer", "", "Bash");
+    app.session = "sess-app";
+    Attention::HookEvent design = hev("PostToolUse", "C:/src/glimmer", "", "Edit");
+    design.session = "sess-design";
+    Attention::HookEvent zidex = hev("PostToolUse", "C:/src/zidex", "", "Read");
+    zidex.session = "sess-zidex";
+    Projects::noteHook(b, Attention::AGENT_CLAUDE, app, t);
+    Projects::noteHook(b, Attention::AGENT_CLAUDE, design, t + 1);
+    Projects::noteHook(b, Attention::AGENT_CLAUDE, zidex, t + 2);
+    int ord[Projects::kMax], cnt[Projects::kMax];
+    TEST_ASSERT_EQUAL(2, Projects::ordered(b, ord, t + 3, cnt));       // glimmer + zidex
+    int g = !strcmp(b.e[ord[0]].project, "glimmer") ? 0 : 1;
+    TEST_ASSERT_EQUAL_STRING("glimmer", b.e[ord[g]].project);
+    TEST_ASSERT_EQUAL(2, cnt[g]);                                      // two sessions behind it
+    // The design session stops: glimmer still shows running (app is working).
+    design.event = "Stop";
+    Projects::noteHook(b, Attention::AGENT_CLAUDE, design, t + 4);
+    Projects::ordered(b, ord, t + 5, cnt);
+    g = !strcmp(b.e[ord[0]].project, "glimmer") ? 0 : 1;
+    TEST_ASSERT_EQUAL(Projects::P_WORKING, b.e[ord[g]].state);
+    // The app session asks for approval: glimmer becomes the top row.
+    app.event = "Notification"; app.type = "permission_prompt";
+    Projects::noteHook(b, Attention::AGENT_CLAUDE, app, t + 6);
+    Projects::ordered(b, ord, t + 7, cnt);
+    TEST_ASSERT_EQUAL_STRING("glimmer", b.e[ord[0]].project);
+    TEST_ASSERT_EQUAL(Projects::P_APPROVAL, b.e[ord[0]].state);
 }
 
 void test_projects_from_pushed_cards() {
@@ -716,6 +749,7 @@ int main(int, char**) {
     RUN_TEST(test_short_duration_units);
     RUN_TEST(test_projects_follow_hook_events);
     RUN_TEST(test_projects_order_idle_and_eviction);
+    RUN_TEST(test_projects_sessions_merge_per_project);
     RUN_TEST(test_projects_from_pushed_cards);
     return UNITY_END();
 }
