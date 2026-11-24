@@ -106,14 +106,14 @@ tiếp từ nhiệm vụ chưa đánh dấu.
 
 | Người dùng nói                   | Từ khoá cho script / thư mục                         |
 | -------------------------------- | ---------------------------------------------------- |
-| Điều hướng, route                | `routing`, `<tính năng>_routes`                      |
-| Tìm / kết nối thiết bị, IP, token | `connect_screen`, `discovery`, `store`              |
-| Tổng quan, mức dùng, bảng project, thẻ | `dashboard_screen`, `device_api`, `models`, `clawd` |
-| Cài đặt (độ sáng, ban đêm, agent…) | `settings_screen`, `device_api`                    |
-| Thiết bị, firmware, sao lưu/khôi phục | `device_screen`, `releases`, `device_api`        |
-| Cài / đổi Wi-Fi, glimmer-setup   | `wifi_setup_screen`, `wifi`                          |
-| Trạng thái chung của app         | `app_controller`                                     |
-| Màu, font, giao diện chung       | `theme`                                              |
-| Quy tắc nghiệp vụ, test quy tắc  | `docs/testing/quy_tac.md` (mã `R-…`), `test/rules/`  |
+| Điều hướng, route                | `routing`, `router`, `routes`, `screens` (`lib/routing/`) |
+| Tìm / kết nối thiết bị, IP, token | `connect`, `device_repository`, `discovery_service`, `local_store_service` |
+| Tổng quan, mức dùng, bảng project, thẻ | `dashboard`, `usage_rules`, `board_rules`, `device_state`, `clawd` |
+| Cài đặt (độ sáng, ban đêm, agent…) | `settings`, `device_repository`                  |
+| Thiết bị, firmware, sao lưu/khôi phục | `device`, `release_repository`, `backup_repository`, `update_rules` |
+| Cài / đổi Wi-Fi, glimmer-setup   | `wifi_setup`, `wifi_service`, `device_repository`    |
+| Trạng thái chung của app (thiết bị, polling) | `device_repository`, `polling_lifecycle`  |
+| Màu, font, giao diện chung       | `themes`, `app_text`, `status_colors`, `labels`      |
+| Quy tắc nghiệp vụ, test quy tắc  | `docs/testing/quy_tac.md` (mã `R-…`), `lib/domain/rules/`, test ghi mã trong `test/` |
 
 Thêm tính năng hoặc thư mục mới → bổ sung một dòng vào bảng này cùng lúc.

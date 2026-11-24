@@ -1,0 +1,885 @@
+{
+  "@@locale": "vi",
+  "navDashboard": "Tổng quan",
+  "@navDashboard": {
+    "description": "Tab dưới"
+  },
+  "navSettings": "Cài đặt",
+  "@navSettings": {
+    "description": "Tab dưới"
+  },
+  "navDevice": "Thiết bị",
+  "@navDevice": {
+    "description": "Tab dưới"
+  },
+  "commonCancel": "Hủy",
+  "@commonCancel": {
+    "description": "Nút hộp thoại"
+  },
+  "commonRetry": "Thử lại",
+  "@commonRetry": {
+    "description": "Nút thử lại"
+  },
+  "commonSet": "Đặt",
+  "@commonSet": {
+    "description": "Nút hộp thoại đặt giá trị"
+  },
+  "commonSave": "Lưu",
+  "@commonSave": {
+    "description": "Nút lưu token app"
+  },
+  "commonAgo": "{time} trước",
+  "@commonAgo": {
+    "description": "Thời gian đã qua, time = \"2m\", \"3h\"",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "connectSearchingTitle": "Đang tìm thiết bị…",
+  "@connectSearchingTitle": {
+    "description": "Kết nối · đang tìm"
+  },
+  "connectSearchingBody": "Tìm glimmer trên mạng Wi-Fi của điện thoại.",
+  "@connectSearchingBody": {
+    "description": "Kết nối · đang tìm"
+  },
+  "connectIdleTitle": "Chưa kết nối",
+  "@connectIdleTitle": {
+    "description": "Kết nối · chưa có thiết bị"
+  },
+  "connectIdleBody": "Điện thoại cần ở cùng mạng Wi-Fi với thiết bị.",
+  "@connectIdleBody": {
+    "description": "Kết nối · khi không có lỗi cụ thể"
+  },
+  "connectNotFound": "Không tìm thấy thiết bị trên mạng này.",
+  "@connectNotFound": {
+    "description": "Lỗi tìm tự động"
+  },
+  "connectNoDeviceAt": "Không có thiết bị glimmer ở {url}.",
+  "@connectNoDeviceAt": {
+    "description": "Lỗi khi nhập IP",
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "connectRetry": "Tìm lại",
+  "@connectRetry": {
+    "description": "Nút chính"
+  },
+  "connectManual": "Nhập địa chỉ IP",
+  "@connectManual": {
+    "description": "Nút viền"
+  },
+  "connectNewDevice": "Thiết bị mới / đang hiện glimmer-setup",
+  "@connectNewDevice": {
+    "description": "Nút viền, mở Cài Wi-Fi"
+  },
+  "connectManualTitle": "Nhập địa chỉ thiết bị",
+  "@connectManualTitle": {
+    "description": "Hộp thoại"
+  },
+  "connectManualHint": "IP hiện trên kênh Thông tin của thiết bị, ví dụ 192.168.1.50.",
+  "@connectManualHint": {
+    "description": "Hộp thoại"
+  },
+  "connectManualIp": "Địa chỉ IP",
+  "@connectManualIp": {
+    "description": "Ô nhập"
+  },
+  "connectManualToken": "API token (nếu có)",
+  "@connectManualToken": {
+    "description": "Ô nhập, ẩn chữ"
+  },
+  "connectManualOk": "Kết nối",
+  "@connectManualOk": {
+    "description": "Nút hộp thoại"
+  },
+  "dashboardSetupMode": "chế độ cài đặt · {ip}",
+  "@dashboardSetupMode": {
+    "description": "Dòng dưới tên glimmer khi thiết bị ở glimmer-setup",
+    "placeholders": {
+      "ip": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboardSetupNote": "Thiết bị đang ở chế độ cài đặt Wi-Fi (glimmer-setup). Vào tab Thiết bị → Wi-Fi.",
+  "@dashboardSetupNote": {
+    "description": "Thẻ ghi chú"
+  },
+  "dashboardUsageTitle": "MỨC DÙNG CLAUDE",
+  "@dashboardUsageTitle": {
+    "description": "Nhãn thẻ"
+  },
+  "dashboardUsageNoKey": "chưa có khóa Claude — thêm trong Cài đặt",
+  "@dashboardUsageNoKey": {
+    "description": "Meta, amber"
+  },
+  "dashboardUsageKeyBad": "khóa Claude lỗi — cập nhật trong Cài đặt",
+  "@dashboardUsageKeyBad": {
+    "description": "Meta, coral"
+  },
+  "dashboardUsageBlocked": "claude.ai đang chặn thiết bị — tự thử lại",
+  "@dashboardUsageBlocked": {
+    "description": "Meta, amber"
+  },
+  "dashboardUsageStale": "số liệu cũ ({time} trước)",
+  "@dashboardUsageStale": {
+    "description": "Meta, amber",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboardWeek": "Tuần",
+  "@dashboardWeek": {
+    "description": "Dòng %"
+  },
+  "dashboardSession": "Phiên 5 giờ",
+  "@dashboardSession": {
+    "description": "Dòng %"
+  },
+  "dashboardResetIn": "đặt lại sau {time}",
+  "@dashboardResetIn": {
+    "description": "time = \"3d 4h\"",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboardProjects": "PROJECT",
+  "@dashboardProjects": {
+    "description": "Nhãn thẻ"
+  },
+  "dashboardProjectsClear": "Xóa bảng",
+  "@dashboardProjectsClear": {
+    "description": "Nút chữ"
+  },
+  "dashboardProjectsEmpty": "Chưa có hoạt động. Hook của Claude Code sẽ gửi trạng thái lên đây.",
+  "@dashboardProjectsEmpty": {
+    "description": "Bảng project trống"
+  },
+  "dashboardCards": "THẺ TRÊN MÀN HÌNH",
+  "@dashboardCards": {
+    "description": "Nhãn thẻ"
+  },
+  "dashboardCardsClearAll": "Xóa hết",
+  "@dashboardCardsClearAll": {
+    "description": "Nút chữ"
+  },
+  "dashboardRefreshNow": "Tải số liệu ngay",
+  "@dashboardRefreshNow": {
+    "description": "Nút"
+  },
+  "dashboardShowClaude": "Hiện màn Claude",
+  "@dashboardShowClaude": {
+    "description": "Nút"
+  },
+  "dashboardDoneProjectsCleared": "Đã xóa bảng project",
+  "@dashboardDoneProjectsCleared": {
+    "description": "Snackbar"
+  },
+  "dashboardDoneCardCleared": "Đã xóa thẻ",
+  "@dashboardDoneCardCleared": {
+    "description": "Snackbar"
+  },
+  "dashboardDoneCardsCleared": "Đã xóa mọi thẻ",
+  "@dashboardDoneCardsCleared": {
+    "description": "Snackbar"
+  },
+  "dashboardDoneRefresh": "Thiết bị đang tải số liệu mới",
+  "@dashboardDoneRefresh": {
+    "description": "Snackbar"
+  },
+  "dashboardDoneShowClaude": "Đã chuyển sang màn Claude",
+  "@dashboardDoneShowClaude": {
+    "description": "Snackbar"
+  },
+  "stateApproval": "Cần duyệt",
+  "@stateApproval": {
+    "description": "Trạng thái project / loại thẻ"
+  },
+  "stateInput": "Chờ bạn",
+  "@stateInput": {
+    "description": "Trạng thái"
+  },
+  "stateError": "Lỗi",
+  "@stateError": {
+    "description": "Trạng thái"
+  },
+  "stateWorking": "Đang chạy",
+  "@stateWorking": {
+    "description": "Trạng thái"
+  },
+  "stateDone": "Xong",
+  "@stateDone": {
+    "description": "Trạng thái"
+  },
+  "cardProgress": "Tiến độ",
+  "@cardProgress": {
+    "description": "Loại thẻ"
+  },
+  "cardWarning": "Cảnh báo",
+  "@cardWarning": {
+    "description": "Loại thẻ"
+  },
+  "cardInfo": "Thông tin",
+  "@cardInfo": {
+    "description": "Loại thẻ"
+  },
+  "settingsSectionDisplay": "MÀN HÌNH",
+  "@settingsSectionDisplay": {
+    "description": "Nhóm"
+  },
+  "settingsBrightness": "Độ sáng",
+  "@settingsBrightness": {
+    "description": "Thanh trượt, hiện \"Độ sáng: 80%\""
+  },
+  "settingsIdleDim": "Tự giảm sáng khi rảnh",
+  "@settingsIdleDim": {
+    "description": "Công tắc"
+  },
+  "settingsIdleDimSub": "15 phút không có hoạt động agent → 15%",
+  "@settingsIdleDimSub": {
+    "description": "Phụ"
+  },
+  "settingsWeeklyHero": "Số lớn là mức dùng tuần",
+  "@settingsWeeklyHero": {
+    "description": "Công tắc"
+  },
+  "settingsWeeklyHeroSub": "tắt: số lớn là phiên 5 giờ",
+  "@settingsWeeklyHeroSub": {
+    "description": "Phụ"
+  },
+  "settingsClock24h": "Đồng hồ 24 giờ",
+  "@settingsClock24h": {
+    "description": "Công tắc"
+  },
+  "settingsSectionNight": "BAN ĐÊM",
+  "@settingsSectionNight": {
+    "description": "Nhóm"
+  },
+  "settingsNightMode": "Chế độ",
+  "@settingsNightMode": {
+    "description": "Chọn"
+  },
+  "settingsNightNone": "Không",
+  "@settingsNightNone": {
+    "description": "Lựa chọn"
+  },
+  "settingsNightDim": "Giảm sáng",
+  "@settingsNightDim": {
+    "description": "Lựa chọn"
+  },
+  "settingsNightClock": "Đồng hồ",
+  "@settingsNightClock": {
+    "description": "Lựa chọn"
+  },
+  "settingsNightOff": "Tắt màn",
+  "@settingsNightOff": {
+    "description": "Lựa chọn"
+  },
+  "settingsNightFrom": "Từ",
+  "@settingsNightFrom": {
+    "description": "Giờ bắt đầu"
+  },
+  "settingsNightTo": "Đến",
+  "@settingsNightTo": {
+    "description": "Giờ kết thúc"
+  },
+  "settingsNightBright": "Độ sáng ban đêm",
+  "@settingsNightBright": {
+    "description": "Thanh trượt, chỉ khi Giảm sáng"
+  },
+  "settingsSectionClaude": "SỐ LIỆU CLAUDE",
+  "@settingsSectionClaude": {
+    "description": "Nhóm"
+  },
+  "settingsClaudeKey": "Khóa Claude (sessionKey)",
+  "@settingsClaudeKey": {
+    "description": "Dòng khóa"
+  },
+  "settingsClaudeKeyHint": "Dán sessionKey của claude.ai (bắt đầu bằng sk-ant-…).",
+  "@settingsClaudeKeyHint": {
+    "description": "Hộp thoại"
+  },
+  "settingsRefresh": "Tải số liệu mỗi",
+  "@settingsRefresh": {
+    "description": "Chọn"
+  },
+  "settingsMinutes": "{n} phút",
+  "@settingsMinutes": {
+    "description": "Lựa chọn thời gian",
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsHour": "1 giờ",
+  "@settingsHour": {
+    "description": "Lựa chọn"
+  },
+  "settingsNever": "Không bao giờ",
+  "@settingsNever": {
+    "description": "Lựa chọn"
+  },
+  "settingsUserName": "Tên của bạn",
+  "@settingsUserName": {
+    "description": "Dòng tên"
+  },
+  "settingsSectionAgent": "AGENT",
+  "@settingsSectionAgent": {
+    "description": "Nhóm"
+  },
+  "settingsShowAgents": "Màn danh sách tác tử",
+  "@settingsShowAgents": {
+    "description": "Công tắc"
+  },
+  "settingsShowAgentsSub": "thẻ duyệt vẫn hiện khi tắt",
+  "@settingsShowAgentsSub": {
+    "description": "Phụ"
+  },
+  "settingsPinApprovals": "Giữ thẻ duyệt tới khi trả lời",
+  "@settingsPinApprovals": {
+    "description": "Công tắc"
+  },
+  "settingsDoneCards": "Thẻ \"xong\" khi agent dừng",
+  "@settingsDoneCards": {
+    "description": "Công tắc"
+  },
+  "settingsApprovalTtl": "Bỏ thẻ chờ sau",
+  "@settingsApprovalTtl": {
+    "description": "Chọn"
+  },
+  "settingsApiToken": "API token của thiết bị",
+  "@settingsApiToken": {
+    "description": "Dòng khóa"
+  },
+  "settingsApiTokenHint": "Nếu đặt, hook / app phải gửi kèm token này. Để trống để bỏ.",
+  "@settingsApiTokenHint": {
+    "description": "Hộp thoại"
+  },
+  "settingsAppToken": "Token app đang dùng",
+  "@settingsAppToken": {
+    "description": "Dòng"
+  },
+  "settingsAppTokenTitle": "Token cho app",
+  "@settingsAppTokenTitle": {
+    "description": "Hộp thoại"
+  },
+  "settingsSecretSet": "đã đặt",
+  "@settingsSecretSet": {
+    "description": "Trạng thái khóa"
+  },
+  "settingsSecretUnset": "chưa đặt",
+  "@settingsSecretUnset": {
+    "description": "Trạng thái khóa / tên"
+  },
+  "settingsSecretPending": "sẽ đổi khi lưu",
+  "@settingsSecretPending": {
+    "description": "Trạng thái khóa"
+  },
+  "settingsNone": "không có",
+  "@settingsNone": {
+    "description": "Token app"
+  },
+  "settingsSaved": "Đã lưu",
+  "@settingsSaved": {
+    "description": "Snackbar"
+  },
+  "settingsDiscard": "Bỏ thay đổi",
+  "@settingsDiscard": {
+    "description": "Nút viền"
+  },
+  "settingsSaveCount": "Lưu ({count})",
+  "@settingsSaveCount": {
+    "description": "Nút chính, count = số mục đã đổi",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsSaving": "Đang lưu…",
+  "@settingsSaving": {
+    "description": "Nút khi đang lưu"
+  },
+  "deviceInfo": "THIẾT BỊ",
+  "@deviceInfo": {
+    "description": "Nhãn thẻ"
+  },
+  "deviceFirmware": "Firmware",
+  "@deviceFirmware": {
+    "description": "Khóa"
+  },
+  "deviceBuild": "Bản build",
+  "@deviceBuild": {
+    "description": "Khóa"
+  },
+  "deviceWifi": "Wi-Fi",
+  "@deviceWifi": {
+    "description": "Khóa"
+  },
+  "deviceIp": "IP",
+  "@deviceIp": {
+    "description": "Khóa"
+  },
+  "deviceUptime": "Đã chạy",
+  "@deviceUptime": {
+    "description": "Khóa"
+  },
+  "deviceHeap": "Bộ nhớ trống",
+  "@deviceHeap": {
+    "description": "Khóa"
+  },
+  "deviceHeapValue": "{free} KB (khối lớn nhất {block} KB)",
+  "@deviceHeapValue": {
+    "description": "Giá trị",
+    "placeholders": {
+      "free": {
+        "type": "String"
+      },
+      "block": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceSetupMode": "chế độ cài đặt",
+  "@deviceSetupMode": {
+    "description": "Giá trị Wi-Fi"
+  },
+  "deviceChangeWifi": "Đổi Wi-Fi cho thiết bị",
+  "@deviceChangeWifi": {
+    "description": "Dòng"
+  },
+  "deviceChangeWifiSub": "Khi chuyển nhà / nơi làm",
+  "@deviceChangeWifiSub": {
+    "description": "Phụ"
+  },
+  "deviceReboot": "Khởi động lại",
+  "@deviceReboot": {
+    "description": "Dòng, tiêu đề và nút hộp thoại"
+  },
+  "deviceRebootBody": "Thiết bị sẽ tắt màn hình vài giây rồi bật lại.",
+  "@deviceRebootBody": {
+    "description": "Hộp thoại"
+  },
+  "deviceForget": "Kết nối thiết bị khác",
+  "@deviceForget": {
+    "description": "Dòng"
+  },
+  "deviceUpdates": "CẬP NHẬT",
+  "@deviceUpdates": {
+    "description": "Nhãn thẻ"
+  },
+  "deviceChecking": "Đang kiểm tra bản mới…",
+  "@deviceChecking": {
+    "description": "Trạng thái"
+  },
+  "deviceLatest": "Bản mới nhất: {date}",
+  "@deviceLatest": {
+    "description": "Có thể kèm \" · {commit}\"",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceNewer": "Có bản mới hơn thiết bị.",
+  "@deviceNewer": {
+    "description": "mint"
+  },
+  "deviceUpToDate": "Thiết bị có vẻ đã cập nhật.",
+  "@deviceUpToDate": {
+    "description": "inkDim"
+  },
+  "deviceUpdateFw": "Cập nhật firmware",
+  "@deviceUpdateFw": {
+    "description": "Dòng / hộp thoại"
+  },
+  "deviceUpdateFwSub": "Giữ nguyên cấu hình và lịch sử",
+  "@deviceUpdateFwSub": {
+    "description": "Phụ"
+  },
+  "deviceUpdateFwBody": "Tải firmware mới nhất từ {repo} và nạp qua Wi-Fi. Cấu hình được giữ nguyên.",
+  "@deviceUpdateFwBody": {
+    "description": "Hộp thoại",
+    "placeholders": {
+      "repo": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceUpdate": "Cập nhật",
+  "@deviceUpdate": {
+    "description": "Nút hộp thoại"
+  },
+  "deviceUpdateFull": "Cập nhật đầy đủ",
+  "@deviceUpdateFull": {
+    "description": "Dòng / hộp thoại"
+  },
+  "deviceUpdateFullSub": "Kèm font + giao diện web; tự sao lưu và khôi phục cấu hình",
+  "@deviceUpdateFullSub": {
+    "description": "Phụ"
+  },
+  "deviceUpdateFullBody": "Nạp firmware và hệ thống tệp (font, giao diện web). Ứng dụng sẽ sao lưu cấu hình, nạp, rồi tự khôi phục qua Wi-Fi glimmer-setup (Android sẽ hỏi xác nhận). Lịch sử mức dùng 7 ngày bị xóa.",
+  "@deviceUpdateFullBody": {
+    "description": "Hộp thoại"
+  },
+  "deviceStart": "Bắt đầu",
+  "@deviceStart": {
+    "description": "Nút hộp thoại"
+  },
+  "deviceBackup": "Sao lưu cấu hình",
+  "@deviceBackup": {
+    "description": "Dòng / hộp thoại / nút"
+  },
+  "deviceBackupSub": "Có mật khẩu Wi-Fi và khóa — giữ kín",
+  "@deviceBackupSub": {
+    "description": "Phụ"
+  },
+  "deviceBackupBody": "Tệp chứa mật khẩu Wi-Fi và khóa Claude ở dạng chữ thường. Chỉ lưu ở nơi an toàn.",
+  "@deviceBackupBody": {
+    "description": "Hộp thoại"
+  },
+  "deviceRestore": "Khôi phục cấu hình",
+  "@deviceRestore": {
+    "description": "Dòng / hộp thoại"
+  },
+  "deviceRestoreBody": "Thay toàn bộ cấu hình thiết bị bằng tệp \"{file}\"? Thiết bị sẽ khởi động lại.",
+  "@deviceRestoreBody": {
+    "description": "Hộp thoại",
+    "placeholders": {
+      "file": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceRestoreOk": "Khôi phục",
+  "@deviceRestoreOk": {
+    "description": "Nút hộp thoại"
+  },
+  "deviceBusyNote": "Đừng tắt ứng dụng hay rút điện thiết bị.",
+  "@deviceBusyNote": {
+    "description": "Thẻ tiến trình"
+  },
+  "deviceStepFlashFw": "Nạp firmware…",
+  "@deviceStepFlashFw": {
+    "description": "Bước"
+  },
+  "deviceStepFlashFs": "Nạp hệ thống tệp…",
+  "@deviceStepFlashFs": {
+    "description": "Bước"
+  },
+  "deviceStepDownload": "Tải {name}…",
+  "@deviceStepDownload": {
+    "description": "Bước",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceStepRebooting": "Thiết bị đang khởi động lại…",
+  "@deviceStepRebooting": {
+    "description": "Bước"
+  },
+  "deviceStepBackup": "Sao lưu cấu hình…",
+  "@deviceStepBackup": {
+    "description": "Bước"
+  },
+  "deviceStepSendConfig": "Gửi cấu hình…",
+  "@deviceStepSendConfig": {
+    "description": "Bước"
+  },
+  "wifiTitle": "Cài Wi-Fi cho thiết bị",
+  "@wifiTitle": {
+    "description": "Thanh trên"
+  },
+  "wifiNote": "Thiết bị chỉ nhớ một mạng, chỉ dùng Wi-Fi 2,4 GHz và không vào được mạng phải đăng nhập qua trang web (khách sạn, sân bay). Khi đó hãy dùng hotspot điện thoại.",
+  "@wifiNote": {
+    "description": "Nhãn"
+  },
+  "wifiSsid": "Tên Wi-Fi (SSID)",
+  "@wifiSsid": {
+    "description": "Ô nhập"
+  },
+  "wifiPass": "Mật khẩu (để trống nếu mạng mở)",
+  "@wifiPass": {
+    "description": "Ô nhập, ẩn chữ"
+  },
+  "wifiSend": "Gửi cho thiết bị",
+  "@wifiSend": {
+    "description": "Nút chính"
+  },
+  "wifiStepDirect": "Gửi Wi-Fi mới cho thiết bị…",
+  "@wifiStepDirect": {
+    "description": "Trạng thái"
+  },
+  "wifiStepJoinAp": "Đang vào Wi-Fi glimmer-setup…",
+  "@wifiStepJoinAp": {
+    "description": "Trạng thái"
+  },
+  "wifiStepJoinApDetail": "Thiết bị phải đang hiện KẾT NỐI WI-FI · glimmer-setup (khoảng 1 phút sau khi cắm điện). Android sẽ hỏi bạn xác nhận kết nối.",
+  "@wifiStepJoinApDetail": {
+    "description": "Chi tiết"
+  },
+  "wifiStepSend": "Gửi \"{ssid}\" cho thiết bị…",
+  "@wifiStepSend": {
+    "description": "Trạng thái",
+    "placeholders": {
+      "ssid": {
+        "type": "String"
+      }
+    }
+  },
+  "wifiStepWait": "Chờ thiết bị vào \"{ssid}\"…",
+  "@wifiStepWait": {
+    "description": "Trạng thái",
+    "placeholders": {
+      "ssid": {
+        "type": "String"
+      }
+    }
+  },
+  "wifiStepWaitDetail": "Có thể mất tới 4 phút. Điện thoại cần ở cùng mạng này.",
+  "@wifiStepWaitDetail": {
+    "description": "Chi tiết"
+  },
+  "wifiDone": "Xong! Thiết bị đã vào \"{ssid}\".",
+  "@wifiDone": {
+    "description": "Trạng thái, mint",
+    "placeholders": {
+      "ssid": {
+        "type": "String"
+      }
+    }
+  },
+  "wifiDoneDetail": "IP {ip}",
+  "@wifiDoneDetail": {
+    "description": "Chi tiết",
+    "placeholders": {
+      "ip": {
+        "type": "String"
+      }
+    }
+  },
+  "wifiDoneButton": "Xong",
+  "@wifiDoneButton": {
+    "description": "Nút"
+  },
+  "wifiFailed": "Chưa xong",
+  "@wifiFailed": {
+    "description": "Trạng thái, coral"
+  },
+  "wifiNotFound": "Chưa thấy thiết bị trên \"{ssid}\". Sai mật khẩu, mạng chỉ có 5 GHz, hoặc mạng phải đăng nhập web — khi đó thiết bị sẽ lại hiện glimmer-setup.",
+  "@wifiNotFound": {
+    "description": "Chi tiết lỗi",
+    "placeholders": {
+      "ssid": {
+        "type": "String"
+      }
+    }
+  },
+  "devErrUnauthorized": "Thiết bị yêu cầu API token.",
+  "@devErrUnauthorized": {
+    "description": "Lỗi: thiết bị trả 401"
+  },
+  "devErrHttp": "Lỗi HTTP {status}",
+  "@devErrHttp": {
+    "description": "Lỗi: thiết bị trả mã HTTP",
+    "placeholders": {
+      "status": {
+        "type": "int"
+      }
+    }
+  },
+  "devErrUnreachable": "Không kết nối được thiết bị ({error})",
+  "@devErrUnreachable": {
+    "description": "Lỗi: thiết bị không trả lời",
+    "x-thiet-ke": "source/Dashboard.dc.html",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "devErrFlashFailed": "Nạp thất bại: {detail}",
+  "@devErrFlashFailed": {
+    "description": "Lỗi: thiết bị từ chối ảnh nạp",
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "devErrRateLimited": "GitHub đang giới hạn lượt gọi, thử lại sau ít phút.",
+  "@devErrRateLimited": {
+    "description": "Lỗi: GitHub 403"
+  },
+  "devErrReleaseHttp": "Không đọc được bản phát hành (HTTP {status}).",
+  "@devErrReleaseHttp": {
+    "description": "Lỗi: GitHub releases",
+    "placeholders": {
+      "status": {
+        "type": "int"
+      }
+    }
+  },
+  "devErrDownload": "Tải thất bại (HTTP {status}).",
+  "@devErrDownload": {
+    "description": "Lỗi: tải tệp nạp",
+    "placeholders": {
+      "status": {
+        "type": "int"
+      }
+    }
+  },
+  "devErrNoAsset": "bản phát hành không có {name}",
+  "@devErrNoAsset": {
+    "description": "Lỗi: thiếu tệp trong bản phát hành",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "devErrWifiPermission": "Cần quyền vị trí / thiết bị Wi-Fi lân cận để vào glimmer-setup.",
+  "@devErrWifiPermission": {
+    "description": "Lỗi: thiếu quyền Wi-Fi"
+  },
+  "devErrSetupAp": "Không vào được glimmer-setup. Thiết bị có đang hiện màn cài đặt Wi-Fi không?",
+  "@devErrSetupAp": {
+    "description": "Lỗi: không vào được AP cài đặt"
+  },
+  "devErrNoAnswerAfterFlash": "thiết bị không trả lời sau khi nạp firmware",
+  "@devErrNoAnswerAfterFlash": {
+    "description": "Lỗi: cập nhật đầy đủ"
+  },
+  "devErrConfigUnreadable": "không đọc được cấu hình để sao lưu",
+  "@devErrConfigUnreadable": {
+    "description": "Lỗi: cập nhật đầy đủ"
+  },
+  "devErrInvalidBackup": "Tệp không hợp lệ: không phải tệp cấu hình glimmer",
+  "@devErrInvalidBackup": {
+    "description": "Lỗi: tệp khôi phục"
+  },
+  "devCardsNeedToken": "Thiết bị có API token — nhập token trong Cài đặt để xem thẻ.",
+  "@devCardsNeedToken": {
+    "description": "Tổng quan: thẻ cần token"
+  },
+  "devNow": "ngay",
+  "@devNow": {
+    "description": "Đếm ngược đã tới (R-DUNG-3)"
+  },
+  "devSliderValue": "{title}: {value}%",
+  "@devSliderValue": {
+    "description": "Cài đặt: nhãn thanh trượt",
+    "x-thiet-ke": "source/Settings.dc.html",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "devWifiRssi": "{ssid} ({rssi} dBm)",
+  "@devWifiRssi": {
+    "description": "Thiết bị: dòng Wi-Fi",
+    "x-thiet-ke": "source/Device.dc.html",
+    "placeholders": {
+      "ssid": {
+        "type": "String"
+      },
+      "rssi": {
+        "type": "int"
+      }
+    }
+  },
+  "devBackupShareText": "Cấu hình glimmer",
+  "@devBackupShareText": {
+    "description": "Thiết bị: chữ kèm khi chia sẻ tệp sao lưu"
+  },
+  "devBackupFailed": "Sao lưu lỗi: {error}",
+  "@devBackupFailed": {
+    "description": "Thiết bị: thông báo",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "devStepJoinApRestore": "Vào Wi-Fi glimmer-setup để khôi phục…",
+  "@devStepJoinApRestore": {
+    "description": "Thiết bị: bước khôi phục"
+  },
+  "devStepWaitReboot": "Chờ thiết bị khởi động lại…",
+  "@devStepWaitReboot": {
+    "description": "Thiết bị: bước chờ"
+  },
+  "devStepToSetupAp": "Thiết bị chuyển sang glimmer-setup…",
+  "@devStepToSetupAp": {
+    "description": "Thiết bị: bước cập nhật đầy đủ"
+  },
+  "devStepRebootingShort": "Đang khởi động lại…",
+  "@devStepRebootingShort": {
+    "description": "Thiết bị: bước khởi động lại"
+  },
+  "devRestoreDone": "Đã khôi phục cấu hình",
+  "@devRestoreDone": {
+    "description": "Thiết bị: thông báo"
+  },
+  "devRestoreSentNotFound": "Đã gửi cấu hình; chưa thấy thiết bị trên mạng",
+  "@devRestoreSentNotFound": {
+    "description": "Thiết bị: thông báo"
+  },
+  "devRestoreFailed": "Khôi phục lỗi: {error}",
+  "@devRestoreFailed": {
+    "description": "Thiết bị: thông báo",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "devRestoreLater": "Chưa khôi phục được. Bản sao lưu: {path}",
+  "@devRestoreLater": {
+    "description": "Thiết bị: thông báo",
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "devUpdateNoAnswer": "Đã nạp; chưa thấy thiết bị trả lời",
+  "@devUpdateNoAnswer": {
+    "description": "Thiết bị: thông báo"
+  },
+  "devUpdateDone": "Xong — firmware {fw}",
+  "@devUpdateDone": {
+    "description": "Thiết bị: thông báo",
+    "placeholders": {
+      "fw": {
+        "type": "String"
+      }
+    }
+  },
+  "devUpdateFailed": "Cập nhật lỗi: {error}",
+  "@devUpdateFailed": {
+    "description": "Thiết bị: thông báo",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
+}

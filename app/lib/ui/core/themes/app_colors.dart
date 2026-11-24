@@ -1,0 +1,36 @@
+// SINH TỰ ĐỘNG bởi tool/sync_design.dart từ design/tokens/design_tokens.json.
+// Không sửa tay — sửa thiết kế rồi chạy: dart run tool/sync_design.dart
+import 'package:flutter/painting.dart';
+
+abstract final class AppColors {
+  /// Nền mọi màn
+  static const Color bg = Color(0xFF0E0D12);
+  /// Thẻ (card), thanh điều hướng dưới, hộp thoại
+  static const Color panel = Color(0xFF1F1A28);
+  /// Thẻ nhấn mạnh (ghi chú, tiến trình), nền thanh %, viên chỉ báo tab đang chọn
+  static const Color panel2 = Color(0xFF2A2236);
+  /// Đường kẻ
+  static const Color line = Color(0xFF34293F);
+  /// Chữ chính
+  static const Color ink = Color(0xFFFFF8E8);
+  /// Chữ thân, chữ phụ sáng
+  static const Color inkDim = Color(0xFFD8CDB8);
+  /// Nhãn nhỏ, chữ phụ
+  static const Color muted = Color(0xFF8A7F96);
+  /// Lỗi; mức dùng còn ≤ 20%
+  static const Color coral = Color(0xFFFF5247);
+  /// Cần duyệt, cảnh báo, số liệu cũ; mức dùng còn ≤ 50%
+  static const Color amber = Color(0xFFFFD23F);
+  /// Xong, trực tuyến; mức dùng còn > 50%
+  static const Color mint = Color(0xFF8FE574);
+  /// Chờ bạn (input)
+  static const Color sky = Color(0xFF54B6FF);
+  /// Đang chạy (working), tiến độ
+  static const Color lilac = Color(0xFFC385FF);
+  /// Màu chính (nút, công tắc, thanh trượt), linh vật Clawd, tiêu đề nhóm Cài đặt
+  static const Color clawd = Color(0xFFD97757);
+  /// Viền nút viền và ô nhập (hiện là mặc định của Flutter)
+  static const Color outline = Color(0xFFFFFFFF);
+  /// Lớp phủ sau hộp thoại
+  static const Color scrim = Color(0x8A000000);
+}

@@ -3,4 +3,24 @@
 Mô tả dữ liệu người dùng app lưu trên máy (tên trường, kiểu, ý nghĩa) để backend làm theo. Cập nhật **cùng commit**
 với mọi thay đổi ở `lib/data/repositories/` hoặc `lib/domain/models/` (`tool/check.dart` nhắc bằng W-backend).
 
-_(chưa có dữ liệu nào)_
+App chưa có backend. Dữ liệu người dùng chỉ gồm vài giá trị trên máy; mọi thứ khác (trạng thái, cài đặt, thẻ) đọc
+thẳng từ thiết bị qua HTTP (`/api/*`, `/push` — hợp đồng do firmware quyết định, `../src/core/web.cpp`) và không lưu.
+
+## Lưu trên máy — `shared_preferences` (`lib/data/services/local_store_service.dart`)
+
+| Khoá | Kiểu | Mặc định | Ý nghĩa |
+| --- | --- | --- | --- |
+| `device_url` | string | `''` | Địa chỉ thiết bị trả lời lần trước, vd `http://192.168.100.40`. Không lưu AP cài đặt `192.168.4.1` (R-KN-1). |
+| `token` | string | `''` | API token của thiết bị (gửi `Authorization: Bearer …`); rỗng khi thiết bị không đặt token. Bí mật. |
+| `repo` | string | `Letuananh1207/glimmer` | Repo GitHub có bản phát hành `latest` chứa `firmware.bin` / `littlefs.bin`. |
+
+## Tệp sao lưu cấu hình
+
+`glimmer-config-<YYYY-MM-DDTHHmm>.json` trong thư mục tài liệu của app: nguyên văn `GET /api/export` (config.json của
+thiết bị, khoá snake_case, **có mật khẩu Wi-Fi và khoá Claude**). Hợp lệ khi có `wifi_ssid` (R-TB-2).
+
+## Ghi chú lần chuyển MVVM (2026-11-25)
+
+Model chuyển sang `lib/domain/models/` (`DeviceState`, `Usage`, `Project`, `AttentionCard` — trước là `Card`,
+`Release`, `ConfigBackup`, `AppError`), repository ở `lib/data/repositories/{device,release,backup}/`. Khoá lưu và
+định dạng tệp không đổi — không cần di trú.
