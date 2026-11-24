@@ -23,6 +23,8 @@ struct Settings {
     bool     showAiDash    = true;
     bool     showInfo      = true;
     bool     showTrend     = true;
+    bool     showAgents    = true;   // the Agents list channel (approval cards are separate)
+    bool     idleDim       = true;   // dim to 15 % after 15 min without agent activity
     bool     showStatus    = false;  // vendor status pages (2 extra TLS calls / 15 min)
     bool     autoRotate    = true;
     bool     claudeWeeklyHero = false;

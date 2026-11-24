@@ -43,6 +43,8 @@ Settings Storage::load() {
     s.showAiDash    = doc["show_aidash"]    | true;
     s.showInfo      = doc["show_info"]      | true;
     s.showTrend     = doc["show_trend"]     | true;
+    s.showAgents    = doc["show_agents"]    | true;
+    s.idleDim       = doc["idle_dim"]       | true;
     s.showStatus    = doc["show_status"]    | false;
     s.autoRotate    = doc["auto_rotate"]    | true;
     s.claudeWeeklyHero = doc["claude_weekly_hero"] | false;
@@ -104,6 +106,8 @@ bool Storage::save(const Settings& s) {
     doc["show_aidash"]   = s.showAiDash;
     doc["show_info"]     = s.showInfo;
     doc["show_trend"]    = s.showTrend;
+    doc["show_agents"]   = s.showAgents;
+    doc["idle_dim"]      = s.idleDim;
     doc["show_status"]   = s.showStatus;
     doc["auto_rotate"]   = s.autoRotate;
     doc["claude_weekly_hero"] = s.claudeWeeklyHero;

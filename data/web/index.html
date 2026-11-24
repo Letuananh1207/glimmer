@@ -215,6 +215,8 @@
               </template>
             </select>
           </div>
+          <label class="row"><input type="checkbox" x-model="settings.idleDim">Tự giảm sáng khi không có hoạt động agent</label>
+          <div class="hint">Không có sự kiện từ Claude Code / Codex trong 15 phút → giảm còn 15%; sáng lại ngay khi có việc hoặc thẻ cần duyệt.</div>
           <label class="row"><input type="checkbox" x-model="settings.clock24h">Đồng hồ 24 giờ</label>
           <label class="row"><input type="checkbox" x-model="settings.invertDisplay">Đảo màu</label>
           <div class="hint">Chỉ bật nếu màu trên màn hình của bạn trông bị nhạt.</div>
@@ -482,6 +484,7 @@ function app() {
         {key: 'showForecast', label: 'Dự báo 3 ngày', needs: loc ? 'sẵn sàng' : 'cần vị trí', ready: loc},
         {key: 'showClock',    label: 'Đồng hồ',        needs: 'sẵn sàng', ready: true},
         {key: 'showInfo',     label: 'Thông tin thiết bị', needs: 'sẵn sàng', ready: true},
+        {key: 'showAgents',   label: 'Danh sách tác tử', needs: 'khi có thẻ (thẻ duyệt vẫn hiện)', ready: true},
       ];
     },
 

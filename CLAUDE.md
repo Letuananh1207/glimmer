@@ -181,6 +181,11 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
   + amber `STALE 14M` meta, never a takeover.
 - `nightMode` 0 none, 1 dim, 2 clock (Night face only, no rotation), 3 dark
   (backlight off). Window = minutes past midnight; start == end disables.
+- **Idle dim** (`idleDim`, default on): no agent activity (hook event,
+  pushed card, queue change — `AttentionQueue::lastActivityMs()`) for 15 min
+  → backlight ≤ 15 %; a card holding the screen counts as activity; checked
+  every 1 s in `loop()`. Night rules apply first. `showAgents` hides the
+  Agents list channel (approval cards still interrupt).
 - On the night face only these cards show (and wake a dark panel): `urgent`,
   a user's error card (agent `other`, not `sys:*`), and approvals/questions if
   `agentNightShow`. Others only light the strip (unseen in dark mode).

@@ -142,12 +142,27 @@ static bool nightNow() {
                            g_settings.nightStartMin, g_settings.nightEndMin);
 }
 
+// Idle dim: no agent activity (hook event, pushed card, queue change) for
+// kIdleDimMs → the backlight drops to at most kIdleDimPct. A card holding the
+// screen (approval, question) always counts as activity. Night rules still
+// decide first; this only ever makes the panel dimmer.
+static constexpr uint32_t kIdleDimMs  = 15UL * 60UL * 1000UL;
+static constexpr uint8_t  kIdleDimPct = 15;
+
+static bool idleNow() {
+    if (!g_settings.idleDim || g_apMode) return false;
+    if (chAttentionEnabled(makeCtx())) return false;
+    return millis() - AttentionQueue::lastActivityMs() >= kIdleDimMs;
+}
+
 static void applyBrightness() {
     ChannelCtx ctx = makeCtx();
     bool night = nightNow();
-    Display::setBrightness(Night::brightness((Night::Mode)g_settings.nightMode, night,
-                                             chAttentionEnabled(ctx), g_settings.brightness,
-                                             g_settings.nightBright));
+    uint8_t pct = Night::brightness((Night::Mode)g_settings.nightMode, night,
+                                    chAttentionEnabled(ctx), g_settings.brightness,
+                                    g_settings.nightBright);
+    if (idleNow() && pct > kIdleDimPct) pct = kIdleDimPct;
+    Display::setBrightness(pct);
 }
 
 static void recomputeActive() {
@@ -634,7 +649,14 @@ void loop() {
     // became more urgent) takes the screen right away; when nothing holds the
     // screen any more, the rotation resumes immediately.
     static uint32_t lastExpire = 0;
-    if (now - lastExpire >= 1000UL) { lastExpire = now; AttentionQueue::expire(); AttentionQueue::projectsTick(); }
+    if (now - lastExpire >= 1000UL) {
+        lastExpire = now;
+        AttentionQueue::expire();
+        AttentionQueue::projectsTick();
+        static bool wasIdle = false;                 // idle dim: react within 1 s
+        bool idle = idleNow();
+        if (idle != wasIdle) { wasIdle = idle; applyBrightness(); }
+    }
     static bool wasAttention = false;
     ChannelCtx ctx = makeCtx();
     bool attention = !g_apMode && chAttentionEnabled(ctx);

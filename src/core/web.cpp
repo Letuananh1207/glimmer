@@ -218,6 +218,8 @@ static void handleApiGetSettings() {
     d["showAiDash"]    = s.showAiDash;
     d["showInfo"]      = s.showInfo;
     d["showTrend"]     = s.showTrend;
+    d["showAgents"]    = s.showAgents;
+    d["idleDim"]       = s.idleDim;
     d["showStatus"]    = s.showStatus;
     d["autoRotate"]    = s.autoRotate;
     d["claudeWeeklyHero"] = s.claudeWeeklyHero;
@@ -312,6 +314,8 @@ static void applyIfPresent(Settings& s, JsonDocument& d) {
     applyBool("showAiDash",   s.showAiDash);
     applyBool("showInfo",     s.showInfo);
     applyBool("showTrend",    s.showTrend);
+    applyBool("showAgents",   s.showAgents);
+    applyBool("idleDim",      s.idleDim);
     applyBool("showStatus",   s.showStatus);
     applyBool("autoRotate",   s.autoRotate);
     applyBool("claudeWeeklyHero", s.claudeWeeklyHero);

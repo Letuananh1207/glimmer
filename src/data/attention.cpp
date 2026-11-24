@@ -7,6 +7,9 @@ namespace AttentionQueue {
 static Attention::Queue s_q;
 static uint32_t         s_rev = 1;
 static bool             s_interrupt = false;
+static uint32_t         s_activityMs = 0;
+
+uint32_t lastActivityMs() { return s_activityMs; }
 
 Attention::Queue& get() { return s_q; }
 uint32_t revision()     { return s_rev; }
@@ -19,6 +22,7 @@ uint32_t now() {
 int put(const Attention::Item& it, bool* fresh) {
     bool f = false;
     int i = Attention::upsert(s_q, it, now(), &f);
+    s_activityMs = millis();
     if (i >= 0) {
         s_rev++;
         if (f && it.display == Attention::SHOW_INTERRUPT) s_interrupt = true;
@@ -71,10 +75,12 @@ uint32_t projectsRevision()       { return s_boardRev; }
 static void boardChanged() { s_boardRev++; s_boardDirty = true; }
 
 void noteHook(Attention::Agent a, const Attention::HookEvent& e) {
+    s_activityMs = millis();
     if (Projects::noteHook(s_board, a, e, now())) boardChanged();
 }
 
 void noteItem(const Attention::Item& it) {
+    s_activityMs = millis();
     if (Projects::noteItem(s_board, it, now())) boardChanged();
 }
 

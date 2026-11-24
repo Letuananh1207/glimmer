@@ -323,8 +323,8 @@ void chAttentionTick(const ChannelCtx&) {
 static uint32_t s_listRev = 0;
 static uint32_t s_listMin = 0xFFFFFFFF;
 
-bool chAgentsEnabled(const ChannelCtx&) {
-    return !mainNightFace() && countVisible(AttentionQueue::get(), AttentionQueue::now()) > 0;
+bool chAgentsEnabled(const ChannelCtx& ctx) {
+    return ctx.settings && ctx.settings->showAgents && !mainNightFace() && countVisible(AttentionQueue::get(), AttentionQueue::now()) > 0;
 }
 
 static void listRow(const Item& it, int y, uint32_t now) {

@@ -36,4 +36,8 @@ namespace AttentionQueue {
     void projectsBegin();     // restore /projects.bin (after LittleFS is mounted)
     void projectsTick();      // ~1 Hz: save if changed, at most every 30 s
     int  clearProjects();     // empty the board (POST /push/clear {"projects":true})
+
+    // millis() of the last agent activity: a hook event, a pushed card or a
+    // queue change. Drives the idle dim; starts at boot.
+    uint32_t lastActivityMs();
 }
