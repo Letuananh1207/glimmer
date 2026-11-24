@@ -1,100 +1,74 @@
 ---
 name: glimmer-setup
-description: Set glimmer up again after moving — a new computer (connect Claude Code / Codex hooks to the display) or a new place (put the display on a new Wi-Fi), or check that everything is connected. Use when the user says they changed machine, moved house/office, changed Wi-Fi, the project board or approval cards stopped showing, or asks "cài lại glimmer", "đổi mạng", "sang máy khác", "glimmer không hiện", "/glimmer-setup". Talk to the user in Vietnamese.
+description: One command to make glimmer work wherever the user is now — a new computer, a new place, a new Wi-Fi. Installs the Claude Code / Codex hooks on this computer and, if the display isn't on this network, moves it onto this computer's current Wi-Fi automatically. Use when the user says they changed machine, moved house/office, changed Wi-Fi, the display shows "glimmer-setup", the project board or approval cards stopped showing, or asks "cài lại glimmer", "đổi mạng", "sang máy khác", "glimmer không hiện", "/glimmer-setup". Talk to the user in Vietnamese.
 ---
 
-# glimmer — cài lại khi đổi máy hoặc đổi mạng
+# glimmer — một lệnh cho mọi nơi mới
 
-Two things can need redoing, independently:
+The whole job is `node tools/glimmer-setup.mjs auto` (repo root). It asks
+nothing. It:
 
-| Situation | What breaks | Fix |
-|---|---|---|
-| **New / other computer** | no hooks → no approval cards, empty project board ("Chưa có hoạt động project") | `node tools/agents/install.mjs` |
-| **Display moved to another Wi-Fi** | display can't join → shows `KẾT NỐI WI-FI · glimmer-setup` | give it the new SSID/password |
+1. installs/updates the hooks on this computer (`tools/agents/install.mjs`,
+   idempotent, keeps the user's other settings);
+2. looks for the display — configured URL, `glimmer.local`, the setup AP;
+3. if the display is not on this network: reads THIS computer's current
+   Wi-Fi name and the password the OS saved for it, hops onto the display's
+   open setup AP `glimmer-setup`, sends it that Wi-Fi, hops back, and waits
+   until the display shows up on `glimmer.local`.
 
-Both are wrapped by an interactive wizard the user can run themselves:
-`node tools/glimmer-setup.mjs` (menu) or `… may-moi | wifi | kiem-tra`.
+Exit code 0 = ready, 2 = needs the user (the output says what).
 
-Facts you need (from the firmware, don't re-derive):
-- Device answers on `http://glimmer.local` (mDNS) when it shares the
-  computer's network. `GET /api/state` → `fw`, `ssid`, `ip`, `wifi`,
-  `sources.claude`. `/hook` answers 200 to anything.
-- Lost network → after 2 × 30 s it opens the **open** AP `glimmer-setup`,
-  device at `http://192.168.4.1`, and keeps retrying the saved network every
-  180 s. It remembers ONE network, 2.4 GHz only, no captive portals.
-- `POST /api/settings {"wifiSSID","wifiPass","_restart":true}` sets Wi-Fi and
-  reboots (Bearer token if the user set an API token — 401 tells you).
-- The ESP8266 is single-threaded: during a TLS fetch it ignores HTTP for a
-  few seconds. Use `--max-time 6` and retry once before calling it offline.
+## Do this
 
-## 1. Find out where things stand — run, don't ask
+1. **Tell the user first, in one short message** (they may have other apps
+   or sessions online):
+   > Mình sẽ chạy cài đặt tự động. Nếu thiết bị chưa ở mạng này, máy bạn sẽ
+   > tạm rời Wi-Fi khoảng 1–2 phút để chuyển Wi-Fi cho thiết bị rồi tự quay
+   > lại. Hãy cắm điện thiết bị.
+2. **Run it in the foreground** with a long timeout (it can take ~6 min when
+   the display is booting into its setup AP):
+   ```bash
+   node tools/glimmer-setup.mjs auto < /dev/null
+   ```
+   Run it as ONE command and don't do anything else until it returns: during
+   the hop this computer has no Internet; it all happens inside that process,
+   which needs none.
+3. **Relay the result** in Vietnamese: `XONG` → done (hooks apply to Claude
+   Code sessions started after install; remind them to set the city in the
+   web UI's **Vị trí & giờ** tab if they moved). `CHƯA XONG` → follow the
+   table below.
 
-```bash
-node tools/glimmer-setup.mjs kiem-tra < /dev/null
-```
+Never print, ask for, or echo a Wi-Fi password. If the OS can't give the
+saved password, the user runs the interactive version themselves:
+`node tools/glimmer-setup.mjs wifi` (hidden prompt) — not via `!`.
 
-It reports whether hooks are installed here, where they point, and whether
-the device is online, in setup-AP mode, needs a token, or is unreachable.
-Then pick the branch below. Only ask the user what you can't detect
-(e.g. "did you move the display?") with AskUserQuestion.
+## When it says CHƯA XONG
 
-## 2. New computer → install hooks (you can do this yourself)
-
-```bash
-node --version                        # needs ≥ 18
-node tools/agents/install.mjs         # idempotent; merges into ~/.claude/settings.json
-```
-
-Read its last line:
-- `display: OK` → done. Tell the user hooks apply to **new** Claude Code sessions.
-- `wants a token` → ask the user for the device's API token (it is a secret:
-  suggest they run `node tools/agents/install.mjs --token <t>` themselves),
-  or run it with the token they give you.
-- `no answer` → device not on this network. Either the user is elsewhere
-  (fine — hooks stay silent until they are back) or the network blocks
-  device-to-device traffic (office/guest Wi-Fi): ask for the IP shown on the
-  display's **Thông tin** channel and run
-  `node tools/agents/install.mjs --url http://<ip>`.
-
-Codex: the installer also writes `~/.codex/hooks.json` when `~/.codex`
-exists; Codex asks the user to trust new hooks once.
-
-## 3. Display on a new Wi-Fi → the USER enters the password
-
-**Never ask for the Wi-Fi password in chat**, and don't run the Wi-Fi step
-yourself: joining `glimmer-setup` takes this computer offline, so this
-session would stall mid-way. Hand it over:
-
-- **If the device is still online here** (they are about to move it): they
-  can pre-set the new network now — it switches when it sees it.
-- **Otherwise**, give these steps, then tell them to run the wizard in their
-  own terminal (not via `!`, which can't read the hidden password prompt):
-
-> 1. Cắm điện thiết bị, chờ ~1 phút tới khi màn hình hiện **KẾT NỐI WI-FI · glimmer-setup**.
-> 2. Chạy trong terminal của bạn: `node tools/glimmer-setup.mjs wifi`
->    — nó bảo bạn vào Wi-Fi `glimmer-setup`, hỏi tên + mật khẩu Wi-Fi mới
->    (gõ ẩn), gửi cho thiết bị rồi chờ thiết bị lên mạng mới.
-> 3. Hoặc không cần máy tính: điện thoại vào Wi-Fi `glimmer-setup`, mở
->    `http://192.168.4.1`, tab **Wi-Fi**, nhập, Lưu.
-
-Warn up front when relevant: 5 GHz-only networks and captive-portal Wi-Fi
-(hotels, airports) can't work — use a phone hotspot (iPhone: "Maximize
-Compatibility" for 2.4 GHz) for both the display and the laptop.
-
-When they're back, re-run step 1 to confirm, and remind them to update the
-city in the web UI's **Vị trí & giờ** tab if they moved.
-
-## 4. Troubleshooting table
-
-| Symptom | Cause → fix |
+| Output | Meaning → what to tell the user |
 |---|---|
-| Display stuck on "Đang kết nối Wi-Fi" > 4 min | unplug and replug (a cold boot resets the radio) |
-| Back on `glimmer-setup` after entering Wi-Fi | wrong password/SSID (case-sensitive) or 5 GHz → redo step 3 |
-| Online, but `glimmer.local` not found | network blocks mDNS/peers → install with `--url http://<ip>` |
-| Hooks installed, board still empty | Claude Code loads hooks when a session STARTS — the session that ran the installer never sends events; open a new one. `GET /api/state` → `projects` shows what arrived (`kiem-tra` prints it) |
-| Board lost after a reboot | it is saved to `/projects.bin` every ≤ 30 s and restored at boot; only a filesystem flash wipes it |
-| Test/stale rows on the board | `curl -X POST -d '{"projects":true}' http://glimmer.local/push/clear` empties it (4 rows max — a burst of test events evicts real projects) |
-| Events dropped at random | Node's `glimmer.local` lookup can take ~3 s on Windows; the hook caches the IP in `~/.glimmer/cache.json` and re-resolves only when it stops answering — delete the file if the IP changed and things look stuck |
-| `install.mjs` says settings.json is not valid JSON | fix that file first — it changes nothing until then |
+| `Máy này chưa vào Wi-Fi nào` | join the local Wi-Fi first, then rerun |
+| `Không đọc được mật khẩu đã lưu` | run `node tools/glimmer-setup.mjs wifi` and type it (macOS may also just need the Keychain prompt approved) |
+| `Không thấy Wi-Fi glimmer-setup` | display unpowered, still booting, or ONLINE ON ANOTHER NETWORK (the old place): power-cycle it here and rerun |
+| `Thiết bị đòi API token` | `node tools/agents/install.mjs --token <token>`, rerun |
+| `Thiết bị chưa lên "<ssid>"` | 5 GHz-only or captive-portal Wi-Fi (hotel/airport) → phone hotspot at 2.4 GHz (iPhone: Maximize Compatibility) for both, rerun; or the network hides devices from each other → IP from the display's **Thông tin** channel, `node tools/agents/install.mjs --url http://<ip>` |
 
-Uninstall everything on a machine: `node tools/agents/install.mjs --uninstall`.
+Other checks: `node tools/glimmer-setup.mjs kiem-tra < /dev/null` prints the
+hooks, the display, and its project board (`GET /api/state` → `projects`).
+
+## Facts (don't re-derive)
+
+- Display: `http://glimmer.local` on the shared network; after losing its
+  network it opens the open AP `glimmer-setup` (device `http://192.168.4.1`)
+  ~60 s after boot and retries the saved network every 180 s. One saved
+  network, 2.4 GHz only. `POST /api/settings {"wifiSSID","wifiPass","_restart":true}`.
+- ESP8266 is single-threaded: during a TLS fetch it ignores HTTP for seconds;
+  the scripts retry with 6 s timeouts.
+- Hook delivery: `~/.glimmer/glimmer-hook.mjs` caches the display's IP in
+  `~/.glimmer/cache.json` (Node's mDNS lookup can take ~3 s on Windows);
+  `auto` clears it after moving the display. Board: `POST /push/clear
+  {"projects":true}` empties it; it survives reboots (`/projects.bin`).
+- OS Wi-Fi control (`tools/wifi-os.mjs`): Windows `netsh` (tested),
+  macOS `networksetup` + `security` Keychain, Linux `nmcli` (untested).
+  The temporary `glimmer-setup` profile is deleted afterwards so the
+  computer never auto-joins it.
+- Uninstall the hooks on a computer: `node tools/agents/install.mjs --uninstall`.

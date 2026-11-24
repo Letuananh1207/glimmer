@@ -3,6 +3,7 @@
 // làm lại khi đổi máy hoặc đổi mạng:
 //
 //   node tools/glimmer-setup.mjs           menu
+//   node tools/glimmer-setup.mjs auto      làm hết, không hỏi gì (dùng bởi /glimmer-setup)
 //   node tools/glimmer-setup.mjs may-moi   cài hook cho máy này
 //   node tools/glimmer-setup.mjs wifi      đổi Wi-Fi cho thiết bị
 //   node tools/glimmer-setup.mjs kiem-tra  kiểm tra thiết bị + hook
@@ -15,7 +16,7 @@
 // In setup-AP mode the device is http://192.168.4.1 (open AP "glimmer-setup").
 
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { createInterface } from "node:readline";
@@ -241,20 +242,124 @@ async function check() {
   else { ok(`Thiết bị online ở ${dev.url}.`); describe(dev.state); }
 }
 
+// ── 0. tự động: một lệnh cho mọi nơi mới ──────────────────────────────────
+//
+// No questions asked (Claude Code's /glimmer-setup runs it): installs hooks,
+// and if the display isn't on this computer's network but is broadcasting
+// its setup AP, hands it THIS computer's current Wi-Fi — SSID and the
+// password the OS has saved — by hopping onto the AP and back. The hop takes
+// this computer offline for ~1 min; it all happens inside this one process,
+// so nothing that needs the Internet is waiting on it. The password never
+// leaves memory except in the POST to the display.
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function auto() {
+  const { wifi } = await import("./wifi-os.mjs");
+
+  step("1/3 Hook trên máy này");
+  const inst = spawnSync(process.execPath, [join(here, "agents", "install.mjs")], { encoding: "utf8" });
+  if (inst.status !== 0) bad("Cài hook lỗi: " + (inst.stderr || inst.stdout).trim().split("\n").pop());
+  else ok("Hook đã cài / cập nhật (có hiệu lực từ phiên Claude Code mới).");
+
+  step("2/3 Tìm thiết bị");
+  const cur = wifi.current();
+  console.log(dim(`    máy này đang ở Wi-Fi: ${cur ? cur.ssid : "(không có)"}`));
+  let dev = await locate();
+  if (dev?.mode === "sta") {
+    ok(`Thiết bị đã online cùng mạng ở ${dev.url}${dev.state ? "" : " (cần token)"}.`);
+    if (dev.state) describe(dev.state);
+    return finish(true);
+  }
+  if (dev?.mode === "ap") {
+    // This computer is already on the setup AP (user joined it by hand).
+    warn(`Máy này đang nối thẳng vào ${AP_SSID}. Hãy cho máy vào Wi-Fi của nơi này rồi chạy lại.`);
+    return finish(false);
+  }
+  if (!cur) {
+    bad("Máy này chưa vào Wi-Fi nào. Vào Wi-Fi của nơi bạn đang ở rồi chạy lại.");
+    return finish(false);
+  }
+  const sec = wifi.secret(cur);
+  if (!sec) {
+    bad(`Không đọc được mật khẩu đã lưu của "${cur.ssid}" từ hệ điều hành.`);
+    console.log(dim("    Chạy bản hỏi-đáp và tự gõ mật khẩu: node tools/glimmer-setup.mjs wifi"));
+    return finish(false);
+  }
+
+  step(`3/3 Đưa thiết bị vào Wi-Fi "${cur.ssid}"`);
+  console.log(dim(`    Thiết bị chưa có trên mạng này. Cắm điện thiết bị; khoảng 1 phút sau nó phát`));
+  console.log(dim(`    Wi-Fi "${AP_SSID}". Máy này sẽ tạm chuyển sang đó (~1 phút mất Internet) rồi quay lại.`));
+  if (cur.band5) console.log(dim(`    (máy đang ở băng 5 GHz — router cần phát "${cur.ssid}" cả ở 2,4 GHz cho thiết bị)`));
+
+  let sent = false, reason = "";
+  try {
+    // The display opens its AP ~60 s after power-on; keep trying ~3 min.
+    let onAp = null;
+    const end = Date.now() + 180000;
+    process.stdout.write(`  Đang tìm Wi-Fi ${AP_SSID} `);
+    while (!onAp && Date.now() < end) {
+      wifi.joinOpen(AP_SSID);
+      for (let i = 0; i < 4 && !onAp; i++) { await sleep(3000); onAp = await state(AP_URL, readCfg().token, 1); }
+      process.stdout.write(".");
+    }
+    process.stdout.write(onAp ? green(" ✓\n") : red(" không thấy\n"));
+    if (!onAp) reason = "noap";
+    else {
+      const r = await http(`${AP_URL}/api/settings`, { method: "POST", token: readCfg().token, timeout: 8000,
+        body: { wifiSSID: cur.ssid, wifiPass: sec.password, _restart: true } });
+      if (r.status === 401) reason = "token";
+      else if (r.status === 200 || r.status === 0) sent = true;   // 0: it rebooted mid-reply
+      else reason = `http ${r.status}`;
+    }
+  } finally {
+    wifi.back(cur, sec);           // always return this computer to its network
+    wifi.forget(AP_SSID);          // and never auto-join the setup AP later
+  }
+  if (!sent) {
+    if (reason === "noap") {
+      bad(`Không thấy Wi-Fi ${AP_SSID} sau 3 phút.`);
+      console.log(dim("    • Thiết bị có cắm điện không? Màn hình có hiện KẾT NỐI WI-FI · glimmer-setup không?"));
+      console.log(dim("    • Nếu nó đang hiện số liệu bình thường thì nó đang online ở mạng KHÁC (nơi cũ)."));
+    } else if (reason === "token") bad("Thiết bị đòi API token: chạy node tools/agents/install.mjs --token <token> rồi chạy lại.");
+    else bad(`Thiết bị trả lỗi (${reason}).`);
+    return finish(false);
+  }
+  ok(`Đã gửi Wi-Fi "${cur.ssid}" cho thiết bị; máy này đang về lại "${cur.ssid}".`);
+  try { rmSync(join(homedir(), ".glimmer", "cache.json"), { force: true }); } catch {}   // IP will differ
+  const back = await waitFor(async () => state("http://glimmer.local", readCfg().token, 1), 360,
+                             "Chờ thiết bị lên mạng mới (tối đa 6 phút)");
+  if (back) { ok(`Thiết bị đã online — IP ${back.ip}.`); describe(back); return finish(true); }
+  bad(`Thiết bị chưa lên "${cur.ssid}".`);
+  console.log(dim("    • Mạng chỉ có 5 GHz, hoặc phải đăng nhập qua trang web (khách sạn/sân bay) → dùng"));
+  console.log(dim("      hotspot điện thoại (2,4 GHz) cho cả laptop và thiết bị, rồi chạy lại."));
+  console.log(dim("    • Mạng chặn các máy thấy nhau → xem IP trên kênh Thông tin, chạy"));
+  console.log(dim("      node tools/agents/install.mjs --url http://<IP>"));
+  return finish(false);
+}
+
+function finish(good) {
+  console.log("\n" + (good ? green(bold("XONG — glimmer đã sẵn sàng ở nơi này."))
+                           : yellow(bold("CHƯA XONG — xem hướng dẫn ở trên."))));
+  console.log(dim("  Nhớ đổi thành phố ở tab Vị trí & giờ nếu bạn đã chuyển nơi khác."));
+  process.exitCode = good ? 0 : 2;
+}
+
 // ── menu ────────────────────────────────────────────────────────────────────
-const ACTIONS = { "may-moi": newMachine, wifi: changeWifi, "kiem-tra": check };
+const ACTIONS = { auto, "may-moi": newMachine, wifi: changeWifi, "kiem-tra": check };
 
 async function main() {
   console.log(bold("\nglimmer — cài đặt nhanh"));
   let pick = process.argv[2];
   if (!ACTIONS[pick]) {
     console.log(`
+  0. Tự động — làm hết mọi thứ cho nơi/máy này (khuyên dùng)
   1. Máy mới / máy chưa cài: cài hook cho Claude Code / Codex
-  2. Đổi mạng Wi-Fi cho thiết bị (chuyển nhà, chuyển nơi làm)
+  2. Đổi mạng Wi-Fi cho thiết bị, tự gõ tên + mật khẩu
   3. Kiểm tra kết nối
   4. Cả 2 rồi 1 (thiết bị ở nơi mới + máy mới)`);
-    const n = await ask("Chọn", "3");
-    pick = { 1: "may-moi", 2: "wifi", 3: "kiem-tra", 4: "both" }[n] || "kiem-tra";
+    const n = await ask("Chọn", "0");
+    pick = { 0: "auto", 1: "may-moi", 2: "wifi", 3: "kiem-tra", 4: "both" }[n] || "auto";
   }
   if (pick === "both") { await changeWifi(); await newMachine(); }
   else await ACTIONS[pick]();
