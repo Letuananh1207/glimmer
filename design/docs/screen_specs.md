@@ -20,6 +20,8 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
 
 ## 2. Tổng quan — `DashboardScreen` (Dashboard.png, DashboardEmpty.png, DashboardStale.png, DashboardSetup.png, DashboardLoading.png)
 
+> **2026-11-25.2 — Thanh điều hướng theo skill:** thanh dưới thành 4 tab (Agent · Skill · Cài đặt · Thiết bị), xem `components.md` "Thanh điều hướng dưới"; ảnh của mọi trạng thái màn này chụp lại. Đây là màn chính (tab 1) của skill Agent; nội dung không đổi.
+
 > **2026-11-25.1 — Bản đầu:** vẽ lại đúng app hiện có.
 
 - Đầu màn (đệm 16 20 8 20): Clawd 72 (biểu cảm theo bảng project: approval → mở to, error → buồn, working/input → mở,
@@ -39,9 +41,11 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
 - Hai nút tonal xuống dòng khi chật (đệm 8 16 24, cách 10): `dashboardRefreshNow` (refresh), `dashboardShowClaude` (tv).
   Hiện nền mint chữ đen (mặc định Flutter).
 - `loading`: chỉ vòng xoay 40 giữa màn.
-- Thanh điều hướng dưới, tab 0.
+- Thanh điều hướng dưới, tab 1 (Agent).
 
 ## 3. Cài đặt — `SettingsScreen` (Settings.png, SettingsChanged.png, SettingsError.png)
+
+> **2026-11-25.2 — Thanh điều hướng theo skill:** thanh dưới thành 4 tab (Agent · Skill · Cài đặt · Thiết bị), xem `components.md` "Thanh điều hướng dưới"; ảnh của mọi trạng thái màn này chụp lại. Tab 3, dùng chung mọi skill; mục SỐ LIỆU CLAUDE và AGENT thuộc skill Agent (chưa tách), nội dung không đổi.
 
 > **2026-11-25.1 — Bản đầu:** vẽ lại đúng app hiện có.
 
@@ -58,9 +62,11 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
 - `changed`: thanh nổi cách đáy 16 (trên thanh điều hướng), lề 16: nút viền `settingsDiscard` + nút chính `settingsSaveCount`,
   chia đôi, cách 12. Chỉ gửi những mục đã đổi.
 - `error`: lỗi (body) + nút chữ `commonRetry` giữa màn.
-- Thanh điều hướng dưới, tab 1.
+- Thanh điều hướng dưới, tab 3 (Cài đặt).
 
 ## 4. Thiết bị — `DeviceScreen` (Device.png, DeviceBusy.png)
+
+> **2026-11-25.2 — Thanh điều hướng theo skill:** thanh dưới thành 4 tab (Agent · Skill · Cài đặt · Thiết bị), xem `components.md` "Thanh điều hướng dưới"; ảnh của mọi trạng thái màn này chụp lại. Tab 4, dùng chung mọi skill; nội dung không đổi.
 
 > **2026-11-25.1 — Bản đầu:** vẽ lại đúng app hiện có.
 
@@ -73,7 +79,7 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
 - Thẻ CẬP NHẬT: dòng trạng thái 13 (mint khi có bản mới hơn, inkDim khi không) "Bản mới nhất: ngày · commit" + dòng thứ hai;
   `deviceUpdateFw` (+phụ, icon system_update), `deviceUpdateFull` (+phụ, icon layers). Mỗi dòng mở hộp thoại xác nhận.
 - Thẻ sao lưu: `deviceBackup` (+phụ, icon save_alt), `deviceRestore` (icon restore).
-- Thanh điều hướng dưới, tab 2.
+- Thanh điều hướng dưới, tab 4 (Thiết bị).
 
 ## 5. Cài Wi-Fi — `WifiSetupScreen` (WifiSetup.png, WifiSetupWorking.png, WifiSetupDone.png, WifiSetupFailed.png)
 
@@ -85,3 +91,29 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
   20 → nút chính `wifiSend` (icon send).
 - Các trạng thái khác: dòng trạng thái `heading` căn giữa (ink / mint / coral) → 10 → chi tiết `body` → 24 → vòng xoay
   (working) hoặc nút `commonRetry` (failed) / `wifiDoneButton` (done). Đang làm thì không quay lại được.
+
+## 6. Skill — `SkillsScreen` (Skills.png, SkillsSwitching.png, SkillsError.png, SkillsLegacy.png)
+
+> **2026-11-25.2 — Màn mới: chọn skill** (phiếu `app/docs/phieu_thiet_ke/2026-11-25-chon-skill.md`): tab 2 của thanh dưới.
+
+- Đầu màn (đệm 16 20 8, cách 4): `skillsTitle` (`screenTitle`), `skillsSubtitle` (label).
+- Thanh báo (chỉ khi có), thẻ `panel2`, đệm 14 16, lề 6 16:
+  - `switching`: vòng xoay 24 + `skillsSwitchingBanner` (14 ink) / `skillsSwitchingHint` (label).
+  - `error`: `skillsErrorTitle` (14/700 coral), `skillsErrorBody` (13 inkDim), nút chữ `commonRetry` căn phải — gửi lại skill vừa chọn.
+  - `legacy` (R-SK-4): `skillsLegacyTitle` (14/700 amber), `skillsLegacyBody` (13 inkDim, `fw` = firmware thiết bị), nút viền
+    `deviceUpdateFw` (icon system_update) → tab Thiết bị.
+- Lưới 2 cột, cách 12, đệm 8 16. Thứ tự: Agent, Nhạc, Mạng xã hội, Giải trí (`skills.catalog` trong `navigation.json`).
+- Ô skill (`SkillTile`, `components.md`): cao ≥ 176, đệm 14, bo 14, nền `panel`, viền 2. Từ trên: ô icon 48 bo 12 (nền
+  `skill…Tint`; Agent = Clawd 40 mắt mở, khác = icon 28 màu nhấn) → tên 16/700 → mô tả 12 muted (giãn) → nhãn trạng thái:
+  - đang dùng: viền màu nhấn liền; chấm 8 màu nhấn + `skillsCurrent` 12 ink. Chạm → màn chính của skill (tab 1).
+  - chọn được: viền trong suốt; `skillsUse` 12/500 màu nhấn. Chạm → đổi skill ngay (không hỏi lại).
+  - đang đổi: viền màu nhấn nét đứt; vòng xoay 16 + `skillsSwitching`. Ô "đang dùng" giữ nguyên tới khi thiết bị nhận
+    (R-SK-2, R-SK-5: app theo `skill` thiết bị báo).
+  - sắp có (chưa có gói): ô icon nền `panel2`, icon muted, tên inkDim, `skillsSoon` muted; không bấm được. Hiện, không ẩn.
+  - Trong lúc đổi, các ô khác không bấm được.
+- Thẻ kênh (nền `panel`, đệm 16): `skillsChannelsTitle` → kênh của skill đang dùng (`skillAgentChannels`, 13 ink) →
+  `skillsChannelsSystem` (12 muted) → đường kẻ 1 `line` (cách 12) → ô vuông 8 amber + `skillsAttentionNote` (12 inkDim).
+  Danh sách kênh là chữ tĩnh theo skill (thiết bị không trả về).
+- Trạng thái `switching` / `error` trên canvas minh họa bằng Nhạc như đã có gói; hiện chỉ Agent có gói nên thực tế
+  chưa có ô "chọn được".
+- Thanh điều hướng dưới, tab 2 (Skill).

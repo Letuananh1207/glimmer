@@ -2,7 +2,7 @@
   "@@locale": "vi",
   "navDashboard": "Tổng quan",
   "@navDashboard": {
-    "description": "Tab dưới"
+    "description": "Không còn hiện trên thanh dưới từ 2026-11-25.2 (tab 1 mang tên skill); giữ cho tiêu đề / đọc màn hình"
   },
   "navSettings": "Cài đặt",
   "@navSettings": {
@@ -687,5 +687,129 @@
         "type": "String"
       }
     }
+  },
+  "navSkills": "Skill",
+  "@navSkills": {
+    "description": "Tab 2 của thanh dưới"
+  },
+  "skillAgentName": "Agent",
+  "@skillAgentName": {
+    "description": "Tên skill; cũng là nhãn tab 1 khi Agent đang dùng"
+  },
+  "skillAgentDesc": "Claude Code & Codex: mức dùng, project, thẻ duyệt.",
+  "@skillAgentDesc": {
+    "description": "Mô tả ô skill"
+  },
+  "skillAgentChannels": "Trang chủ · Danh sách agent · Claude · Codex · AI · Xu hướng",
+  "@skillAgentChannels": {
+    "description": "Kênh thiết bị của skill Agent"
+  },
+  "skillMusicName": "Nhạc",
+  "@skillMusicName": {
+    "description": "Tên skill (sắp có)"
+  },
+  "skillMusicDesc": "Bài đang phát và điều khiển nhạc.",
+  "@skillMusicDesc": {
+    "description": "Mô tả ô skill"
+  },
+  "skillSocialName": "Mạng xã hội",
+  "@skillSocialName": {
+    "description": "Tên skill (sắp có)"
+  },
+  "skillSocialDesc": "Thông báo và số liệu mạng xã hội.",
+  "@skillSocialDesc": {
+    "description": "Mô tả ô skill"
+  },
+  "skillFunName": "Giải trí",
+  "@skillFunName": {
+    "description": "Tên skill (sắp có)"
+  },
+  "skillFunDesc": "Nội dung vui cho màn hình.",
+  "@skillFunDesc": {
+    "description": "Mô tả ô skill"
+  },
+  "skillsTitle": "Skill",
+  "@skillsTitle": {
+    "description": "Tiêu đề màn Skill"
+  },
+  "skillsSubtitle": "Chọn gói chức năng cho màn hình glimmer. Mỗi lúc một skill.",
+  "@skillsSubtitle": {
+    "description": "Dòng dưới tiêu đề"
+  },
+  "skillsCurrent": "Đang dùng",
+  "@skillsCurrent": {
+    "description": "Nhãn ô skill đang dùng"
+  },
+  "skillsCurrentA11y": "{skill} — đang dùng, mở màn chính",
+  "@skillsCurrentA11y": {
+    "description": "Nhãn đọc màn hình của ô đang dùng",
+    "placeholders": {
+      "skill": {
+        "type": "String"
+      }
+    }
+  },
+  "skillsSoon": "Sắp có",
+  "@skillsSoon": {
+    "description": "Nhãn ô skill chưa có gói"
+  },
+  "skillsUse": "Dùng skill này",
+  "@skillsUse": {
+    "description": "Nhãn ô skill chọn được"
+  },
+  "skillsSwitching": "Đang đổi…",
+  "@skillsSwitching": {
+    "description": "Nhãn ô skill đang đổi"
+  },
+  "skillsSwitchingBanner": "Đang chuyển màn thiết bị sang {skill}…",
+  "@skillsSwitchingBanner": {
+    "description": "Thanh báo khi đang đổi",
+    "placeholders": {
+      "skill": {
+        "type": "String"
+      }
+    }
+  },
+  "skillsSwitchingHint": "Chờ thiết bị nhận, vài giây.",
+  "@skillsSwitchingHint": {
+    "description": "Dòng phụ thanh báo đang đổi"
+  },
+  "skillsErrorTitle": "Chưa đổi được skill",
+  "@skillsErrorTitle": {
+    "description": "Thanh báo lỗi, coral"
+  },
+  "skillsErrorBody": "Thiết bị không trả lời. Màn thiết bị vẫn là {skill}.",
+  "@skillsErrorBody": {
+    "description": "skill = skill đang dùng",
+    "placeholders": {
+      "skill": {
+        "type": "String"
+      }
+    }
+  },
+  "skillsLegacyTitle": "Firmware chưa hỗ trợ skill",
+  "@skillsLegacyTitle": {
+    "description": "Thanh báo firmware cũ, amber"
+  },
+  "skillsLegacyBody": "Thiết bị đang chạy {fw} — chỉ có skill Agent. Cập nhật firmware để đổi skill.",
+  "@skillsLegacyBody": {
+    "description": "fw = phiên bản firmware",
+    "placeholders": {
+      "fw": {
+        "type": "String"
+      }
+    }
+  },
+  "skillsChannelsTitle": "MÀN THIẾT BỊ ĐANG XOAY",
+  "@skillsChannelsTitle": {
+    "description": "Nhãn thẻ kênh"
+  },
+  "skillsChannelsSystem": "+ luôn có: Đồng hồ · Thời tiết · Dự báo · Thông tin · Ban đêm",
+  "@skillsChannelsSystem": {
+    "description": "Kênh hệ thống (R-SK-2)"
+  },
+  "skillsAttentionNote": "Thẻ cần duyệt / chờ trả lời của agent vẫn chen ngang ở mọi skill.",
+  "@skillsAttentionNote": {
+    "description": "R-SK-3"
   }
 }

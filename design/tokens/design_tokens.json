@@ -1,7 +1,7 @@
 {
   "meta": {
     "name": "glimmer",
-    "version": "2026-11-25.1",
+    "version": "2026-11-25.2",
     "frame": {
       "width": 390,
       "height": 844,
@@ -69,6 +69,38 @@
     "scrim": {
       "value": "rgba(0, 0, 0, 0.54)",
       "use": "Lớp phủ sau hộp thoại"
+    },
+    "skillAgent": {
+      "value": "#D97757",
+      "use": "Màu nhấn skill Agent (= clawd)"
+    },
+    "skillMusic": {
+      "value": "#C385FF",
+      "use": "Màu nhấn skill Nhạc (= lilac)"
+    },
+    "skillSocial": {
+      "value": "#54B6FF",
+      "use": "Màu nhấn skill Mạng xã hội (= sky)"
+    },
+    "skillFun": {
+      "value": "#FFD23F",
+      "use": "Màu nhấn skill Giải trí (= amber)"
+    },
+    "skillAgentTint": {
+      "value": "rgba(217, 119, 87, 0.16)",
+      "use": "Nền ô icon skill Agent"
+    },
+    "skillMusicTint": {
+      "value": "rgba(195, 133, 255, 0.16)",
+      "use": "Nền ô icon skill Nhạc"
+    },
+    "skillSocialTint": {
+      "value": "rgba(84, 182, 255, 0.16)",
+      "use": "Nền ô icon skill Mạng xã hội"
+    },
+    "skillFunTint": {
+      "value": "rgba(255, 210, 63, 0.16)",
+      "use": "Nền ô icon skill Giải trí"
     }
   },
   "font": {
@@ -179,7 +211,10 @@
     "clawdWifi": 120,
     "clawdHeader": 72,
     "usageBarBig": 8,
-    "usageBarSmall": 5
+    "usageBarSmall": 5,
+    "skillTile": 176,
+    "skillBadge": 48,
+    "navTabs": 4
   },
   "radius": {
     "card": 14,
@@ -187,7 +222,9 @@
     "dialog": 28,
     "field": 4,
     "usageBar": 3,
-    "navIndicator": 16
+    "navIndicator": 16,
+    "skillTile": 14,
+    "skillBadge": 12
   },
   "border": {
     "hairline": 1

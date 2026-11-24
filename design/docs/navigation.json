@@ -1,7 +1,7 @@
 {
-  "version": "2026-11-25.1",
+  "version": "2026-11-25.2",
   "start": "Connect",
-  "rule": "Chưa kết nối được thiết bị → Connect. Kết nối được → khung 3 tab (Dashboard, Settings, Device) với thanh điều hướng dưới.",
+  "rule": "Chưa kết nối được thiết bị → Connect. Kết nối được → khung 4 tab: tab 1 = màn chính của skill đang dùng (Agent → Dashboard; nhãn + icon theo skill), tab 2 = Skills, tab 3 = Settings, tab 4 = Device. Settings và Device dùng chung mọi skill; Connect và WifiSetup ngoài khung tab.",
   "screens": {
     "Connect": {
       "source": "source/Connect.dc.html",
@@ -25,11 +25,12 @@
         "setup",
         "loading"
       ],
-      "refresh": "Kéo để làm mới; tự làm mới mỗi 5 s khi app mở"
+      "refresh": "Kéo để làm mới; tự làm mới mỗi 5 s khi app mở",
+      "skill": "agent"
     },
     "Settings": {
       "source": "source/Settings.dc.html",
-      "tab": 1,
+      "tab": 2,
       "states": [
         "normal",
         "changed",
@@ -38,7 +39,7 @@
     },
     "Device": {
       "source": "source/Device.dc.html",
-      "tab": 2,
+      "tab": 3,
       "states": [
         "normal",
         "busy"
@@ -60,6 +61,88 @@
       "to": {
         "Dashboard": "Nút 'Xong' khi tìm lại được thiết bị"
       }
+    },
+    "Skills": {
+      "source": "source/Skills.dc.html",
+      "tab": 1,
+      "states": [
+        "normal",
+        "switching",
+        "error",
+        "legacy"
+      ],
+      "rules": [
+        "R-SK-1",
+        "R-SK-2",
+        "R-SK-3",
+        "R-SK-4",
+        "R-SK-5"
+      ],
+      "to": {
+        "skill home": "Chạm ô skill đang dùng",
+        "Device": "Nút 'Cập nhật firmware' ở trạng thái legacy"
+      }
     }
+  },
+  "tabs": [
+    {
+      "tab": 0,
+      "screen": "skill home",
+      "label": "tên skill (skillAgentName…)",
+      "icon": "icon skill (Agent: Clawd)",
+      "bySkill": {
+        "agent": "Dashboard"
+      }
+    },
+    {
+      "tab": 1,
+      "screen": "Skills",
+      "label": "navSkills",
+      "icon": "apps"
+    },
+    {
+      "tab": 2,
+      "screen": "Settings",
+      "label": "navSettings",
+      "icon": "tune",
+      "shared": true
+    },
+    {
+      "tab": 3,
+      "screen": "Device",
+      "label": "navDevice",
+      "icon": "memory",
+      "shared": true
+    }
+  ],
+  "skills": {
+    "catalog": [
+      {
+        "id": "agent",
+        "name": "skillAgentName",
+        "accent": "skillAgent",
+        "home": "Dashboard",
+        "pack": true
+      },
+      {
+        "id": "music",
+        "name": "skillMusicName",
+        "accent": "skillMusic",
+        "pack": false
+      },
+      {
+        "id": "social",
+        "name": "skillSocialName",
+        "accent": "skillSocial",
+        "pack": false
+      },
+      {
+        "id": "fun",
+        "name": "skillFunName",
+        "accent": "skillFun",
+        "pack": false
+      }
+    ],
+    "note": "Chỉ agent có gói. Id music/social/fun là id đặt tạm của thiết kế — gói thật đặt id khi làm."
   }
 }

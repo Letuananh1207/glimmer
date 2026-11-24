@@ -17,6 +17,8 @@
 | Chọn (Dropdown) | Chữ 16 + mũi tên 24, gạch dưới 1 #BDBDBD. |
 | Ô nhập | Viền 1 `outline`, bo 4, cao 56, chữ 16; nhãn nổi 12 `inkDim` khi có giá trị. Ô mật khẩu có nút mắt 48. |
 | Thanh % mức dùng | Bo 3, nền `panel2`; cao 8 (tuần) / 5 (phiên); màu theo % còn lại. |
-| Thanh điều hướng dưới | Cao 80, nền `panel`, 3 tab (dashboard, tune, memory). Tab đang chọn: viên 64 × 32 bo 16 nền `panel2`; icon đang chọn hiện ra màu đen (mặc định Flutter) — gần như không thấy. Nhãn 12/500 ink. |
+| Thanh điều hướng dưới | **2026-11-25.2:** cao 80, nền `panel`, **4 tab** chia đều: (1) màn chính của skill đang dùng — nhãn = tên skill, icon = icon skill (Agent: Clawd 24 không mắt; khi chọn tô `clawd`); (2) `navSkills`, icon apps; (3) `navSettings`, tune; (4) `navDevice`, memory. Tab đang chọn: viên 64 × 32 bo 16 nền `panel2`, icon ink (bỏ icon đen của bản đầu), nhãn 12/700 ink; tab khác: nhãn 12/500 inkDim. |
 | Hộp thoại | Nền `panel`, bo 28, đệm 24, tiêu đề 24/400, nút căn phải. Lớp phủ `scrim`. |
 | Vòng xoay | 40, nét 4, `clawd`. |
+| `SkillTile` | **2026-11-25.2:** ô skill trong lưới màn Skill — 4 kiểu: đang dùng / chọn được / đang đổi / sắp có. Số đo ở `screen_specs.md` §6. Màu nhấn theo skill: `skillAgent`, `skillMusic`, `skillSocial`, `skillFun`. |
+| Thanh báo trạng thái | **2026-11-25.2:** thẻ `panel2` đầu màn: tiêu đề 14/700 màu loại (coral lỗi, amber cảnh báo) hoặc vòng xoay 24 + chữ 14 ink; thân 13 inkDim; nút căn phải hoặc nút viền. |
