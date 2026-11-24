@@ -1,0 +1,65 @@
+{
+  "version": "2026-11-25.1",
+  "start": "Connect",
+  "rule": "Chưa kết nối được thiết bị → Connect. Kết nối được → khung 3 tab (Dashboard, Settings, Device) với thanh điều hướng dưới.",
+  "screens": {
+    "Connect": {
+      "source": "source/Connect.dc.html",
+      "states": [
+        "searching",
+        "notFound",
+        "manual"
+      ],
+      "to": {
+        "WifiSetup": "Nút 'Thiết bị mới / đang hiện glimmer-setup' (push)",
+        "Dashboard": "Tìm thấy / nhập IP đúng"
+      }
+    },
+    "Dashboard": {
+      "source": "source/Dashboard.dc.html",
+      "tab": 0,
+      "states": [
+        "normal",
+        "empty",
+        "stale",
+        "setup",
+        "loading"
+      ],
+      "refresh": "Kéo để làm mới; tự làm mới mỗi 5 s khi app mở"
+    },
+    "Settings": {
+      "source": "source/Settings.dc.html",
+      "tab": 1,
+      "states": [
+        "normal",
+        "changed",
+        "error"
+      ]
+    },
+    "Device": {
+      "source": "source/Device.dc.html",
+      "tab": 2,
+      "states": [
+        "normal",
+        "busy"
+      ],
+      "to": {
+        "WifiSetup": "Dòng 'Đổi Wi-Fi cho thiết bị' (push)",
+        "Connect": "Dòng 'Kết nối thiết bị khác' (quên thiết bị)"
+      }
+    },
+    "WifiSetup": {
+      "source": "source/WifiSetup.dc.html",
+      "states": [
+        "form",
+        "working",
+        "done",
+        "failed"
+      ],
+      "pop": "Nút quay lại; khóa khi đang làm (working)",
+      "to": {
+        "Dashboard": "Nút 'Xong' khi tìm lại được thiết bị"
+      }
+    }
+  }
+}

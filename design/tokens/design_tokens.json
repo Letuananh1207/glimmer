@@ -1,0 +1,195 @@
+{
+  "meta": {
+    "name": "glimmer",
+    "version": "2026-11-25.1",
+    "frame": {
+      "width": 390,
+      "height": 844,
+      "unit": "dp"
+    },
+    "note": "Màu trùng tên với src/core/theme.h của thiết bị giữ đúng mã."
+  },
+  "color": {
+    "bg": {
+      "value": "#0E0D12",
+      "use": "Nền mọi màn"
+    },
+    "panel": {
+      "value": "#1F1A28",
+      "use": "Thẻ (card), thanh điều hướng dưới, hộp thoại"
+    },
+    "panel2": {
+      "value": "#2A2236",
+      "use": "Thẻ nhấn mạnh (ghi chú, tiến trình), nền thanh %, viên chỉ báo tab đang chọn"
+    },
+    "line": {
+      "value": "#34293F",
+      "use": "Đường kẻ"
+    },
+    "ink": {
+      "value": "#FFF8E8",
+      "use": "Chữ chính"
+    },
+    "inkDim": {
+      "value": "#D8CDB8",
+      "use": "Chữ thân, chữ phụ sáng"
+    },
+    "muted": {
+      "value": "#8A7F96",
+      "use": "Nhãn nhỏ, chữ phụ"
+    },
+    "coral": {
+      "value": "#FF5247",
+      "use": "Lỗi; mức dùng còn ≤ 20%"
+    },
+    "amber": {
+      "value": "#FFD23F",
+      "use": "Cần duyệt, cảnh báo, số liệu cũ; mức dùng còn ≤ 50%"
+    },
+    "mint": {
+      "value": "#8FE574",
+      "use": "Xong, trực tuyến; mức dùng còn > 50%"
+    },
+    "sky": {
+      "value": "#54B6FF",
+      "use": "Chờ bạn (input)"
+    },
+    "lilac": {
+      "value": "#C385FF",
+      "use": "Đang chạy (working), tiến độ"
+    },
+    "clawd": {
+      "value": "#D97757",
+      "use": "Màu chính (nút, công tắc, thanh trượt), linh vật Clawd, tiêu đề nhóm Cài đặt"
+    },
+    "outline": {
+      "value": "#FFFFFF",
+      "use": "Viền nút viền và ô nhập (hiện là mặc định của Flutter)"
+    },
+    "scrim": {
+      "value": "rgba(0, 0, 0, 0.54)",
+      "use": "Lớp phủ sau hộp thoại"
+    }
+  },
+  "font": {
+    "mono": {
+      "family": "JetBrains Mono",
+      "weights": [
+        400,
+        500,
+        700
+      ],
+      "use": "Mọi chữ"
+    }
+  },
+  "type": {
+    "screenTitle": {
+      "font": "mono",
+      "size": 20,
+      "weight": 700,
+      "use": "Tiêu đề màn Kết nối, tên glimmer ở Tổng quan"
+    },
+    "appBarTitle": {
+      "font": "mono",
+      "size": 22,
+      "weight": 400,
+      "use": "Tiêu đề thanh trên (Cài Wi-Fi)"
+    },
+    "dialogTitle": {
+      "font": "mono",
+      "size": 24,
+      "weight": 400,
+      "use": "Tiêu đề hộp thoại"
+    },
+    "heading": {
+      "font": "mono",
+      "size": 16,
+      "weight": 700,
+      "use": "Dòng trạng thái, tiêu đề thẻ tiến trình"
+    },
+    "itemTitle": {
+      "font": "mono",
+      "size": 16,
+      "weight": 400,
+      "use": "Tiêu đề dòng danh sách"
+    },
+    "body": {
+      "font": "mono",
+      "size": 14,
+      "weight": 400,
+      "use": "Chữ thân",
+      "color": "inkDim"
+    },
+    "label": {
+      "font": "mono",
+      "size": 12,
+      "weight": 400,
+      "letterSpacing": 0.5,
+      "use": "Nhãn, chữ phụ",
+      "color": "muted"
+    },
+    "button": {
+      "font": "mono",
+      "size": 14,
+      "weight": 500,
+      "use": "Chữ trên nút"
+    },
+    "navLabel": {
+      "font": "mono",
+      "size": 12,
+      "weight": 500,
+      "use": "Nhãn tab dưới"
+    },
+    "trailingValue": {
+      "font": "mono",
+      "size": 11,
+      "weight": 500,
+      "use": "Giá trị bên phải dòng (giờ Từ/Đến)"
+    },
+    "usageHero": {
+      "font": "mono",
+      "size": 40,
+      "weight": 700,
+      "use": "% tuần"
+    },
+    "usageSmall": {
+      "font": "mono",
+      "size": 24,
+      "weight": 700,
+      "use": "% phiên 5 giờ"
+    }
+  },
+  "space": {
+    "xs": 4,
+    "s": 8,
+    "m": 12,
+    "l": 16,
+    "xl": 20,
+    "xxl": 24
+  },
+  "size": {
+    "tapMin": 44,
+    "button": 40,
+    "navBar": 80,
+    "appBar": 64,
+    "listTile": 56,
+    "listTile2": 72,
+    "field": 56,
+    "clawdConnect": 144,
+    "clawdWifi": 120,
+    "clawdHeader": 72,
+    "usageBarBig": 8,
+    "usageBarSmall": 5
+  },
+  "radius": {
+    "card": 14,
+    "button": 20,
+    "dialog": 28,
+    "field": 4,
+    "usageBar": 3,
+    "navIndicator": 16
+  },
+  "border": {
+    "hairline": 1
+  }
+}
