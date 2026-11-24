@@ -29,6 +29,8 @@ namespace Display {
 
     // 16×16 key (credential problems) and 32-px circle-slash (blocked).
     void drawKeyGlyph(int x, int y, uint16_t color, int scale = 1);
+    // Claude spark (12 rays), radius r px around (cx, cy).
+    void drawClaudeMark(int cx, int cy, int r, uint16_t color);
     void drawBlockedGlyph(int cx, int cy, uint16_t color);
 
     // Re-arm partial-redraw state for boot/system screens so the next

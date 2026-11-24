@@ -107,6 +107,23 @@ static const uint16_t KEY_ROWS[16] = {
     0x0000, 0x0000, 0x0000, 0x0000,
 };
 
+// ── Claude spark — 12 rays of uneven length meeting at the centre ──
+// Pixel-honest (no anti-aliasing): each ray is stepped in half-pixel
+// increments and stamped as a 2×2 block, so strokes stay 2 px wide.
+void Display::drawClaudeMark(int cx, int cy, int r, uint16_t color) {
+    static const struct { int16_t deg; uint8_t pct; } kRays[] = {
+        {0, 100}, {31, 78}, {58, 95}, {92, 82}, {121, 100}, {150, 74},
+        {182, 96}, {209, 80}, {241, 100}, {268, 76}, {299, 93}, {329, 84},
+    };
+    for (const auto& ray : kRays) {
+        const float a = ray.deg * 0.0174533f;
+        const float ux = cosf(a), uy = sinf(a);
+        const float len = r * ray.pct / 100.0f;
+        for (float s = 0; s <= len; s += 0.5f)
+            tft.fillRect((int)lroundf(cx + ux * s) - 1, (int)lroundf(cy + uy * s) - 1, 2, 2, color);
+    }
+}
+
 void Display::drawKeyGlyph(int x, int y, uint16_t color, int scale) {
     drawGlyph16(KEY_ROWS, x, y, color, scale);
 }

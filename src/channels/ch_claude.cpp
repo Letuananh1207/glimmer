@@ -2,7 +2,8 @@
 //
 // Fonts (regenerated via tools/genfonts.py at exact em-px sizes):
 //   - "PHIÊN 5 GIỜ" / "TUẦN" / labels / sub-data : JBMono-11   (~13 px)
-//   - countdowns "3h 2m"                              : VT323-32    (~26 px)
+//   - countdown "3h 2m" (right column, under CLAUDE)  : JBMono-12B  (~12 px)
+//   - Claude spark icon top-right                     : Display::drawClaudeMark
 //   - hero "%" digits                                 : VT323-86   (~70 px)
 //   - inline "%" suffix on hero                       : VT323-44   (~36 px)
 //
@@ -54,13 +55,30 @@ static void paceFor(const ClaudeData& d, char* buf, size_t n) {
 
 // ── Region paint helpers (also called from draw()) ──
 
-static void paintSessReset(time_t resetEpoch) {
-    String s = (resetEpoch > 0) ? Api::formatCountdown(resetEpoch) : String("--");
-    tft.fillRect(SCREEN_W - 110, 26, 100, 28, Theme::BG);
-    Display::useFont("VT323-32");
+// Right column, beside the hero %:
+//   y 29..55   Claude spark (r 13)          static — painted once by draw()
+//   y 62       CLAUDE        JBMono-11       static
+//   y 78       3h 14m        JBMono-12B      time left in the hero window (tick)
+// The hero repaint clears only x < kHeroRight, so this column is never wiped.
+static constexpr int kHeroRight = 150;      // "100%" ends near x 138
+static constexpr int kResetY    = 78;
+
+static void paintRightColumn() {
+    tft.fillRect(kHeroRight, 26, SCREEN_W - kHeroRight, 50, Theme::BG);
+    Display::drawClaudeMark(SCREEN_W - 12 - 13, 42, 13, Theme::CORAL);
+    Display::useFont("JBMono-11");
     tft.setTextDatum(TR_DATUM);
     tft.setTextColor(Theme::CORAL, Theme::BG);
-    tft.drawString(s, SCREEN_W - 12, 26);
+    tft.drawString("CLAUDE", SCREEN_W - 12, 62);
+}
+
+static void paintSessReset(time_t resetEpoch) {
+    String s = (resetEpoch > 0) ? Api::formatCountdown(resetEpoch) : String("--");
+    tft.fillRect(kHeroRight, kResetY - 1, SCREEN_W - kHeroRight - 8, 17, Theme::BG);
+    Display::useFont("JBMono-12B");
+    tft.setTextDatum(TR_DATUM);
+    tft.setTextColor(Theme::CORAL, Theme::BG);
+    tft.drawString(s, SCREEN_W - 12, kResetY);
     strncpy(s_heroReset, s.c_str(), sizeof(s_heroReset) - 1);
 }
 
@@ -68,8 +86,8 @@ static void paintSessHero(float pct, bool stale) {
     char pctBuf[8];
     if (pct < 0) snprintf_P(pctBuf, sizeof(pctBuf), PSTR("--"));
     else         snprintf_P(pctBuf, sizeof(pctBuf), PSTR("%.0f"), Api::shownPct(pct));
-    // Clear hero band + suffix area
-    tft.fillRect(10, 46, SCREEN_W - 20, 76, Theme::BG);
+    // Clear the hero band + suffix (left of the right column only)
+    tft.fillRect(10, 46, kHeroRight - 10, 76, Theme::BG);
 
     // Stale data stays visible but dimmed — it is not a live reading.
     uint16_t uc = stale ? Theme::MUTED : Display::usageColor(pct);
@@ -84,11 +102,6 @@ static void paintSessHero(float pct, bool stale) {
     tft.setTextColor(uc, Theme::BG);
     int pctY = 46 + (heroH - tft.fontHeight()) - 4;
     tft.drawString("%", 12 + heroW + 2, pctY);
-
-    Display::useFont("JBMono-11");
-    tft.setTextDatum(TR_DATUM);
-    tft.setTextColor(Theme::CORAL, Theme::BG);
-    tft.drawString("CLAUDE", SCREEN_W - 12, 76);
 
     Display::pixelBar(12, 128, SCREEN_W - 24, 8,
                      pct < 0 ? 0 : Api::shownPct(pct), uc);
@@ -251,6 +264,7 @@ void chClaudeDraw(const ChannelCtx& ctx) {
     tft.setTextColor(Theme::MUTED, Theme::BG);
     tft.drawString(swapped ? "TUẦN" : "PHIÊN 5 GIỜ", 12, 32);
 
+    paintRightColumn();
     paintSessReset(heroRst);
     paintSessHero(heroPct, s_stale);
     Display::dotsDivider(12, 146, SCREEN_W - 24);
