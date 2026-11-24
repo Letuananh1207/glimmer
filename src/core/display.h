@@ -13,9 +13,7 @@ namespace Display {
     void setInvert(bool on);                       // toggle ST7789 INVON/INVOFF at runtime
 
     // High-level scenes
-    void drawSplash(const char* line);             // (old text splash, unused at boot)
-    // Mac-style boot: black, white Clawd, thin progress bar; pct only grows.
-    void drawBoot(uint8_t pct);
+    void drawSplash(const char* line);             // animated startup screen
     void drawSetupMode(const char* ap, const char* ip);
     void drawConnecting(const char* ssid, int attempt);
     void drawError(const char* title, const char* msg);

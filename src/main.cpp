@@ -433,8 +433,7 @@ static bool tryConnect() {
                 Serial.printf_P(PSTR("[wifi] connected, IP=%s, RSSI=%d\n"), WiFi.localIP().toString().c_str(), WiFi.RSSI());
                 return true;
             }
-            // Boot bar 15 → 70 % across both attempts (Mac-style: no text).
-            Display::drawBoot(15 + 55 * (i + (attempt - 1) * ATTEMPT_TICKS) / (ATTEMPTS * ATTEMPT_TICKS));
+            Display::drawConnecting(g_settings.wifiSSID.c_str(), i + (attempt - 1) * ATTEMPT_TICKS);
             delay(500);
         }
         Serial.printf_P(PSTR("[wifi] attempt %d timed out (status=%d), backing off...\n"), attempt, WiFi.status());
@@ -561,10 +560,9 @@ void setup() {
     Serial.begin(115200);
     Serial.println(F("\n=== glimmer v" FW_VERSION " ==="));
 
-    // Mac-style boot screen: black, white Clawd, a bar that tracks the real
-    // steps (config → Wi-Fi → clock → ready). No text, no greeting.
     Display::begin();
-    Display::drawBoot(5);
+    Display::drawSplash("đang khởi động...");
+    delay(400);
 
     Storage::begin();
     g_settings = Storage::load();
@@ -574,20 +572,26 @@ void setup() {
     UsageHistory::begin();
     AttentionQueue::projectsBegin();
     Api::refreshCred(g_settings, g_claude, g_codex);
-    Display::drawBoot(15);
 
-    if (!tryConnect()) {                     // fills 15 → 70 % while it waits
+    Display::drawSplash("đang kết nối Wi-Fi");
+    if (!tryConnect()) {
         startAPMode();
     } else {
-        Display::drawBoot(80);
+        Display::drawSplash("đang đồng bộ giờ");
         onStaUp();
     }
 
     Web::begin(g_settings);
 
     if (!g_apMode) {
-        Display::drawBoot(100);
-        delay(400);                          // let the full bar register
+        // Personalized greeting splash
+        if (!g_settings.userName.isEmpty()) {
+            char greet[40];
+            snprintf(greet, sizeof(greet), "Xin chào, %s", g_settings.userName.c_str());
+            Utf8::trimPartial(greet);
+            Display::drawSplash(greet);
+            delay(900);
+        }
         applyBrightness();
         refreshScreen(true);
     }

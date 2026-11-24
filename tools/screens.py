@@ -237,18 +237,6 @@ def cred_card(sc, *, headline, l1, l2, accent, glyph="key", url=True, retry=""):
 
 # ── system screens (display.cpp) ────────────────────────────────────────────
 
-def boot(sc, pct):
-    """Mac-style boot (display.cpp drawBoot): black, white Clawd, thin bar."""
-    clawd_white = [(x, y) for y, row in enumerate(clawd_grid()) for x, c in enumerate(row) if c == "#"]
-    for x, y in clawd_white:
-        sc.rect((W - 90) // 2 + x * 5, 70 + y * 5, 5, 5, (255, 255, 255))
-    track, fill = (0x3A, 0x3A, 0x3C), (255, 255, 255)
-    d = ImageDraw.Draw(sc.img)
-    d.rounded_rectangle([60, 156, 60 + 120 - 1, 156 + 5 - 1], radius=2, fill=track)
-    w = max(5, 120 * pct // 100)
-    d.rounded_rectangle([60, 156, 60 + w - 1, 156 + 5 - 1], radius=2, fill=fill)
-
-
 def splash(sc, line):
     sc.logo(W // 2 - 8, 68)
     sc.text("JBMono-16B", "GLIMMER", W // 2, 104, INK, "MC")
@@ -427,8 +415,8 @@ SCREENS = [
     ("Thẻ · lỗi", "Agent tự đẩy (MCP / push)",
      lambda s: card_v2(s, kc=CORAL, eyes="sad", mark="x", title="build failed",
                        detail=f"3 lỗi {DOT} ch_claude.cpp:120")),
-    ("Khởi động", "Kiểu Mac: nạp cấu hình (15%)", lambda s: boot(s, 15)),
-    ("Khởi động · kết nối Wi-Fi", "Thanh chạy 15 → 70% khi chờ Wi-Fi", lambda s: boot(s, 55)),
+    ("Khởi động", "Vài giây sau khi cắm điện", lambda s: splash(s, "đang khởi động...")),
+    ("Đang kết nối Wi-Fi", "2 lần × 30 giây", connecting),
     ("Chế độ cài đặt Wi-Fi", "Không vào được mạng đã lưu", setup_ap),
     ("Đang cập nhật", "Khi nạp firmware qua Wi-Fi", ota),
     ("Chưa có kênh", "Mọi kênh đều tắt", no_channels),
