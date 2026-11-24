@@ -56,13 +56,15 @@ static void paceFor(const ClaudeData& d, char* buf, size_t n) {
 // ── Region paint helpers (also called from draw()) ──
 
 // Right column, beside the hero %:
-//   y 28..58   Clawd 54×30 — mood follows the project board (tick)
-//   y 62       CLAUDE        JBMono-11       static
+//   y 40..80   Clawd 72×40 — mood follows the project board (tick); its top
+//              lines up with the hero digits, 18 px clear of the status bar
 //   y 112      4d / 3h 14m   JBMono-12B      time left, right above the bar (tick)
 // The hero repaint clears only x < kHeroRight, so this column is never wiped.
 static constexpr int kHeroRight = 150;      // "100%" ends near x 138
 static constexpr int kResetY    = 112;      // bottom 126; the bar starts at 128
-static constexpr int kClawdX = SCREEN_W - 12 - 54, kClawdY = 28;
+static constexpr int kClawdS = 4;                              // 18×10 cells → 72×40
+static constexpr int kClawdX = SCREEN_W - 12 - 18 * kClawdS;   // 156; "100%" ends near 138
+static constexpr int kClawdY = 40;
 static uint8_t s_clawdFrame = 0xFF;
 
 // Clawd's mood from the project board: alarmed for an approval, sad for an
@@ -91,17 +93,13 @@ static uint8_t clawdFrame() {
 static void paintClawd(bool force = false) {
     uint8_t f = clawdFrame();
     if (!force && f == s_clawdFrame) return;
-    Display::drawClawd(kClawdX, kClawdY, 3, Display::CLAWD_ORANGE, f & 0x0F, f & 0x10);
+    Display::drawClawd(kClawdX, kClawdY, kClawdS, Display::CLAWD_ORANGE, f & 0x0F, f & 0x10);
     s_clawdFrame = f;
 }
 
 static void paintRightColumn() {
-    tft.fillRect(kHeroRight, 26, SCREEN_W - kHeroRight, 50, Theme::BG);
+    tft.fillRect(kHeroRight, 26, SCREEN_W - kHeroRight, kResetY - 27, Theme::BG);
     paintClawd(true);
-    Display::useFont("JBMono-11");
-    tft.setTextDatum(TR_DATUM);
-    tft.setTextColor(Theme::CORAL, Theme::BG);
-    tft.drawString("CLAUDE", SCREEN_W - 12, 62);
 }
 
 static void paintSessReset(time_t resetEpoch) {

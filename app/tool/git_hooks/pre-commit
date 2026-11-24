@@ -1,0 +1,5 @@
+#!/bin/sh
+# Bật một lần (từ gốc repo): git config core.hooksPath <đường tới>/tool/git_hooks
+# Chạy guard ở thư mục dự án Flutter chứa tool/ (có thể là thư mục con của repo).
+cd "$(dirname "$0")/../.." || exit 1
+exec dart tool/guard.dart pre-commit

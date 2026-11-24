@@ -14,7 +14,8 @@ hooks) → read [`docs/AGENTS-GLIMMER.md`](docs/AGENTS-GLIMMER.md), not this.
   before any non-trivial change.
 - `src/channels/channel.h` — the channel API and the partial-redraw contract.
 - `FLASHING.md` — getting glimmer onto a device; `.claude/skills/` —
-  skills (`<name>/SKILL.md`): `flash-device`, `regenerate-fonts`, `glimmer-setup`.
+  skills (`<name>/SKILL.md`): `flash-device`, `regenerate-fonts`, `glimmer-setup`;
+  for the Flutter app (`app/`, rules in `app/CLAUDE.md`): `flutter-dev`, `lead`, `loi`, `guide`.
 
 ## Repo layout
 

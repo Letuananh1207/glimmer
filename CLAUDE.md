@@ -4,6 +4,12 @@ Hard-won facts from building this firmware, so future sessions don't re-walk
 the same dead ends. Repo layout, house rules and CI: `AGENTS.md`. The
 agent-facing card/MCP contract: `docs/AGENTS-GLIMMER.md`. Keep this tight.
 
+**Android app (`app/`, Flutter)**: rules in `app/CLAUDE.md` — MVVM standard
+(`.claude/skills/flutter-dev/`), `/lead`, `/loi`, `/guide`; a Stop hook and git
+pre-commit run `app/tool/guard.dart`. App UI is design-first: drawn on the canvas
+https://claude.ai/artifact/WzLqGhKvD1MYxqaiRkzq1r, exported to `design/` by a design session
+(`/ui-design`, outside VS Code), applied to code by `/ui-apply`. This file is firmware-only.
+
 ## Hardware & build
 
 - **Target**: GeekMagic SmallTV-Ultra — ESP8266 @ 160 MHz, 4 MB flash
@@ -252,7 +258,8 @@ when `pct > i * 11.11`, so anything ≥ 89% is full.
 
 ## Where the design lives
 
-The visual design (palette, type, layouts) is in the
+`design/` at the repo root is the **Android app's** design (see above), not the
+panel's. The panel's visual design (palette, type, layouts) is in the
 `/tmp/smalltv-design/smalltv/project/screens.jsx` archive — not in this repo.
 Tokens are mirrored in `src/core/theme.h` (RGB565) and `data/fonts/*.vlw`
 (design-spec pixel sizes).
