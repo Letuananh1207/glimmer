@@ -61,8 +61,12 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
     var viaAp = false;
     try {
       // 1. Already reachable on this network? Send it straight away.
+      // Only when it actually answers here — a display that already left
+      // this network would swallow the request, and its silence would look
+      // like the reboot that follows a successful save.
       DeviceApi? api;
-      if (c.connected && !(c.state?.inSetupMode ?? false)) {
+      final reachable = c.connected && !(c.state?.inSetupMode ?? false) && await c.api!.probe() != null;
+      if (reachable) {
         _say('Gửi Wi-Fi mới cho thiết bị…');
         api = DeviceApi(c.api!.baseUrl, token: c.store.token);
       } else {
