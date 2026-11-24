@@ -147,7 +147,18 @@ static void handleApiState() {
     if (const ClaudeData* cd = mainClaudeData()) {
         d["claude_err"]      = cd->err;
         d["claude_valid"]    = cd->valid;
+        // Usage for the companion app (% USED, like the screen; epochs for
+        // the resets so the app counts down itself). -1 = unknown.
+        JsonObject u = d["claude_usage"].to<JsonObject>();
+        u["session_used"]  = cd->sessionPct < 0 ? -1 : (int)(100.0f - cd->sessionPct + 0.5f);
+        u["weekly_used"]   = cd->weeklyPct  < 0 ? -1 : (int)(100.0f - cd->weeklyPct  + 0.5f);
+        u["session_reset"] = (uint32_t)cd->sessionReset;
+        u["weekly_reset"]  = (uint32_t)cd->weeklyReset;
+        u["last_ok"]       = (uint32_t)cd->lastOk;
+        u["stale"]         = pSettings ? Api::isStale(cd->lastOk, *pSettings) : false;
+        u["cred"]          = CredState::name(cd->cred);
     }
+    d["time"] = (uint32_t)time(nullptr);     // device clock (epoch; < 1e9 = not synced)
     // Project board (what the Claude screen's bottom rows show), for
     // diagnosing "no project activity": empty = no hook events arrived.
     {

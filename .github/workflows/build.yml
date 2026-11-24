@@ -51,12 +51,32 @@ jobs:
       - name: Build filesystem (LittleFS)
         run: pio run -e nodemcuv2 -t buildfs
 
+      # ── Android companion app (app/) ──
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.7'
+          channel: stable
+          cache: true
+
+      - name: Test + build the Android app
+        working-directory: app
+        run: |
+          flutter pub get
+          flutter test test/logic_test.dart
+          flutter build apk --release
+
       - name: Stage binaries
         id: stage
         run: |
           mkdir -p dist
           cp .pio/build/nodemcuv2/firmware.bin dist/firmware.bin
           cp .pio/build/nodemcuv2/littlefs.bin dist/littlefs.bin
+          cp app/build/app/outputs/flutter-apk/app-release.apk dist/glimmer.apk
           ver=$(grep -m1 FW_VERSION platformio.ini | grep -oE '[0-9]+\.[0-9]+\.[0-9]+[A-Za-z0-9.-]*' || true)
           echo "version=${ver:-unknown}" >> "$GITHUB_OUTPUT"
           ls -la dist
@@ -65,7 +85,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: glimmer-binaries
-          path: dist/*.bin
+          path: |
+            dist/*.bin
+            dist/*.apk
           retention-days: 30
 
       # ── Rolling `latest` release — every push to main ──
@@ -94,7 +116,12 @@ jobs:
             curl -F "filesystem=@littlefs.bin" http://<device-ip>/update
             curl -F "firmware=@firmware.bin"   http://<device-ip>/update
             ```
-          files: dist/*.bin
+
+            **Ứng dụng Android:** tải `glimmer.apk` bên dưới về điện thoại và cài
+            (cho phép cài từ nguồn không xác định). Xem [app/README.md](../../blob/main/app/README.md).
+          files: |
+            dist/*.bin
+            dist/*.apk
           make_latest: 'true'
           prerelease: false
 

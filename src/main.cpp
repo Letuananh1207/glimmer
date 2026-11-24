@@ -453,6 +453,7 @@ static void startAPMode() {
 // STA is up: mDNS, time, and every fetch job due now.
 static void onStaUp() {
     MDNS.begin(MDNS_HOSTNAME);
+    MDNS.addService("http", "tcp", 80);      // lets the Android app find it via NSD
     configTime(0, 0, "pool.ntp.org", "time.google.com");
     Storage::applyTimezone(g_settings);
     for (int i = 0; i < 20 && !timeSynced(); i++) delay(250);

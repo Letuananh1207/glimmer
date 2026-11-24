@@ -284,6 +284,14 @@ MIT. See [LICENSE](./LICENSE). The MIT license governs the code in this
 repository; it does **not** waive any obligations you may have under third-party
 Terms of Service (Anthropic, OpenAI, etc.). See the Disclaimer above.
 
+## Ứng dụng Android
+
+[`app/`](app/README.md) — ứng dụng Flutter đi kèm: cài Wi-Fi cho thiết bị (kể
+cả khi nó đang phát `glimmer-setup`), xem mức dùng Claude và bảng project, chỉnh
+cài đặt, cập nhật firmware qua Wi-Fi, sao lưu / khôi phục cấu hình. Tải
+`glimmer.apk` từ bản phát hành
+[`latest`](https://github.com/Letuananh1207/glimmer/releases/tag/latest).
+
 ## Acknowledgments
 
 - Fork of [Avinava/glimmer](https://github.com/Avinava/glimmer) (original firmware); this fork adds the Vietnamese UI, the project board and the cross-machine setup tools.
