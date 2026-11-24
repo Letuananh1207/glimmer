@@ -91,7 +91,10 @@ city in the web UI's **Vị trí & giờ** tab if they moved.
 | Display stuck on "Đang kết nối Wi-Fi" > 4 min | unplug and replug (a cold boot resets the radio) |
 | Back on `glimmer-setup` after entering Wi-Fi | wrong password/SSID (case-sensitive) or 5 GHz → redo step 3 |
 | Online, but `glimmer.local` not found | network blocks mDNS/peers → install with `--url http://<ip>` |
-| Hooks installed, board still empty | hooks start with the next Claude Code session; check `~/.glimmer/config.json` url |
+| Hooks installed, board still empty | Claude Code loads hooks when a session STARTS — the session that ran the installer never sends events; open a new one. `GET /api/state` → `projects` shows what arrived (`kiem-tra` prints it) |
+| Board lost after a reboot | it is saved to `/projects.bin` every ≤ 30 s and restored at boot; only a filesystem flash wipes it |
+| Test/stale rows on the board | `curl -X POST -d '{"projects":true}' http://glimmer.local/push/clear` empties it (4 rows max — a burst of test events evicts real projects) |
+| Events dropped at random | Node's `glimmer.local` lookup can take ~3 s on Windows; the hook caches the IP in `~/.glimmer/cache.json` and re-resolves only when it stops answering — delete the file if the IP changed and things look stuck |
 | `install.mjs` says settings.json is not valid JSON | fix that file first — it changes nothing until then |
 
 Uninstall everything on a machine: `node tools/agents/install.mjs --uninstall`.

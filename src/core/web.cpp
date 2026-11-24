@@ -148,6 +148,25 @@ static void handleApiState() {
         d["claude_err"]      = cd->err;
         d["claude_valid"]    = cd->valid;
     }
+    // Project board (what the Claude screen's bottom rows show), for
+    // diagnosing "no project activity": empty = no hook events arrived.
+    {
+        const Projects::Board& pb = AttentionQueue::projects();
+        uint32_t pnow = AttentionQueue::now();
+        static const char* const kSt[] = {"approval", "input", "error", "working", "done"};
+        JsonArray pa = d["projects"].to<JsonArray>();
+        for (const auto& x : pb.e) {
+            if (!x.used) continue;
+            JsonObject o = pa.add<JsonObject>();
+            o["project"] = x.project;
+            o["agent"]   = Attention::agentName(x.agent);
+            o["state"]   = kSt[x.state];
+            o["detail"]  = x.detail;
+            o["age_s"]   = pnow - x.since;
+            o["idle_s"]  = pnow - x.last;
+            o["shown"]   = Projects::shown(x, pnow);
+        }
+    }
     // Per-source fetch health.
     JsonObject src = d["sources"].to<JsonObject>();
     const ClaudeData* cl = mainClaudeData();
@@ -416,6 +435,11 @@ static void handlePushClear() {
         return;
     }
     JsonDocument r;
+    if (d["projects"] | false) {             // {"projects":true}: empty the project board
+        r["cleared"] = AttentionQueue::clearProjects();
+        sendJson(200, r);
+        return;
+    }
     if (d["all"] | false) r["cleared"] = AttentionQueue::clearAll();
     else                  r["cleared"] = AttentionQueue::clear(d["id"] | "") ? 1 : 0;
     sendJson(200, r);

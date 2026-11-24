@@ -14,17 +14,47 @@
 //   GLIMMER_URL / GLIMMER_TOKEN env  →  ~/.glimmer/config.json {url, token}
 //   →  http://glimmer.local (mDNS: any machine on the same network)
 //
-// Always exits 0 within ~2 s, so an offline display never blocks the agent.
+// Always exits 0 within ~4.5 s (runs async), so an offline display never blocks the agent.
 // `--dry-run` prints the payload instead of sending it.
 
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
+import { lookup } from "node:dns/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
 const agent = process.argv[2] === "codex" ? "codex" : "claude";
 const dryRun = process.argv.includes("--dry-run");
 const done = () => process.exit(0);
-setTimeout(done, 2500).unref();                    // hard stop, whatever happens
+// Hard stop. The hook runs async (Claude Code doesn't wait for it) with a 5 s
+// limit in settings, so 4.5 s leaves room for one mDNS lookup.
+setTimeout(done, 4500).unref();
+
+// Resolving "glimmer.local" from Node on Windows can take ~3 s — longer than
+// a hook should wait, so events were dropped at random. Remember the
+// device's IP and post straight to it; look the name up again only when
+// that IP stops answering (the router handed out a new one).
+const CACHE = join(homedir(), ".glimmer", "cache.json");
+const readCache = () => { try { return JSON.parse(readFileSync(CACHE, "utf8")); } catch { return {}; } };
+const writeCache = (c) => { try { writeFileSync(CACHE, JSON.stringify(c)); } catch {} };
+
+async function post(url, init, ms) {
+  const r = await fetch(url, { ...init, signal: AbortSignal.timeout(ms) });
+  return r.status;
+}
+
+async function send(base, path, init) {
+  const u = new URL(base);
+  if (!u.hostname.endsWith(".local")) return post(base + path, init, 4000);
+  const cache = readCache();
+  const viaIp = (ip) => { const x = new URL(base); x.hostname = ip; return x.origin + path; };
+  if (cache[u.hostname]) {
+    try { return await post(viaIp(cache[u.hostname]), init, 1500); } catch {}
+  }
+  const { address } = await lookup(u.hostname, { family: 4 });
+  const status = await post(viaIp(address), init, 1500);
+  writeCache({ ...cache, [u.hostname]: address });
+  return status;
+}
 
 function config() {
   let file = {};
@@ -71,7 +101,7 @@ async function main() {
   const headers = { "Content-Type": "application/json" };
   if (token) headers.Authorization = `Bearer ${token}`;
   try {
-    await fetch(`${url}/hook?agent=${agent}`, { method: "POST", headers, body, signal: AbortSignal.timeout(2000) });
+    await send(url, `/hook?agent=${agent}`, { method: "POST", headers, body });
   } catch {}
 }
 

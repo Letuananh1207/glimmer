@@ -33,4 +33,7 @@ namespace AttentionQueue {
     void noteHook(Attention::Agent a, const Attention::HookEvent& e);
     void noteItem(const Attention::Item& it);
     uint32_t projectsRevision();
+    void projectsBegin();     // restore /projects.bin (after LittleFS is mounted)
+    void projectsTick();      // ~1 Hz: save if changed, at most every 30 s
+    int  clearProjects();     // empty the board (POST /push/clear {"projects":true})
 }

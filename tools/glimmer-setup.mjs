@@ -126,6 +126,15 @@ function describe(s) {
   const src = s.sources?.claude;
   console.log(dim(`    firmware ${s.fw || "?"} · Wi-Fi ${s.ssid || "?"} (${s.wifi || "?"}) · IP ${s.ip || "?"}`));
   if (src) console.log(dim(`    Claude: ${src.valid ? "có dữ liệu" : "chưa có dữ liệu"}${src.err ? " · lỗi " + src.err : ""}`));
+  if (Array.isArray(s.projects)) {
+    const vi = { approval: "Cần duyệt", input: "Chờ bạn", error: "Lỗi", working: "Đang chạy", done: "Xong" };
+    const ago = (sec) => sec < 60 ? `${sec}s` : sec < 3600 ? `${Math.round(sec / 60)}m` : `${Math.round(sec / 3600)}h`;
+    if (!s.projects.length)
+      console.log(dim("    Bảng project: trống — chưa có sự kiện hook nào tới thiết bị (từ lần khởi động này)."));
+    for (const p of s.projects)
+      console.log(dim(`    • ${p.project} (${p.agent}): ${vi[p.state] || p.state}${p.detail ? " · " + p.detail : ""}` +
+                      ` — ${ago(p.age_s)} trước${p.shown ? "" : " (đã ẩn: quá cũ)"}`));
+  }
 }
 
 // ── 1. máy mới: cài hook ────────────────────────────────────────────────────

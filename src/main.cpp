@@ -554,6 +554,7 @@ void setup() {
     Display::setInvert(g_settings.invertDisplay);
     Weather::begin();
     UsageHistory::begin();
+    AttentionQueue::projectsBegin();
     Api::refreshCred(g_settings, g_claude, g_codex);
 
     Display::drawSplash("đang kết nối Wi-Fi");
@@ -633,7 +634,7 @@ void loop() {
     // became more urgent) takes the screen right away; when nothing holds the
     // screen any more, the rotation resumes immediately.
     static uint32_t lastExpire = 0;
-    if (now - lastExpire >= 1000UL) { lastExpire = now; AttentionQueue::expire(); }
+    if (now - lastExpire >= 1000UL) { lastExpire = now; AttentionQueue::expire(); AttentionQueue::projectsTick(); }
     static bool wasAttention = false;
     ChannelCtx ctx = makeCtx();
     bool attention = !g_apMode && chAttentionEnabled(ctx);

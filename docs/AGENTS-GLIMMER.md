@@ -147,7 +147,9 @@ latest state per project (cwd basename) + agent — approval, input, error,
 working, done — shown in the Claude screen's bottom rows. DONE/error stay
 6 h, working hides after 30 min without events, 4 projects max. Pushed
 cards that set `project` feed it too (success → done, error, progress →
-working with its %).
+working with its %). `POST /push/clear {"projects":true}` empties the board;
+`GET /api/state` lists it under `projects`. It is saved to `/projects.bin`
+(at most every 30 s), so a reboot keeps it.
 
 Because the command and message end up on a desk screen, the script masks
 anything credential-shaped before sending: `key=…`, `token: …`,
