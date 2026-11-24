@@ -31,6 +31,17 @@ namespace Display {
     void drawKeyGlyph(int x, int y, uint16_t color, int scale = 1);
     // Claude spark (12 rays), radius r px around (cx, cy).
     void drawClaudeMark(int cx, int cy, int r, uint16_t color);
+
+    // Clawd, the Claude Code mascot: 18×10 cells of s px (s=3 → 54×30,
+    // s=5 → 90×50). Paints every cell (body or bg), so redrawing it for a
+    // blink or a step needs no separate clear.
+    constexpr uint16_t CLAWD_ORANGE = 0xDBAA;   // #D97757
+    enum ClawdEyes : uint8_t { CLAWD_OPEN, CLAWD_WIDE, CLAWD_HAPPY, CLAWD_SAD, CLAWD_SHUT };
+    void drawClawd(int x, int y, int s, uint16_t color, uint8_t eyes = CLAWD_OPEN,
+                   bool walking = false, uint16_t bg = 0x0000);
+    // 7×7 symbol, cells of s px: '!' alert, '.' speech bubble, 'v' check, 'x' cross.
+    void drawBadge(int x, int y, int s, char kind, uint16_t color);
+    void drawSparkle(int cx, int cy, uint16_t color);
     void drawBlockedGlyph(int cx, int cy, uint16_t color);
 
     // Re-arm partial-redraw state for boot/system screens so the next
@@ -46,7 +57,6 @@ namespace Display {
     // ── Typography (VLW bitmap fonts from LittleFS) ──
     // Available VLW fonts:
     //   "VT323-86"        clock digits, hero numerics
-    //   "VT323-64"        large numerics
     //   "VT323-44"        medium numerics (Claude/Codex %)
     //   "VT323-32"        small numerics + retro headlines
     //   "JBMono-16B"      headlines, card titles (TITLE)   JetBrains Mono Bold

@@ -10,7 +10,7 @@ TFT_eSPI tft = TFT_eSPI();
 // either 0 or 255 — TFT_eSPI's smooth-font path then renders without softening.
 //
 // Mapping:
-//   HUGE       → VT323-64    big 7-seg-style digits  (clock, %, temp)
+//   HUGE       → VT323-86    big digits  (clock, %, temp)
 //   HUGE_TEXT  → VT323-32    medium VT323 with full ASCII (headlines)
 //   TITLE      → JBMono-16B  status-bar titles + section labels
 //   TITLE_SM   → JBMono-12B  tighter heading
@@ -24,7 +24,7 @@ static const char* s_loadedFont = nullptr;
 
 static const char* nameFor(Display::FontTier t) {
     switch (t) {
-        case Display::HUGE:  return "VT323-64";
+        case Display::HUGE:  return "VT323-86";   // VT323-64 is no longer shipped
         case Display::TITLE: return "JBMono-16B";
         case Display::BODY:  return "JBMono-11";
     }
@@ -106,6 +106,62 @@ static const uint16_t KEY_ROWS[16] = {
     0x811A, 0x421A, 0x3C00, 0x0000,
     0x0000, 0x0000, 0x0000, 0x0000,
 };
+
+// ── Clawd — the Claude Code mascot ──
+// The terminal sprite " ▐▛███▜▌ / ▝▜█████▛▘ /   ▘▘ ▝▝ " (quarter blocks in 2:1
+// cells) as an 18×10 square-pixel grid; bit 17 = leftmost column.
+static const uint32_t kClawd[10] = {
+    0x07FF8, 0x07FF8,                // head
+    0x06FD8, 0x06FD8,                // eyes: 1×2 holes at columns 5 and 12
+    0x1FFFE, 0x1FFFE,                // arms
+    0x07FF8, 0x07FF8,                // body
+    0x02850, 0x02850,                // legs (standing)
+};
+static constexpr uint32_t kEyeBits   = (1u << 12) | (1u << 5);   // columns 5, 12
+static constexpr uint32_t kInnerBits = (1u << 11) | (1u << 6);   // columns 6, 11
+static constexpr uint32_t kWalkLegs  = 0x04848;                  // mid-stride
+
+void Display::drawClawd(int x, int y, int s, uint16_t color, uint8_t eyes, bool walking, uint16_t bg) {
+    uint32_t rows[10];
+    memcpy(rows, kClawd, sizeof(rows));
+    switch (eyes) {
+        case CLAWD_WIDE:  rows[1] &= ~kEyeBits; break;                       // 1×3 eyes
+        case CLAWD_HAPPY: rows[2] |= kEyeBits; break;                        // low slit
+        case CLAWD_SAD:   rows[2] = (rows[2] | kEyeBits) & ~kInnerBits; break; // "\ /" droop
+        case CLAWD_SHUT:  rows[2] |= kEyeBits; rows[3] |= kEyeBits; break;   // blink
+        default: break;
+    }
+    if (walking) rows[8] = rows[9] = kWalkLegs;
+    for (int j = 0; j < 10; j++) {
+        // Runs of equal cells as single rects: few SPI transactions.
+        int i = 0;
+        while (i < 18) {
+            const bool on = rows[j] & (1u << (17 - i));
+            int k = i;
+            while (k < 18 && (bool)(rows[j] & (1u << (17 - k))) == on) k++;
+            tft.fillRect(x + i * s, y + j * s, (k - i) * s, s, on ? color : bg);
+            i = k;
+        }
+    }
+}
+
+// 7×7 state symbols beside Clawd's head; bit 6 = leftmost column.
+void Display::drawBadge(int x, int y, int s, char kind, uint16_t color) {
+    static const uint8_t kBang[7]  = {0x3E, 0x6F, 0x6F, 0x6F, 0x7F, 0x6F, 0x3E};   // !
+    static const uint8_t kTalk[7]  = {0x3E, 0x7F, 0x7F, 0x55, 0x7F, 0x30, 0x20};   // …
+    static const uint8_t kCheck[7] = {0x01, 0x03, 0x46, 0x6C, 0x38, 0x10, 0x00};   // ✓
+    static const uint8_t kCross[7] = {0x41, 0x22, 0x14, 0x08, 0x14, 0x22, 0x41};   // ✗
+    const uint8_t* m = kind == '!' ? kBang : kind == '.' ? kTalk : kind == 'v' ? kCheck : kCross;
+    for (int j = 0; j < 7; j++)
+        for (int i = 0; i < 7; i++)
+            if (m[j] & (0x40 >> i)) tft.fillRect(x + i * s, y + j * s, s, s, color);
+}
+
+// Small "+" twinkle (9×9 px) for the done card.
+void Display::drawSparkle(int cx, int cy, uint16_t color) {
+    tft.fillRect(cx - 4, cy, 10, 2, color);
+    tft.fillRect(cx, cy - 4, 2, 10, color);
+}
 
 // ── Claude spark — 12 rays of uneven length meeting at the centre ──
 // Pixel-honest (no anti-aliasing): each ray is stepped in half-pixel

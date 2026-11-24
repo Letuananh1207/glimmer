@@ -102,7 +102,7 @@ secrets.
   `DONE`…) stay English; `ch_attention.cpp` translates them on screen.
 - Before shipping a label, measure it against its slot (status title ≈ 88
   px, right meta ≈ 72 px) — Vietnamese runs longer than the English did.
-6. **Shipped** (`data/fonts/`): JBMono-11/13/12B/16B, VT323-32/44/64/86. The
+6. **Shipped** (`data/fonts/`): JBMono-11/13/12B/16B, VT323-32/44/86. The
    generator also builds VT323-110 (unused) — don't ship unused ones (1 MB FS).
 
 **VLW format** (verified against TFT_eSPI `Smooth_font.cpp`, big-endian):

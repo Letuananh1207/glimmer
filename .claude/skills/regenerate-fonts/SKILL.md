@@ -25,8 +25,8 @@ from the OFL TTFs in `tools/ttf/`. Format details and loader gotchas:
   `python tools/vlwpreview.py out.png <file.vlw> "ĐANG CHỜ"`.
 - **Line box**: the 5th matrix field forces the header (ascent, descent).
   Swapping a family? Give it the old font's box so TL/MC layouts don't move.
-- **`FONT_MATRIX`** generates 9 fonts; 8 ship: `JBMono-11/13/12B/16B`,
-  `VT323-32/44/64/86`. `VT323-110` is unused — don't add it to
+- **`FONT_MATRIX`** generates 8 fonts; 7 ship: `JBMono-11/13/12B/16B`,
+  `VT323-32/44/86`. `VT323-110` is unused — don't add it to
   `data/fonts/` (LittleFS is ~1 MB).
 
 To see what the code actually loads:

@@ -39,10 +39,6 @@ uint16_t kindColor(Kind k) {
     }
 }
 
-static uint16_t agentColor(Agent a) {
-    return a == AGENT_CLAUDE ? Theme::CORAL : a == AGENT_CODEX ? Theme::LILAC : Theme::SKY;
-}
-
 // At night (night face up) only these get through: anything urgent, a user's
 // red card (as before), and — if the user chose so — agents waiting on them.
 static bool allowedAtNight(const Item& it) {
@@ -73,15 +69,9 @@ bool chAttentionEnabled(const ChannelCtx&) {
 
 // ── card ────────────────────────────────────────────────────────────────────
 //
-// One focal element per card, centred, three type sizes at most:
-//
-//   y 44   ■ CLAUDE · glimmer          agent square + project, JBMono-11 muted
-//   y 78   Bash / 142/142 / 64%        focal, VT323-64 (44 when it won't fit)
-//   y 140  pio run -e nodemcuv2…       one detail line, JBMono-11 muted
-//   y 176  CẦN BẠN · 2M                status, JBMono-12B in the kind colour
-//   y 200  ● ○                         queue dots / time-left hairline
-//
-// (Result cards swap the last two: kind-coloured title at 146, detail at 166.)
+// Clawd (the Claude Code mascot) is the focal element — one expression and
+// badge per kind — with the text in JetBrains Mono under it. Layout: see
+// paintBody() below.
 
 static char     s_shownId[24] = "";
 static uint32_t s_shownRev = 0;
@@ -149,29 +139,14 @@ static void centerText(const char* font, const char* text, int y, uint16_t color
     tft.drawString(buf, SCREEN_W / 2, y);
 }
 
-// "■ CLAUDE · glimmer" — square in the agent colour, words muted.
+// "CLAUDE · glimmer", muted, centred at the top.
 static void paintHeader(const Item& it) {
     char line[64];
     const char* a = agentName2(it.agent);
     if (a && it.project[0]) snprintf_P(line, sizeof(line), PSTR("%s \xC2\xB7 %s"), a, it.project);
     else if (a)             snprintf_P(line, sizeof(line), PSTR("%s"), a);
     else                    snprintf_P(line, sizeof(line), PSTR("%s"), it.project[0] ? it.project : "glimmer");
-    Display::useFont("JBMono-11");
-    int w = tft.textWidth(line) + (a ? 12 : 0);
-    int x = (SCREEN_W - w) / 2;
-    if (a) { tft.fillRect(x, 48, 6, 6, agentColor(it.agent)); x += 12; }
-    tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString(line, x, 44);
-}
-
-// The biggest VT323 (64, else 44) that fits, centred at y.
-static void focal(const char* text, int y) {
-    Display::useFont("VT323-64");
-    const char* f = tft.textWidth(text) <= 216 ? "VT323-64" : "VT323-44";
-    Display::useFont(f);
-    int dy = strcmp(f, "VT323-44") ? 0 : 8;
-    centerText(f, text, y + dy, Theme::INK);
+    centerText("JBMono-11", line, 30, Theme::MUTED);
 }
 
 // "Bash: pio run" → tool "Bash", detail "pio run"; "wants to use Bash" → "Bash".
@@ -189,40 +164,77 @@ static void toolAndDetail(const char* body, char tool[kTool], char detail[kDetai
     Utf8::copy(detail, kDetail, body);
 }
 
+// ── card body: Clawd + state badge, then clean JetBrains Mono text ──
+//
+//   y 30        CLAUDE · glimmer                     JBMono-11 muted
+//   y 62..112   Clawd 90×50 (+ 21×21 badge off the right shoulder)
+//   y 130       Cần duyệt / Lượt bạn / Xong rồi! …   JBMono-16B, kind colour
+//   y 156       [progress bar]  detail line           JBMono-11
+//   …           chờ bạn · 2M                          JBMono-11 muted (waiting)
+//   y 204       queue dots / time-left hairline
+//
+// Animated from tick(): waiting cards blink, progress cards walk; only the
+// 90×50 Clawd box is repainted.
+
+static constexpr int kClawdX = (SCREEN_W - 90) / 2, kClawdY = 62, kClawdS = 5;
+static int      s_statusY = -1;          // where the waiting status line sits
+static uint8_t  s_clawdFrame = 0xFF;     // last painted eyes | walking<<4
+
+struct Look { uint8_t eyes; char badge; bool walk; bool sparkle; };
+
+static Look lookFor(const Item& it) {
+    switch (it.kind) {
+        case K_APPROVAL: return {Display::CLAWD_WIDE,  '!', false, false};
+        case K_INPUT:    return {Display::CLAWD_OPEN,  '.', false, false};
+        case K_SUCCESS:  return {Display::CLAWD_HAPPY, 'v', false, true};
+        case K_ERROR:    return {Display::CLAWD_SAD,   'x', false, false};
+        case K_WARNING:  return {Display::CLAWD_WIDE,  '!', false, false};
+        case K_PROGRESS: return {Display::CLAWD_OPEN,  0,   true,  false};
+        default:         return {Display::CLAWD_OPEN,  0,   false, false};
+    }
+}
+
+static uint16_t clawdColor(const Item& it) {
+    return it.agent == AGENT_CODEX ? Theme::LILAC : Display::CLAWD_ORANGE;
+}
+
+// Eyes/legs for this instant: a 150 ms blink every 4 s while waiting on you,
+// a step every 400 ms while working.
+static uint8_t frameFor(const Item& it) {
+    Look l = lookFor(it);
+    uint8_t eyes = l.eyes;
+    if (waitsOnUser(it.kind) && millis() % 4000 < 150) eyes = Display::CLAWD_SHUT;
+    bool step = l.walk && (millis() / 400) % 2;
+    return eyes | (step ? 0x10 : 0);
+}
+
+static void paintClawd(const Item& it) {
+    uint8_t f = frameFor(it);
+    if (f == s_clawdFrame) return;
+    Display::drawClawd(kClawdX, kClawdY, kClawdS, clawdColor(it), f & 0x0F, f & 0x10);
+    s_clawdFrame = f;
+}
+
 static void statusText(const Item& it, char* buf, size_t n) {
     uint32_t secs = AttentionQueue::now() - it.created;
     char d[16];
     if (secs < 60) snprintf_P(d, sizeof(d), PSTR("%luS"), (unsigned long)secs);
     else           TimeUtil::shortDuration((long)secs, d, sizeof(d));
-    snprintf_P(buf, n, PSTR("%s \xC2\xB7 %s"), it.kind == K_APPROVAL ? "CẦN BẠN" : "ĐANG CHỜ", d);
+    snprintf_P(buf, n, PSTR("chờ bạn \xC2\xB7 %s"), d);
 }
 
 static void paintStatus(const Item& it) {
+    if (s_statusY < 0) return;
     char s[40]; statusText(it, s, sizeof(s));
-    tft.fillRect(0, 172, SCREEN_W, 20, Theme::BG);
-    centerText("JBMono-12B", s, 176, kindColor(it.kind));
+    tft.fillRect(0, s_statusY, SCREEN_W, 14, Theme::BG);
+    centerText("JBMono-11", s, s_statusY, Theme::MUTED);
     snprintf(s_status, sizeof(s_status), "%s", s);
 }
 
 static void paintDots(int n, uint16_t color) {
     if (n < 2) return;
     int x = SCREEN_W / 2 - (n * 10 - 4) / 2;
-    for (int i = 0; i < n; i++) tft.fillRect(x + i * 10, 200, 6, 6, i == s_cycleIdx ? color : Theme::LINE);
-}
-
-static void paintWaiting(const Item& it, int n) {
-    const bool custom = it.title[0] && strcmp(it.title, "APPROVAL NEEDED") && strcmp(it.title, "WAITING FOR YOU");
-    char tool[kTool], detail[kDetail];
-    toolAndDetail(it.body, tool, detail);
-    if (it.kind == K_INPUT) {
-        focal(custom ? it.title : "Lượt bạn", 78);
-        if (!detail[0] && tool[0]) Utf8::copy(detail, sizeof(detail), it.body);
-    } else {
-        focal(custom ? it.title : (tool[0] ? tool : "Duyệt?"), 78);
-    }
-    if (detail[0]) centerText("JBMono-11", detail, 140, Theme::MUTED);
-    paintStatus(it);
-    paintDots(n, kindColor(it.kind));
+    for (int i = 0; i < n; i++) tft.fillRect(x + i * 10, 204, 6, 6, i == s_cycleIdx ? color : Theme::LINE);
 }
 
 // Hairline under result cards that shortens as the card's time runs out.
@@ -232,45 +244,78 @@ static void paintDrain(const Item& it) {
     uint32_t total = it.expires - it.created, left = it.expires > now ? it.expires - now : 0;
     int w = (int)((uint64_t)60 * left / total);
     if (w == s_lastDrain) return;
-    tft.drawFastHLine(90, 200, 60, Theme::LINE);
-    if (w > 0) tft.drawFastHLine(90, 200, w, kindColor(it.kind));
+    tft.drawFastHLine(90, 206, 60, Theme::LINE);
+    if (w > 0) tft.drawFastHLine(90, 206, w, kindColor(it.kind));
     s_lastDrain = w;
 }
 
-static void paintResult(const Item& it, int n) {
-    const uint16_t kc = kindColor(it.kind);
-    char title[kLine]; Utf8::copy(title, sizeof(title), titleText(it));
-    Utf8::upper(title);
-    char bb[kLine]; const char* body = bodyText(it, bb, sizeof(bb));
-    if (it.progress >= 0) {
-        char pct[8]; snprintf_P(pct, sizeof(pct), PSTR("%d%%"), it.progress);
-        focal(pct, 78);
-        tft.fillRect(50, 146, 140, 4, Theme::PANEL);
-        tft.fillRect(50, 146, 140 * it.progress / 100, 4, kc);
-        centerText("JBMono-12B", title, 164, kc);
-        if (body[0]) centerText("JBMono-11", body, 184, Theme::MUTED);
-    } else if (it.value[0]) {
-        focal(it.value, 78);
-        centerText("JBMono-12B", title, 146, kc);
-        if (body[0]) centerText("JBMono-11", body, 166, Theme::MUTED);
-    } else {
-        // No value: the title is the focal element, in the kind colour.
-        Display::useFont("VT323-44");
-        const char* t = titleText(it);
-        const char* f = tft.textWidth(t) <= 216 ? "VT323-44" : "VT323-32";
-        centerText(f, t, 92, kc);
-        if (body[0]) centerText("JBMono-11", body, 146, Theme::MUTED);
+// Title under Clawd: the hook's built-in titles become friendly Vietnamese;
+// an agent's own title is kept as sent.
+static void cardTitle(const Item& it, char* buf, size_t n) {
+    const bool builtin = !it.title[0] || !strcmp(it.title, "APPROVAL NEEDED")
+                      || !strcmp(it.title, "WAITING FOR YOU") || !strcmp(it.title, "DONE");
+    if (it.kind == K_PROGRESS && it.progress >= 0) {
+        if (builtin) snprintf_P(buf, n, PSTR("Đang chạy %d%%"), it.progress);
+        else         snprintf_P(buf, n, PSTR("%s %d%%"), it.title, it.progress);
+        return;
     }
+    if (!builtin) { Utf8::copy(buf, n, it.title); return; }
+    switch (it.kind) {
+        case K_APPROVAL: Utf8::copy(buf, n, "Cần duyệt"); break;
+        case K_INPUT:    Utf8::copy(buf, n, "Lượt bạn"); break;
+        case K_SUCCESS:  Utf8::copy(buf, n, "Xong rồi!"); break;
+        case K_ERROR:    Utf8::copy(buf, n, "Lỗi"); break;
+        case K_WARNING:  Utf8::copy(buf, n, "Cảnh báo"); break;
+        default:         Utf8::copy(buf, n, "Thông tin"); break;
+    }
+}
+
+// One detail line: "Bash · pio run -e …" for approvals, else value · body.
+static void cardDetail(const Item& it, char* buf, size_t n) {
+    buf[0] = '\0';
+    char bb[kLine]; const char* body = bodyText(it, bb, sizeof(bb));
+    if (it.kind == K_APPROVAL) {
+        char tool[kTool], detail[kDetail];
+        toolAndDetail(it.body, tool, detail);
+        if (tool[0] && detail[0]) snprintf_P(buf, n, PSTR("%s \xC2\xB7 %s"), tool, detail);
+        else Utf8::copy(buf, n, tool[0] ? tool : detail);
+        return;
+    }
+    if (it.value[0] && body[0]) snprintf_P(buf, n, PSTR("%s \xC2\xB7 %s"), it.value, body);
+    else Utf8::copy(buf, n, it.value[0] ? it.value : body);
+}
+
+static void paintBody(const Item& it, int n) {
+    const uint16_t kc = it.kind == K_INFO ? Theme::INK : kindColor(it.kind);
+    const Look l = lookFor(it);
+    s_clawdFrame = 0xFF;
+    paintClawd(it);
+    if (l.badge) Display::drawBadge(kClawdX + 90, kClawdY - 6, 3, l.badge, kc);
+    if (l.sparkle) {
+        Display::drawSparkle(kClawdX - 12, kClawdY + 4, kc);
+        Display::drawSparkle(kClawdX + 90 + 14, kClawdY + 30, kc);
+    }
+    char title[kLine]; cardTitle(it, title, sizeof(title));
+    centerText("JBMono-16B", title, 130, kc);
+    int y = 156;
+    if (it.kind == K_PROGRESS && it.progress >= 0) {
+        tft.fillRect(40, y, 160, 6, Theme::PANEL);
+        tft.fillRect(40, y, 160 * it.progress / 100, 6, kc);
+        y += 16;
+    }
+    char detail[kLine]; cardDetail(it, detail, sizeof(detail));
+    if (detail[0]) { centerText("JBMono-11", detail, y, Theme::INK_DIM); y += 18; }
+    s_statusY = -1;
+    if (waitsOnUser(it.kind)) { s_statusY = y + 6; paintStatus(it); }
     s_lastDrain = -1;
     if (n > 1) paintDots(n, kc);
-    else       paintDrain(it);
+    else if (!waitsOnUser(it.kind) && it.progress < 0) paintDrain(it);
 }
 
 static void paintCard(const Item& it, int n) {
     tft.fillRect(0, 0, SCREEN_W, Layout::CONTENT_BOTTOM, Theme::BG);
     paintHeader(it);
-    if (waitsOnUser(it.kind)) paintWaiting(it, n);
-    else                      paintResult(it, n);
+    paintBody(it, n);
     snprintf(s_shownId, sizeof(s_shownId), "%s", it.id);
 }
 
@@ -304,6 +349,7 @@ void chAttentionTick(const ChannelCtx&) {
         s_shownRev = AttentionQueue::revision();
         return;
     }
+    paintClawd(it);                          // blink / step, only when the frame changes
     if (waitsOnUser(it.kind)) {
         char s[40]; statusText(it, s, sizeof(s));
         if (strcmp(s, s_status)) paintStatus(it);

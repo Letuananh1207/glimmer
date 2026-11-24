@@ -75,7 +75,6 @@ VIET = _vietnamese()
 FONT_MATRIX = [
     ("VT323-32",   "VT323-Regular.ttf",          32, ASCII + EXTRA + VIET, None),
     ("VT323-44",   "VT323-Regular.ttf",          44, ASCII + EXTRA + VIET, None),
-    ("VT323-64",   "VT323-Regular.ttf",          64, ASCII + EXTRA + VIET, None),
     ("VT323-86",   "VT323-Regular.ttf",          86, ASCII + EXTRA,        None),
     ("VT323-110",  "VT323-Regular.ttf",         110, ASCII + EXTRA,        None),
     ("JBMono-11",  "JetBrainsMono-Regular.ttf",  11, ASCII + EXTRA + VIET, (10, 3)),  # was DMMono-11

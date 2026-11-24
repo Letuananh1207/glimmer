@@ -2,8 +2,8 @@
 //
 // Fonts (regenerated via tools/genfonts.py at exact em-px sizes):
 //   - "PHIÊN 5 GIỜ" / "TUẦN" / labels / sub-data : JBMono-11   (~13 px)
-//   - countdown "3h 2m" (right column, under CLAUDE)  : JBMono-12B  (~12 px)
-//   - Claude spark icon top-right                     : Display::drawClaudeMark
+//   - countdown "3h 2m" (right, just above the bar)    : JBMono-12B  (~12 px)
+//   - Clawd mascot top-right, mood from project board : Display::drawClawd
 //   - hero "%" digits                                 : VT323-86   (~70 px)
 //   - inline "%" suffix on hero                       : VT323-44   (~36 px)
 //
@@ -56,16 +56,48 @@ static void paceFor(const ClaudeData& d, char* buf, size_t n) {
 // ── Region paint helpers (also called from draw()) ──
 
 // Right column, beside the hero %:
-//   y 29..55   Claude spark (r 13)          static — painted once by draw()
+//   y 28..58   Clawd 54×30 — mood follows the project board (tick)
 //   y 62       CLAUDE        JBMono-11       static
-//   y 78       3h 14m        JBMono-12B      time left in the hero window (tick)
+//   y 112      4d / 3h 14m   JBMono-12B      time left, right above the bar (tick)
 // The hero repaint clears only x < kHeroRight, so this column is never wiped.
 static constexpr int kHeroRight = 150;      // "100%" ends near x 138
-static constexpr int kResetY    = 78;
+static constexpr int kResetY    = 112;      // bottom 126; the bar starts at 128
+static constexpr int kClawdX = SCREEN_W - 12 - 54, kClawdY = 28;
+static uint8_t s_clawdFrame = 0xFF;
+
+// Clawd's mood from the project board: alarmed for an approval, sad for an
+// error, walking while something runs, pleased when all is done, asleep
+// with nothing on the board. Blinks every 4 s while awake.
+static uint8_t clawdFrame() {
+    const Projects::Board& b = AttentionQueue::projects();
+    int ord[Projects::kMax];
+    int n = Projects::ordered(b, ord, AttentionQueue::now());
+    uint8_t eyes = Display::CLAWD_SHUT;          // asleep: nothing going on
+    bool walk = false;
+    if (n) {
+        switch (b.e[ord[0]].state) {             // ordered: most urgent first
+            case Projects::P_APPROVAL: eyes = Display::CLAWD_WIDE; break;
+            case Projects::P_ERROR:    eyes = Display::CLAWD_SAD;  break;
+            case Projects::P_DONE:     eyes = Display::CLAWD_HAPPY; break;
+            case Projects::P_WORKING:  eyes = Display::CLAWD_OPEN; walk = (millis() / 400) % 2; break;
+            default:                   eyes = Display::CLAWD_OPEN; break;
+        }
+        if ((eyes == Display::CLAWD_OPEN || eyes == Display::CLAWD_WIDE) && millis() % 4000 < 150)
+            eyes = Display::CLAWD_SHUT;          // blink
+    }
+    return eyes | (walk ? 0x10 : 0);
+}
+
+static void paintClawd(bool force = false) {
+    uint8_t f = clawdFrame();
+    if (!force && f == s_clawdFrame) return;
+    Display::drawClawd(kClawdX, kClawdY, 3, Display::CLAWD_ORANGE, f & 0x0F, f & 0x10);
+    s_clawdFrame = f;
+}
 
 static void paintRightColumn() {
     tft.fillRect(kHeroRight, 26, SCREEN_W - kHeroRight, 50, Theme::BG);
-    Display::drawClaudeMark(SCREEN_W - 12 - 13, 42, 13, Theme::CORAL);
+    paintClawd(true);
     Display::useFont("JBMono-11");
     tft.setTextDatum(TR_DATUM);
     tft.setTextColor(Theme::CORAL, Theme::BG);
@@ -304,6 +336,8 @@ void chClaudeTick(const ChannelCtx& ctx) {
     const float secPct   = swapped ? d.sessionPct  : d.weeklyPct;
     const time_t heroRst = swapped ? d.weeklyReset : d.sessionReset;
     const time_t secRst  = swapped ? d.sessionReset: d.weeklyReset;
+
+    paintClawd();                       // mood / blink / step — only when the frame changes
 
     if (minTick) {
         MetaSlot m = metaFor(ctx);
