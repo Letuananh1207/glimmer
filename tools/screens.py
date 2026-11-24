@@ -211,11 +211,6 @@ def claude(sc, *, hero_used=38, hero_label="TUẦN", reset="4d", sec_label="PHI�
         st = f"{state} {DOT} {detail}" if detail else state
         sc.text("JBMono-11", fit(sc, "JBMono-11", st, right - (22 + pw + 8)), 22 + pw + 8, y, c)
         row += 1
-    if row < 3 and pace:
-        y = y0 + row * rh
-        sc.text("JBMono-11", "NHỊP TUẦN", 12, y, MUTED)
-        sc.text("JBMono-11", pace, W - 12, y, CORAL if pace.startswith("HẾT") else INK_DIM, "TR")
-        row += 1
     if not rows and row < 3:
         sc.text("JBMono-11", "Chưa có hoạt động project", 12, y0 + row * rh, MUTED)
 

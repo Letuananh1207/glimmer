@@ -8,9 +8,8 @@
 //   - inline "%" suffix on hero                       : VT323-44   (~36 px)
 //
 //   y=176..218  bottom rows: the project board (what each agent project is
-//               doing: Cần duyệt / Chờ bạn / Lỗi / Đang chạy / Xong), then
-//               the weekly pace if a row is free. Resets and per-model
-//               windows (FABLE / EXTRA) are no longer shown here.
+//               doing: Cần duyệt / Chờ bạn / Lỗi / Đang chạy / Xong). Resets,
+//               per-model windows and the weekly pace are not shown here.
 
 #include "channel.h"
 #include "chrome.h"
@@ -31,7 +30,6 @@ static float  s_secPct   = -2.f;
 static bool   s_stale    = false;
 static char   s_heroReset[16] = "";
 static char   s_secSub[40]    = "";
-static char   s_pace[40]      = "";
 static Cred   s_cred          = Cred::NOT_SET;
 static MetaSlot s_meta;
 static int    s_loadDot = -1;
@@ -45,12 +43,6 @@ bool chClaudeEnabled(const ChannelCtx& ctx) {
 static MetaSlot metaFor(const ChannelCtx& ctx) {
     return usageMeta(*ctx.settings, ctx.claude->lastOk, VendorStatus::CLAUDE,
                      "", ctx.claude->cred, 0);   // no model tag: badges only
-}
-
-static void paceFor(const ClaudeData& d, char* buf, size_t n) {
-    History::Pace p = History::pace(UsageHistory::ring(), History::CLAUDE_WEEK,
-                                    d.weeklyPct, time(nullptr), d.weeklyReset);
-    History::paceText(p, buf, n);
 }
 
 // ── Region paint helpers (also called from draw()) ──
@@ -163,7 +155,6 @@ static void paintWeeklyCompact(const char* label, float pct, time_t weekReset) {
 //
 //   ■ glimmer     Cần duyệt · Bash    2M     square + status in the state colour
 //   ■ api         Xong                 14M
-//   NHỊP TUẦN                 HẾT SAU 5H     (weekly pace, only if a row is free)
 
 static const char* stateLabel(Projects::State s) {
     switch (s) {
@@ -218,8 +209,8 @@ static void paintProjectRow(const Projects::Entry& x, int y, uint32_t now) {
 
 static uint32_t s_boardRev = 0;
 
-// Bottom rows: credential banner > project board > weekly pace (3 rows).
-static void paintBottomRows(const ClaudeData& d, const char* pace) {
+// Bottom rows: credential banner > project board (3 rows).
+static void paintBottomRows(const ClaudeData& d) {
     const int startY = 176, rowH = 14;
     tft.fillRect(0, startY, SCREEN_W, rowH * 3, Theme::BG);
     int row = 0;
@@ -237,22 +228,11 @@ static void paintBottomRows(const ClaudeData& d, const char* pace) {
     const int show = n > room ? room : n;
     for (int i = 0; i < show; i++, row++) paintProjectRow(b.e[ord[i]], startY + row * rowH, now);
 
-    if (row < 3 && pace[0]) {
-        int y = startY + row * rowH;
-        tft.setTextDatum(TL_DATUM);
-        tft.setTextColor(Theme::MUTED, Theme::BG);
-        tft.drawString("NHỊP TUẦN", 12, y);
-        tft.setTextDatum(TR_DATUM);
-        tft.setTextColor(strncmp(pace, "HẾT", strlen("HẾT")) == 0 ? Theme::CORAL : Theme::INK_DIM, Theme::BG);
-        tft.drawString(pace, SCREEN_W - 12, y);
-        row++;
-    }
     if (n == 0 && row < 3) {
         tft.setTextDatum(TL_DATUM);
         tft.setTextColor(Theme::MUTED, Theme::BG);
         tft.drawString("Chưa có hoạt động project", 12, startY + row * rowH);
     }
-    Utf8::copy(s_pace, sizeof(s_pace), pace);
     s_boardRev = AttentionQueue::projectsRevision();
 }
 
@@ -302,8 +282,7 @@ void chClaudeDraw(const ChannelCtx& ctx) {
     const char* secLabel = swapped ? "PHIÊN 5 GIỜ" : "TUẦN";
     paintWeeklyCompact(secLabel, secPct, secRst);
     Display::dotsDivider(12, 170, SCREEN_W - 24);
-    char pace[40]; paceFor(d, pace, sizeof(pace));
-    paintBottomRows(d, pace);
+    paintBottomRows(d);
 
     s_heroPct = (heroPct < 0) ? -2.f : heroPct;
     s_secPct  = (secPct  < 0) ? -2.f : secPct;
@@ -371,11 +350,10 @@ void chClaudeTick(const ChannelCtx& ctx) {
     }
 
     // Bottom rows: the project board moved, the credential changed, or a new
-    // minute (ages "2M" tick, entries time out, pace may change).
+    // minute (ages "2M" tick, entries time out).
     bool rowsDirty = d.cred != s_cred || AttentionQueue::projectsRevision() != s_boardRev || minTick;
     if (rowsDirty) {
-        char pace[40]; paceFor(d, pace, sizeof(pace));
-        paintBottomRows(d, pace);
+        paintBottomRows(d);
     }
 
     s_cdMin = tm.tm_min;
