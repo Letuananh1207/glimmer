@@ -6,7 +6,7 @@
 - Đã chốt (2026-11-25): **một skill chiếm màn** thiết bị tại một thời điểm; bước đầu = **khung skill + gói 5 màn
   hiện có thành skill "Agent"**, chưa làm gói mới (Nhạc, Mạng xã hội, Giải trí là các kế hoạch sau).
 - Loại: thêm · Cỡ: lớn
-- Trạng thái: đang làm (còn nhiệm vụ 8 — chờ thiết kế)
+- Trạng thái: xong
 
 ## Hiểu đúng "skill" ở đây
 
@@ -75,7 +75,7 @@ thiết bị đang làm hôm nay, nên ai không đổi gì sẽ không thấy k
 - [x] 7. Firmware: `Channel.skill`, bộ lọc trong `recomputeActive`, settings `skill` (4 file), `/api/state`
   `skill`/`skills` · test: `pio test -e native` · xong khi: `pio run -e nodemcuv2` build được, đổi `skill` qua
   `/api/settings` thì vòng kênh đổi trong 1 slide. *(chờ duyệt có làm đợt này)*
-- [ ] 8. UI chọn skill + khung theo skill + route — `ui/skills/…`, `routing/` · *chờ thiết kế:
+- [x] 8. UI chọn skill + khung theo skill + route — `ui/skills/…`, `routing/` · *chờ thiết kế:
   `docs/phieu_thiet_ke/2026-11-25-chon-skill.md`*. Khi làm: gọi `SwitchSkillUseCase.syncFromDevice()` mỗi lần
   trạng thái thiết bị đổi (R-SK-5).
 - [x] 9. Bản đồ tính năng `/lead` thêm dòng "Skill, gói chức năng".

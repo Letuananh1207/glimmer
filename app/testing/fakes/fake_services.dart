@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:glimmer_app/data/services/device_api_service.dart';
@@ -22,6 +23,9 @@ class FakeDeviceApiService implements DeviceApiService {
   /// Runs after each call is recorded, before it is answered (e.g. make the device vanish).
   void Function(ApiCall call)? onCall;
 
+  /// While set, POSTs wait for it (to see a "sending…" state).
+  Completer<void>? holdPosts;
+
   void on(String url, String method, String path, Object answer) => answers['$url $method $path'] = answer;
 
   /// A device at [url] answering /api/state with [state] and /push with no cards.
@@ -38,6 +42,7 @@ class FakeDeviceApiService implements DeviceApiService {
     final call = ApiCall(baseUrl, method, path, body, token);
     calls.add(call);
     onCall?.call(call);
+    if (method == 'POST' && holdPosts != null) await holdPosts!.future;
     final a = answers['$baseUrl $method $path'];
     if (a == null) throw const DeviceHttpException(0, 'TimeoutException');
     if (a is Exception) throw a;

@@ -15,6 +15,7 @@ import '../data/services/file_service.dart';
 import '../data/services/local_store_service.dart';
 import '../data/services/releases_service.dart';
 import '../data/services/wifi_service.dart';
+import '../domain/use_cases/switch_skill_use_case.dart';
 
 /// The one place that picks implementations and creates them.
 class Dependencies {
@@ -45,5 +46,6 @@ class Dependencies {
         Provider<ReleaseRepository>.value(value: releases),
         Provider<BackupRepository>.value(value: backups),
         ChangeNotifierProvider<SkillRepository>.value(value: skills),
+        Provider<SwitchSkillUseCase>(create: (_) => SwitchSkillUseCase(skills: skills, device: device)),
       ];
 }

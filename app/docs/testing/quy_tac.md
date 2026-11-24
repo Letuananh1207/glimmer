@@ -17,7 +17,7 @@ Các quy tắc dưới đây ghi lại hành vi app đang có lúc chuyển sang
 | --- | --- | --- | --- |
 | R-KN-1 | Tìm thiết bị theo thứ tự: địa chỉ lần trước → NSD (`_http._tcp` tên glimmer*) → `glimmer.local` → AP cài đặt `192.168.4.1`. Địa chỉ trả lời được lưu lại, trừ AP cài đặt. | Lần trước 10.0.0.9 không trả lời, NSD thấy 10.0.0.5 → thử 10.0.0.5 | ok |
 | R-KN-2 | Đã kết nối thì tự làm mới mỗi 5 s, chỉ khi app đang mở; mở lại app → làm mới ngay. | App xuống nền → ngừng hỏi thiết bị | ok |
-| R-KN-3 | Chưa kết nối → màn Kết nối; kết nối được → khung 3 tab (Tổng quan). "Kết nối thiết bị khác" quên thiết bị → về Kết nối. | Bấm "Kết nối thiết bị khác" → màn Kết nối | ok |
+| R-KN-3 | Chưa kết nối → màn Kết nối; kết nối được → khung 4 tab, mở ở tab 1 (màn chính của skill đang dùng; Agent → Tổng quan). "Kết nối thiết bị khác" quên thiết bị → về Kết nối. | Bấm "Kết nối thiết bị khác" → màn Kết nối | ok |
 | R-KN-4 | Thiết bị có API token mà app chưa có → vẫn hiện trạng thái, thẻ để trống, báo cần nhập token trong Cài đặt. | `/push` trả 401 → "Thiết bị có API token — …" | ok |
 
 ## 2. Mức dùng Claude (Tổng quan)

@@ -4,6 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:glimmer_app/data/repositories/backup/backup_repository.dart';
 import 'package:glimmer_app/data/repositories/device/device_repository.dart';
 import 'package:glimmer_app/data/repositories/release/release_repository.dart';
+import 'package:glimmer_app/data/repositories/skill/skill_repository.dart';
+import 'package:glimmer_app/data/repositories/skill/skill_repository_local.dart';
+import 'package:glimmer_app/domain/use_cases/switch_skill_use_case.dart';
 import 'package:glimmer_app/l10n/app_localizations.dart';
 import 'package:glimmer_app/routing/polling_lifecycle.dart';
 import 'package:glimmer_app/routing/router.dart';
@@ -17,6 +20,7 @@ import 'package:glimmer_app/ui/wifi_setup/widgets/wifi_setup_screen.dart';
 import 'package:provider/provider.dart';
 
 import '../../testing/fakes/fake_repositories.dart';
+import '../../testing/fakes/fake_services.dart';
 
 const _url = 'http://192.168.1.50';
 final _vi = lookupAppLocalizations(const Locale('vi'));
@@ -220,11 +224,14 @@ void main() {
 
     testWidgets('R-KN-3 connecting shows the tabs; forgetting goes back to Kết nối', (t) async {
       final router = buildRouter(rig.repo);
+      final skills = SkillRepositoryLocal(store: (await t.runAsync(fakeStore))!);
       await t.pumpWidget(MultiProvider(
         providers: [
           ChangeNotifierProvider<DeviceRepository>.value(value: rig.repo),
           Provider<ReleaseRepository>.value(value: FakeReleaseRepository()),
           Provider<BackupRepository>.value(value: FakeBackupRepository()),
+          ChangeNotifierProvider<SkillRepository>.value(value: skills),
+          Provider<SwitchSkillUseCase>.value(value: SwitchSkillUseCase(skills: skills, device: rig.repo)),
         ],
         child: MaterialApp.router(
           locale: const Locale('vi'),
@@ -242,7 +249,9 @@ void main() {
       expect(find.text(_vi.connectRetry), findsOneWidget);
       await t.runAsync(() => rig.connect(_url, _state()));
       await _frames(t);
-      expect(find.text(_vi.navDashboard), findsOneWidget);
+      // 4 tabs, opened on tab 1 = the home of the skill in use (Agent → Tổng quan).
+      expect(find.text(_vi.skillAgentName), findsOneWidget);
+      expect(find.text(_vi.navSkills), findsOneWidget);
       expect(find.text(_vi.dashboardUsageTitle), findsOneWidget);
       rig.repo.forget();
       for (var i = 0; i < 10; i++) {

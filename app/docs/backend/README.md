@@ -25,3 +25,8 @@ thiết bị, khoá snake_case, **có mật khẩu Wi-Fi và khoá Claude**). H�
 Model chuyển sang `lib/domain/models/` (`DeviceState`, `Usage`, `Project`, `AttentionCard` — trước là `Card`,
 `Release`, `ConfigBackup`, `AppError`), repository ở `lib/data/repositories/{device,release,backup}/`. Khoá lưu và
 định dạng tệp không đổi — không cần di trú.
+
+## Danh mục skill (2026-11-25.2)
+
+`active_skill` chỉ nhận id có gói trong app (`skillCatalog` ở `lib/domain/rules/skill_rules.dart`, hiện chỉ `agent`).
+Id `music` / `social` / `fun` là ô "Sắp có" — không bao giờ được lưu. Khoá và kiểu không đổi.

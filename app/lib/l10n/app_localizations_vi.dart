@@ -633,4 +633,95 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get devErrSkillUnsupported =>
       'Thiết bị chưa hỗ trợ skill này — cập nhật firmware.';
+
+  @override
+  String get navSkills => 'Skill';
+
+  @override
+  String get skillAgentName => 'Agent';
+
+  @override
+  String get skillAgentDesc =>
+      'Claude Code & Codex: mức dùng, project, thẻ duyệt.';
+
+  @override
+  String get skillAgentChannels =>
+      'Trang chủ · Danh sách agent · Claude · Codex · AI · Xu hướng';
+
+  @override
+  String get skillMusicName => 'Nhạc';
+
+  @override
+  String get skillMusicDesc => 'Bài đang phát và điều khiển nhạc.';
+
+  @override
+  String get skillSocialName => 'Mạng xã hội';
+
+  @override
+  String get skillSocialDesc => 'Thông báo và số liệu mạng xã hội.';
+
+  @override
+  String get skillFunName => 'Giải trí';
+
+  @override
+  String get skillFunDesc => 'Nội dung vui cho màn hình.';
+
+  @override
+  String get skillsTitle => 'Skill';
+
+  @override
+  String get skillsSubtitle =>
+      'Chọn gói chức năng cho màn hình glimmer. Mỗi lúc một skill.';
+
+  @override
+  String get skillsCurrent => 'Đang dùng';
+
+  @override
+  String skillsCurrentA11y(String skill) {
+    return '$skill — đang dùng, mở màn chính';
+  }
+
+  @override
+  String get skillsSoon => 'Sắp có';
+
+  @override
+  String get skillsUse => 'Dùng skill này';
+
+  @override
+  String get skillsSwitching => 'Đang đổi…';
+
+  @override
+  String skillsSwitchingBanner(String skill) {
+    return 'Đang chuyển màn thiết bị sang $skill…';
+  }
+
+  @override
+  String get skillsSwitchingHint => 'Chờ thiết bị nhận, vài giây.';
+
+  @override
+  String get skillsErrorTitle => 'Chưa đổi được skill';
+
+  @override
+  String skillsErrorBody(String skill) {
+    return 'Thiết bị không trả lời. Màn thiết bị vẫn là $skill.';
+  }
+
+  @override
+  String get skillsLegacyTitle => 'Firmware chưa hỗ trợ skill';
+
+  @override
+  String skillsLegacyBody(String fw) {
+    return 'Thiết bị đang chạy $fw — chỉ có skill Agent. Cập nhật firmware để đổi skill.';
+  }
+
+  @override
+  String get skillsChannelsTitle => 'MÀN THIẾT BỊ ĐANG XOAY';
+
+  @override
+  String get skillsChannelsSystem =>
+      '+ luôn có: Đồng hồ · Thời tiết · Dự báo · Thông tin · Ban đêm';
+
+  @override
+  String get skillsAttentionNote =>
+      'Thẻ cần duyệt / chờ trả lời của agent vẫn chen ngang ở mọi skill.';
 }

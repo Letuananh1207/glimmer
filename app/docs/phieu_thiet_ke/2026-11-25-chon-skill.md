@@ -1,6 +1,6 @@
 # Phiếu thiết kế: Chọn skill + điều hướng theo skill
 
-- Trạng thái: chờ thiết kế
+- Trạng thái: đã áp (2026-11-25.2)
 - Đã vẽ: 2026-11-25.2
 - Ngày: 2026-11-25 · Nguồn: kế hoạch `docs/tasks/2026-11-25-he-sinh-thai-skill.md` (nhiệm vụ 8)
 

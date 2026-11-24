@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/repositories/device/device_repository.dart';
-import '../ui/home/widgets/home_shell.dart';
 import 'routes.dart';
 import 'screens.dart';
 
-/// R-KN-3: not connected → Kết nối; connected → the 3-tab shell. Cài Wi-Fi is allowed either way (its
+/// R-KN-3: not connected → Kết nối; connected → the 4-tab shell, on tab 1 (home of the skill in use). Cài Wi-Fi is allowed either way (its
 /// flow forgets and finds the device again), above the shell.
 String? redirectFor(bool connected, String location) {
   if (location.endsWith('/${Routes.wifiSetupName}')) return null;
@@ -32,13 +31,23 @@ GoRouter buildRouter(DeviceRepository device) {
         routes: [GoRoute(path: Routes.wifiSetupName, builder: (_, _) => wifiSetupScreen())],
       ),
       ShellRoute(
-        builder: (context, s, child) => HomeShell(
-          index: Routes.tabs.indexWhere((t) => s.matchedLocation.startsWith(t)).clamp(0, 2),
-          onSelect: (i) => context.go(Routes.tabs[i]),
+        builder: (context, s, child) => homeShell(
+          index: Routes.tabOf(s.matchedLocation),
+          onSelect: (i, skill) => context.go(i == 0 ? Routes.skillHome(skill) : Routes.sharedTabs[i - 1]),
           child: child,
         ),
         routes: [
           GoRoute(path: Routes.dashboard, pageBuilder: (_, s) => _tab(s, dashboardScreen())),
+          GoRoute(
+            path: Routes.skills,
+            pageBuilder: (context, s) => _tab(
+              s,
+              skillsScreen(
+                onOpenHome: (skill) => context.go(Routes.skillHome(skill)),
+                onOpenDevice: () => context.go(Routes.device),
+              ),
+            ),
+          ),
           GoRoute(path: Routes.settings, pageBuilder: (_, s) => _tab(s, settingsScreen())),
           GoRoute(
             path: Routes.device,

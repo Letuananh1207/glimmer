@@ -33,4 +33,20 @@ abstract final class AppColors {
   static const Color outline = Color(0xFFFFFFFF);
   /// Lớp phủ sau hộp thoại
   static const Color scrim = Color(0x8A000000);
+  /// Màu nhấn skill Agent (= clawd)
+  static const Color skillAgent = Color(0xFFD97757);
+  /// Màu nhấn skill Nhạc (= lilac)
+  static const Color skillMusic = Color(0xFFC385FF);
+  /// Màu nhấn skill Mạng xã hội (= sky)
+  static const Color skillSocial = Color(0xFF54B6FF);
+  /// Màu nhấn skill Giải trí (= amber)
+  static const Color skillFun = Color(0xFFFFD23F);
+  /// Nền ô icon skill Agent
+  static const Color skillAgentTint = Color(0x29D97757);
+  /// Nền ô icon skill Nhạc
+  static const Color skillMusicTint = Color(0x29C385FF);
+  /// Nền ô icon skill Mạng xã hội
+  static const Color skillSocialTint = Color(0x2954B6FF);
+  /// Nền ô icon skill Giải trí
+  static const Color skillFunTint = Color(0x29FFD23F);
 }

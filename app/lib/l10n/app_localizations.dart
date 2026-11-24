@@ -94,7 +94,7 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[Locale('vi')];
 
-  /// Tab dưới
+  /// Không còn hiện trên thanh dưới từ 2026-11-25.2 (tab 1 mang tên skill); giữ cho tiêu đề / đọc màn hình
   ///
   /// In vi, this message translates to:
   /// **'Tổng quan'**
@@ -1179,6 +1179,162 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Thiết bị chưa hỗ trợ skill này — cập nhật firmware.'**
   String get devErrSkillUnsupported;
+
+  /// Tab 2 của thanh dưới
+  ///
+  /// In vi, this message translates to:
+  /// **'Skill'**
+  String get navSkills;
+
+  /// Tên skill; cũng là nhãn tab 1 khi Agent đang dùng
+  ///
+  /// In vi, this message translates to:
+  /// **'Agent'**
+  String get skillAgentName;
+
+  /// Mô tả ô skill
+  ///
+  /// In vi, this message translates to:
+  /// **'Claude Code & Codex: mức dùng, project, thẻ duyệt.'**
+  String get skillAgentDesc;
+
+  /// Kênh thiết bị của skill Agent
+  ///
+  /// In vi, this message translates to:
+  /// **'Trang chủ · Danh sách agent · Claude · Codex · AI · Xu hướng'**
+  String get skillAgentChannels;
+
+  /// Tên skill (sắp có)
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhạc'**
+  String get skillMusicName;
+
+  /// Mô tả ô skill
+  ///
+  /// In vi, this message translates to:
+  /// **'Bài đang phát và điều khiển nhạc.'**
+  String get skillMusicDesc;
+
+  /// Tên skill (sắp có)
+  ///
+  /// In vi, this message translates to:
+  /// **'Mạng xã hội'**
+  String get skillSocialName;
+
+  /// Mô tả ô skill
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông báo và số liệu mạng xã hội.'**
+  String get skillSocialDesc;
+
+  /// Tên skill (sắp có)
+  ///
+  /// In vi, this message translates to:
+  /// **'Giải trí'**
+  String get skillFunName;
+
+  /// Mô tả ô skill
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung vui cho màn hình.'**
+  String get skillFunDesc;
+
+  /// Tiêu đề màn Skill
+  ///
+  /// In vi, this message translates to:
+  /// **'Skill'**
+  String get skillsTitle;
+
+  /// Dòng dưới tiêu đề
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn gói chức năng cho màn hình glimmer. Mỗi lúc một skill.'**
+  String get skillsSubtitle;
+
+  /// Nhãn ô skill đang dùng
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang dùng'**
+  String get skillsCurrent;
+
+  /// Nhãn đọc màn hình của ô đang dùng
+  ///
+  /// In vi, this message translates to:
+  /// **'{skill} — đang dùng, mở màn chính'**
+  String skillsCurrentA11y(String skill);
+
+  /// Nhãn ô skill chưa có gói
+  ///
+  /// In vi, this message translates to:
+  /// **'Sắp có'**
+  String get skillsSoon;
+
+  /// Nhãn ô skill chọn được
+  ///
+  /// In vi, this message translates to:
+  /// **'Dùng skill này'**
+  String get skillsUse;
+
+  /// Nhãn ô skill đang đổi
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang đổi…'**
+  String get skillsSwitching;
+
+  /// Thanh báo khi đang đổi
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang chuyển màn thiết bị sang {skill}…'**
+  String skillsSwitchingBanner(String skill);
+
+  /// Dòng phụ thanh báo đang đổi
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ thiết bị nhận, vài giây.'**
+  String get skillsSwitchingHint;
+
+  /// Thanh báo lỗi, coral
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa đổi được skill'**
+  String get skillsErrorTitle;
+
+  /// skill = skill đang dùng
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiết bị không trả lời. Màn thiết bị vẫn là {skill}.'**
+  String skillsErrorBody(String skill);
+
+  /// Thanh báo firmware cũ, amber
+  ///
+  /// In vi, this message translates to:
+  /// **'Firmware chưa hỗ trợ skill'**
+  String get skillsLegacyTitle;
+
+  /// fw = phiên bản firmware
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiết bị đang chạy {fw} — chỉ có skill Agent. Cập nhật firmware để đổi skill.'**
+  String skillsLegacyBody(String fw);
+
+  /// Nhãn thẻ kênh
+  ///
+  /// In vi, this message translates to:
+  /// **'MÀN THIẾT BỊ ĐANG XOAY'**
+  String get skillsChannelsTitle;
+
+  /// Kênh hệ thống (R-SK-2)
+  ///
+  /// In vi, this message translates to:
+  /// **'+ luôn có: Đồng hồ · Thời tiết · Dự báo · Thông tin · Ban đêm'**
+  String get skillsChannelsSystem;
+
+  /// R-SK-3
+  ///
+  /// In vi, this message translates to:
+  /// **'Thẻ cần duyệt / chờ trả lời của agent vẫn chen ngang ở mọi skill.'**
+  String get skillsAttentionNote;
 }
 
 class _AppLocalizationsDelegate

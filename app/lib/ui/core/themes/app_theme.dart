@@ -31,9 +31,14 @@ abstract final class AppTheme {
         margin: const EdgeInsets.symmetric(horizontal: AppSpace.l, vertical: _cardGapV),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSize.radiusCard)),
       ),
-      navigationBarTheme: const NavigationBarThemeData(
+      // 2026-11-25.2: every icon ink (no more black selected icon); label 12/700 ink selected, 12/500 inkDim.
+      navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.panel,
         indicatorColor: AppColors.panel2,
+        iconTheme: const WidgetStatePropertyAll(IconThemeData(color: AppColors.ink)),
+        labelTextStyle: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected)
+            ? AppFonts.navLabel.copyWith(fontWeight: FontWeight.w700, color: AppColors.ink)
+            : AppFonts.navLabel.copyWith(color: AppColors.inkDim)),
       ),
       dividerColor: AppColors.line,
       inputDecorationTheme: const InputDecorationTheme(border: OutlineInputBorder()),
