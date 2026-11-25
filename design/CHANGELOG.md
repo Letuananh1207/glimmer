@@ -5,6 +5,52 @@ widget và việc cần làm — không ghi đường dẫn file hay cách code.
 
 ---
 
+## 2026-11-25.3 — Skill bật / tắt theo dock, Màn hình chia tab như thiết bị
+
+- **Skill · `SkillsScreen`** (`source/Skills.dc.html`, `screen_specs.md` §6; ảnh `Skills.png`, `SkillsSwitching.png`,
+  `SkillsError.png`, `SkillsLegacy.png`, mới `SkillsLastOne.png`):
+  - Lưới chọn một skill → **danh sách công tắc** `SkillRow` + `SkillSwitch`: Agent, Thời tiết, Đồng hồ; mỗi skill bật là
+    một tab dock thiết bị, thứ tự dòng = thứ tự dock. Icon pixel lấy đúng dock thiết bị, công tắc tô màu nhấn từng skill.
+  - Đang gửi: vòng xoay ngay trên dòng (`skillsSending`), không thanh báo. Lỗi: thanh báo + `commonRetry`, công tắc về như
+    thiết bị. Còn một skill: công tắc khoá, mô tả `skillsLastOne`. Firmware cũ: Agent ổ khoá, Thời tiết / Đồng hồ "Luôn có".
+  - Bỏ thẻ "Màn thiết bị đang xoay"; thay bằng một dòng chú thích. "Sắp có" thành chip (Tin nhắn, Nhạc, Mạng xã hội, Giải trí).
+  - Hiện app: lưới 2 cột `SkillTile` chọn một skill.
+- **Màn hình · `DashboardScreen`** (`source/Dashboard.dc.html`, §2; ảnh 5 trạng thái cũ chụp lại, mới `DashboardWeather.png`,
+  `DashboardWeatherNoLocation.png`, `DashboardClock.png`, `DashboardSingle.png`):
+  - Thanh tab `DockTabBar` dưới đầu màn: Agent · Thời tiết · Đồng hồ (skill đang bật); tab Agent có huy hiệu amber số
+    agent chờ. Một skill bật → không có thanh.
+  - Tab Thời tiết (hôm nay + 3 ngày; chưa có vị trí → nút sang Cài đặt), tab Đồng hồ (giờ, múi giờ, kiểu giờ, ban đêm).
+  - Đầu màn gọn: Clawd 44, nút icon refresh thay "Tải số liệu ngay". Hai nút xanh đặc cuối → một `ShowOnDeviceButton`
+    nền `panel2` "Hiện {skill} trên thiết bị".
+- **Khung · thanh dưới** (`components.md`; ảnh Cài đặt, Thiết bị mọi trạng thái chụp lại): tab 1 thành "Màn hình"
+  (`navHome`, `icons/nav-home.svg`) với huy hiệu amber số agent chờ.
+- **Token:** `skillWeather`, `skillClock` + `…Tint`; size `dockTab`, `skillRow`, `skillIcon`, `switchW/H`, `chip`, `headerClawd`;
+  radius `dockBar`, `dockTab`, `chip`, `badge`. **Icon:** `icons/dock-*.svg`, `nav-home.svg`. **Chuỗi:** 40 khoá mới / đổi;
+  16 khoá cũ đánh dấu "Không dùng từ 2026-11-25.3".
+- Phiếu: `app/docs/phieu_thiet_ke/2026-11-25-skill-theo-dock.md`
+- Đổi luật:
+  - R-SK-1 → "Nhiều skill bật cùng lúc, **ít nhất một**; mặc định Agent + Thời tiết + Đồng hồ (giữ đúng thứ đang xoay trên
+    thiết bị khi nâng cấp)". Phiếu đề xuất "mặc định chỉ Agent"; thiết kế đổi vì Thời tiết / Đồng hồ giờ là skill.
+  - R-SK-2 → "Bật / tắt trên app → gửi thiết bị danh sách skill bật; thiết bị xoay mọi tab dock đang bật + Thông tin, Ban đêm".
+  - Thời tiết, Đồng hồ **thành skill tắt được** (không còn là kênh hệ thống luôn có). R-SK-3/4/5 giữ.
+- Cần firmware:
+  - Setting dạng danh sách skill bật (ví dụ `skills_on`), `/api/state` báo lại; dock thiết bị chỉ hiện tab của skill bật.
+    Tắt Thời tiết = tắt Weather + Forecast, tắt Đồng hồ = tắt Clock (Night vẫn là hệ thống).
+  - `/api/state` thêm thời tiết hiện tại + 3 ngày (nhiệt, mô tả, cao / thấp, cảm giác, tuổi số liệu; tên nơi nếu có) — hiện
+    app không có dữ liệu này. Giờ / ban đêm đã có (`time`, `/api/settings`).
+- Cài đặt chưa có ô vị trí thời tiết (`weatherLat/Lon` đã có trong `/api/settings`) — cần một mục vẽ sau; tạm thời nút
+  `weatherSetLocation` mở tab Cài đặt.
+
+**Việc cần làm trong code:**
+- Sổ quy tắc: chốt R-SK-1, R-SK-2 mới (và Thời tiết / Đồng hồ thành skill) trước khi làm; test theo luật mới.
+- `SkillsScreen`: thay lưới bằng thẻ danh sách `SkillRow` có `SkillSwitch`; trạng thái đang gửi / lỗi / còn một / firmware cũ
+  như §6; chip "Sắp có"; dòng chú thích. Bỏ thẻ kênh và thanh báo đang đổi.
+- `SkillRepository` / use case: từ một skill thành danh sách bật (ít nhất một), gửi thiết bị, theo thiết bị khi khác (R-SK-5).
+- `DashboardScreen` → Màn hình: đầu màn gọn + nút refresh icon; `DockTabBar` (ẩn khi một skill); tab Agent = thân cũ +
+  `ShowOnDeviceButton`; tab Thời tiết, tab Đồng hồ như §2; huy hiệu agent chờ trên tab Agent.
+- Thanh điều hướng dưới: tab 1 "Màn hình" + icon mới + huy hiệu agent chờ, ở mọi màn có thanh.
+- Firmware: setting danh sách skill + dock theo đó; thời tiết trong `/api/state` (bốn file, `CLAUDE.md` gốc mục Settings round-trip).
+
 ## 2026-11-25.2 — Chọn skill: màn Skill và thanh điều hướng 4 tab
 
 - **Skill · `SkillsScreen`** (màn mới; `source/Skills.dc.html`, `screen_specs.md` §6; ảnh `Skills.png`, `SkillsSwitching.png`,

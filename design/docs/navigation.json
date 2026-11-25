@@ -1,7 +1,7 @@
 {
-  "version": "2026-11-25.2",
+  "version": "2026-11-25.3",
   "start": "Connect",
-  "rule": "Chưa kết nối được thiết bị → Connect. Kết nối được → khung 4 tab: tab 1 = màn chính của skill đang dùng (Agent → Dashboard; nhãn + icon theo skill), tab 2 = Skills, tab 3 = Settings, tab 4 = Device. Settings và Device dùng chung mọi skill; Connect và WifiSetup ngoài khung tab.",
+  "rule": "Chưa kết nối được thiết bị → Connect. Kết nối được → khung 4 tab: tab 1 = Màn hình (Dashboard) chia theo các tab dock đang bật, tab 2 = Skills (bật / tắt), tab 3 = Settings, tab 4 = Device. Settings và Device dùng chung; Connect và WifiSetup ngoài khung tab.",
   "screens": {
     "Connect": {
       "source": "source/Connect.dc.html",
@@ -23,10 +23,29 @@
         "empty",
         "stale",
         "setup",
-        "loading"
+        "loading",
+        "weather",
+        "weatherNoLoc",
+        "clock",
+        "single"
       ],
       "refresh": "Kéo để làm mới; tự làm mới mỗi 5 s khi app mở",
-      "skill": "agent"
+      "dockTabs": {
+        "order": [
+          "agent",
+          "chat",
+          "weather",
+          "clock"
+        ],
+        "show": "Chỉ skill đang bật; một skill bật → không có thanh tab",
+        "badge": "Tab agent: số agent chờ (approval + input); cũng ở tab 1 thanh dưới",
+        "agent": "Thân Tổng quan cũ (mức dùng, project, thẻ)",
+        "weather": "Thời tiết hôm nay + 3 ngày; chưa có vị trí → nút sang Settings",
+        "clock": "Giờ thiết bị, múi giờ, kiểu giờ, ban đêm"
+      },
+      "to": {
+        "Settings": "Nút 'Đặt vị trí trong Cài đặt' (weatherNoLoc)"
+      }
     },
     "Settings": {
       "source": "source/Settings.dc.html",
@@ -69,6 +88,7 @@
         "normal",
         "switching",
         "error",
+        "lastOne",
         "legacy"
       ],
       "rules": [
@@ -79,7 +99,6 @@
         "R-SK-5"
       ],
       "to": {
-        "skill home": "Chạm ô skill đang dùng",
         "Device": "Nút 'Cập nhật firmware' ở trạng thái legacy"
       }
     }
@@ -87,12 +106,10 @@
   "tabs": [
     {
       "tab": 0,
-      "screen": "skill home",
-      "label": "tên skill (skillAgentName…)",
-      "icon": "icon skill (Agent: Clawd)",
-      "bySkill": {
-        "agent": "Dashboard"
-      }
+      "screen": "Dashboard",
+      "label": "navHome",
+      "icon": "icons/nav-home.svg",
+      "badge": "số agent chờ"
     },
     {
       "tab": 1,
@@ -121,8 +138,33 @@
         "id": "agent",
         "name": "skillAgentName",
         "accent": "skillAgent",
-        "home": "Dashboard",
-        "pack": true
+        "dockTab": "agent",
+        "pack": true,
+        "default": true
+      },
+      {
+        "id": "weather",
+        "name": "skillWeatherName",
+        "accent": "skillWeather",
+        "dockTab": "weather",
+        "pack": true,
+        "default": true,
+        "device": "showWeather + showForecast"
+      },
+      {
+        "id": "clock",
+        "name": "skillClockName",
+        "accent": "skillClock",
+        "dockTab": "clock",
+        "pack": true,
+        "default": true,
+        "device": "showClock"
+      },
+      {
+        "id": "chat",
+        "name": "skillChatName",
+        "dockTab": "chat",
+        "pack": false
       },
       {
         "id": "music",
@@ -143,6 +185,7 @@
         "pack": false
       }
     ],
-    "note": "Chỉ agent có gói. Id music/social/fun là id đặt tạm của thiết kế — gói thật đặt id khi làm."
+    "enabled": "Danh sách; ít nhất một; mặc định agent + weather + clock",
+    "note": "Id weather / clock / chat là id đặt trong thiết kế — firmware chốt khi làm danh sách skill bật."
   }
 }

@@ -1,6 +1,7 @@
 # Phiếu thiết kế: Skill bật/tắt nhiều + màn chính theo tab dock
 
 - Trạng thái: chờ thiết kế
+- Đã vẽ: 2026-11-25.3
 - Ngày: 2026-11-25 · Nguồn: yêu cầu người dùng (app theo ý tưởng dock của màn thiết bị, P-2026-11-25.3)
 
 ## Dán vào canvas

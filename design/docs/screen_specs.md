@@ -1,6 +1,6 @@
 # Đặc tả màn — app glimmer
 
-Khung 390 × 844 dp. Màn dài (Tổng quan, Cài đặt, Thiết bị) được vẽ cao hơn để thấy hết phần cuộn; ảnh của chúng cao hơn
+Khung 390 × 844 dp. Màn dài (Màn hình, Cài đặt, Thiết bị, Skill) được vẽ cao hơn để thấy hết phần cuộn; ảnh của chúng cao hơn
 2532 px. Màu / cỡ chữ: `tokens/design_tokens.json`. Chuỗi: `l10n/app_vi.arb`. Widget dùng chung: `components.md`.
 Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn trạng thái.
 
@@ -18,7 +18,36 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
   `connectManualHint` (label) → ô `connectManualIp` (đã điền IP lần trước) → ô `connectManualToken` (ẩn chữ) → nút chữ
   `commonCancel` + nút chính `connectManualOk` căn phải.
 
-## 2. Tổng quan — `DashboardScreen` (Dashboard.png, DashboardEmpty.png, DashboardStale.png, DashboardSetup.png, DashboardLoading.png)
+## 2. Màn hình — `DashboardScreen` (Dashboard.png, DashboardEmpty.png, DashboardStale.png, DashboardSetup.png, DashboardLoading.png, DashboardWeather.png, DashboardWeatherNoLocation.png, DashboardClock.png, DashboardSingle.png)
+
+> **2026-11-25.3 — Màn hình theo tab dock** (phiếu `app/docs/phieu_thiet_ke/2026-11-25-skill-theo-dock.md`): tab 1 của thanh dưới thành **Màn hình** (`navHome`), chia theo
+> các tab dock đang bật giống màn thiết bị. Prop `state` thêm `weather`, `weatherNoLoc`, `clock`, `single`. Ảnh 5 trạng
+> thái cũ chụp lại, 4 ảnh mới. Các mục cũ bên dưới vẫn đúng cho phần thân tab Agent, trừ đầu màn và hai nút cuối.
+> - **Đầu màn gọn:** Clawd 44 (thay 72), "glimmer" 18/700, đệm 12 16 8 20, cách 12. Bên phải nút icon refresh 44 màu
+>   inkDim (nhãn đọc màn hình `dashboardRefreshNow`) — thay nút "Tải số liệu ngay".
+> - **Thanh tab `DockTabBar`** (khi ≥ 2 skill bật, dưới đầu màn và thanh báo): lề 4 16 6, đệm 4, nền `panel`, bo 14, lưới
+>   chia đều cách 4. Tab ≥ 48 bo 10: icon pixel của dock ×1.25 (`icons/dock-*.svg`; Clawd màu `clawd`, còn lại inkDim)
+>   + 7 + nhãn 13 = tên skill. Đang chọn: nền `panel2`, nhãn 700 ink, vạch 20×3 bo 2 màu nhấn skill cách đáy 3. Khác:
+>   nền trong, nhãn 500 inkDim. Tab Agent có huy hiệu 18×18 bo 4 nền amber, số 11/700 màu bg = số agent chờ (approval +
+>   input, như `countWaiting`); 0 → ẩn, > 9 → "9+". Thứ tự = dock: Agent, (Tin nhắn), Thời tiết, Đồng hồ — chỉ skill
+>   đang bật. Một skill bật → không có thanh (`single`). Từ 4 tab trở lên: nhãn xuống dưới icon (chưa vẽ).
+> - **Tab Agent:** thân như cũ. Hai nút cuối thay bằng một `ShowOnDeviceButton` (`homeShowOnDevice`, skill = "Agent").
+> - **Tab Thời tiết** (`weather`): thẻ đệm 16 — nhãn `weatherTitle` + meta `weatherMeta` ("Hà Nội · 10m trước"); hàng
+>   cách 16 lề trên 14: mặt trời pixel ×3.5 màu `skillWeather`, nhiệt "29°" 56/700 ink, cột cách 4: mô tả 16 ink,
+>   `weatherHiLo` 12 inkDim, `weatherFeels` 12 muted. Kẻ 1 `line` (lề 16 0 4). 3 dòng dự báo ≥ 44 kẻ giữa: thứ 12 muted
+>   rộng 36 (`weatherDayTomorrow` MAI, `weatherDayAfter` KIA, rồi T7…), mô tả 14 inkDim, "30° / 25°" 14 (thấp muted).
+>   Không icon ở dòng dự báo. Nút "Hiện Thời tiết trên thiết bị".
+> - **`weatherNoLoc`** (thiết bị chưa có `weatherLat/Lon`): meta amber `weatherNoLocationMeta`; giữa thẻ (đệm 24 8 8)
+>   mặt trời muted ×3.5, `weatherNoLocationTitle` 16/700, `weatherNoLocationBody` 13 inkDim; nút viền `weatherSetLocation`
+>   (icon tune) → tab Cài đặt. Không có nút hiện trên thiết bị.
+> - **Tab Đồng hồ** (`clock`): nhãn `clockTitle`; giờ 72/700 căn giữa, lề trên 18: giờ ink, ":" `coral`, phút amber
+>   (như kênh Clock); `clockDate` 14 inkDim (lề 10 0 14); 3 dòng ≥ 44 kẻ giữa, nhãn 14 inkDim / giá trị 14 ink phải:
+>   `clockTz` (UTC+7), `clockFormat` (`clockFormat24` / `clockFormat12`), `clockNight` (`clockNightValue`). Nút "Hiện Đồng hồ
+>   trên thiết bị". Giờ lấy từ `time` của `/api/state` + `tzMinutes`; kiểu giờ, ban đêm từ `/api/settings`.
+> - **`ShowOnDeviceButton`:** đệm 8 16 24, rộng hết, cao ≥ 48, bo 14, nền `panel2`, icon tv 18 inkDim + 10 + chữ 14/500 ink.
+>   Gửi `POST /api/channel` kênh chính của tab (Agent → Claude, Thời tiết → Weather, Đồng hồ → Clock).
+> - **Thanh dưới:** tab 1 `navHome`, icon `icons/nav-home.svg`; huy hiệu 16×16 bo 4 amber, số 10/700 bg, góc trên phải icon
+>   (top −2, left 38 trong viên 64). Hiện ở mọi tab của khung.
 
 > **2026-11-25.2 — Thanh điều hướng theo skill:** thanh dưới thành 4 tab (Agent · Skill · Cài đặt · Thiết bị), xem `components.md` "Thanh điều hướng dưới"; ảnh của mọi trạng thái màn này chụp lại. Đây là màn chính (tab 1) của skill Agent; nội dung không đổi.
 
@@ -45,6 +74,8 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
 
 ## 3. Cài đặt — `SettingsScreen` (Settings.png, SettingsChanged.png, SettingsError.png)
 
+> **2026-11-25.3:** thanh dưới tab 1 đổi thành "Màn hình" (`navHome`, có huy hiệu agent chờ); ảnh chụp lại.
+
 > **2026-11-25.2 — Thanh điều hướng theo skill:** thanh dưới thành 4 tab (Agent · Skill · Cài đặt · Thiết bị), xem `components.md` "Thanh điều hướng dưới"; ảnh của mọi trạng thái màn này chụp lại. Tab 3, dùng chung mọi skill; mục SỐ LIỆU CLAUDE và AGENT thuộc skill Agent (chưa tách), nội dung không đổi.
 
 > **2026-11-25.1 — Bản đầu:** vẽ lại đúng app hiện có.
@@ -65,6 +96,8 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
 - Thanh điều hướng dưới, tab 3 (Cài đặt).
 
 ## 4. Thiết bị — `DeviceScreen` (Device.png, DeviceBusy.png)
+
+> **2026-11-25.3:** thanh dưới tab 1 đổi thành "Màn hình" (`navHome`, có huy hiệu agent chờ); ảnh chụp lại.
 
 > **2026-11-25.2 — Thanh điều hướng theo skill:** thanh dưới thành 4 tab (Agent · Skill · Cài đặt · Thiết bị), xem `components.md` "Thanh điều hướng dưới"; ảnh của mọi trạng thái màn này chụp lại. Tab 4, dùng chung mọi skill; nội dung không đổi.
 
@@ -92,7 +125,29 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
 - Các trạng thái khác: dòng trạng thái `heading` căn giữa (ink / mint / coral) → 10 → chi tiết `body` → 24 → vòng xoay
   (working) hoặc nút `commonRetry` (failed) / `wifiDoneButton` (done). Đang làm thì không quay lại được.
 
-## 6. Skill — `SkillsScreen` (Skills.png, SkillsSwitching.png, SkillsError.png, SkillsLegacy.png)
+## 6. Skill — `SkillsScreen` (Skills.png, SkillsSwitching.png, SkillsError.png, SkillsLegacy.png, SkillsLastOne.png)
+
+> **2026-11-25.3 — Bật / tắt skill theo dock** (phiếu `app/docs/phieu_thiet_ke/2026-11-25-skill-theo-dock.md`): thay lưới chọn một skill bằng **danh sách có công tắc**; mọi mục
+> của bản .2 bên dưới (lưới, `SkillTile`, thẻ kênh, thanh báo đang đổi) **bỏ**, trừ đầu màn. Prop `state`: `normal`,
+> `switching`, `error`, `lastOne` (mới), `legacy`. Ảnh 4 trạng thái cũ chụp lại + `SkillsLastOne.png`. Cả màn vừa 844.
+> - Đầu màn như cũ, `skillsSubtitle` mới (một dòng).
+> - Thẻ danh sách: lề 6 16, nền `panel`, bo 14, đệm 4 16. Mỗi dòng `SkillRow` ≥ 72, đệm 10 0, kẻ 1 `line` giữa các dòng:
+>   ô icon 44 bo 12 + 14 + cột (tên 16/700, cách 2, mô tả 12 muted một dòng `skill…Desc`) + công tắc `SkillSwitch`.
+>   Bật: nền ô `skill…Tint`, icon pixel dock màu nhấn (Clawd ×1.75, khác ×1.5), tên ink. Tắt: nền ô `panel2`, icon muted,
+>   tên inkDim. Thứ tự dòng = thứ tự tab trên dock: Agent, Thời tiết, Đồng hồ. Chạm công tắc → gửi thiết bị ngay.
+> - `SkillSwitch`: vùng chạm 60×48 (lề phải −4); rãnh 52×32 bo 16. Bật: nền + viền 2 màu nhấn skill, núm 24 màu bg ở
+>   phải. Tắt: nền `panel2`, viền 2 muted, núm 16 muted ở trái. Khoá: mờ 38 %.
+> - `switching`: dòng đang gửi thay công tắc bằng vòng xoay 24 (`clawd`), mô tả → `skillsSending` inkDim; công tắc khác
+>   khoá. **Không** thanh báo. App giữ trạng thái thiết bị tới khi thiết bị nhận (R-SK-5).
+> - `error`: thanh báo (như bản .2) `skillsErrorOffTitle` / `skillsErrorOnTitle` coral + `skillsErrorOffBody` /
+>   `skillsErrorOnBody` + `commonRetry`; công tắc về trạng thái thiết bị đang có.
+> - `lastOne`: chỉ một skill bật → công tắc của nó khoá; mô tả thay bằng `skillsLastOne` amber. Không có hộp thoại.
+> - `legacy` (R-SK-4): thanh báo amber `skillsLegacyTitle` / `skillsLegacyBody` + nút viền `deviceUpdateFw` → tab Thiết bị.
+>   Agent: ổ khoá 20 muted thay công tắc. Thời tiết, Đồng hồ: bật (màu nhấn), không công tắc, mô tả `skillsAlwaysOn`.
+>   Không có dòng chú thích.
+> - Dưới thẻ (trừ legacy): lề 6 20 0, ô vuông 8 amber + 8 + `skillsOrderNote` 12/16 muted.
+> - `skillsSoonTitle` (12 muted, đệm 14 20 4) + chip xuống dòng cách 8, đệm 4 16 0: cao 36, bo 18, viền 1 `line`, đệm
+>   0 12 0 10, icon 16 muted + 8 + tên 13 muted. Tin nhắn (`icons/dock-chat.svg`), Nhạc, Mạng xã hội, Giải trí. Không bấm được.
 
 > **2026-11-25.2 — Màn mới: chọn skill** (phiếu `app/docs/phieu_thiet_ke/2026-11-25-chon-skill.md`): tab 2 của thanh dưới.
 

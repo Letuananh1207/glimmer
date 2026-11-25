@@ -101,6 +101,22 @@
     "skillFunTint": {
       "value": "rgba(255, 210, 63, 0.16)",
       "use": "Nền ô icon skill Giải trí"
+    },
+    "skillWeather": {
+      "value": "#54B6FF",
+      "use": "Màu nhấn skill Thời tiết (= sky, như kênh Weather)"
+    },
+    "skillClock": {
+      "value": "#FFD23F",
+      "use": "Màu nhấn skill Đồng hồ (= amber, như kênh Clock)"
+    },
+    "skillWeatherTint": {
+      "value": "rgba(84, 182, 255, 0.16)",
+      "use": "Nền ô icon skill Thời tiết"
+    },
+    "skillClockTint": {
+      "value": "rgba(255, 210, 63, 0.16)",
+      "use": "Nền ô icon skill Đồng hồ"
     }
   },
   "font": {
@@ -214,7 +230,14 @@
     "usageBarSmall": 5,
     "skillTile": 176,
     "skillBadge": 48,
-    "navTabs": 4
+    "navTabs": 4,
+    "dockTab": 48,
+    "skillRow": 72,
+    "skillIcon": 44,
+    "switchW": 52,
+    "switchH": 32,
+    "chip": 36,
+    "headerClawd": 44
   },
   "radius": {
     "card": 14,
@@ -224,7 +247,11 @@
     "usageBar": 3,
     "navIndicator": 16,
     "skillTile": 14,
-    "skillBadge": 12
+    "skillBadge": 12,
+    "dockBar": 14,
+    "dockTab": 10,
+    "chip": 18,
+    "badge": 4
   },
   "border": {
     "hairline": 1

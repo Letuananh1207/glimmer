@@ -179,7 +179,7 @@
   },
   "dashboardShowClaude": "Hiện màn Claude",
   "@dashboardShowClaude": {
-    "description": "Nút"
+    "description": "Không dùng từ 2026-11-25.3 — Nút"
   },
   "dashboardDoneProjectsCleared": "Đã xóa bảng project",
   "@dashboardDoneProjectsCleared": {
@@ -696,13 +696,13 @@
   "@skillAgentName": {
     "description": "Tên skill; cũng là nhãn tab 1 khi Agent đang dùng"
   },
-  "skillAgentDesc": "Claude Code & Codex: mức dùng, project, thẻ duyệt.",
+  "skillAgentDesc": "Mức dùng và thẻ duyệt",
   "@skillAgentDesc": {
-    "description": "Mô tả ô skill"
+    "description": "Mô tả dòng skill (một dòng)"
   },
   "skillAgentChannels": "Trang chủ · Danh sách agent · Claude · Codex · AI · Xu hướng",
   "@skillAgentChannels": {
-    "description": "Kênh thiết bị của skill Agent"
+    "description": "Không dùng từ 2026-11-25.3 — Kênh thiết bị của skill Agent"
   },
   "skillMusicName": "Nhạc",
   "@skillMusicName": {
@@ -710,7 +710,7 @@
   },
   "skillMusicDesc": "Bài đang phát và điều khiển nhạc.",
   "@skillMusicDesc": {
-    "description": "Mô tả ô skill"
+    "description": "Không dùng từ 2026-11-25.3 — Mô tả ô skill"
   },
   "skillSocialName": "Mạng xã hội",
   "@skillSocialName": {
@@ -718,7 +718,7 @@
   },
   "skillSocialDesc": "Thông báo và số liệu mạng xã hội.",
   "@skillSocialDesc": {
-    "description": "Mô tả ô skill"
+    "description": "Không dùng từ 2026-11-25.3 — Mô tả ô skill"
   },
   "skillFunName": "Giải trí",
   "@skillFunName": {
@@ -726,23 +726,23 @@
   },
   "skillFunDesc": "Nội dung vui cho màn hình.",
   "@skillFunDesc": {
-    "description": "Mô tả ô skill"
+    "description": "Không dùng từ 2026-11-25.3 — Mô tả ô skill"
   },
   "skillsTitle": "Skill",
   "@skillsTitle": {
     "description": "Tiêu đề màn Skill"
   },
-  "skillsSubtitle": "Chọn gói chức năng cho màn hình glimmer. Mỗi lúc một skill.",
+  "skillsSubtitle": "Mỗi skill bật là một tab trên dock thiết bị.",
   "@skillsSubtitle": {
-    "description": "Dòng dưới tiêu đề"
+    "description": "Phụ đề màn Skill"
   },
   "skillsCurrent": "Đang dùng",
   "@skillsCurrent": {
-    "description": "Nhãn ô skill đang dùng"
+    "description": "Không dùng từ 2026-11-25.3 — Nhãn ô skill đang dùng"
   },
   "skillsCurrentA11y": "{skill} — đang dùng, mở màn chính",
   "@skillsCurrentA11y": {
-    "description": "Nhãn đọc màn hình của ô đang dùng",
+    "description": "Không dùng từ 2026-11-25.3 — Nhãn đọc màn hình của ô đang dùng",
     "placeholders": {
       "skill": {
         "type": "String"
@@ -755,15 +755,15 @@
   },
   "skillsUse": "Dùng skill này",
   "@skillsUse": {
-    "description": "Nhãn ô skill chọn được"
+    "description": "Không dùng từ 2026-11-25.3 — Nhãn ô skill chọn được"
   },
   "skillsSwitching": "Đang đổi…",
   "@skillsSwitching": {
-    "description": "Nhãn ô skill đang đổi"
+    "description": "Không dùng từ 2026-11-25.3 — Nhãn ô skill đang đổi"
   },
   "skillsSwitchingBanner": "Đang chuyển màn thiết bị sang {skill}…",
   "@skillsSwitchingBanner": {
-    "description": "Thanh báo khi đang đổi",
+    "description": "Không dùng từ 2026-11-25.3 — Thanh báo khi đang đổi",
     "placeholders": {
       "skill": {
         "type": "String"
@@ -772,26 +772,26 @@
   },
   "skillsSwitchingHint": "Chờ thiết bị nhận, vài giây.",
   "@skillsSwitchingHint": {
-    "description": "Dòng phụ thanh báo đang đổi"
+    "description": "Không dùng từ 2026-11-25.3 — Dòng phụ thanh báo đang đổi"
   },
   "skillsErrorTitle": "Chưa đổi được skill",
   "@skillsErrorTitle": {
-    "description": "Thanh báo lỗi, coral"
+    "description": "Không dùng từ 2026-11-25.3 — Thanh báo lỗi, coral"
   },
   "skillsErrorBody": "Thiết bị không trả lời. Màn thiết bị vẫn là {skill}.",
   "@skillsErrorBody": {
-    "description": "skill = skill đang dùng",
+    "description": "Không dùng từ 2026-11-25.3 — skill = skill đang dùng",
     "placeholders": {
       "skill": {
         "type": "String"
       }
     }
   },
-  "skillsLegacyTitle": "Firmware chưa hỗ trợ skill",
+  "skillsLegacyTitle": "Firmware chưa có dock",
   "@skillsLegacyTitle": {
     "description": "Thanh báo firmware cũ, amber"
   },
-  "skillsLegacyBody": "Thiết bị đang chạy {fw} — chỉ có skill Agent. Cập nhật firmware để đổi skill.",
+  "skillsLegacyBody": "Thiết bị đang chạy {fw} — chỉ có skill Agent, không bật / tắt được. Cập nhật firmware để dùng dock.",
   "@skillsLegacyBody": {
     "description": "fw = phiên bản firmware",
     "placeholders": {
@@ -802,14 +802,240 @@
   },
   "skillsChannelsTitle": "MÀN THIẾT BỊ ĐANG XOAY",
   "@skillsChannelsTitle": {
-    "description": "Nhãn thẻ kênh"
+    "description": "Không dùng từ 2026-11-25.3 — Nhãn thẻ kênh"
   },
   "skillsChannelsSystem": "+ luôn có: Đồng hồ · Thời tiết · Dự báo · Thông tin · Ban đêm",
   "@skillsChannelsSystem": {
-    "description": "Kênh hệ thống (R-SK-2)"
+    "description": "Không dùng từ 2026-11-25.3 — Kênh hệ thống (R-SK-2)"
   },
   "skillsAttentionNote": "Thẻ cần duyệt / chờ trả lời của agent vẫn chen ngang ở mọi skill.",
   "@skillsAttentionNote": {
-    "description": "R-SK-3"
+    "description": "Không dùng từ 2026-11-25.3 — R-SK-3"
+  },
+  "navHome": "Màn hình",
+  "@navHome": {
+    "description": "Tab 1 thanh dưới (2026-11-25.3), mọi skill"
+  },
+  "navHomeBadgeA11y": "{count} agent đang chờ",
+  "@navHomeBadgeA11y": {
+    "description": "Đọc màn hình cho huy hiệu tab 1 / tab Agent",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "homeTabsA11y": "Tab của Màn hình",
+  "@homeTabsA11y": {
+    "description": "Nhãn thanh tab dock"
+  },
+  "homeShowOnDevice": "Hiện {skill} trên thiết bị",
+  "@homeShowOnDevice": {
+    "description": "Nút cuối mỗi tab Màn hình",
+    "placeholders": {
+      "skill": {
+        "type": "String"
+      }
+    }
+  },
+  "skillWeatherName": "Thời tiết",
+  "@skillWeatherName": {
+    "description": "Tên skill / tab dock"
+  },
+  "skillWeatherDesc": "Hôm nay và 3 ngày tới",
+  "@skillWeatherDesc": {
+    "description": "Mô tả dòng skill"
+  },
+  "skillClockName": "Đồng hồ",
+  "@skillClockName": {
+    "description": "Tên skill / tab dock"
+  },
+  "skillClockDesc": "Giờ, ngày, giờ ban đêm",
+  "@skillClockDesc": {
+    "description": "Mô tả dòng skill"
+  },
+  "skillChatName": "Tin nhắn",
+  "@skillChatName": {
+    "description": "Tên skill (sắp có)"
+  },
+  "skillsToggleA11y": "Bật / tắt skill {skill}",
+  "@skillsToggleA11y": {
+    "description": "Nhãn công tắc",
+    "placeholders": {
+      "skill": {
+        "type": "String"
+      }
+    }
+  },
+  "skillsSending": "Đang gửi thiết bị…",
+  "@skillsSending": {
+    "description": "Mô tả dòng skill khi đang gửi"
+  },
+  "skillsErrorOffTitle": "Chưa tắt được {skill}",
+  "@skillsErrorOffTitle": {
+    "description": "Thanh báo lỗi, coral",
+    "placeholders": {
+      "skill": {
+        "type": "String"
+      }
+    }
+  },
+  "skillsErrorOnTitle": "Chưa bật được {skill}",
+  "@skillsErrorOnTitle": {
+    "description": "Thanh báo lỗi, coral",
+    "placeholders": {
+      "skill": {
+        "type": "String"
+      }
+    }
+  },
+  "skillsErrorOffBody": "Thiết bị không trả lời. {skill} vẫn bật trên thiết bị.",
+  "@skillsErrorOffBody": {
+    "description": "Thân thanh báo lỗi",
+    "placeholders": {
+      "skill": {
+        "type": "String"
+      }
+    }
+  },
+  "skillsErrorOnBody": "Thiết bị không trả lời. {skill} vẫn tắt trên thiết bị.",
+  "@skillsErrorOnBody": {
+    "description": "Thân thanh báo lỗi",
+    "placeholders": {
+      "skill": {
+        "type": "String"
+      }
+    }
+  },
+  "skillsLastOne": "Cần ít nhất một skill bật",
+  "@skillsLastOne": {
+    "description": "Thay mô tả dòng skill bật duy nhất, amber"
+  },
+  "skillsAlwaysOn": "Luôn có (firmware cũ)",
+  "@skillsAlwaysOn": {
+    "description": "Mô tả Thời tiết / Đồng hồ khi firmware cũ"
+  },
+  "skillsOrderNote": "Thiết bị xoay các tab theo thứ tự trên. Thẻ cần duyệt vẫn chen ngang mọi tab.",
+  "@skillsOrderNote": {
+    "description": "Chú thích dưới danh sách (R-SK-3)"
+  },
+  "skillsSoonTitle": "SẮP CÓ",
+  "@skillsSoonTitle": {
+    "description": "Nhãn nhóm chip sắp có"
+  },
+  "weatherTitle": "THỜI TIẾT",
+  "@weatherTitle": {
+    "description": "Nhãn thẻ tab Thời tiết"
+  },
+  "weatherMeta": "{place} · {age} trước",
+  "@weatherMeta": {
+    "description": "Meta thẻ thời tiết; place = tên nơi (bỏ \"place ·\" nếu thiết bị không có)",
+    "placeholders": {
+      "place": {
+        "type": "String"
+      },
+      "age": {
+        "type": "String"
+      }
+    }
+  },
+  "weatherHiLo": "cao {hi}° · thấp {lo}°",
+  "@weatherHiLo": {
+    "description": "Nhiệt cao / thấp hôm nay",
+    "placeholders": {
+      "hi": {
+        "type": "String"
+      },
+      "lo": {
+        "type": "String"
+      }
+    }
+  },
+  "weatherFeels": "cảm giác {t}°",
+  "@weatherFeels": {
+    "description": "Nhiệt cảm giác",
+    "placeholders": {
+      "t": {
+        "type": "String"
+      }
+    }
+  },
+  "weatherDayTomorrow": "MAI",
+  "@weatherDayTomorrow": {
+    "description": "Dòng dự báo ngày mai (như kênh Weather)"
+  },
+  "weatherDayAfter": "KIA",
+  "@weatherDayAfter": {
+    "description": "Dòng dự báo ngày kia; ngày sau dùng thứ T2…CN"
+  },
+  "weatherNoLocationMeta": "chưa có vị trí",
+  "@weatherNoLocationMeta": {
+    "description": "Meta amber khi thiếu vị trí"
+  },
+  "weatherNoLocationTitle": "Chưa đặt vị trí",
+  "@weatherNoLocationTitle": {
+    "description": "Tiêu đề trạng thái thiếu vị trí"
+  },
+  "weatherNoLocationBody": "Thiết bị cần vĩ độ / kinh độ để lấy thời tiết và dự báo.",
+  "@weatherNoLocationBody": {
+    "description": "Thân trạng thái thiếu vị trí"
+  },
+  "weatherSetLocation": "Đặt vị trí trong Cài đặt",
+  "@weatherSetLocation": {
+    "description": "Nút viền → Cài đặt"
+  },
+  "clockTitle": "ĐỒNG HỒ",
+  "@clockTitle": {
+    "description": "Nhãn thẻ tab Đồng hồ"
+  },
+  "clockDate": "{weekday} {date} · tuần {week}",
+  "@clockDate": {
+    "description": "Dòng ngày dưới giờ, viết hoa thứ",
+    "placeholders": {
+      "weekday": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      },
+      "week": {
+        "type": "String"
+      }
+    }
+  },
+  "clockTz": "Múi giờ",
+  "@clockTz": {
+    "description": "Nhãn dòng"
+  },
+  "clockFormat": "Kiểu giờ",
+  "@clockFormat": {
+    "description": "Nhãn dòng"
+  },
+  "clockFormat24": "24 giờ",
+  "@clockFormat24": {
+    "description": "Giá trị kiểu giờ"
+  },
+  "clockFormat12": "12 giờ",
+  "@clockFormat12": {
+    "description": "Giá trị kiểu giờ"
+  },
+  "clockNight": "Ban đêm",
+  "@clockNight": {
+    "description": "Nhãn dòng"
+  },
+  "clockNightValue": "{start} – {end} · {mode}",
+  "@clockNightValue": {
+    "description": "mode = làm tối / chỉ đồng hồ / tắt màn",
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      },
+      "mode": {
+        "type": "String"
+      }
+    }
   }
 }
