@@ -130,13 +130,14 @@ static const char* bodyText(const Item& it, char* buf, size_t n) {
     return it.body;
 }
 
-static void centerText(const char* font, const char* text, int y, uint16_t color, int maxW = 216) {
+static void centerText(const char* font, const char* text, int y, uint16_t color, int maxW = 216,
+                       int cx = SCREEN_W / 2) {
     Display::useFont(font);
     char buf[kLine]; Utf8::copy(buf, sizeof(buf), text);
     fitLine(buf, maxW);
     tft.setTextDatum(TC_DATUM);
     tft.setTextColor(color, Theme::BG);
-    tft.drawString(buf, SCREEN_W / 2, y);
+    tft.drawString(buf, cx, y);
 }
 
 // "CLAUDE · glimmer", muted, centred at the top.
@@ -218,7 +219,7 @@ static void paintClawd(const Item& it) {
 static void statusText(const Item& it, char* buf, size_t n) {
     uint32_t secs = AttentionQueue::now() - it.created;
     char d[16];
-    if (secs < 60) snprintf_P(d, sizeof(d), PSTR("%luS"), (unsigned long)secs);
+    if (secs < 60) snprintf_P(d, sizeof(d), PSTR("%lu giây"), (unsigned long)secs);
     else           TimeUtil::shortDuration((long)secs, d, sizeof(d));
     snprintf_P(buf, n, PSTR("chờ bạn \xC2\xB7 %s"), d);
 }
@@ -360,9 +361,9 @@ void chAttentionTick(const ChannelCtx&) {
 
 // ── Agents list ─────────────────────────────────────────────────────────────
 //
-//            TÁC TỬ                   JBMono-12B muted, no status bar
-//   ■ Cần bạn · Bash                  JBMono-11 ink
-//     claude · glimmer · 2m           JBMono-11 muted
+//   status bar "Tác tử" · "3 MỤC"; dock at x 2..31 (painted by main.cpp)
+//   ■ Cần bạn · Bash                  JBMono-11 ink   (■ x 40, text x 54)
+//     claude · glimmer · 2p           JBMono-11 muted
 //   ─────────────────────             hairline
 //   (3 rows; a 4th+ becomes "+ N mục khác")
 
@@ -373,8 +374,15 @@ bool chAgentsEnabled(const ChannelCtx& ctx) {
     return ctx.settings && ctx.settings->showAgents && !mainNightFace() && countVisible(AttentionQueue::get(), AttentionQueue::now()) > 0;
 }
 
+// Dock layout (P-2026-11-25.3 §15 "Agents-Dock"): kind square x 40, text
+// x 54..228 (174 px), hairline x 40 w 188. The dock (x 2..31, y 34..147) is
+// painted by main.cpp and the list never clears left of x 39.
+static constexpr int kRowSqX = Layout::CONTENT_LEFT;                          // 40
+static constexpr int kRowTextX = 54;
+static constexpr int kRowTextW = Layout::CONTENT_RIGHT - kRowTextX;           // 174
+
 static void listRow(const Item& it, int y, uint32_t now) {
-    tft.fillRect(20, y + 4, 6, 6, kindColor(it.kind));
+    tft.fillRect(kRowSqX, y + 4, 6, 6, kindColor(it.kind));
     char line[kLine];
     if (waitsOnUser(it.kind)) {
         char tool[kTool], detail[kDetail];
@@ -390,10 +398,10 @@ static void listRow(const Item& it, int y, uint32_t now) {
         else                   snprintf_P(line, sizeof(line), PSTR("%s"), t);
     }
     Display::useFont("JBMono-11");
-    fitLine(line, 190);
+    fitLine(line, kRowTextW);
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(Theme::INK, Theme::BG);
-    tft.drawString(line, 36, y);
+    tft.drawString(line, kRowTextX, y);
 
     char age[8]; TimeUtil::shortDuration((long)(now - it.created), age, sizeof(age));
     for (char* p = age; *p; p++) if (*p >= 'A' && *p <= 'Z') *p += 32;
@@ -403,26 +411,34 @@ static void listRow(const Item& it, int y, uint32_t now) {
     else if (a)             snprintf_P(meta, sizeof(meta), PSTR("%s \xC2\xB7 %s"), a, age);
     else if (it.project[0]) snprintf_P(meta, sizeof(meta), PSTR("%s \xC2\xB7 %s"), it.project, age);
     else                    snprintf_P(meta, sizeof(meta), PSTR("%s"), age);
-    fitLine(meta, 190);
+    fitLine(meta, kRowTextW);
     tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString(meta, 36, y + 15);
+    tft.drawString(meta, kRowTextX, y + 15);
 }
 
-static void paintList() {
+// Design P-2026-11-25.4 §5 on the dock layout (§15 "Agents-Dock"): status
+// bar "Tác tử" · meta "N MỤC", rows from y 32 every 60 px, "+ N mục khác"
+// TC at (134, 152). Repaints only the content area right of the dock
+// (x 39..239, y 24..219).
+static void paintList(bool withMeta = true) {
     const Queue& q = AttentionQueue::get();
     uint32_t now = AttentionQueue::now();
     int ord[kMax], n = ordered(q, ord, now);
-    tft.fillRect(0, 0, SCREEN_W, Layout::CONTENT_BOTTOM, Theme::BG);
-    centerText("JBMono-12B", "TÁC TỬ", 10, Theme::MUTED);
+    if (withMeta) {
+        char meta[16]; snprintf_P(meta, sizeof(meta), PSTR("%d MỤC"), n);
+        Display::statusMeta(meta, Theme::MUTED);
+    }
+    tft.fillRect(Layout::CONTENT_LEFT - 1, Layout::CONTENT_TOP, SCREEN_W - (Layout::CONTENT_LEFT - 1),
+                 Layout::CONTENT_BOTTOM - Layout::CONTENT_TOP, Theme::BG);
     int shown = n > 3 ? 2 : n;
     for (int i = 0; i < shown; i++) {
-        int y = 40 + i * 60;
+        int y = 32 + i * 60;
         listRow(q.items[ord[i]], y, now);
-        if (i < n - 1) tft.drawFastHLine(20, y + 44, 200, Theme::LINE);
+        if (i < n - 1) tft.drawFastHLine(kRowSqX, y + 44, Layout::CONTENT_W, Theme::LINE);
     }
     if (n > shown) {
         char more[32]; snprintf_P(more, sizeof(more), PSTR("+ %d mục khác"), n - shown);
-        centerText("JBMono-11", more, 40 + shown * 60, Theme::MUTED);
+        centerText("JBMono-11", more, 32 + shown * 60, Theme::MUTED, Layout::CONTENT_W, Layout::CONTENT_MID);
     }
     s_listRev = AttentionQueue::revision();
     s_listMin = now / 60;
@@ -430,7 +446,11 @@ static void paintList() {
 
 void chAgentsDraw(const ChannelCtx&) {
     Display::clear();
-    paintList();
+    const Queue& q = AttentionQueue::get();
+    int ord[kMax], n = ordered(q, ord, AttentionQueue::now());
+    char meta[16]; snprintf_P(meta, sizeof(meta), PSTR("%d MỤC"), n);
+    Display::statusBar("Tác tử", meta, Theme::MUTED);
+    paintList(false);
 }
 
 void chAgentsTick(const ChannelCtx&) {

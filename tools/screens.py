@@ -32,7 +32,7 @@ INK, INK_DIM, MUTED = (0xFF, 0xF8, 0xE8), (0xD8, 0xCD, 0xB8), (0x8A, 0x7F, 0x96)
 CORAL, AMBER, MINT = (0xFF, 0x52, 0x47), (0xFF, 0xD2, 0x3F), (0x8F, 0xE5, 0x74)
 SKY, LILAC = (0x54, 0xB6, 0xFF), (0xC3, 0x85, 0xFF)
 DOT = "·"
-VERSION = "v0.22.0-glimmer"
+VERSION = "v0.23.0-glimmer"
 
 _fonts = {}
 
@@ -160,6 +160,55 @@ class Screen:
         self.rect(0, 230, W, 2, color)
 
 
+# ── Dock (src/channels/dock.cpp, P-2026-11-25.3) ────────────────────────────
+#
+# Painted by main.cpp after each channel's draw() on every channel except
+# Attention / Night. Channels with a dock keep content in x 40..228 (L..R).
+L, R, CW, MID = 40, 228, 188, 134
+
+DOCK_ICONS = [   # (w, h, rows): bit (w-1-x) of row y = pixel (x, y)
+    (18, 10, [0x07FF8, 0x07FF8, 0x06FD8, 0x06FD8, 0x1FFFE,
+              0x1FFFE, 0x07FF8, 0x07FF8, 0x02850, 0x02850]),
+    (16, 14, [0x0180, 0x2184, 0x1008, 0x07E0, 0x0FF0, 0x0FF0, 0xCFF3,
+              0xCFF3, 0x0FF0, 0x0FF0, 0x07E0, 0x1008, 0x2184, 0x0180]),
+    (16, 14, [0x07E0, 0x1FF8, 0x381C, 0x60C6, 0x60C6, 0xC0C3, 0xC0C3,
+              0xC0FB, 0xC003, 0x6006, 0x6006, 0x381C, 0x1FF8, 0x07E0]),
+]
+DOCK_DIGITS = [[7, 5, 5, 5, 7], [2, 6, 2, 2, 7], [6, 1, 2, 4, 7], [6, 1, 2, 1, 6], [5, 5, 7, 1, 1],
+               [7, 4, 6, 1, 6], [3, 4, 7, 5, 7], [7, 1, 2, 2, 2], [7, 5, 7, 5, 7], [7, 5, 7, 1, 6],
+               [0, 2, 7, 2, 0]]   # 0-9, '+'
+
+
+def dock(sc, accent, active=0, waiting=1):
+    """Dock::draw(active, accent, waiting): frame 30x114 at (2,34), 3 tabs."""
+    ox, oy = 3, 35                                   # inside the 1-px border
+    sc.rect(2, 34, 30, 114, PANEL)
+    sc.outline(2, 34, 30, 114, LINE)
+
+    def cy_of(k):
+        return oy + 19 + 36 * k
+    if active is not None and active >= 0:
+        cy = cy_of(active)
+        sc.rect(ox + 2, cy - 12, 24, 24, PANEL2)
+        sc.rect(ox, cy - 5, 2, 10, accent)
+    for k, (w, h, rows) in enumerate(DOCK_ICONS):
+        x0, y0 = ox + 14 - w // 2, cy_of(k) - h // 2
+        c = CLAWD_ORANGE if k == 0 else INK_DIM
+        for y, row in enumerate(rows):
+            for x in range(w):
+                if row >> (w - 1 - x) & 1:
+                    sc.pixel(x0 + x, y0 + y, c)
+    if waiting > 0:
+        cy = cy_of(0)
+        bx, by = ox + 19, cy - 14
+        sc.rect(bx + 1, by, 7, 9, AMBER)
+        sc.rect(bx, by + 1, 9, 7, AMBER)
+        for y, row in enumerate(DOCK_DIGITS[min(waiting, 10)]):
+            for x in range(3):
+                if row >> (2 - x) & 1:
+                    sc.pixel(ox + 22 + x, cy - 12 + y, BG)
+
+
 # ── Claude channel (ch_claude.cpp) ───────────────────────────────────────────
 
 STATE_COLOR = {"Cần duyệt": AMBER, "Chờ bạn": SKY, "Lỗi": CORAL, "Đang chạy": LILAC, "Xong": MINT}
@@ -171,63 +220,215 @@ def fit(sc, fname, s, maxw):
     return s
 
 
-def claude(sc, *, hero_used=38, hero_label="TUẦN", reset="4d", sec_label="PHIÊN 5 GIỜ",
-           sec_used=12, sec_reset="2h 14m", stale=False, meta="", meta_color=MUTED,
-           rows=None, pace="", banner=None, mood="wide"):
+def claude(sc, *, hero_used=38, hero_label="TUẦN", reset="4NG", sec_label="PHIÊN 5 GIỜ",
+           sec_used=12, sec_reset="2G 14P", stale=False, meta="", meta_color=MUTED,
+           rows=None, pace="", banner=None, mood="wide", waiting=1):
     sc.status_bar("Claude", meta, CORAL, meta_color)
-    sc.text("JBMono-11", hero_label, 12, 32, MUTED)
+    sc.text("JBMono-11", hero_label, L, 32, MUTED)
     # right column: Clawd (mood from the board); countdown above the bar
-    clawd(sc, W - 12 - 72, 58, 4, eyes=mood)
-    sc.text("JBMono-12B", reset, W - 12, 112, CORAL, "TR")
-    # hero
+    clawd(sc, R - 72, 58, 4, eyes=mood)
+    if mood == "sleep":                 # "Zz" (ch_claude.cpp paintZz): 2-px cells, MUTED
+        for glyph, gx, gy in ((["####", "..#.", ".#..", "####"], 202, 46),
+                              (["#####", "...#.", "..#..", ".#...", "#####"], 214, 30)):
+            for j, row in enumerate(glyph):
+                for i, c in enumerate(row):
+                    if c == "#":
+                        sc.rect(gx + i * 2, gy + j * 2, 2, 2, MUTED)
+    sc.text("JBMono-12B", reset, R, 112, CORAL, "TR")
+    # hero ("100" drops its "%": it would run into Clawd at x 156)
     remaining = 100 - hero_used if hero_used >= 0 else -1
     uc = MUTED if stale else usage_color(remaining)
-    hw = sc.text("VT323-86", f"{hero_used}" if hero_used >= 0 else "--", 12, 46, uc)
+    hs = f"{hero_used}" if hero_used >= 0 else "--"
+    hw = sc.text("VT323-86", hs, L, 46, uc)
     g, a, d = font("VT323-86"); g2, a2, d2 = font("VT323-44")
-    sc.text("VT323-44", "%", 12 + hw + 2, 46 + ((a + d) - (a2 + d2)) - 4, uc)
-    sc.pixel_bar(12, 128, W - 24, 8, max(hero_used, 0), uc)
-    sc.dots_divider(12, 146, W - 24)
+    if len(hs) < 3:
+        sc.text("VT323-44", "%", L + hw + 2, 46 + ((a + d) - (a2 + d2)) - 4, uc)
+    sc.pixel_bar(L, 128, CW, 8, max(hero_used, 0), uc)
+    sc.dots_divider(L, 146, CW)
     # secondary row
-    sc.text("JBMono-11", sec_label, 12, 150, MUTED)
-    sc.text("JBMono-11", f"{sec_used}% {DOT} {sec_reset}", W - 12, 150, INK_DIM, "TR")
-    sc.pixel_bar(12, 164, W - 24, 4, sec_used, usage_color(100 - sec_used))
-    sc.dots_divider(12, 170, W - 24)
+    sc.text("JBMono-11", sec_label, L, 150, MUTED)
+    sc.text("JBMono-11", f"{sec_used}% {DOT} {sec_reset}", R, 150, INK_DIM, "TR")
+    sc.pixel_bar(L, 164, CW, 4, sec_used, usage_color(100 - sec_used))
+    sc.dots_divider(L, 170, CW)
     # bottom rows
     y0, rh, row = 176, 14, 0
     if banner:
-        text, color = banner
-        sc.rect(8, y0, W - 16, 14, color)
-        sc.text("JBMono-11", text, W // 2, y0 + 7, BG, "MC")
+        cred_banner(sc, y0, *banner)
         row = 1
     rows = rows or []
     for proj, state, detail, age in rows[:3 - row]:
         y = y0 + row * rh
         c = STATE_COLOR[state]
-        sc.rect(12, y + 4, 5, 5, c)
-        aw = sc.text("JBMono-11", age, W - 12, y, MUTED, "TR")
-        right = W - 12 - aw - 8
+        sc.rect(L, y + 4, 5, 5, c)
+        aw = sc.text("JBMono-11", age, R, y, MUTED, "TR")
+        right = R - aw - 8
         p = fit(sc, "JBMono-11", proj, 84)
-        pw = sc.text("JBMono-11", p, 22, y, INK_DIM)
+        pw = sc.text("JBMono-11", p, L + 10, y, INK_DIM)
+        sx = L + 10 + pw + 8
         st = f"{state} {DOT} {detail}" if detail else state
-        sc.text("JBMono-11", fit(sc, "JBMono-11", st, right - (22 + pw + 8)), 22 + pw + 8, y, c)
+        if detail and sc.width("JBMono-11", st) > right - sx:
+            st = state                                  # drop the detail
+        sc.text("JBMono-11", fit(sc, "JBMono-11", st, right - sx), sx, y, c)
         row += 1
     if not rows and row < 3:
-        sc.text("JBMono-11", "Chưa có hoạt động project", 12, y0 + row * rh, MUTED)
+        sc.text("JBMono-11", "Chưa có hoạt động project", L, y0 + row * rh, MUTED)
+    dock(sc, CORAL, waiting=waiting)
 
 
-def cred_card(sc, *, headline, l1, l2, accent, glyph="key", url=True, retry=""):
-    sc.status_bar("Claude", "KHÓA LỖI" if glyph == "key" else "", CORAL, accent)
-    if glyph == "key": sc.key(W // 2 - 16, 34, accent, 2)
-    else:              sc.blocked(W // 2, 54, accent)
-    sc.text("JBMono-16B", headline, W // 2, 92, accent, "MC")
-    sc.text("JBMono-11", l1, W // 2, 116, MUTED, "MC")
-    sc.text("JBMono-11", l2, W // 2, 132, MUTED, "MC")
-    sc.dots_divider(30, 148, W - 60)
+def cred_banner(sc, y, text, color, short=None):
+    """chrome.cpp credBanner: band x 40..227, short form when > 184 px."""
+    if short and sc.width("JBMono-11", text) > CW - 4:
+        text = short
+    sc.rect(L, y, CW, 14, color)
+    sc.text("JBMono-11", text, MID, y + 7, BG, "MC")
+
+
+def cred_card(sc, *, headline, l1, l2, accent, glyph="key", url=True, retry="",
+              title="Claude", bar=CORAL, meta=None):
+    if meta is None:
+        meta = "KHÓA LỖI" if glyph == "key" else ""
+    sc.status_bar(title, meta, bar, accent)
+    if glyph == "key": sc.key(MID - 16, 34, accent, 2)
+    else:              sc.blocked(MID, 54, accent)
+    sc.text("JBMono-16B", headline, MID, 92, accent, "MC")
+    sc.text("JBMono-11", l1, MID, 116, MUTED, "MC")
+    sc.text("JBMono-11", l2, MID, 132, MUTED, "MC")
+    sc.dots_divider(52, 148, 164)
     if url:
-        sc.text("JBMono-12B", "glimmer.local", W // 2, 166, SKY, "MC")
-        sc.text("JBMono-11", "192.168.100.40", W // 2, 186, MUTED, "MC")
+        sc.text("JBMono-12B", "glimmer.local", MID, 166, SKY, "MC")
+        sc.text("JBMono-11", "192.168.100.40", MID, 186, MUTED, "MC")
     else:
-        sc.text("JBMono-11", retry, W // 2, 166, INK_DIM, "MC")
+        sc.text("JBMono-11", retry, MID, 166, INK_DIM, "MC")
+    dock(sc, bar, waiting=0)
+
+
+def loading(sc, title, accent):
+    sc.status_bar(title, "", accent)
+    sc.text("JBMono-16B", "Đang tải", MID, 100, MUTED, "MC")
+    sc.loading_dots(MID - 21, 128, 0, accent)
+    dock(sc, accent, waiting=0)
+
+
+# ── Codex channel (ch_codex.cpp) ─────────────────────────────────────────────
+
+# Design CodexDock: hourly % of the weekly allowance left (5 empty hours first).
+SPARK = [None] * 5 + [72, 72] + [66] * 9 + [60] * 7 + [60]
+
+
+def codex(sc, *, hero_used=41, hero_label="TUẦN", right="3NG", right_color=LILAC,
+          sec_label="SPARK", sec_used=12, sec_right="2G 14P", pace="~70% KHI ĐẶT LẠI",
+          resets="CÒN 2 · 3NG", stale=False, meta="", meta_color=MUTED, banner=None, spark=SPARK):
+    sc.status_bar("Codex", meta, LILAC, meta_color)
+    sc.text("JBMono-12B", hero_label, L, 32, MUTED)
+    if right:
+        sc.text("VT323-32", right, R, 26, right_color, "TR")
+    remaining = 100 - hero_used if hero_used >= 0 else -1
+    uc = MUTED if stale else usage_color(remaining)
+    hw = sc.text("VT323-86", f"{hero_used}" if hero_used >= 0 else "--", L, 46, uc)
+    g, a, d = font("VT323-86"); g2, a2, d2 = font("VT323-44")
+    sc.text("VT323-44", "%", L + hw + 2, 46 + ((a + d) - (a2 + d2)) - 4, uc)
+    sc.pixel_bar(L, 128, CW, 8, max(hero_used, 0), uc)
+    sc.dots_divider(L, 146, CW)
+    sc.text("JBMono-11", sec_label, L, 150, MUTED)
+    sc.text("JBMono-11", sec_right, R, 150, INK_DIM, "TR")
+    sc.pixel_bar(L, 164, CW, 4, sec_used, usage_color(100 - sec_used))
+    sc.dots_divider(L, 170, CW)
+    y = 174
+    if banner:
+        cred_banner(sc, y, *banner)
+        y += 14
+    sc.text("JBMono-11", "24H", L, y, MUTED)
+    if pace:
+        sc.text("JBMono-11", pace, R, y, CORAL if pace.startswith("HẾT") else INK_DIM, "TR")
+    y += 14
+    if resets and not banner:
+        sc.text("JBMono-11", "ĐẶT LẠI", L, y, MINT)
+        sc.text("JBMono-11", resets, R, y, INK_DIM, "TR")
+        y += 14
+    bottom, bw, sh = 219, CW // 24, 219 - y
+    for i, v in enumerate(spark):
+        bx = L + i * bw
+        if v is None:
+            sc.hline(bx, bottom, bw - 1, LINE)
+            continue
+        bh = max(1, v * sh // 100)
+        sc.rect(bx, bottom + 1 - bh, bw - 1, bh, LILAC if i == 23 else INK_DIM)
+    dock(sc, LILAC)
+
+
+# ── AI channel (ch_aidash.cpp) ───────────────────────────────────────────────
+
+def aidash(sc, *, cl=38, cx=71, cl_reset="2G 14P", cx_reset="3NG", credits="$4.20",
+           advice="DÙNG CLAUDE · ĐẶT LẠI 2G", advice_color=INK):
+    sc.status_bar("AI hôm nay", credits, INK_DIM)
+    sc.text("JBMono-12B", "CLAUDE", L, 32, CORAL)
+    sc.text("JBMono-12B", "CODEX", R, 32, LILAC, "TR")
+    sc.text("VT323-32", f"{cl}%", L, 50, usage_color(100 - cl))
+    sc.text("VT323-32", f"{cx}%", R, 50, usage_color(100 - cx), "TR")
+    sc.pixel_bar(L, 92, CW, 10, cl, usage_color(100 - cl))
+    sc.pixel_bar(L, 110, CW, 10, cx, usage_color(100 - cx))
+    sc.dots_divider(L, 130, CW)
+    sc.text("JBMono-11", "ĐẶT LẠI", L, 138, MUTED)
+    for y, tag, c, cd in ((158, "CL", CORAL, cl_reset), (174, "CX", LILAC, cx_reset)):
+        sc.text("JBMono-12B", tag, L, y, c)
+        sc.text("JBMono-11", cd, R, y, INK_DIM, "TR")
+    if advice:
+        sc.dots_divider(L, 192, CW)
+        sc.text("JBMono-11", advice, MID, 198, advice_color, "TC")
+    dock(sc, INK_DIM)
+
+
+# ── Trend channel (ch_trend.cpp) ─────────────────────────────────────────────
+
+TREND_BLOCKS = [
+    ("CLAUDE", CORAL, [5, 7.5, 2.5, 0, 10, 6.6, 7.5], f"HÔM NAY 9 {DOT} ĐỈNH T2", MUTED, False),
+    ("CODEX", LILAC, [3.4, 1.6, 4.1, 5.9, 2.5, 5, 3.4], f"HÔM NAY 4 {DOT} ĐỈNH CN", MUTED, False),
+]
+
+
+def trend(sc, *, blocks=TREND_BLOCKS, days=("T5", "T6", "T7", "CN", "T2", "T3", "T4")):
+    sc.status_bar("Xu hướng", "7 NGÀY", MINT)
+    scale = max([10.0] + [v for b in blocks for v in b[2] if v is not None])
+    for idx, (tag, color, burn, right, rc, bad) in enumerate(blocks):
+        y = (30, 98)[idx]
+        tw = sc.text("JBMono-12B", tag, L, y, color)
+        room = R - (L + tw) - 6                     # long lines lose their " · …" tail
+        while sc.width("JBMono-11", right) > room and f" {DOT} " in right:
+            right = right.rsplit(f" {DOT} ", 1)[0]
+        right = fit(sc, "JBMono-11", right, room)
+        sc.text("JBMono-11", right, R, y + 1, rc, "TR")
+        base = y + 16 + 44
+        for i, v in enumerate(burn):
+            x = L + i * 27
+            sc.hline(x, base, 23, LINE)
+            if v is None or v <= 0:
+                continue
+            h = min(44, max(2, int(v / scale * 44 + 0.5)))
+            sc.rect(x, base - h, 23, h, LINE if bad else (color if i == 6 else INK_DIM))
+    for i, wd in enumerate(days):
+        sc.text("JBMono-11", wd, L + i * 27 + 11, 168, INK if i == 6 else MUTED, "TC")
+    sc.text("JBMono-11", "% hạn mức tuần mỗi ngày", MID, 194, MUTED, "TC")
+    dock(sc, MINT)
+
+
+# ── Setup channel (ch_setup.cpp) ─────────────────────────────────────────────
+
+def setup(sc, done=(False, False, True)):
+    sc.status_bar("glimmer", "CÀI ĐẶT", AMBER, AMBER)
+    sc.text("JBMono-12B", "HOÀN TẤT CÀI ĐẶT", MID, 40, AMBER, "MC")
+    items = zip((62, 84, 106), done, ("Khóa Claude", "Token Codex", "Thời tiết"),
+                ("Tài khoản", "Tài khoản", "Vị trí & giờ"))
+    for y, ok, item, hint in items:
+        sc.outline(44, y + 1, 11, 11, MINT if ok else LINE)
+        if ok:
+            sc.rect(47, y + 4, 5, 5, MINT)
+        sc.text("JBMono-11", item, 62, y, INK_DIM if ok else INK)
+        sc.text("JBMono-11", hint, R, y, MUTED, "TR")
+    sc.dots_divider(52, 140, 164)
+    sc.text("JBMono-11", "mở trong trình duyệt", MID, 158, MUTED, "MC")
+    sc.text("JBMono-16B", "glimmer.local", MID, 180, SKY, "MC")
+    sc.text("JBMono-11", "192.168.100.40", MID, 202, MUTED, "MC")
+    dock(sc, MUTED, waiting=0)
 
 
 # ── system screens (display.cpp) ────────────────────────────────────────────
@@ -304,8 +505,11 @@ def clawd_grid(eyes="open", legs="stand"):
         g[1][5] = g[1][12] = "."
     elif eyes == "happy":               # squint: a low 1-px slit
         g[2][5] = g[2][12] = "#"
-    elif eyes == "shut":                # asleep / blink
+    elif eyes == "shut":                # blink
         g[2][5] = g[2][12] = "#"; g[3][5] = g[3][12] = "#"
+    elif eyes == "sleep":               # asleep: lid row filled, 2-cell slits below
+        g[2][5] = g[2][12] = "#"
+        g[3][4] = g[3][5] = g[3][12] = g[3][13] = "."
     elif eyes == "sad":                 # droopy "/ \" eyes: inner-high, outer-low
         g[2][5] = g[2][12] = "#"; g[3][5] = g[3][12] = "#"
         g[2][6] = g[2][11] = "."; g[3][5] = g[3][12] = "."
@@ -370,25 +574,23 @@ def card_v2(sc, *, kc, eyes, legs="stand", mark, title, detail="", status="", pr
 
 # ── the catalogue ───────────────────────────────────────────────────────────
 
-ROWS = [("glimmer", "Cần duyệt", "Bash", "2M"), ("TieuMac3d", "Đang chạy", "Edit", "5M"),
-        ("api", "Xong", "", "1H")]
+ROWS = [("glimmer", "Cần duyệt", "Bash", "2P"), ("TieuMac3d", "Đang chạy", "Edit", "5P"),
+        ("api", "Xong", "", "1G")]
 
 SCREENS = [
     ("Claude · bình thường", "Màn chính", lambda s: claude(s, rows=ROWS)),
     ("Claude · chưa có project", "Bảng trống: Clawd ngủ",
-     lambda s: claude(s, rows=[], pace="~70% KHI ĐẶT LẠI", mood="shut")),
+     lambda s: claude(s, rows=[], pace="~70% KHI ĐẶT LẠI", mood="sleep", waiting=0)),
     ("Claude · sắp hết hạn mức", "Dùng 92%, đỏ",
-     lambda s: claude(s, hero_used=92, sec_used=97, reset="18h 5m", rows=ROWS[1:], pace="HẾT SAU 5H",
+     lambda s: claude(s, hero_used=92, sec_used=97, reset="18G 5P", rows=ROWS[1:], pace="HẾT SAU 5G",
                       mood="open")),
     ("Claude · dữ liệu cũ", "Mất kết nối > 15 phút",
-     lambda s: claude(s, stale=True, meta="CŨ 14M", meta_color=AMBER, rows=ROWS)),
+     lambda s: claude(s, stale=True, meta="CŨ 14P", meta_color=AMBER, rows=ROWS)),
     ("Claude · khóa hết hạn", "Còn số cũ + dải cảnh báo",
      lambda s: claude(s, stale=True, meta="KHÓA LỖI", meta_color=CORAL, rows=ROWS,
-                      banner=("KHÓA HẾT HẠN " + DOT + " glimmer.local", CORAL))),
-    ("Claude · đang tải", "Lần đầu sau khởi động",
-     lambda s: (s.status_bar("Claude", "", CORAL),
-                s.text("JBMono-16B", "Đang tải", W // 2, 100, MUTED, "MC"),
-                s.loading_dots(W // 2 - 21, 128, 0, CORAL))),
+                      banner=(f"KHÓA HẾT HẠN {DOT} glimmer.local", CORAL,
+                              f"HẾT HẠN {DOT} glimmer.local"))),
+    ("Claude · đang tải", "Lần đầu sau khởi động", lambda s: loading(s, "Claude", CORAL)),
     ("Claude · khóa bị từ chối", "Không có số liệu",
      lambda s: cred_card(s, headline="KHÓA BỊ TỪ CHỐI", l1="claude.ai từ chối khóa",
                          l2="nhập khóa mới tại", accent=CORAL)),
@@ -397,10 +599,10 @@ SCREENS = [
                          accent=AMBER, glyph="blocked", url=False, retry="đang tự động thử lại")),
     ("Thẻ · cần duyệt", "Claude Code xin quyền chạy lệnh",
      lambda s: card_v2(s, kc=AMBER, eyes="wide", mark="!", title="Cần duyệt",
-                       detail=f"Bash {DOT} pio run -e nodemcuv2", status=f"chờ bạn {DOT} 2M")),
+                       detail=f"Bash {DOT} pio run -e nodemcuv2", status=f"chờ bạn {DOT} 2P")),
     ("Thẻ · lượt bạn", "Claude Code chờ bạn trả lời",
      lambda s: card_v2(s, kc=SKY, eyes="open", mark="...", title="Lượt bạn",
-                       detail="Claude đang chờ câu trả lời", status=f"chờ bạn {DOT} 45S")),
+                       detail="Claude đang chờ câu trả lời", status=f"chờ bạn {DOT} 45 giây")),
     ("Thẻ · xong", "Phiên làm việc kết thúc",
      lambda s: card_v2(s, kc=MINT, eyes="happy", mark="ok", spark=True, title="Xong rồi!",
                        detail="Claude đã xong")),
@@ -415,6 +617,29 @@ SCREENS = [
     ("Chế độ cài đặt Wi-Fi", "Không vào được mạng đã lưu", setup_ap),
     ("Đang cập nhật", "Khi nạp firmware qua Wi-Fi", ota),
     ("Chưa có kênh", "Mọi kênh đều tắt", no_channels),
+    # ── dock layout (P-2026-11-25.3): Codex, AI, Trend, Setup ──
+    ("Codex · bình thường", "Màn chính", lambda s: codex(s)),
+    ("Codex · token hết hạn", "Còn số cũ + dải cảnh báo",
+     lambda s: codex(s, stale=True, meta="TOKEN LỖI", meta_color=CORAL,
+                     banner=(f"TOKEN HẾT HẠN {DOT} glimmer.local", CORAL,
+                             f"HẾT HẠN {DOT} glimmer.local"))),
+    ("Codex · token hết hạn, chưa có số", "Thẻ khóa",
+     lambda s: cred_card(s, headline="TOKEN HẾT HẠN", l1="hết hạn ngày 20/11", l2="nhập token mới tại",
+                         accent=CORAL, title="Codex", bar=LILAC, meta="TOKEN LỖI")),
+    ("Codex · bị chặn", "Cloudflare chặn thiết bị",
+     lambda s: cred_card(s, headline="BỊ CHẶN", l1="chatgpt.com đang chặn",
+                         l2="thiết bị này - khóa vẫn tốt", accent=AMBER, glyph="blocked", url=False,
+                         retry="thử lại mỗi 15m", title="Codex", bar=LILAC, meta="")),
+    ("Codex · đang tải", "Lần đầu sau khởi động", lambda s: loading(s, "Codex", LILAC)),
+    ("AI · bình thường", "Claude + Codex", lambda s: aidash(s)),
+    ("AI · khóa lỗi", "Khóa Claude bị từ chối",
+     lambda s: aidash(s, advice="KHÓA CLAUDE BỊ TỪ CHỐI", advice_color=CORAL)),
+    ("Xu hướng · bình thường", "7 ngày", lambda s: trend(s)),
+    ("Xu hướng · khóa lỗi / thu thập", "Claude bị từ chối, Codex chưa có lịch sử",
+     lambda s: trend(s, blocks=[
+         ("CLAUDE", CORAL, [None] * 7, f"khóa bị từ chối {DOT} cập nhật", CORAL, True),
+         ("CODEX", LILAC, [None] * 6 + [2], "đang thu thập", MUTED, False)])),
+    ("Cài đặt", "Chưa có khóa nào", lambda s: setup(s)),
 ]
 
 

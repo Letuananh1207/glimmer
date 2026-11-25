@@ -7,6 +7,7 @@
 #include "config.h"
 #include "weather.h"
 #include "weather_icons.h"
+#include "layout.h"
 #include <time.h>
 
 
@@ -22,6 +23,11 @@ bool chForecastEnabled(const ChannelCtx& ctx) {
     return w && w->valid;
 }
 
+// Row band (design P-2026-11-25.3 §15 Forecast-Dock): x 36..239 — right of
+// the dock (x 2..31) — h 52, step 56 from y 32. Text from x 44, track 92×8
+// at x 104, lo TR 206, hi TR 228.
+static constexpr int kRowX = 36;
+
 static void paintRow(int i, const WeatherDay& day, float gMin, float range, bool f) {
     const char* labels[3] = { "NAY", "MAI", "KIA" };   // hôm nay / ngày mai / ngày kia
     int rowH = 56;
@@ -29,37 +35,34 @@ static void paintRow(int i, const WeatherDay& day, float gMin, float range, bool
     int y = top + i * rowH;
     bool isToday = (i == 0);
 
-    // Clear the row band
-    tft.fillRect(0, y, SCREEN_W, rowH - 4, Theme::BG);
-    if (isToday) tft.fillRect(0, y, SCREEN_W, rowH - 4, Theme::PANEL);
-    tft.fillRect(0, y, 2, rowH - 4, isToday ? Theme::CORAL : Theme::LINE);
+    // Clear the row band (today: PANEL background)
+    tft.fillRect(kRowX, y, SCREEN_W - kRowX, rowH - 4, isToday ? Theme::PANEL : Theme::BG);
+    tft.fillRect(kRowX, y, 2, rowH - 4, isToday ? Theme::CORAL : Theme::LINE);
 
     Display::useFont("JBMono-16B");
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(isToday ? Theme::INK : Theme::INK_DIM,
                      isToday ? Theme::PANEL : Theme::BG);
-    tft.drawString(labels[i], 10, y + 4);
+    tft.drawString(labels[i], 44, y + 4);
 
-    WeatherIcon::draw(10, y + 26, day.code, isToday ? Theme::SKY : Theme::MUTED);
+    WeatherIcon::draw(44, y + 26, day.code, isToday ? Theme::SKY : Theme::MUTED);
     Display::useFont("JBMono-11");
     tft.setTextColor(Theme::MUTED, isToday ? Theme::PANEL : Theme::BG);
-    tft.drawString(Weather::describe(day.code), 28, y + 28);
+    tft.drawString(Weather::describe(day.code), 62, y + 28);
 
     float dMin = day.tmin, dMax = day.tmax;
     if (dMin > -900 && dMax > -900) {
-        int barX = 90, barY = y + 10, barW = SCREEN_W - 110, barH = 8;
+        int barX = 104, barY = y + 10, barW = 92, barH = 8;
         tft.fillRect(barX, barY, barW, barH, Theme::PANEL2);
         int x0 = barX + (int)((dMin - gMin) / range * barW);
         int x1 = barX + (int)((dMax - gMin) / range * barW);
         if (x1 < x0 + 4) x1 = x0 + 4;
-        for (int xx = x0; xx <= x1; xx++) {
-            float t = (float)(xx - x0) / (float)(x1 - x0 + 1);
-            uint8_t r = (uint8_t)(0x0A + t * (0x1F - 0x0A));
-            uint8_t g = (uint8_t)(0x30 + t * (0x14 - 0x30));
-            uint8_t b = (uint8_t)(0x1F + t * (0x09 - 0x1F));
-            uint16_t c = (r << 11) | (g << 5) | b;
-            tft.drawFastVLine(xx, barY, barH, c);
-        }
+        // Solid span (no gradient — design P-2026-11-25.4 §11), kept inside
+        // the track: last column ≤ barX + barW - 1 (x 195).
+        const int last = barX + barW - 1;
+        if (x1 > last) { x1 = last; if (x0 > x1 - 4) x0 = x1 - 4; }
+        if (x0 < barX) x0 = barX;
+        tft.fillRect(x0, barY, x1 - x0 + 1, barH, isToday ? Theme::SKY : Theme::MUTED);
     }
 
     char minBuf[6], maxBuf[6];
@@ -70,9 +73,9 @@ static void paintRow(int i, const WeatherDay& day, float gMin, float range, bool
     Display::useFont("JBMono-11");
     tft.setTextDatum(TR_DATUM);
     tft.setTextColor(Theme::MUTED, isToday ? Theme::PANEL : Theme::BG);
-    tft.drawString(minBuf, SCREEN_W - 36, y + 28);
+    tft.drawString(minBuf, 206, y + 28);
     tft.setTextColor(Theme::INK, isToday ? Theme::PANEL : Theme::BG);
-    tft.drawString(maxBuf, SCREEN_W - 10, y + 28);
+    tft.drawString(maxBuf, 228, y + 28);
 }
 
 static void computeRange(const WeatherData* w, float& gMin, float& range) {
@@ -92,7 +95,7 @@ void chForecastDraw(const ChannelCtx& ctx) {
 
     const WeatherData* w = &Weather::snapshot();
     if (!w || !w->valid) {
-        Display::drawText("chưa có dự báo", SCREEN_W/2, 110, Theme::MUTED, Display::TITLE);
+        Display::drawText("chưa có dự báo", Layout::CONTENT_MID, 110, Theme::MUTED, Display::TITLE);
         for (int i = 0; i < 3; i++) { s_fcMin[i] = -999; s_fcMax[i] = -999; s_fcCode[i] = 255; }
         return;
     }

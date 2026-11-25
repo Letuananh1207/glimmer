@@ -18,8 +18,8 @@ inline void hourField(int hour24, bool h24, char* buf, size_t n) {
     snprintf(buf, n, h24 ? "%02d" : "%2d", displayHour(hour24, h24));
 }
 
-// 12-hour suffix (English AM/PM is kept on the Vietnamese UI).
-inline const char* ampm(int hour24) { return hour24 < 12 ? "AM" : "PM"; }
+// 12-hour suffix: SA (sáng) / CH (chiều) — design token text.ampm.
+inline const char* ampm(int hour24) { return hour24 < 12 ? "SA" : "CH"; }
 
 // "THỨ HAI" … "CHỦ NHẬT" (full) or "T2" … "CN" (short). UTF-8.
 inline const char* weekday(int wday, bool full) {

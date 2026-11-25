@@ -1,6 +1,6 @@
 # Phiếu màn thiết bị: sửa bản vẽ đầu cho khớp máy + Việt hoá đơn vị thời gian
 
-- Trạng thái: đã vẽ
+- Trạng thái: đã áp (P-2026-11-25.4) — chờ thử máy
 - Đã vẽ: P-2026-11-25.4
 - Ngày: 2026-11-25 · Nguồn: `/panel-apply` kiểm bản đầu `P-2026-11-25.1` (40 màn)
 

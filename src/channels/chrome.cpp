@@ -12,20 +12,24 @@ static const char* host(bool isClaude) { return isClaude ? "claude.ai" : "chatgp
 //   y≈84   headline, JBMono-16B
 //   y≈110  1–2 reason lines, JBMono-11 muted
 //   y≈150  what to do: glimmer.local in SKY (+ IP muted) — or retry note
+// Dock layout (P-2026-11-25.3): everything centres on x 134 inside x 40..228
+// (widest line "thiết bị này - khóa vẫn tốt" 189 px → x 40..228); the clear
+// starts at x 36 so the dock (x 2..31) is never touched.
 void credCard(bool isClaude, Cred cred, time_t jwtExp, const char* err) {
     using namespace Layout;
-    tft.fillRect(0, CONTENT_TOP, SCREEN_W, CONTENT_BOTTOM - CONTENT_TOP, Theme::BG);
+    constexpr int cx = CONTENT_MID;
+    tft.fillRect(36, CONTENT_TOP, SCREEN_W - 36, CONTENT_BOTTOM - CONTENT_TOP, Theme::BG);
 
     const bool credIssue = CredState::bad(cred);
     const uint16_t accent = credIssue ? credColor(cred) : Theme::AMBER;
-    if (cred == Cred::BLOCKED || !credIssue) Display::drawBlockedGlyph(SCREEN_W / 2, 54, accent);
-    else                                     Display::drawKeyGlyph(SCREEN_W / 2 - 16, 34, accent, 2);
+    if (cred == Cred::BLOCKED || !credIssue) Display::drawBlockedGlyph(cx, 54, accent);
+    else                                     Display::drawKeyGlyph(cx - 16, 34, accent, 2);
 
     Display::useFont("JBMono-16B");
     tft.setTextDatum(MC_DATUM);
     tft.setTextColor(accent, Theme::BG);
     tft.drawString(credIssue ? CredState::headline(cred, isClaude) : (err && *err ? err : "MẤT MẠNG"),
-                   SCREEN_W / 2, 92);
+                   cx, 92);
 
     char l1[64] = "", l2[64] = "";
     bool showUrl = false;
@@ -54,36 +58,45 @@ void credCard(bool isClaude, Cred cred, time_t jwtExp, const char* err) {
     }
     Display::useFont("JBMono-11");
     tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString(l1, SCREEN_W / 2, 116);
-    tft.drawString(l2, SCREEN_W / 2, 132);
+    tft.drawString(l1, cx, 116);
+    tft.drawString(l2, cx, 132);
 
-    Display::dotsDivider(30, 148, SCREEN_W - 60);
+    Display::dotsDivider(52, 148, 164);
     if (showUrl) {
         Display::useFont("JBMono-12B");
         tft.setTextColor(Theme::SKY, Theme::BG);
         char url[32]; snprintf_P(url, sizeof(url), PSTR("%s.local"), MDNS_HOSTNAME);
-        tft.drawString(url, SCREEN_W / 2, 166);
+        tft.drawString(url, cx, 166);
         Display::useFont("JBMono-11");
         tft.setTextColor(Theme::MUTED, Theme::BG);
-        tft.drawString(WiFi.localIP().toString(), SCREEN_W / 2, 186);
+        tft.drawString(WiFi.localIP().toString(), cx, 186);
     } else {
         Display::useFont("JBMono-11");
         tft.setTextColor(Theme::INK_DIM, Theme::BG);
         tft.drawString(cred == Cred::BLOCKED ? "thử lại mỗi 15m" : "đang tự động thử lại",
-                       SCREEN_W / 2, 166);
+                       cx, 166);
     }
 }
 
 void credBanner(int y, bool isClaude, Cred cred) {
     char t[64];
+    // The band spans the dock layout's content (x 40..227, 188 px); the text
+    // gets 184. Too wide → the short form: "BỊ CHẶN · KHÓA OK · THỬ LẠI"
+    // (189) → "BỊ CHẶN · KHÓA OK", "KHÓA HẾT HẠN · glimmer.local" (196) →
+    // "HẾT HẠN · glimmer.local". "BỊ TỪ CHỐI" never fits: it reads "LỖI".
+    Display::useFont("JBMono-11");
     if (cred == Cred::BLOCKED) snprintf_P(t, sizeof(t), PSTR("BỊ CHẶN \xC2\xB7 KHÓA OK \xC2\xB7 THỬ LẠI"));
     else snprintf_P(t, sizeof(t), PSTR("%s %s \xC2\xB7 %s.local"), isClaude ? "KHÓA" : "TOKEN",
-                  cred == Cred::EXPIRED ? "HẾT HẠN" : "LỖI", MDNS_HOSTNAME);   // 224 px: "BỊ TỪ CHỐI" won't fit
-    tft.fillRect(8, y, SCREEN_W - 16, 14, credColor(cred));
-    Display::useFont("JBMono-11");
+                  cred == Cred::EXPIRED ? "HẾT HẠN" : "LỖI", MDNS_HOSTNAME);
+    if (tft.textWidth(t) > Layout::CONTENT_W - 4) {
+        if (cred == Cred::BLOCKED) snprintf_P(t, sizeof(t), PSTR("BỊ CHẶN \xC2\xB7 KHÓA OK"));
+        else snprintf_P(t, sizeof(t), PSTR("%s \xC2\xB7 %s.local"),
+                        cred == Cred::EXPIRED ? "HẾT HẠN" : "LỖI", MDNS_HOSTNAME);
+    }
+    tft.fillRect(Layout::CONTENT_LEFT, y, Layout::CONTENT_W, 14, credColor(cred));
     tft.setTextDatum(MC_DATUM);
     tft.setTextColor(Theme::BG, credColor(cred));
-    tft.drawString(t, SCREEN_W / 2, y + 7);
+    tft.drawString(t, Layout::CONTENT_MID, y + 7);
 }
 
 void credLine(bool isClaude, Cred cred, char* buf, size_t n) {

@@ -120,6 +120,8 @@ static const uint32_t kClawd[10] = {
 static constexpr uint32_t kEyeBits   = (1u << 12) | (1u << 5);   // columns 5, 12
 static constexpr uint32_t kInnerBits = (1u << 11) | (1u << 6);   // columns 6, 11
 static constexpr uint32_t kWalkLegs  = 0x04848;                  // mid-stride
+// Asleep: lid row filled, the row below cut as a 2-cell slit per eye (columns 4–5, 12–13).
+static constexpr uint32_t kSleepSlits = (1u << 13) | (1u << 12) | (1u << 5) | (1u << 4);
 
 void Display::drawClawd(int x, int y, int s, uint16_t color, uint8_t eyes, bool walking, uint16_t bg) {
     uint32_t rows[10];
@@ -129,6 +131,8 @@ void Display::drawClawd(int x, int y, int s, uint16_t color, uint8_t eyes, bool 
         case CLAWD_HAPPY: rows[2] |= kEyeBits; break;                        // low slit
         case CLAWD_SAD:   rows[2] = (rows[2] | kEyeBits) & ~kInnerBits; break; // "\ /" droop
         case CLAWD_SHUT:  rows[2] |= kEyeBits; rows[3] |= kEyeBits; break;   // blink
+        case CLAWD_SLEEP: rows[2] |= kEyeBits;                                // "- -" asleep
+                          rows[3] = (rows[3] | kEyeBits) & ~kSleepSlits; break;
         default: break;
     }
     if (walking) rows[8] = rows[9] = kWalkLegs;

@@ -119,7 +119,7 @@ inline Pace pace(const Ring& r, Metric m, float curPct, time_t now, time_t reset
     return p;
 }
 
-// "HẾT SAU 6H" / "~62% KHI ĐẶT LẠI" / "" for NONE. UTF-8: ≤ 22 bytes.
+// "HẾT SAU 6G" / "~62% KHI ĐẶT LẠI" / "" for NONE. UTF-8: ≤ 22 bytes.
 inline void paceText(const Pace& p, char* buf, size_t n) {
     if (p.kind == Pace::EMPTY) {
         char d[8]; TimeUtil::shortDuration(p.sec, d, sizeof(d));

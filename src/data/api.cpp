@@ -8,13 +8,9 @@
 String Api::formatCountdown(time_t t) {
     time_t now = time(nullptr);
     if (now < 1000000000L) return "--";                 // clock not synced yet
-    long diff = (long)(t - now);
-    if (diff <= 0) return "ngay";
-    long h = diff / 3600;
-    long m = (diff % 3600) / 60;
-    if (h >= 24) { char b[8]; snprintf_P(b, sizeof(b), PSTR("%ldd"), (h + 12) / 24); return b; }
-    if (h >= 1)  { char b[12]; snprintf_P(b, sizeof(b), PSTR("%ldh %ldm"), h, m);   return b; }
-    char b[8]; snprintf_P(b, sizeof(b), PSTR("%ldm"), m); return b;
+    if (t <= 0) return "--";                            // reset not known yet (still loading)
+    char b[12]; TimeUtil::countdown((long)(t - now), b, sizeof(b));
+    return b;
 }
 
 bool Api::isStale(time_t lastOk, const Settings& s) {

@@ -5,6 +5,8 @@
 //   - Two big % side-by-side (CLAUDE coral, CODEX lilac)
 //   - PixelBars stacked
 //   - Reset countdown rows (real data from API)
+// Dock layout (P-2026-11-25.3): content in x 40..228 (Layout::CONTENT_*);
+// main.cpp paints the dock at x 2..31 — no band here starts left of x 40.
 
 #include "channel.h"
 #include "display.h"
@@ -12,8 +14,13 @@
 #include "config.h"
 #include "api.h"
 #include "chrome.h"
+#include "layout.h"
 #include <math.h>
 #include <time.h>
+
+static constexpr int kL = Layout::CONTENT_LEFT;    // 40
+static constexpr int kR = Layout::CONTENT_RIGHT;   // 228
+static constexpr int kW = Layout::CONTENT_W;       // 188
 
 // tick cache
 static float s_cl = -2.f, s_cx = -2.f;
@@ -34,9 +41,9 @@ static void paintCLBlock(float cl, bool loading, int lit, Cred cred) {
     // A credential problem replaces the number: the value isn't live.
     if (CredState::bad(cred)) loading = false;
     uint16_t uc = CredState::bad(cred) ? Theme::MUTED : Display::usageColor(cl);
-    tft.fillRect(10, 48, 100, 28, Theme::BG);
+    tft.fillRect(kL, 48, 88, 28, Theme::BG);      // x 40..127; CODEX clears from 130
     if (loading) {
-        Display::loadingDots(14, 58, lit, Theme::CORAL, 3);
+        Display::loadingDots(kL + 2, 58, lit, Theme::CORAL, 3);
     } else {
         char buf[8];
         if (CredState::bad(cred)) snprintf_P(buf, sizeof(buf), PSTR("KHÓA"));
@@ -45,9 +52,9 @@ static void paintCLBlock(float cl, bool loading, int lit, Cred cred) {
         Display::useFont("VT323-32");
         tft.setTextDatum(TL_DATUM);
         tft.setTextColor(CredState::bad(cred) ? credColor(cred) : uc, Theme::BG);
-        tft.drawString(buf, 12, 50);
+        tft.drawString(buf, kL, 50);
     }
-    Display::pixelBar(12, 92, SCREEN_W - 24, 10, (loading || cl < 0 || CredState::bad(cred)) ? 0 : Api::shownPct(cl), uc);
+    Display::pixelBar(kL, 92, kW, 10, (loading || cl < 0 || CredState::bad(cred)) ? 0 : Api::shownPct(cl), uc);
 }
 
 static void paintCXBlock(float cx, bool loading, int lit, Cred cred) {
@@ -56,7 +63,7 @@ static void paintCXBlock(float cx, bool loading, int lit, Cred cred) {
     uint16_t uc = CredState::bad(cred) ? Theme::MUTED : Display::usageColor(cx);
     tft.fillRect(SCREEN_W - 110, 48, 100, 28, Theme::BG);
     if (loading) {
-        Display::loadingDots(SCREEN_W - 12 - 24, 58, lit, Theme::LILAC, 3);
+        Display::loadingDots(kR - 24, 58, lit, Theme::LILAC, 3);
     } else {
         char buf[8];
         if (CredState::bad(cred)) snprintf_P(buf, sizeof(buf), PSTR("KHÓA"));
@@ -65,23 +72,23 @@ static void paintCXBlock(float cx, bool loading, int lit, Cred cred) {
         Display::useFont("VT323-32");
         tft.setTextDatum(TR_DATUM);
         tft.setTextColor(CredState::bad(cred) ? credColor(cred) : uc, Theme::BG);
-        tft.drawString(buf, SCREEN_W - 12, 50);
+        tft.drawString(buf, kR, 50);
     }
-    Display::pixelBar(12, 110, SCREEN_W - 24, 10, (loading || cx < 0 || CredState::bad(cred)) ? 0 : Api::shownPct(cx), uc);
+    Display::pixelBar(kL, 110, kW, 10, (loading || cx < 0 || CredState::bad(cred)) ? 0 : Api::shownPct(cx), uc);
 }
 
 static void paintResetRow(int y, const char* tag, uint16_t tagColor, time_t resetEpoch) {
-    tft.fillRect(0, y, SCREEN_W, 14, Theme::BG);
+    tft.fillRect(kL, y, SCREEN_W - kL, 14, Theme::BG);
     Display::useFont("JBMono-12B");
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(tagColor, Theme::BG);
-    tft.drawString(tag, 12, y);
+    tft.drawString(tag, kL, y);
 
     String cd = Api::formatCountdown(resetEpoch);
     Display::useFont("JBMono-11");
     tft.setTextDatum(TR_DATUM);
     tft.setTextColor(Theme::INK_DIM, Theme::BG);
-    tft.drawString(cd, SCREEN_W - 12, y);
+    tft.drawString(cd, kR, y);
 }
 
 // Which weekly allowance to spend next (see Api::adviceText).
@@ -93,13 +100,13 @@ static uint16_t adviceColor(const ChannelCtx& ctx) {
 }
 
 static void paintAdvice(const char* advice, uint16_t color) {
-    tft.fillRect(0, 192, SCREEN_W, 20, Theme::BG);
+    tft.fillRect(kL, 192, SCREEN_W - kL, 20, Theme::BG);
     if (advice[0]) {
-        Display::dotsDivider(12, 192, SCREEN_W - 24);
+        Display::dotsDivider(kL, 192, kW);
         Display::useFont("JBMono-11");
         tft.setTextDatum(TC_DATUM);
         tft.setTextColor(color, Theme::BG);
-        tft.drawString(advice, SCREEN_W / 2, 198);
+        tft.drawString(advice, Layout::CONTENT_MID, 198);   // ≤ 175 px
     }
     strncpy(s_advice, advice, sizeof(s_advice) - 1);
 }
@@ -120,11 +127,11 @@ void chAiDashDraw(const ChannelCtx& ctx) {
     Display::useFont("JBMono-12B");
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(Theme::CORAL, Theme::BG);
-    tft.drawString("CLAUDE", 12, 32);
+    tft.drawString("CLAUDE", kL, 32);
 
     tft.setTextDatum(TR_DATUM);
     tft.setTextColor(Theme::LILAC, Theme::BG);
-    tft.drawString("CODEX", SCREEN_W - 12, 32);
+    tft.drawString("CODEX", kR, 32);
 
     // Hero %s + segmented bars (via helpers so tick can reuse)
     const bool clLoading = ctx.claude && claudeLoading(*ctx.claude);
@@ -135,13 +142,13 @@ void chAiDashDraw(const ChannelCtx& ctx) {
     s_clCred = ctx.claude->cred; s_cxCred = ctx.codex->cred;
     s_loadDot = (clLoading || cxLoading) ? lit : -1;
 
-    Display::dotsDivider(12, 130, SCREEN_W - 24);
+    Display::dotsDivider(kL, 130, kW);
 
     // Reset countdowns — real data from API
     Display::useFont("JBMono-11");
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString("ĐẶT LẠI", 12, 138);
+    tft.drawString("ĐẶT LẠI", kL, 138);
 
     time_t clReset = ctx.claude ? ctx.claude->sessionReset : 0;
     time_t cxReset = ctx.codex  ? ctx.codex->primaryReset  : 0;

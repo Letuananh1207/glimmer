@@ -7,6 +7,9 @@
 //   - hero "%" digits                                 : VT323-86   (~70 px)
 //   - inline "%" suffix on hero                       : VT323-44   (~36 px)
 //
+// Dock layout (P-2026-11-25.3): content in x 40..228 (Layout::CONTENT_*);
+// main.cpp paints the dock at x 2..31 — no band here starts left of x 40.
+//
 //   y=176..218  bottom rows: the project board (what each agent project is
 //               doing: Cần duyệt / Chờ bạn / Lỗi / Đang chạy / Xong). Resets,
 //               per-model windows and the weekly pace are not shown here.
@@ -52,21 +55,25 @@ static MetaSlot metaFor(const ChannelCtx& ctx) {
 //              on the hero digits' ink (y 53..102, VT323-86 drawn at y 46)
 //   y 112      4d / 3h 14m   JBMono-12B      time left, right above the bar (tick)
 // The hero repaint clears only x < kHeroRight, so this column is never wiped.
-static constexpr int kHeroRight = 150;      // "100%" ends near x 138
+static constexpr int kL = Layout::CONTENT_LEFT;    // 40
+static constexpr int kR = Layout::CONTENT_RIGHT;   // 228
+static constexpr int kW = Layout::CONTENT_W;       // 188
+static constexpr int kHeroRight = 150;      // "38%" ends at 128; "100" at 142 (no "%")
 static constexpr int kResetY    = 112;      // bottom 126; the bar starts at 128
 static constexpr int kClawdS = 4;                              // 18×10 cells → 72×40
-static constexpr int kClawdX = SCREEN_W - 12 - 18 * kClawdS;   // 156; "100%" ends near 138
+static constexpr int kClawdX = kR - 18 * kClawdS;              // 156
 static constexpr int kClawdY = 58;
 static uint8_t s_clawdFrame = 0xFF;
 
 // Clawd's mood from the project board: alarmed for an approval, sad for an
 // error, walking while something runs, pleased when all is done, asleep
-// with nothing on the board. Blinks every 4 s while awake.
+// with nothing on the board (sleep eyes + "Zz", no blink). Blinks every 4 s
+// while awake.
 static uint8_t clawdFrame() {
     const Projects::Board& b = AttentionQueue::projects();
     int ord[Projects::kMax];
     int n = Projects::ordered(b, ord, AttentionQueue::now());
-    uint8_t eyes = Display::CLAWD_SHUT;          // asleep: nothing going on
+    uint8_t eyes = Display::CLAWD_SLEEP;         // asleep: nothing going on
     bool walk = false;
     if (n) {
         switch (b.e[ord[0]].state) {             // ordered: most urgent first
@@ -82,10 +89,32 @@ static uint8_t clawdFrame() {
     return eyes | (walk ? 0x10 : 0);
 }
 
+// "Zz" over a sleeping Clawd (design P-2026-11-25.2): bitmap glyphs, 2-px cells,
+// MUTED — z 4×4 at (202,46), Z 5×5 at (214,30). Band 202..223 × 30..53.
+static constexpr int kZzX = 202, kZzY = 30, kZzW = 22, kZzH = 24;
+
+static void drawGlyph(const uint8_t* rows, int n, int x, int y, uint16_t color) {
+    for (int j = 0; j < n; j++)
+        for (int i = 0; i < n; i++)
+            if (rows[j] & (1 << (n - 1 - i))) tft.fillRect(x + i * 2, y + j * 2, 2, 2, color);
+}
+
+static void paintZz(bool on) {
+    static const uint8_t kz[4] = {0x0F, 0x02, 0x04, 0x0F};
+    static const uint8_t kZ[5] = {0x1F, 0x02, 0x04, 0x08, 0x1F};
+    tft.fillRect(kZzX, kZzY, kZzW, kZzH, Theme::BG);
+    if (!on) return;
+    drawGlyph(kz, 4, 202, 46, Theme::MUTED);
+    drawGlyph(kZ, 5, 214, 30, Theme::MUTED);
+}
+
 static void paintClawd(bool force = false) {
     uint8_t f = clawdFrame();
     if (!force && f == s_clawdFrame) return;
+    const bool asleep    = (f & 0x0F) == Display::CLAWD_SLEEP;
+    const bool wasAsleep = s_clawdFrame != 0xFF && (s_clawdFrame & 0x0F) == Display::CLAWD_SLEEP;
     Display::drawClawd(kClawdX, kClawdY, kClawdS, Display::CLAWD_ORANGE, f & 0x0F, f & 0x10);
+    if (asleep != wasAsleep || force) paintZz(asleep);
     s_clawdFrame = f;
 }
 
@@ -100,7 +129,7 @@ static void paintSessReset(time_t resetEpoch) {
     Display::useFont("JBMono-12B");
     tft.setTextDatum(TR_DATUM);
     tft.setTextColor(Theme::CORAL, Theme::BG);
-    tft.drawString(s, SCREEN_W - 12, kResetY);
+    tft.drawString(s, kR, kResetY);
     strncpy(s_heroReset, s.c_str(), sizeof(s_heroReset) - 1);
 }
 
@@ -109,32 +138,35 @@ static void paintSessHero(float pct, bool stale) {
     if (pct < 0) snprintf_P(pctBuf, sizeof(pctBuf), PSTR("--"));
     else         snprintf_P(pctBuf, sizeof(pctBuf), PSTR("%.0f"), Api::shownPct(pct));
     // Clear the hero band + suffix (left of the right column only)
-    tft.fillRect(10, 46, kHeroRight - 10, 76, Theme::BG);
+    tft.fillRect(kL, 46, kHeroRight - kL, 76, Theme::BG);
 
     // Stale data stays visible but dimmed — it is not a live reading.
     uint16_t uc = stale ? Theme::MUTED : Display::usageColor(pct);
     Display::useFont("VT323-86");
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(uc, Theme::BG);
-    tft.drawString(pctBuf, 12, 46);
+    tft.drawString(pctBuf, kL, 46);
     int heroW = tft.textWidth(pctBuf);
     int heroH = tft.fontHeight();
 
-    Display::useFont("VT323-44");
-    tft.setTextColor(uc, Theme::BG);
-    int pctY = 46 + (heroH - tft.fontHeight()) - 4;
-    tft.drawString("%", 12 + heroW + 2, pctY);
+    // "100" fills the column up to x 142; its "%" would run into Clawd (x 156).
+    if (strlen(pctBuf) < 3) {
+        Display::useFont("VT323-44");
+        tft.setTextColor(uc, Theme::BG);
+        int pctY = 46 + (heroH - tft.fontHeight()) - 4;
+        tft.drawString("%", kL + heroW + 2, pctY);
+    }
 
-    Display::pixelBar(12, 128, SCREEN_W - 24, 8,
+    Display::pixelBar(kL, 128, kW, 8,
                      pct < 0 ? 0 : Api::shownPct(pct), uc);
 }
 
 static void paintWeeklyCompact(const char* label, float pct, time_t weekReset) {
-    tft.fillRect(0, 150, SCREEN_W, 20, Theme::BG);
+    tft.fillRect(kL, 150, SCREEN_W - kL, 20, Theme::BG);
     Display::useFont("JBMono-11");
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString(label, 12, 150);
+    tft.drawString(label, kL, 150);
 
     String s;
     if (pct < 0) s = "--";
@@ -144,17 +176,19 @@ static void paintWeeklyCompact(const char* label, float pct, time_t weekReset) {
     }
     tft.setTextDatum(TR_DATUM);
     tft.setTextColor(Theme::INK_DIM, Theme::BG);
-    tft.drawString(s, SCREEN_W - 12, 150);
+    tft.drawString(s, kR, 150);
     strncpy(s_secSub, s.c_str(), sizeof(s_secSub) - 1);
 
     uint16_t uc = Display::usageColor(pct);
-    Display::pixelBar(12, 164, SCREEN_W - 24, 4, pct < 0 ? 0 : Api::shownPct(pct), uc);
+    Display::pixelBar(kL, 164, kW, 4, pct < 0 ? 0 : Api::shownPct(pct), uc);
 }
 
 // ── Project board rows ──
 //
-//   ■ glimmer     Cần duyệt · Bash    2M     square + status in the state colour
-//   ■ api         Xong                 14M
+//   ■ glimmer Cần duyệt · Bash      2P     square + status in the state colour
+//   ■ api     Xong                  14P
+// The " · detail" part is dropped when it doesn't fit (the dock layout is
+// 188 px wide): "Cần duyệt" rather than "Cần duyệt · Ba".
 
 static const char* stateLabel(Projects::State s) {
     switch (s) {
@@ -184,24 +218,26 @@ static void fitTo(char* s, int maxW) {
 
 static void paintProjectRow(const Projects::Entry& x, int y, uint32_t now) {
     const uint16_t sc = stateColor(x.state);
-    tft.fillRect(12, y + 4, 5, 5, sc);
+    tft.fillRect(kL, y + 4, 5, 5, sc);
 
     char age[8]; TimeUtil::shortDuration((long)(now - x.since), age, sizeof(age));
     tft.setTextDatum(TR_DATUM);
     tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString(age, SCREEN_W - 12, y);
-    const int right = SCREEN_W - 12 - tft.textWidth(age) - 8;
+    tft.drawString(age, kR, y);
+    const int right = kR - tft.textWidth(age) - 8;
 
     char proj[24]; Utf8::copy(proj, sizeof(proj), x.project);
     fitTo(proj, 84);                                  // ≤ 12 glyphs
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(Theme::INK_DIM, Theme::BG);
-    tft.drawString(proj, 22, y);
-    const int sx = 22 + tft.textWidth(proj) + 8;
+    tft.drawString(proj, kL + 10, y);
+    const int sx = kL + 10 + tft.textWidth(proj) + 8;
 
     char st[48];
     if (x.detail[0]) snprintf_P(st, sizeof(st), PSTR("%s \xC2\xB7 %s"), stateLabel(x.state), x.detail);
     else             snprintf_P(st, sizeof(st), PSTR("%s"), stateLabel(x.state));
+    if (x.detail[0] && tft.textWidth(st) > right - sx)
+        snprintf_P(st, sizeof(st), PSTR("%s"), stateLabel(x.state));   // drop the detail
     fitTo(st, right - sx);
     tft.setTextColor(sc, Theme::BG);
     tft.drawString(st, sx, y);
@@ -212,7 +248,7 @@ static uint32_t s_boardRev = 0;
 // Bottom rows: credential banner > project board (3 rows).
 static void paintBottomRows(const ClaudeData& d) {
     const int startY = 176, rowH = 14;
-    tft.fillRect(0, startY, SCREEN_W, rowH * 3, Theme::BG);
+    tft.fillRect(kL, startY, SCREEN_W - kL, rowH * 3, Theme::BG);
     int row = 0;
     if (CredState::bad(d.cred)) {
         Chrome::credBanner(startY, true, d.cred);
@@ -231,7 +267,7 @@ static void paintBottomRows(const ClaudeData& d) {
     if (n == 0 && row < 3) {
         tft.setTextDatum(TL_DATUM);
         tft.setTextColor(Theme::MUTED, Theme::BG);
-        tft.drawString("Chưa có hoạt động project", 12, startY + row * rowH);
+        tft.drawString("Chưa có hoạt động project", kL, startY + row * rowH);
     }
     s_boardRev = AttentionQueue::projectsRevision();
 }
@@ -254,8 +290,8 @@ void chClaudeDraw(const ChannelCtx& ctx) {
         Display::useFont("JBMono-16B");
         tft.setTextDatum(MC_DATUM);
         tft.setTextColor(Theme::MUTED, Theme::BG);
-        tft.drawString("Đang tải", SCREEN_W/2, 100);
-        Display::loadingDots(SCREEN_W/2 - 21, 128, 0, Theme::CORAL);
+        tft.drawString("Đang tải", Layout::CONTENT_MID, 100);
+        Display::loadingDots(Layout::CONTENT_MID - 21, 128, 0, Theme::CORAL);
         s_loadDot = 0;
         s_heroPct = -2.f; s_secPct = -2.f;
         s_heroReset[0] = 0; s_secSub[0] = 0;
@@ -272,16 +308,16 @@ void chClaudeDraw(const ChannelCtx& ctx) {
     Display::useFont("JBMono-11");
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString(swapped ? "TUẦN" : "PHIÊN 5 GIỜ", 12, 32);
+    tft.drawString(swapped ? "TUẦN" : "PHIÊN 5 GIỜ", kL, 32);
 
     paintRightColumn();
     paintSessReset(heroRst);
     paintSessHero(heroPct, s_stale);
-    Display::dotsDivider(12, 146, SCREEN_W - 24);
+    Display::dotsDivider(kL, 146, kW);
 
     const char* secLabel = swapped ? "PHIÊN 5 GIỜ" : "TUẦN";
     paintWeeklyCompact(secLabel, secPct, secRst);
-    Display::dotsDivider(12, 170, SCREEN_W - 24);
+    Display::dotsDivider(kL, 170, kW);
     paintBottomRows(d);
 
     s_heroPct = (heroPct < 0) ? -2.f : heroPct;
@@ -295,7 +331,7 @@ void chClaudeTick(const ChannelCtx& ctx) {
     if (!d.valid) {                       // loading — sweep the chase dots
         int lit = (ctx.now_ms / 150) % 5;
         if (lit != s_loadDot) {
-            Display::loadingDots(SCREEN_W/2 - 21, 128, lit, Theme::CORAL);
+            Display::loadingDots(Layout::CONTENT_MID - 21, 128, lit, Theme::CORAL);
             s_loadDot = lit;
         }
         return;

@@ -55,13 +55,24 @@ inline time_t parseHttpDate(const char* s) {
     return epochUtc(y, month, d, h, mi, se);
 }
 
-// Short uppercase duration for small screens: "45M", "6H", "2D" (the
-// English unit letters are kept on the Vietnamese UI). Fits char[8].
+// Short uppercase duration for small screens: "45P" (phút), "6G" (giờ),
+// "2NG" (ngày) — design token text.duration. Fits char[8].
 inline void shortDuration(long sec, char* buf, size_t n) {
     if (sec < 0) sec = 0;
-    if (sec < 3600)        snprintf(buf, n, "%ldM", sec / 60);
-    else if (sec < 172800) snprintf(buf, n, "%ldH", (sec + 1800) / 3600);
-    else                   snprintf(buf, n, "%ldD", (sec + 43200) / 86400);
+    if (sec < 3600)        snprintf(buf, n, "%ldP", sec / 60);
+    else if (sec < 172800) snprintf(buf, n, "%ldG", (sec + 1800) / 3600);
+    else                   snprintf(buf, n, "%ldNG", (sec + 43200) / 86400);
+}
+
+// Countdown to a reset, `diff` seconds away: "4NG" (≥ 24 h), "2G 14P"
+// (≥ 1 h), "14P", "ngay" once passed — design token text.duration.countdown.
+// The caller shows "--" while the clock is unsynced. Fits char[12].
+inline void countdown(long diff, char* buf, size_t n) {
+    if (diff <= 0) { snprintf(buf, n, "ngay"); return; }
+    long h = diff / 3600, m = (diff % 3600) / 60;
+    if (h >= 24)     snprintf(buf, n, "%ldNG", (h + 12) / 24);
+    else if (h >= 1) snprintf(buf, n, "%ldG %ldP", h, m);
+    else             snprintf(buf, n, "%ldP", m);
 }
 
 }  // namespace TimeUtil

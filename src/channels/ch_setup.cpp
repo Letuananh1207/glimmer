@@ -7,12 +7,14 @@
 //   y=60..124  checklist rows: [ ] / [x] + item, JBMono-11
 //   y=146      dotted divider
 //   y=160      "open" + glimmer.local (SKY) + IP (muted)
+// Dock layout (P-2026-11-25.3): content in x 40..228, centred on x 134.
 
 #include "channel.h"
 #include "display.h"
 #include "theme.h"
 #include "config.h"
 #include "weather.h"
+#include "layout.h"
 #include <ESP8266WiFi.h>
 
 bool chSetupEnabled(const ChannelCtx& ctx) {
@@ -22,16 +24,16 @@ bool chSetupEnabled(const ChannelCtx& ctx) {
 }
 
 static void checkRow(int y, bool done, const char* item, const char* hint) {
-    const int bx = 24;
+    const int bx = 44;
     tft.drawRect(bx, y + 1, 11, 11, done ? Theme::MINT : Theme::LINE);
     if (done) tft.fillRect(bx + 3, y + 4, 5, 5, Theme::MINT);
     Display::useFont("JBMono-11");
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(done ? Theme::INK_DIM : Theme::INK, Theme::BG);
-    tft.drawString(item, bx + 20, y);
+    tft.drawString(item, bx + 18, y);
     tft.setTextDatum(TR_DATUM);
     tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString(hint, SCREEN_W - 16, y);
+    tft.drawString(hint, Layout::CONTENT_RIGHT, y);
 }
 
 void chSetupDraw(const ChannelCtx& ctx) {
@@ -41,24 +43,24 @@ void chSetupDraw(const ChannelCtx& ctx) {
     Display::useFont("JBMono-12B");
     tft.setTextDatum(MC_DATUM);
     tft.setTextColor(Theme::AMBER, Theme::BG);
-    tft.drawString("HOÀN TẤT CÀI ĐẶT", SCREEN_W / 2, 40);
+    tft.drawString("HOÀN TẤT CÀI ĐẶT", Layout::CONTENT_MID, 40);
 
     const Settings& s = *ctx.settings;
     checkRow(62,  !s.claudeKey.isEmpty(),       "Khóa Claude",  "Tài khoản");
     checkRow(84,  !s.codexToken.isEmpty(),      "Token Codex",  "Tài khoản");
     checkRow(106, Weather::configured(s),        "Thời tiết",    "Vị trí & giờ");
 
-    Display::dotsDivider(30, 140, SCREEN_W - 60);
+    Display::dotsDivider(52, 140, 164);
 
     Display::useFont("JBMono-11");
     tft.setTextDatum(MC_DATUM);
     tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString("mở trong trình duyệt", SCREEN_W / 2, 158);
+    tft.drawString("mở trong trình duyệt", Layout::CONTENT_MID, 158);
     Display::useFont("JBMono-16B");
     tft.setTextColor(Theme::SKY, Theme::BG);
     char url[32]; snprintf_P(url, sizeof(url), PSTR("%s.local"), MDNS_HOSTNAME);
-    tft.drawString(url, SCREEN_W / 2, 180);
+    tft.drawString(url, Layout::CONTENT_MID, 180);
     Display::useFont("JBMono-11");
     tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString(WiFi.localIP().toString(), SCREEN_W / 2, 202);
+    tft.drawString(WiFi.localIP().toString(), Layout::CONTENT_MID, 202);
 }

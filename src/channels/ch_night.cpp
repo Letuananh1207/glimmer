@@ -3,7 +3,7 @@
 // a desk display at night reads the time without lighting the room.
 //
 //   y=64..150  VT323-86 HH:MM, digits INK_DIM, colon MUTED
-//   y=172      date (+ AM/PM in 12-hour mode), MUTED
+//   y=172      date (+ SA/CH in 12-hour mode), MUTED
 
 #include "channel.h"
 #include "display.h"

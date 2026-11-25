@@ -9,6 +9,10 @@
 //
 // A bar = percentage points of that provider's weekly allowance used that day
 // (positive drops summed; a window reset never reads as negative use).
+//
+// Dock layout (P-2026-11-25.3): content in x 40..228 (Layout::CONTENT_*);
+// bars 23 px on a 27-px step from x 40 (today = x 202..224). main.cpp paints
+// the dock at x 2..31 — no band here starts left of x 40.
 
 #include "clockfmt.h"
 #include "channel.h"
@@ -17,12 +21,15 @@
 #include "chrome.h"
 #include "theme.h"
 #include "config.h"
+#include "layout.h"
+#include "utf8.h"
 #include <math.h>
 #include <time.h>
 
 static constexpr int kBlockY[2] = {30, 98};
 static constexpr int kBarTop = 16, kBarH = 44;
-static constexpr int kColW = 27, kColGap = 4, kX0 = 12;
+static constexpr int kColW = 23, kColGap = 4, kX0 = Layout::CONTENT_LEFT;
+static constexpr int kR = Layout::CONTENT_RIGHT;
 
 static float    s_today[2] = {-1.f, -1.f};
 static uint32_t s_hour = 0;
@@ -59,12 +66,13 @@ static History::Trend trendFor(const Settings& s, History::Metric m) {
 
 static void paintBlock(int idx, const Block& b, const History::Trend& t, float scale) {
     const int y = kBlockY[idx];
-    tft.fillRect(0, y, SCREEN_W, kBarTop + kBarH + 2, Theme::BG);
+    tft.fillRect(kX0, y, SCREEN_W - kX0, kBarTop + kBarH + 2, Theme::BG);
 
     Display::useFont("JBMono-12B");
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(b.color, Theme::BG);
     tft.drawString(b.tag, kX0, y);
+    const int tagRight = kX0 + tft.textWidth(b.tag);
 
     // Header right: the day's numbers — or, when they can't be live, why.
     //   bad key + history:  "EXPIRED · LAST 3 AUG"  (coral/amber), bars dimmed
@@ -97,9 +105,21 @@ static void paintBlock(int idx, const Block& b, const History::Trend& t, float s
         snprintf_P(right, sizeof(right), PSTR("HÔM NAY %.0f"), t.burn[6]);
     }
     Display::useFont("JBMono-11");
+    // 188 px wide: a line that would run into the tag loses its " · …" tail
+    // ("BỊ TỪ CHỐI · CUỐI 3/8" → "BỊ TỪ CHỐI"), then whole characters.
+    const int room = kR - tagRight - 6;   // "HÔM NAY 12 · ĐỈNH CN" = 140 fits
+    while (tft.textWidth(right) > room) {
+        char* cut = nullptr;
+        for (char* p = strstr(right, " \xC2\xB7 "); p; p = strstr(p + 1, " \xC2\xB7 ")) cut = p;
+        if (!cut) break;
+        *cut = '\0';
+    }
+    for (size_t n = strlen(right); n > 1 && tft.textWidth(right) > room;) {
+        n = Utf8::prevChar(right, n); right[n] = '\0';
+    }
     tft.setTextDatum(TR_DATUM);
     tft.setTextColor(rightColor, Theme::BG);
-    tft.drawString(right, SCREEN_W - 12, y + 1);
+    tft.drawString(right, kR, y + 1);
 
     const int base = y + kBarTop + kBarH;
     for (int i = 0; i < 7; i++) {
@@ -116,16 +136,14 @@ static void paintBlock(int idx, const Block& b, const History::Trend& t, float s
 }
 
 static void paintWeekdays() {
-    tft.fillRect(0, 166, SCREEN_W, 14, Theme::BG);
+    tft.fillRect(kX0, 166, SCREEN_W - kX0, 14, Theme::BG);
     Display::useFont("JBMono-11");
     tft.setTextDatum(TC_DATUM);
     time_t now = time(nullptr);
     for (int i = 0; i < 7; i++) {
         time_t d = now - (6 - i) * 86400L;
         struct tm tm; localtime_r(&d, &tm);
-        char wd[4]; strftime(wd, sizeof(wd), "%a", &tm);
-        wd[2] = '\0';
-        for (char* p = wd; *p; p++) if (*p >= 'a' && *p <= 'z') *p -= 32;
+        const char* wd = ClockFmt::weekday(tm.tm_wday, false);   // "T2" … "CN"
         tft.setTextColor(i == 6 ? Theme::INK : Theme::MUTED, Theme::BG);
         tft.drawString(wd, kX0 + i * (kColW + kColGap) + kColW / 2, 168);
     }
@@ -156,7 +174,7 @@ void chTrendDraw(const ChannelCtx& ctx) {
     Display::useFont("JBMono-11");
     tft.setTextDatum(TC_DATUM);
     tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString("% hạn mức tuần dùng mỗi ngày", SCREEN_W / 2, 194);
+    tft.drawString("% hạn mức tuần mỗi ngày", Layout::CONTENT_MID, 194);
 }
 
 void chTrendTick(const ChannelCtx& ctx) {

@@ -36,7 +36,8 @@ namespace Display {
     // s=5 → 90×50). Paints every cell (body or bg), so redrawing it for a
     // blink or a step needs no separate clear.
     constexpr uint16_t CLAWD_ORANGE = 0xDBAA;   // #D97757
-    enum ClawdEyes : uint8_t { CLAWD_OPEN, CLAWD_WIDE, CLAWD_HAPPY, CLAWD_SAD, CLAWD_SHUT };
+    // SHUT = a blink (eye holes filled); SLEEP = asleep (2-cell slits under a filled lid).
+    enum ClawdEyes : uint8_t { CLAWD_OPEN, CLAWD_WIDE, CLAWD_HAPPY, CLAWD_SAD, CLAWD_SHUT, CLAWD_SLEEP };
     void drawClawd(int x, int y, int s, uint16_t color, uint8_t eyes = CLAWD_OPEN,
                    bool walking = false, uint16_t bg = 0x0000);
     // 7×7 symbol, cells of s px: '!' alert, '.' speech bubble, 'v' check, 'x' cross.

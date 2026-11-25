@@ -1,6 +1,6 @@
 # Phiếu màn thiết bị: vẽ lại các màn đang trái luật khung
 
-- Trạng thái: đã vẽ
+- Trạng thái: đã áp (P-2026-11-25.4) — chờ thử máy
 - Đã vẽ: P-2026-11-25.4
 - Ngày: 2026-11-25 · Nguồn: `/panel-apply` kiểm bản đầu `P-2026-11-25.1` — người dùng chọn "gửi phiếu vẽ lại"
 

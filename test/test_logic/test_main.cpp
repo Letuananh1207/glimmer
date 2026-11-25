@@ -12,6 +12,12 @@
 #include "utf8.h"
 #include "skill_core.h"
 #include "projects_core.h"
+#include "dock_core.h"
+#include <time.h>
+#if defined(_WIN32)   // host tests on Windows (MinGW) lack the POSIX localtime_r
+static inline struct tm* localtime_r(const time_t* t, struct tm* out) { *out = *localtime(t); return out; }
+#endif
+#include "clockfmt.h"
 
 void setUp() {}
 void tearDown() {}
@@ -200,7 +206,7 @@ void test_pace_empty_before_reset() {
     TEST_ASSERT_EQUAL(History::Pace::EMPTY, p.kind);
     TEST_ASSERT_INT_WITHIN(60, 5 * 3600, p.sec);     // 50 left at 10/h ≈ 5 h
     char buf[40]; History::paceText(p, buf, sizeof(buf));
-    TEST_ASSERT_EQUAL_STRING("HẾT SAU 5H", buf);
+    TEST_ASSERT_EQUAL_STRING("HẾT SAU 5G", buf);
 }
 
 void test_pace_lasts_until_reset() {
@@ -311,7 +317,7 @@ void test_cred_derivation_order() {
 void test_cred_meta_labels() {
     char b[24];
     CredState::meta(Cred::EXPIRING, T0 + 2 * 86400L + 60, T0, b, sizeof(b));
-    TEST_ASSERT_EQUAL_STRING("HẠN 2D", b);
+    TEST_ASSERT_EQUAL_STRING("HẠN 2NG", b);
     CredState::meta(Cred::REJECTED, 0, T0, b, sizeof(b));
     TEST_ASSERT_EQUAL_STRING("KHÓA LỖI", b);
     CredState::meta(Cred::OK, 0, T0, b, sizeof(b));
@@ -609,9 +615,45 @@ void test_utf8_case_mapping_vietnamese() {
 
 void test_short_duration_units() {
     char d[8];
-    TimeUtil::shortDuration(45 * 60, d, sizeof(d));      TEST_ASSERT_EQUAL_STRING("45M", d);
-    TimeUtil::shortDuration(6 * 3600, d, sizeof(d));     TEST_ASSERT_EQUAL_STRING("6H", d);
-    TimeUtil::shortDuration(3 * 86400, d, sizeof(d));    TEST_ASSERT_EQUAL_STRING("3D", d);
+    TimeUtil::shortDuration(45 * 60, d, sizeof(d));      TEST_ASSERT_EQUAL_STRING("45P", d);
+    TimeUtil::shortDuration(6 * 3600, d, sizeof(d));     TEST_ASSERT_EQUAL_STRING("6G", d);
+    TimeUtil::shortDuration(3 * 86400, d, sizeof(d));    TEST_ASSERT_EQUAL_STRING("3NG", d);
+    TimeUtil::shortDuration(999L * 86400, d, sizeof(d)); TEST_ASSERT_EQUAL_STRING("999NG", d);
+}
+
+// Design P-2026-11-25.4 token text.duration.countdown.
+void test_countdown_units() {
+    char b[12];
+    TimeUtil::countdown(0, b, sizeof(b));                    TEST_ASSERT_EQUAL_STRING("ngay", b);
+    TimeUtil::countdown(-5, b, sizeof(b));                   TEST_ASSERT_EQUAL_STRING("ngay", b);
+    TimeUtil::countdown(14 * 60 + 30, b, sizeof(b));         TEST_ASSERT_EQUAL_STRING("14P", b);
+    TimeUtil::countdown(2 * 3600 + 14 * 60, b, sizeof(b));   TEST_ASSERT_EQUAL_STRING("2G 14P", b);
+    TimeUtil::countdown(18 * 3600 + 5 * 60, b, sizeof(b));   TEST_ASSERT_EQUAL_STRING("18G 5P", b);
+    TimeUtil::countdown(4 * 86400, b, sizeof(b));            TEST_ASSERT_EQUAL_STRING("4NG", b);
+    TimeUtil::countdown(23L * 3600 + 59 * 60, b, sizeof(b)); TEST_ASSERT_EQUAL_STRING("23G 59P", b);
+}
+
+void test_dock_tabs_and_badge() {
+    TEST_ASSERT_EQUAL(Dock::TAB_NO_DOCK, Dock::tabFor("Attention"));
+    TEST_ASSERT_EQUAL(Dock::TAB_NO_DOCK, Dock::tabFor("Night"));
+    TEST_ASSERT_EQUAL(Dock::TAB_NO_DOCK, Dock::tabFor(nullptr));
+    TEST_ASSERT_EQUAL(Dock::TAB_NONE, Dock::tabFor("Info"));
+    TEST_ASSERT_EQUAL(Dock::TAB_WEATHER, Dock::tabFor("Weather"));
+    TEST_ASSERT_EQUAL(Dock::TAB_WEATHER, Dock::tabFor("Forecast"));
+    TEST_ASSERT_EQUAL(Dock::TAB_CLOCK, Dock::tabFor("Clock"));
+    const char* agent[] = {"Home", "Agents", "Claude", "Codex", "AI", "Trend", "Setup"};
+    for (const char* n : agent) TEST_ASSERT_EQUAL(Dock::TAB_CLAUDE, Dock::tabFor(n));
+    TEST_ASSERT_EQUAL(-1, Dock::badgeGlyph(0));
+    TEST_ASSERT_EQUAL(1, Dock::badgeGlyph(1));
+    TEST_ASSERT_EQUAL(9, Dock::badgeGlyph(9));
+    TEST_ASSERT_EQUAL(10, Dock::badgeGlyph(10));   // '+'
+}
+
+void test_clock_ampm_vietnamese() {
+    TEST_ASSERT_EQUAL_STRING("SA", ClockFmt::ampm(0));
+    TEST_ASSERT_EQUAL_STRING("SA", ClockFmt::ampm(11));
+    TEST_ASSERT_EQUAL_STRING("CH", ClockFmt::ampm(12));
+    TEST_ASSERT_EQUAL_STRING("CH", ClockFmt::ampm(23));
 }
 
 // ── Project board ─────────────────────────────────────────────────────────
@@ -762,6 +804,9 @@ int main(int, char**) {
     RUN_TEST(test_utf8_never_splits_a_letter);
     RUN_TEST(test_utf8_case_mapping_vietnamese);
     RUN_TEST(test_short_duration_units);
+    RUN_TEST(test_countdown_units);
+    RUN_TEST(test_clock_ampm_vietnamese);
+    RUN_TEST(test_dock_tabs_and_badge);
     RUN_TEST(test_projects_follow_hook_events);
     RUN_TEST(test_projects_order_idle_and_eviction);
     RUN_TEST(test_projects_sessions_merge_per_project);

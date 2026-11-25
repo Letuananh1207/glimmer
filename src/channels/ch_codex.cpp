@@ -1,6 +1,8 @@
 // Codex — Claude-style hero layout (mirrors ch_claude.cpp with LILAC accent).
 // Bottom: 24-h strip of the weekly allowance (hourly, from the usage history
 // ring) with the weekly PACE on its label row.
+// Dock layout (P-2026-11-25.3): content in x 40..228 (Layout::CONTENT_*);
+// main.cpp paints the dock at x 2..31 — no band here starts left of x 40.
 
 #include "channel.h"
 #include "chrome.h"
@@ -11,6 +13,10 @@
 #include "layout.h"
 #include <math.h>
 #include <time.h>
+
+static constexpr int kL = Layout::CONTENT_LEFT;    // 40
+static constexpr int kR = Layout::CONTENT_RIGHT;   // 228
+static constexpr int kW = Layout::CONTENT_W;       // 188
 
 // ── tick cache (position-based) ──
 static float s_heroPct = -2.f;
@@ -53,20 +59,21 @@ static void secondaryLabel(const CodexData& d, long winSec, char* buf, size_t n)
 }
 
 static void paintRightStack(const CodexData& d, time_t heroReset) {
-    tft.fillRect(SCREEN_W - 110, 26, 100, 28, Theme::BG);
+    // y 26..49 = VT323-32 ink; stops above the hero digits (ink from y 53).
+    tft.fillRect(SCREEN_W - 110, 26, 100, 24, Theme::BG);
     if (d.creditsRemain >= 0) {
         char credits[16]; snprintf_P(credits, sizeof(credits), PSTR("$%.2f"), d.creditsRemain);
         Display::useFont("VT323-32");
         tft.setTextDatum(TR_DATUM);
         tft.setTextColor(Theme::SKY, Theme::BG);
-        tft.drawString(credits, SCREEN_W - 12, 26);
+        tft.drawString(credits, kR, 26);
         strncpy(s_rightLine, credits, sizeof(s_rightLine) - 1);
     } else if (heroReset > 0) {
         String r = Api::formatCountdown(heroReset);
         Display::useFont("VT323-32");
         tft.setTextDatum(TR_DATUM);
         tft.setTextColor(Theme::LILAC, Theme::BG);
-        tft.drawString(r, SCREEN_W - 12, 26);
+        tft.drawString(r, kR, 26);
         strncpy(s_rightLine, r.c_str(), sizeof(s_rightLine) - 1);
     } else {
         s_rightLine[0] = 0;
@@ -77,33 +84,34 @@ static void paintPrimaryHero(float pct, bool stale) {
     char pctBuf[8];
     if (pct < 0) snprintf_P(pctBuf, sizeof(pctBuf), PSTR("--"));
     else         snprintf_P(pctBuf, sizeof(pctBuf), PSTR("%.0f"), Api::shownPct(pct));
-    tft.fillRect(10, 46, SCREEN_W - 110, 76, Theme::BG);
+    // x 40..163 — wide enough for "100%" (ends at 162).
+    tft.fillRect(kL, 46, 124, 76, Theme::BG);
 
     // Stale data stays visible but dimmed — it is not a live reading.
     uint16_t uc = stale ? Theme::MUTED : Display::usageColor(pct);
     Display::useFont("VT323-86");
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(uc, Theme::BG);
-    tft.drawString(pctBuf, 12, 46);
+    tft.drawString(pctBuf, kL, 46);
     int heroW = tft.textWidth(pctBuf);
     int heroH = tft.fontHeight();
 
     Display::useFont("VT323-44");
     tft.setTextColor(uc, Theme::BG);
     int pctY = 46 + (heroH - tft.fontHeight()) - 4;
-    tft.drawString("%", 12 + heroW + 2, pctY);
+    tft.drawString("%", kL + heroW + 2, pctY);
 
-    Display::pixelBar(12, 128, SCREEN_W - 24, 8,
+    Display::pixelBar(kL, 128, kW, 8,
                      pct < 0 ? 0 : Api::shownPct(pct), uc);
 }
 
 static void paintSecondary(float pct, time_t secReset, const char* label) {
-    tft.fillRect(0, 150, SCREEN_W, 20, Theme::BG);
+    tft.fillRect(kL, 150, SCREEN_W - kL, 20, Theme::BG);
 
     Display::useFont("JBMono-11");
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString(label, 12, 150);
+    tft.drawString(label, kL, 150);
 
     String right;
     if (secReset > 0) right = Api::formatCountdown(secReset);
@@ -111,11 +119,11 @@ static void paintSecondary(float pct, time_t secReset, const char* label) {
     else               right = "--";
     tft.setTextDatum(TR_DATUM);
     tft.setTextColor(Theme::INK_DIM, Theme::BG);
-    tft.drawString(right, SCREEN_W - 12, 150);
+    tft.drawString(right, kR, 150);
     strncpy(s_secSub, right.c_str(), sizeof(s_secSub) - 1);
 
     uint16_t uc = Display::usageColor(pct);
-    Display::pixelBar(12, 164, SCREEN_W - 24, 4,
+    Display::pixelBar(kL, 164, kW, 4,
                      pct < 0 ? 0 : Api::shownPct(pct), uc);
 }
 
@@ -132,9 +140,9 @@ static void paceFor(const CodexData& d, char* buf, size_t n) {
 // then one bar per hour (oldest left, current hour right, in LILAC) = % of
 // the weekly allowance remaining at that hour, filling what is left.
 static void paintSparkBar(const CodexData& d, const char* pace) {
-    const int sx = 12, sw = SCREEN_W - 24, bottom = 219;
-    const int barW = sw / 24;
-    tft.fillRect(0, 174, SCREEN_W, 46, Theme::BG);
+    const int sx = kL, sw = kW, bottom = 219;
+    const int barW = sw / 24;                // 7: bars 6 px, step 7, x 40..206
+    tft.fillRect(kL, 174, SCREEN_W - kL, 46, Theme::BG);
 
     int y = 174;
     if (CredState::bad(d.cred)) { Chrome::credBanner(y, false, d.cred); y += 14; }
@@ -146,7 +154,7 @@ static void paintSparkBar(const CodexData& d, const char* pace) {
     if (pace[0]) {
         tft.setTextDatum(TR_DATUM);
         tft.setTextColor(strncmp(pace, "HẾT", strlen("HẾT")) == 0 ? Theme::CORAL : Theme::INK_DIM, Theme::BG);
-        tft.drawString(pace, SCREEN_W - 12, y);
+        tft.drawString(pace, kR, y);
     }
     y += 14;
     strncpy(s_pace, pace, sizeof(s_pace) - 1);
@@ -158,7 +166,7 @@ static void paintSparkBar(const CodexData& d, const char* pace) {
         tft.drawString("ĐẶT LẠI", sx, y);
         tft.setTextDatum(TR_DATUM);
         tft.setTextColor(Theme::INK_DIM, Theme::BG);
-        tft.drawString(resets, SCREEN_W - 12, y);
+        tft.drawString(resets, kR, y);
         y += 14;
     }
     strncpy(s_resets, resets, sizeof(s_resets) - 1);
@@ -199,8 +207,8 @@ void chCodexDraw(const ChannelCtx& ctx) {
         Display::useFont("JBMono-16B");
         tft.setTextDatum(MC_DATUM);
         tft.setTextColor(Theme::MUTED, Theme::BG);
-        tft.drawString("Đang tải", SCREEN_W/2, 100);
-        Display::loadingDots(SCREEN_W/2 - 21, 128, 0, Theme::LILAC);
+        tft.drawString("Đang tải", Layout::CONTENT_MID, 100);
+        Display::loadingDots(Layout::CONTENT_MID - 21, 128, 0, Theme::LILAC);
         s_loadDot = 0;
         return;
     }
@@ -221,18 +229,18 @@ void chCodexDraw(const ChannelCtx& ctx) {
     Display::useFont("JBMono-12B");
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString(heroLbl, 12, 32);
+    tft.drawString(heroLbl, kL, 32);
 
     s_stale = dimData(*ctx.settings, d.lastOk, d.cred);
     paintRightStack(d, heroRst);
     paintPrimaryHero(heroPct, s_stale);
 
-    Display::dotsDivider(12, 146, SCREEN_W - 24);
+    Display::dotsDivider(kL, 146, kW);
 
     char secLbl[16]; secondaryLabel(d, secWin, secLbl, sizeof(secLbl));
     paintSecondary(secPct, secRst, secLbl);
 
-    Display::dotsDivider(12, 170, SCREEN_W - 24);
+    Display::dotsDivider(kL, 170, kW);
 
     char pace[40]; paceFor(d, pace, sizeof(pace));
     paintSparkBar(d, pace);
@@ -251,7 +259,7 @@ void chCodexTick(const ChannelCtx& ctx) {
     if (!d.valid) {                       // loading — sweep the chase dots
         int lit = (ctx.now_ms / 150) % 5;
         if (lit != s_loadDot) {
-            Display::loadingDots(SCREEN_W/2 - 21, 128, lit, Theme::LILAC);
+            Display::loadingDots(Layout::CONTENT_MID - 21, 128, lit, Theme::LILAC);
             s_loadDot = lit;
         }
         return;
@@ -280,7 +288,7 @@ void chCodexTick(const ChannelCtx& ctx) {
         String r = Api::formatCountdown(heroRst);
         if (strcmp(r.c_str(), s_rightLine) != 0) rightDirty = true;
     }
-    if (rightDirty) { paintRightStack(d, heroRst); s_credits = d.creditsRemain; }
+    bool heroDirty = false;
 
     if (minTick) {
         MetaSlot m = metaFor(ctx);
@@ -293,7 +301,11 @@ void chCodexTick(const ChannelCtx& ctx) {
         paintPrimaryHero(heroPct, stale);
         s_heroPct = p;
         s_stale = stale;
+        heroDirty = true;
     }
+    // The hero clear (x 40..163 from y 46) can nick the foot of a wide credits
+    // line ("$123.45" starts at x 137), so the stack repaints after the hero.
+    if (rightDirty || heroDirty) { paintRightStack(d, heroRst); s_credits = d.creditsRemain; }
 
     // Secondary — repaint on pct change or countdown text change
     float sp = (secPct < 0) ? -2.f : secPct;

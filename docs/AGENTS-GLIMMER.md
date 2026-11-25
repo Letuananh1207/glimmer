@@ -67,8 +67,10 @@ Behaviour:
 
 - **Approvals and questions** (`approval`, `input`) hold the screen until
   cleared or expired (user setting "Hold the screen until answered", on by
-  default). While any waits, the strip at the bottom of every screen is
-  solid amber (approval) or sky (question).
+  default). While any waits, the Claude tab of the dock on the left edge
+  shows an amber count badge; on the full-screen card and the night face
+  (no dock) the strip at the bottom is solid amber (approval) or sky
+  (question) instead.
 - The queue holds **5** cards, most important first. When full, the least
   important, oldest card goes; approvals/questions are never pushed out by
   anything less important — the push fails instead (HTTP 409 / MCP

@@ -133,14 +133,28 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
   channels: Attention, Night, Weather, Forecast, Clock, Info) rotate. Setting
   `skill` (unknown → `agent`); `/api/state` reports `skill` + `skills`. New
   pack = id in `Skill::kAll` + tag its channels. App rules `R-SK-*`.
+  **Changing (P-2026-11-25.3, chốt 2026-11-25):** dock tab = skill — tabs
+  rotate together instead of one pack owning the screen. With only the
+  `agent` pack today nothing rotates differently; a new pack (Tin nhắn) gets
+  its own dock tab and joins the rotation, not replaces it.
 - `draw(ctx)` — full repaint on activation, may `Display::clear()`.
 - `tick(ctx)` — 5 Hz while active. **Never** `Display::clear()` /
   `tft.fillScreen()`. File-static caches with sentinels (`-1`, `-2.f`) +
   per-region `paintX()` helpers that clear only their band; `draw()` seeds the
   cache. References: `ch_clock.cpp`, `ch_home.cpp`.
 - **No animated transitions** — rotation is an instant cut.
-- Indicator strip (y=230, 2 px): slide progress in the channel colour; solid
-  amber (approval) / sky (question) on every screen while an agent waits.
+- **Dock** (`src/channels/dock.{h,cpp}`, `dock_core.h`; P-2026-11-25.3): frame
+  30×114 at (2,34), 3 tabs Claude / Thời tiết / Đồng hồ (Tin nhắn waits for
+  its pack). Painted by `main.cpp` after `draw()`, never by a channel; badge
+  on the Claude tab = agents waiting (`countWaiting`), repainted on change.
+  Tab: agent channels → Claude, Weather/Forecast → Thời tiết, Clock → Đồng
+  hồ, Info → none; Attention + Night have no dock. Docked channels keep
+  content — and every `tick()` clear band — in x 40..228
+  (`Layout::CONTENT_LEFT/RIGHT`), never x < 36 in y 34..147.
+- Indicator strip (y=230, 2 px): slide progress in the channel colour. An
+  agent waiting = the dock badge; only screens without a dock (Attention
+  card, night face) still turn the strip solid amber (approval) / sky
+  (question).
 - System screens (`drawSplash`, `drawConnecting`, `drawOtaProgress`) follow the
   same discipline; call `Display::resetSystemScreens()` from non-system entry
   points so the next one repaints its chrome.

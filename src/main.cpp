@@ -31,6 +31,7 @@
 #include "chrome.h"
 #include "attention.h"
 #include "skill_core.h"
+#include "dock.h"
 
 // ── Channel registry — declared in their own .cpp files ─────────────────────
 extern bool chClaudeEnabled(const ChannelCtx&);  extern void chClaudeDraw(const ChannelCtx&);
@@ -186,6 +187,11 @@ static void recomputeActive() {
         if (!strcmp(kChannels[g_activeIdx[i]].name, cur)) { g_activePtr = i; break; }
 }
 
+// Agents waiting on the user (approval / question) — the dock's Claude badge.
+static int waitingNow() {
+    return Attention::countWaiting(AttentionQueue::get(), AttentionQueue::now());
+}
+
 static void drawActive() {
     if (g_activeCount == 0) {
         Display::drawError("CHƯA CÓ KÊNH", "bật kênh trên trang web");
@@ -196,7 +202,12 @@ static void drawActive() {
     Display::resetSystemScreens();
     // Quiet cut: the channel's draw() clears + paints in ~80 ms.
     ChannelCtx ctx = makeCtx();
+    const char* name = kChannels[g_activeIdx[g_activePtr]].name;
     kChannels[g_activeIdx[g_activePtr]].draw(ctx);
+    // Dock after the channel: draw() clears the screen, the dock sits on top.
+    Dock::Tab tab = Dock::tabFor(name);
+    if (tab == Dock::TAB_NO_DOCK) Dock::hide();
+    else Dock::draw(tab, Theme::channelColor(name), waitingNow());
 }
 
 // Recompute, and repaint only when what should be on screen changed.
@@ -212,22 +223,24 @@ static void refreshScreen(bool force) {
 }
 
 // 2-px strip at y=230.
-//   An agent waiting on the user (approval → amber, question → sky) turns it
-//   into a solid bar on EVERY screen — including Home/Clock and the night
-//   face — so "something is waiting" is visible even when it isn't pinned.
-//   Otherwise it fills in the channel's colour as the slide window elapses
-//   (empty when auto-rotate is off; hidden on the attention card / night face).
+//   It fills in the channel's colour as the slide window elapses (empty when
+//   auto-rotate is off). An agent waiting on the user shows as the dock's
+//   Claude badge (P-2026-11-25.3); only screens without a dock — the attention
+//   card and the night face — still turn the strip solid (approval → amber,
+//   question → sky) so "something is waiting" stays visible there. Otherwise
+//   the strip is hidden on those two.
 static void drawIndicator(uint32_t now) {
     using namespace Layout;
     if (g_apMode || g_activeCount == 0) return;
     const Attention::Queue& aq = AttentionQueue::get();
-    if (Attention::countWaiting(aq, AttentionQueue::now()) > 0) {
+    const char* name = kChannels[g_activeIdx[g_activePtr]].name;
+    const bool docked = Dock::tabFor(name) != Dock::TAB_NO_DOCK;
+    if (!docked && Attention::countWaiting(aq, AttentionQueue::now()) > 0) {
         uint16_t c = Attention::countKind(aq, Attention::K_APPROVAL) ? Theme::AMBER : Theme::SKY;
         tft.fillRect(0, INDICATOR_Y, SCREEN_W, INDICATOR_H, c);
         return;
     }
-    const char* name = kChannels[g_activeIdx[g_activePtr]].name;
-    if (g_nightFace || !strcmp(name, "Attention")) {
+    if (g_nightFace || !docked) {
         tft.fillRect(0, INDICATOR_Y, SCREEN_W, INDICATOR_H, Theme::BG);
         return;
     }
@@ -731,6 +744,7 @@ void loop() {
         lastTick = now;
         auto tickFn = kChannels[g_activeIdx[g_activePtr]].tick;
         if (tickFn) tickFn(makeCtx());
+        Dock::tick(waitingNow());   // no-op without a dock on screen
     }
 
     // Indicator strip refreshes ~4 Hz (touches only y=230..231)

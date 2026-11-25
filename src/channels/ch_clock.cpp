@@ -1,16 +1,22 @@
-// Clock — design-true from ClockScreen, with partial-redraw tick().
+// Clock — design P-2026-11-25.4 §12 on the dock layout of P-2026-11-25.3
+// §15 "Clock-Dock", with partial-redraw tick(). The dock (x 2..31, y 34..147)
+// is painted by main.cpp; everything here is centred on x 134 and every
+// clear band stays in x 40..228.
 //
-//   y=8..18   "TUE · MAY 17" JBMono-11 left  ·  "17°C" right
-//   y=42..130 huge VT323-86 HH:MM, ":" CORAL between
-//   y=148     "good morning, friend" JBMono-13
-//   y=178     24-dot day-progress strip
-//   y=210..   footer row Pip happy + week info
+//   y=0..22   status bar "Đồng hồ" · meta "tuần 48"
+//   y=32      "THỨ TƯ · 25/11" JBMono-11 MUTED, TC (134, 32)
+//   y=50..135 huge VT323-86 HH:MM centred (HH x 49, ":" 117, MM 151 — ink
+//             ends x 215), ":" CORAL between; 12-hour mode: "SA"/"CH" 12B
+//             AMBER at (215, 99), ink x 216..228, right of the minutes
+//   y=148     "chào buổi chiều, bạn" JBMono-13 MC (134, 148), ≤ 188 px
+//   y=178     24-dot day-progress strip x 52..216
 
 #include "channel.h"
 #include "display.h"
 #include "theme.h"
 #include "config.h"
 #include "clockfmt.h"
+#include "layout.h"
 #include "utf8.h"
 #include <time.h>
 
@@ -19,9 +25,16 @@ static char s_lastDate[32]  = "";
 static char s_lastGreet[64] = "";
 static int  s_lastDayHour = -1;
 
-static constexpr int CLOCK_Y  = 42;
+static constexpr int CLOCK_Y  = 50;
 static constexpr int CLOCK_H  = 86;
 static const char*   CLOCK_FN = "VT323-86";
+static constexpr int kL   = Layout::CONTENT_LEFT;     // 40
+static constexpr int kMid = Layout::CONTENT_MID;      // 134
+static constexpr int kW   = Layout::CONTENT_W + 1;    // x 40..228 inclusive
+// VT323-86 digits: advance 34, ink ends ≤ 31 px into the cell ("4": dx 3 + w 28),
+// so the minutes' clear band stops at x 215 and "SA"/"CH" owns x 216..228.
+static constexpr int kDigitInk = 31;
+static constexpr int kAmPmX = 215, kAmPmY = CLOCK_Y + 49;   // 99
 
 static char s_greetBuf[64];
 static const char* greetingFor(int hour, const char* name) {
@@ -42,7 +55,7 @@ static void clockGeom(int& hhX, int& colonX, int& mmX, int& digitW, int& colonW)
     digitW = tft.textWidth("0");          // monospace digit
     colonW = tft.textWidth(":");
     int total = digitW * 4 + colonW;
-    hhX = (SCREEN_W - total) / 2;
+    hhX = kMid - total / 2;               // 49
     colonX = hhX + digitW * 2;
     mmX = colonX + colonW;
 }
@@ -62,7 +75,7 @@ static void paintMM(int m) {
     char buf[4]; snprintf(buf, sizeof(buf), "%02d", m);
     int hhX, colonX, mmX, dw, cw;
     clockGeom(hhX, colonX, mmX, dw, cw);
-    tft.fillRect(mmX, CLOCK_Y, dw * 2, CLOCK_H, Theme::BG);
+    tft.fillRect(mmX, CLOCK_Y, dw + kDigitInk, CLOCK_H, Theme::BG);   // x 151..215
     Display::useFont(CLOCK_FN);
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(Theme::INK, Theme::BG);
@@ -78,32 +91,55 @@ static void paintColon() {
     tft.drawString(":", colonX, CLOCK_Y);
 }
 
-// Date left; AM/PM right in 12-hour mode.
-static void paintDateRow(const char* date, int hour, bool h24) {
-    tft.fillRect(0, 6, SCREEN_W, 16, Theme::BG);
+static void paintDateRow(const char* date) {
+    tft.fillRect(kL, 30, kW, 14, Theme::BG);   // y 30 covers an accented capital (1 px above y 32)
     Display::useFont("JBMono-11");
-    tft.setTextDatum(TL_DATUM);
+    tft.setTextDatum(TC_DATUM);
     tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString(date, 10, 8);
-    if (!h24) {
-        tft.setTextDatum(TR_DATUM);
-        tft.setTextColor(Theme::AMBER, Theme::BG);
-        tft.drawString(ClockFmt::ampm(hour), SCREEN_W - 10, 8);
-    }
+    tft.drawString(date, kMid, 32);
 }
 
+// "SA" / "CH" right of the minutes in 12-hour mode. Own band x 216..228
+// (the glyphs' ink: S/C start 1 px in, "A" ends at x 228); the minutes'
+// ink ends at x 215 at the latest.
+static void paintAmPm(int hour, bool h24) {
+    tft.fillRect(kAmPmX + 1, kAmPmY, Layout::CONTENT_RIGHT - kAmPmX, 16, Theme::BG);
+    if (h24) return;
+    Display::useFont("JBMono-12B");
+    tft.setTextDatum(TL_DATUM);
+    tft.setTextColor(Theme::AMBER, Theme::BG);
+    tft.drawString(ClockFmt::ampm(hour), kAmPmX, kAmPmY);
+}
+
+static void weekMeta(const struct tm& tmv, char* buf, size_t n) {
+    char iso[8]; strftime(iso, sizeof(iso), "%V", &tmv);
+    snprintf(buf, n, "tuần %s", iso);
+}
+
+// A long user name would run into the dock: cut whole characters + "..."
+// until it fits x 40..228.
 static void paintGreeting(const char* msg) {
-    tft.fillRect(0, 138, SCREEN_W, 22, Theme::BG);
+    tft.fillRect(kL, 138, kW, 22, Theme::BG);
     Display::useFont("JBMono-13");
+    char b[72]; Utf8::copy(b, sizeof(b), msg);
+    if (tft.textWidth(b) > Layout::CONTENT_W) {
+        size_t n = strlen(b);
+        while (n > 1) {
+            n = Utf8::prevChar(b, n);
+            b[n] = '\0';
+            char t[72]; snprintf(t, sizeof(t), "%s...", b);
+            if (tft.textWidth(t) <= Layout::CONTENT_W) { snprintf(b, sizeof(b), "%s", t); break; }
+        }
+    }
     tft.setTextDatum(MC_DATUM);
     tft.setTextColor(Theme::INK_DIM, Theme::BG);
-    tft.drawString(msg, SCREEN_W/2, 148);
+    tft.drawString(b, kMid, 148);
 }
 
 static void paintDayStrip(int hour) {
     int dotW = 4, gap = 3;
     int stripW = 24 * dotW + 23 * gap;
-    int sx = (SCREEN_W - stripW) / 2;
+    int sx = kMid - stripW / 2;           // 52
     tft.fillRect(sx, 178, stripW, 4, Theme::BG);
     for (int i = 0; i < 24; i++) {
         uint16_t c = (i < hour)         ? Theme::AMBER
@@ -124,15 +160,19 @@ void chClockDraw(const ChannelCtx& ctx) {
     struct tm tmv;
     localtime_r(&now, &tmv);
 
+    char week[16]; weekMeta(tmv, week, sizeof(week));
+    Display::statusBar("Đồng hồ", week, Theme::AMBER);
+
     char date[32];
     ClockFmt::date(tmv, " · ", date, sizeof(date));
     const bool h24 = ctx.settings->clock24h;
-    paintDateRow(date, tmv.tm_hour, h24);
+    paintDateRow(date);
     strncpy(s_lastDate, date, sizeof(s_lastDate) - 1);
 
     paintHH(tmv.tm_hour, h24);
     paintColon();
     paintMM(tmv.tm_min);
+    paintAmPm(tmv.tm_hour, h24);
     s_lastHH = tmv.tm_hour;
     s_lastMM = tmv.tm_min;
     s_lastDayHour = tmv.tm_hour;
@@ -143,15 +183,6 @@ void chClockDraw(const ChannelCtx& ctx) {
     strncpy(s_lastGreet, g, sizeof(s_lastGreet) - 1);
 
     paintDayStrip(tmv.tm_hour);
-
-    // Footer (mascot removed in v0.13)
-    Display::useFont("JBMono-11");
-    tft.setTextDatum(TR_DATUM);
-    tft.setTextColor(Theme::MUTED, Theme::BG);
-    char weekBuf[16];
-    char isoBuf[8]; strftime(isoBuf, sizeof(isoBuf), "%V", &tmv);
-    snprintf(weekBuf, sizeof(weekBuf), "tuần %s", isoBuf);
-    tft.drawString(weekBuf, SCREEN_W - 10, 208);
 
     // End with VT323-86 loaded so tick() doesn't need to switch
     Display::useFont(CLOCK_FN);
@@ -173,11 +204,13 @@ void chClockTick(const ChannelCtx& ctx) {
 
         char date[32];
         ClockFmt::date(tmv, " · ", date, sizeof(date));
-        // AM/PM flips at noon/midnight even when the date doesn't.
-        if (strcmp(date, s_lastDate) != 0 || (!h24 && (tmv.tm_hour == 0 || tmv.tm_hour == 12))) {
-            paintDateRow(date, tmv.tm_hour, h24);
+        if (strcmp(date, s_lastDate) != 0) {
+            paintDateRow(date);
             strncpy(s_lastDate, date, sizeof(s_lastDate) - 1);
+            char week[16]; weekMeta(tmv, week, sizeof(week));
+            Display::statusMeta(week, Theme::AMBER);
         }
+        paintAmPm(tmv.tm_hour, h24);            // flips at noon / midnight
         const char* uname = ctx.settings ? ctx.settings->userName.c_str() : "";
         const char* g = greetingFor(tmv.tm_hour, uname);
         if (strcmp(g, s_lastGreet) != 0) {

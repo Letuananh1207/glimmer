@@ -178,7 +178,7 @@ void rainHint(const Settings& s, char* buf, size_t n) {
     else if (s.clock24h)      snprintf_P(buf, n, PSTR("MƯA %d%% %02d:00"), bestPct, tm.tm_hour);
     else {
         int h12 = tm.tm_hour % 12; if (!h12) h12 = 12;
-        snprintf_P(buf, n, PSTR("MƯA %d%% %d%s"), bestPct, h12, tm.tm_hour < 12 ? "AM" : "PM");
+        snprintf_P(buf, n, PSTR("MƯA %d%% %d%s"), bestPct, h12, tm.tm_hour < 12 ? "SA" : "CH");   // token text.ampm
     }
 }
 
@@ -194,7 +194,7 @@ const char* describe(uint8_t code) {
     if (code == 80 || code == 81 || code == 82) return "Mưa rào";
     if (code == 85 || code == 86) return "Mưa tuyết";
     if (code >= 95 && code <= 99) return "Dông";
-    return "—";
+    return "--";                        // L-3: U+2014 is not in the VLW glyph set
 }
 
 float toDisplay(float c, bool fahrenheit) {
