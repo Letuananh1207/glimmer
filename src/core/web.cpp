@@ -137,12 +137,16 @@ static void handleApiState() {
     d["reset_reason"]        = ESP.getResetReason();
     d["build"]               = __DATE__ " " __TIME__;
     d["active_channel"]      = mainActiveChannelName();
-    // Skills: the one owning the screen + every one this firmware has (the app hides the
-    // switch on firmware without these keys, R-SK-4).
-    d["skill"]               = Skill::active(pSettings ? pSettings->skill.c_str() : nullptr);
+    // Skills: every one this firmware has + the enabled ones (dock tabs, R-SK-1/2). "skill"
+    // = the first enabled, for apps before 2026-11-25.3 (they hide the switch without it, R-SK-4).
     {
+        const char* on = pSettings ? pSettings->skillsOn.c_str() : Skill::kDefaultOn;
+        d["skill"] = Skill::first(on);
         JsonArray sk = d["skills"].to<JsonArray>();
         for (int i = 0; i < Skill::kCount; i++) sk.add(Skill::kAll[i]);
+        JsonArray so = d["skills_on"].to<JsonArray>();
+        for (int i = 0; i < Skill::kCount; i++)
+            if (Skill::inList(on, Skill::kAll[i])) so.add(Skill::kAll[i]);
     }
     d["night_face"]          = mainNightFace();
     d["next_fetch_s"]        = mainNextFetchInMs() / 1000;
@@ -167,6 +171,29 @@ static void handleApiState() {
         u["cred"]          = CredState::name(cd->cred);
     }
     d["time"] = (uint32_t)time(nullptr);     // device clock (epoch; < 1e9 = not synced)
+    // Weather for the app's weather tab (design 2026-11-25.3): now + today and 3 days.
+    // Celsius always (the app converts); -999 = unknown. Absent until configured.
+    if (pSettings && Weather::configured(*pSettings)) {
+        const WeatherData& w = Weather::snapshot();
+        JsonObject wo = d["weather"].to<JsonObject>();
+        wo["valid"]    = w.valid;
+        wo["temp_c"]   = w.tempC;
+        wo["feels_c"]  = w.feelsC;
+        wo["code"]     = w.code;
+        wo["desc"]     = Weather::describe(w.code);
+        wo["is_day"]   = w.isDay;
+        wo["humidity"] = w.humidity;
+        wo["wind_kmh"] = w.windKmh;
+        wo["last_ok"]  = (uint32_t)w.lastOk;
+        wo["stale"]    = Weather::isStale(*pSettings);
+        wo["err"]      = w.err;
+        JsonArray days = wo["days"].to<JsonArray>();
+        for (const WeatherDay& wd : w.forecast) {
+            JsonObject o = days.add<JsonObject>();
+            o["tmin"] = wd.tmin; o["tmax"] = wd.tmax; o["code"] = wd.code;
+            o["desc"] = Weather::describe(wd.code);
+        }
+    }
     // Project board (what the Claude screen's bottom rows show), for
     // diagnosing "no project activity": empty = no hook events arrived.
     {
@@ -262,7 +289,12 @@ static void handleApiGetSettings() {
     d["approvalTtlMin"] = s.approvalTtlMin;
     d["agentDoneCards"] = s.agentDoneCards;
     d["agentNightShow"] = s.agentNightShow;
-    d["skill"]          = Skill::active(s.skill.c_str());
+    d["skill"]          = Skill::first(s.skillsOn.c_str());
+    {
+        JsonArray so = d["skillsOn"].to<JsonArray>();
+        for (int i = 0; i < Skill::kCount; i++)
+            if (Skill::inList(s.skillsOn.c_str(), Skill::kAll[i])) so.add(Skill::kAll[i]);
+    }
     String out; serializeJson(d, out);
     server.send(200, "application/json", out);
 }
@@ -350,9 +382,22 @@ static void applyIfPresent(Settings& s, JsonDocument& d) {
     applyBool("useFahrenheit", s.useFahrenheit);
     applyFloat("weatherLat", s.weatherLat);
     applyFloat("weatherLon", s.weatherLon);
-    // Only a skill this firmware has channels for (R-SK-1); anything else is ignored.
-    if (d["skill"].is<const char*>() && Skill::known(d["skill"].as<const char*>()))
-        s.skill = d["skill"].as<const char*>();
+    // Enabled skills (R-SK-1): known ids only; an empty result is ignored (at least one stays on).
+    if (d["skillsOn"].is<JsonArray>()) {
+        String in;
+        for (JsonVariant v : d["skillsOn"].as<JsonArray>())
+            if (v.is<const char*>()) { in += v.as<const char*>(); in += ','; }
+        char on[48];
+        Skill::normalise(in.c_str(), on, sizeof(on), false);
+        if (on[0]) s.skillsOn = on;
+    } else if (d["skill"].is<const char*>() && Skill::known(d["skill"].as<const char*>())
+               && !Skill::inList(s.skillsOn.c_str(), d["skill"].as<const char*>())) {
+        // An app before 2026-11-25.3 picking a skill: turn it on, leave the others.
+        String in = s.skillsOn + "," + d["skill"].as<const char*>();
+        char on[48];
+        Skill::normalise(in.c_str(), on, sizeof(on), false);
+        if (on[0]) s.skillsOn = on;
+    }
 }
 
 static void handleApiPostSettings() {

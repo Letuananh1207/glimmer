@@ -128,15 +128,14 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
 - `channel.h`: `Channel { name, enabled, draw, tick, skill }`; `kChannels[]` in
   `main.cpp` registers them (order = rotation order). `recomputeActive()` runs
   every rotation tick, so settings toggles apply within one slide.
-- **Skills** (`src/data/skill_core.h`): one feature pack owns the screen —
-  only channels tagged with `Settings::skill` (+ `skill = nullptr` system
-  channels: Attention, Night, Weather, Forecast, Clock, Info) rotate. Setting
-  `skill` (unknown → `agent`); `/api/state` reports `skill` + `skills`. New
-  pack = id in `Skill::kAll` + tag its channels. App rules `R-SK-*`.
-  **Changing (P-2026-11-25.3, chốt 2026-11-25):** dock tab = skill — tabs
-  rotate together instead of one pack owning the screen. With only the
-  `agent` pack today nothing rotates differently; a new pack (Tin nhắn) gets
-  its own dock tab and joins the rotation, not replaces it.
+- **Skills** (`src/data/skill_core.h`; R-SK-1/2, design 2026-11-25.3): several
+  on at once, at least one — `Settings::skillsOn` CSV in `Skill::kAll` order
+  (`agent`, `weather`, `clock`); `skills_on` in config.json (missing → all on),
+  `skillsOn` array in `/api/settings`, `skills_on` + `skills` (+ legacy
+  `skill` = first on) in `/api/state`. Channels of enabled skills rotate, plus
+  `skill = nullptr` system channels (Attention, Night, Info). Weather +
+  Forecast = `weather`, Clock = `clock`. New pack = id in `Skill::kAll` + dock
+  tab + tag its channels. App rules `R-SK-*`.
 - `draw(ctx)` — full repaint on activation, may `Display::clear()`.
 - `tick(ctx)` — 5 Hz while active. **Never** `Display::clear()` /
   `tft.fillScreen()`. File-static caches with sentinels (`-1`, `-2.f`) +
@@ -144,17 +143,17 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
   cache. References: `ch_clock.cpp`, `ch_home.cpp`.
 - **No animated transitions** — rotation is an instant cut.
 - **Dock** (`src/channels/dock.{h,cpp}`, `dock_core.h`; P-2026-11-25.3): frame
-  30×114 at (2,34), 3 tabs Claude / Thời tiết / Đồng hồ (Tin nhắn waits for
-  its pack). Painted by `main.cpp` after `draw()`, never by a channel; badge
+  at (2,34), one tab per enabled skill (36 px each + 6; all 3 = 114 tall):
+  Claude / Thời tiết / Đồng hồ (Tin nhắn waits for its pack). Painted by `main.cpp` after `draw()`, never by a channel; badge
   on the Claude tab = agents waiting (`countWaiting`), repainted on change.
   Tab: agent channels → Claude, Weather/Forecast → Thời tiết, Clock → Đồng
   hồ, Info → none; Attention + Night have no dock. Docked channels keep
   content — and every `tick()` clear band — in x 40..228
   (`Layout::CONTENT_LEFT/RIGHT`), never x < 36 in y 34..147.
 - Indicator strip (y=230, 2 px): slide progress in the channel colour. An
-  agent waiting = the dock badge; only screens without a dock (Attention
-  card, night face) still turn the strip solid amber (approval) / sky
-  (question).
+  agent waiting = the dock badge; screens without the dock's Claude tab
+  (Attention card, night face, agent skill off) still turn the strip solid
+  amber (approval) / sky (question).
 - System screens (`drawSplash`, `drawConnecting`, `drawOtaProgress`) follow the
   same discipline; call `Display::resetSystemScreens()` from non-system entry
   points so the next one repaints its chrome.

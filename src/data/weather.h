@@ -19,7 +19,7 @@ struct WeatherData {
     bool        isDay      = true;
     int         humidity   = -1;
     float       windKmh    = -1.0f;
-    WeatherDay  forecast[3];
+    WeatherDay  forecast[4];   // today + 3 (the app's weather tab); the panel uses 0..2
     // Next 12 hours of precipitation probability (%, 255 = unknown),
     // rainStart = epoch of hourly slot 0.
     uint8_t     rainPct[12];

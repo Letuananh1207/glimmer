@@ -186,15 +186,15 @@
       <div class="col">
         <article>
           <h2>Kênh</h2>
-          <div class="field-inline">
-            <span>Skill đang dùng</span>
-            <select x-model="settings.skill">
-              <template x-for="k in (state.skills || ['agent'])" :key="k">
-                <option x-bind:value="k" x-text="skillLabel(k)"></option>
-              </template>
-            </select>
-          </div>
-          <div class="hint">Mỗi lúc một skill chiếm màn hình; Đồng hồ, Thời tiết, Thông tin và thẻ cần duyệt hiện ở mọi skill.</div>
+          <div class="field-inline"><span>Skill đang bật (mỗi skill một tab dock)</span></div>
+          <template x-for="k in (state.skills || ['agent'])" :key="k">
+            <div class="channel-row">
+              <label class="row"><input type="checkbox" x-bind:value="k" x-model="settings.skillsOn"
+                     x-bind:disabled="(settings.skillsOn || []).length === 1 &amp;&amp; (settings.skillsOn || []).includes(k)">
+                <span x-text="skillLabel(k)"></span></label>
+            </div>
+          </template>
+          <div class="hint">Các skill bật cùng xoay vòng, phải còn ít nhất một. Thông tin, Ban đêm và thẻ cần duyệt hiện ở mọi skill.</div>
           <template x-for="c in channelToggles()" :key="c.key">
             <div class="channel-row">
               <label class="row"><input type="checkbox" x-model="settings[c.key]"><span x-text="c.label"></span></label>
@@ -498,7 +498,7 @@ function app() {
     },
 
     // Skill ids stay English on the wire (R-SK-2); labels are Vietnamese.
-    skillLabel(k) { return {agent: 'Agent (Claude / Codex)'}[k] || k; },
+    skillLabel(k) { return {agent: 'Agent (Claude / Codex)', weather: 'Thời tiết', clock: 'Đồng hồ'}[k] || k; },
 
     // Display labels only — channel names and card kinds sent to / compared
     // with the device stay English.

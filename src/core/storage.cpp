@@ -1,4 +1,5 @@
 #include "storage.h"
+#include "skill_core.h"
 #include <LittleFS.h>
 #include <time.h>
 
@@ -73,7 +74,13 @@ Settings Storage::load() {
     s.approvalTtlMin = doc["approval_ttl_min"] | 30;
     s.agentDoneCards = doc["agent_done_cards"] | false;
     s.agentNightShow = doc["agent_night_show"] | false;
-    s.skill          = doc["skill"]            | "agent";
+    {
+        // Before 2026-11-25.3 one "skill" owned the screen and weather/clock always rotated:
+        // no "skills_on" yet → everything on, so the device shows what it showed before.
+        char on[48];
+        Skill::normalise(doc["skills_on"] | Skill::kDefaultOn, on, sizeof(on), true);
+        s.skillsOn = on;
+    }
     return s;
 }
 
@@ -129,7 +136,7 @@ bool Storage::save(const Settings& s) {
     doc["approval_ttl_min"] = s.approvalTtlMin;
     doc["agent_done_cards"] = s.agentDoneCards;
     doc["agent_night_show"] = s.agentNightShow;
-    doc["skill"]            = s.skill;
+    doc["skills_on"]        = s.skillsOn;
     return writeAtomic([&](File& f) { return serializeJson(doc, f); });
 }
 

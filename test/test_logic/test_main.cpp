@@ -752,18 +752,39 @@ void test_projects_from_pushed_cards() {
     TEST_ASSERT_FALSE(Projects::noteItem(b, sys, 3000002));     // device notices stay off the board
 }
 
-// R-SK-1 / R-SK-2: one skill owns the screen; system channels show under every skill.
+// R-SK-1 / R-SK-2 (design 2026-11-25.3): several skills on, at least one; channels of enabled
+// skills + system channels rotate; the dock shows one tab per enabled skill.
 void test_skill_filter_and_default() {
     TEST_ASSERT_TRUE(Skill::known("agent"));
+    TEST_ASSERT_TRUE(Skill::known("weather"));
+    TEST_ASSERT_TRUE(Skill::known("clock"));
     TEST_ASSERT_FALSE(Skill::known("music"));
     TEST_ASSERT_FALSE(Skill::known(nullptr));
-    TEST_ASSERT_EQUAL_STRING("agent", Skill::active("agent"));
-    TEST_ASSERT_EQUAL_STRING("agent", Skill::active("gone"));   // unknown → default
-    TEST_ASSERT_EQUAL_STRING("agent", Skill::active(""));
-    TEST_ASSERT_TRUE(Skill::shows(nullptr, "agent"));           // system channel (Clock, Attention…)
-    TEST_ASSERT_TRUE(Skill::shows(nullptr, "music"));
-    TEST_ASSERT_TRUE(Skill::shows("agent", "agent"));
-    TEST_ASSERT_FALSE(Skill::shows("agent", "music"));
+    char on[48];
+    Skill::normalise("clock,music,agent,clock", on, sizeof(on), true);
+    TEST_ASSERT_EQUAL_STRING("agent,clock", on);                 // kAll order, unknown + dupes dropped
+    Skill::normalise("", on, sizeof(on), true);
+    TEST_ASSERT_EQUAL_STRING(Skill::kDefaultOn, on);             // old config → everything on
+    Skill::normalise("music", on, sizeof(on), false);
+    TEST_ASSERT_EQUAL_STRING("", on);                            // caller rejects: at least one
+    TEST_ASSERT_TRUE(Skill::inList("agent,weather", "weather"));
+    TEST_ASSERT_FALSE(Skill::inList("agent,weather", "weath"));
+    TEST_ASSERT_EQUAL_STRING("weather", Skill::first("weather,clock"));
+    TEST_ASSERT_TRUE(Skill::shows(nullptr, "clock"));            // system channel (Info, Attention…)
+    TEST_ASSERT_TRUE(Skill::shows("agent", "agent,clock"));
+    TEST_ASSERT_FALSE(Skill::shows("weather", "agent,clock"));   // Weather/Forecast off
+}
+
+void test_dock_tabs_follow_enabled_skills() {
+    uint8_t m = Dock::tabMask("agent,clock");
+    TEST_ASSERT_EQUAL(2, Dock::tabCount(m));
+    TEST_ASSERT_EQUAL(0, Dock::slotOf(Dock::TAB_CLAUDE, m));
+    TEST_ASSERT_EQUAL(-1, Dock::slotOf(Dock::TAB_WEATHER, m));
+    TEST_ASSERT_EQUAL(1, Dock::slotOf(Dock::TAB_CLOCK, m));
+    TEST_ASSERT_EQUAL(-1, Dock::slotOf(Dock::TAB_NONE, m));
+    TEST_ASSERT_EQUAL(78, Dock::frameH(m));
+    TEST_ASSERT_EQUAL(114, Dock::frameH(Dock::tabMask(Skill::kDefaultOn)));
+    TEST_ASSERT_EQUAL(0, Dock::slotOf(Dock::TAB_WEATHER, Dock::tabMask("weather")));
 }
 
 int main(int, char**) {
@@ -812,5 +833,6 @@ int main(int, char**) {
     RUN_TEST(test_projects_sessions_merge_per_project);
     RUN_TEST(test_projects_from_pushed_cards);
     RUN_TEST(test_skill_filter_and_default);
+    RUN_TEST(test_dock_tabs_follow_enabled_skills);
     return UNITY_END();
 }

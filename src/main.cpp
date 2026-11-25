@@ -71,9 +71,9 @@ static const Channel kChannels[] = {
     { "Codex",    chCodexEnabled,    chCodexDraw,    chCodexTick,    "agent" },
     { "AI",       chAiDashEnabled,   chAiDashDraw,   chAiDashTick,   "agent" },
     { "Trend",    chTrendEnabled,    chTrendDraw,    chTrendTick,    "agent" },
-    { "Weather",  chWeatherEnabled,  chWeatherDraw,  chWeatherTick  },
-    { "Forecast", chForecastEnabled, chForecastDraw, chForecastTick },
-    { "Clock",    chClockEnabled,    chClockDraw,    chClockTick    },
+    { "Weather",  chWeatherEnabled,  chWeatherDraw,  chWeatherTick,  "weather" },
+    { "Forecast", chForecastEnabled, chForecastDraw, chForecastTick, "weather" },
+    { "Clock",    chClockEnabled,    chClockDraw,    chClockTick,    "clock" },
     { "Info",     chInfoEnabled,     chInfoDraw,     chInfoTick     },
 };
 static constexpr int kChannelCount = sizeof(kChannels) / sizeof(kChannels[0]);
@@ -172,14 +172,14 @@ static void recomputeActive() {
     const char* cur = g_activeCount ? kChannels[g_activeIdx[g_activePtr]].name : nullptr;
     g_nightFace = nightNow() && g_settings.nightMode >= Night::CLOCK;
     ChannelCtx ctx = makeCtx();
-    const char* skill = Skill::active(g_settings.skill.c_str());
+    const char* skillsOn = g_settings.skillsOn.c_str();
     g_activeCount = 0;
     for (int i = 0; i < kChannelCount; i++) {
         // The night face replaces rotation: only it (and an alert card) runs.
         if (g_nightFace && strcmp(kChannels[i].name, "Night") && strcmp(kChannels[i].name, "Attention"))
             continue;
-        // One skill owns the screen: its channels + system ones (R-SK-2).
-        if (!Skill::shows(kChannels[i].skill, skill)) continue;
+        // Enabled skills' channels + system ones (R-SK-2).
+        if (!Skill::shows(kChannels[i].skill, skillsOn)) continue;
         if (kChannels[i].enabled(ctx)) g_activeIdx[g_activeCount++] = i;
     }
     g_activePtr = 0;
@@ -207,7 +207,8 @@ static void drawActive() {
     // Dock after the channel: draw() clears the screen, the dock sits on top.
     Dock::Tab tab = Dock::tabFor(name);
     if (tab == Dock::TAB_NO_DOCK) Dock::hide();
-    else Dock::draw(tab, Theme::channelColor(name), waitingNow());
+    else Dock::draw(Dock::tabMask(g_settings.skillsOn.c_str()), tab,
+                    Theme::channelColor(name), waitingNow());
 }
 
 // Recompute, and repaint only when what should be on screen changed.
@@ -235,7 +236,8 @@ static void drawIndicator(uint32_t now) {
     const Attention::Queue& aq = AttentionQueue::get();
     const char* name = kChannels[g_activeIdx[g_activePtr]].name;
     const bool docked = Dock::tabFor(name) != Dock::TAB_NO_DOCK;
-    if (!docked && Attention::countWaiting(aq, AttentionQueue::now()) > 0) {
+    // Agents waiting: the dock badge when the dock has a Claude tab, else the strip.
+    if (!Dock::showsBadge() && Attention::countWaiting(aq, AttentionQueue::now()) > 0) {
         uint16_t c = Attention::countKind(aq, Attention::K_APPROVAL) ? Theme::AMBER : Theme::SKY;
         tft.fillRect(0, INDICATOR_Y, SCREEN_W, INDICATOR_H, c);
         return;
@@ -287,9 +289,11 @@ static bool jobEnabled(Job j) {
         case JOB_CODEX:   return !g_settings.codexToken.isEmpty();
         // Reset credits only once the token is known to work.
         case JOB_CODEX_RESETS: return g_codex.cred == Cred::OK || g_codex.cred == Cred::EXPIRING;
-        // Weather feeds the Weather, Forecast and Home channels.
+        // Weather feeds the Weather, Forecast and Home channels, and the app's weather tab
+        // (/api/state "weather") whenever the weather skill is on.
         case JOB_WEATHER: return Weather::configured(g_settings)
-                              && (g_settings.showWeather || g_settings.showHome || g_settings.showForecast);
+                              && (g_settings.showWeather || g_settings.showHome || g_settings.showForecast
+                                  || Skill::inList(g_settings.skillsOn.c_str(), "weather"));
         case JOB_STATUS_CLAUDE: return g_settings.showStatus && !g_settings.claudeKey.isEmpty();
         case JOB_STATUS_OPENAI: return g_settings.showStatus && !g_settings.codexToken.isEmpty();
         default: return false;

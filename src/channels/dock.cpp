@@ -1,7 +1,7 @@
 // Vertical dock — see dock.h. Geometry from design/panel/source/Dock.dc.html:
 // children are placed from the inside of the 1-px border, so the inner origin
-// is (DOCK_X + 1, DOCK_Y + 1). Three tabs (Tin nhắn dropped), so the frame is
-// 3 × 36 + 6 = 114 px tall instead of 150 (same 8-px pad under the last tile).
+// is (DOCK_X + 1, DOCK_Y + 1). Only enabled skills' tabs are shown, stacked
+// from the top; the frame is 36 px per tab + 6 (design's 4 tabs = 150).
 
 #include "dock.h"
 #include "display.h"
@@ -39,12 +39,14 @@ const uint8_t kDigits[11][5] PROGMEM = {
 };
 
 int s_waiting = -1;   // last badge count painted; -1 = dock not on screen
+uint8_t s_mask = 0;   // tabs shown (Dock::tabMask)
+Dock::Tab s_active = Dock::TAB_NONE;
 
-int slotCy(int k) { return kOy + 19 + 36 * k; }
+int slotCy(int slot) { return kOy + 19 + 36 * slot; }
 
-void paintIcon(int k) {
+void paintIcon(int k, int slot) {
     const Icon& ic = kIcons[k];
-    int x0 = kOx + 14 - ic.w / 2, y0 = slotCy(k) - ic.h / 2;
+    int x0 = kOx + 14 - ic.w / 2, y0 = slotCy(slot) - ic.h / 2;
     uint16_t c = k == Dock::TAB_CLAUDE ? Display::CLAWD_ORANGE : Theme::INK_DIM;
     for (int y = 0; y < ic.h; y++) {
         uint32_t row = pgm_read_dword(&ic.rows[y]);
@@ -58,13 +60,15 @@ void paintIcon(int k) {
     }
 }
 
-// Badge 9×9 with 1-px cut corners at (19, cy − 14) inside the frame.
-void paintBadge(int k, int count, uint16_t under) {
-    int cy = slotCy(k);
+// Badge 9×9 with 1-px cut corners at (19, cy − 14) inside the frame, on the
+// Claude tab. under = what lies beneath (active tile or frame fill).
+void paintBadge(int count, uint16_t under) {
+    int slot = Dock::slotOf(Dock::TAB_CLAUDE, s_mask);
+    if (slot < 0) return;
+    int cy = slotCy(slot);
     int bx = kOx + 19, by = cy - 14;
     int g = Dock::badgeGlyph(count);
     if (g < 0) {
-        // Clear back to whatever sits under the badge (tile or frame fill).
         tft.fillRect(bx, by, 9, 9, Theme::PANEL);
         if (under != Theme::PANEL) {
             // The active tile (x 2..25, y cy−12..cy+11) overlaps the badge box.
@@ -72,7 +76,7 @@ void paintBadge(int k, int count, uint16_t under) {
             int x0 = bx > tx0 ? bx : tx0, y0 = by > ty0 ? by : ty0;
             int x1 = bx + 9 < tx0 + 24 ? bx + 9 : tx0 + 24;
             if (x1 > x0) tft.fillRect(x0, y0, x1 - x0, by + 9 - y0, under);
-            paintIcon(k);   // the clear may have nicked the icon's corner
+            paintIcon(Dock::TAB_CLAUDE, slot);   // the clear may nick the icon
         }
         return;
     }
@@ -86,34 +90,40 @@ void paintBadge(int k, int count, uint16_t under) {
     }
 }
 
-Dock::Tab s_active = Dock::TAB_NONE;
-
 }  // namespace
 
 namespace Dock {
 
-void draw(Tab active, uint16_t accent, int waiting) {
+void draw(uint8_t mask, Tab active, uint16_t accent, int waiting) {
     using namespace Layout;
+    s_mask = mask;
     s_active = active;
-    tft.fillRect(DOCK_X, DOCK_Y, DOCK_W, DOCK_H, Theme::PANEL);
-    tft.drawRect(DOCK_X, DOCK_Y, DOCK_W, DOCK_H, Theme::LINE);
-    if (active >= 0) {
-        int cy = slotCy(active);
+    int h = frameH(mask);
+    tft.fillRect(DOCK_X, DOCK_Y, DOCK_W, h, Theme::PANEL);
+    tft.drawRect(DOCK_X, DOCK_Y, DOCK_W, h, Theme::LINE);
+    int as = slotOf(active, mask);
+    if (as >= 0) {
+        int cy = slotCy(as);
         tft.fillRect(kOx + 2, cy - 12, 24, 24, Theme::PANEL2);
         tft.fillRect(kOx, cy - 5, 2, 10, accent);
     }
-    for (int k = 0; k < kTabCount; k++) paintIcon(k);
-    paintBadge(TAB_CLAUDE, waiting, Theme::PANEL);
+    for (int k = 0; k < kTabCount; k++) {
+        int sl = slotOf((Tab)k, mask);
+        if (sl >= 0) paintIcon(k, sl);
+    }
+    paintBadge(waiting, Theme::PANEL);
     s_waiting = waiting;
 }
 
 void tick(int waiting) {
     if (s_waiting < 0 || waiting == s_waiting) return;
     if (badgeGlyph(waiting) == badgeGlyph(s_waiting)) { s_waiting = waiting; return; }
-    paintBadge(TAB_CLAUDE, waiting, s_active == TAB_CLAUDE ? Theme::PANEL2 : Theme::PANEL);
+    paintBadge(waiting, s_active == TAB_CLAUDE ? Theme::PANEL2 : Theme::PANEL);
     s_waiting = waiting;
 }
 
 void hide() { s_waiting = -1; }
+
+bool showsBadge() { return s_waiting >= 0 && (s_mask >> TAB_CLAUDE & 1); }
 
 }  // namespace Dock

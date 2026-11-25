@@ -68,7 +68,7 @@ void begin() {
     s_w.lastOk = (time_t)(d["ok"] | 0UL);
     s_w.rainStart = (time_t)(d["rs"] | 0UL);
     for (int i = 0; i < 12; i++) s_w.rainPct[i] = d["rp"][i] | 255;
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 4; i++) {
         JsonVariant o = d["fc"][i];
         s_w.forecast[i].tmin = o["lo"] | -999.0f; s_w.forecast[i].tmax = o["hi"] | -999.0f;
         s_w.forecast[i].code = o["c"] | 0;        s_w.forecast[i].uvMax = o["uv"] | -1.0f;
@@ -100,7 +100,7 @@ bool fetch(const Settings& s) {
         "wind_speed_10m,is_day"
         "&hourly=precipitation_probability&forecast_hours=12"
         "&daily=temperature_2m_min,temperature_2m_max,weather_code,sunrise,sunset,uv_index_max"
-        "&forecast_days=3&timezone=auto&timeformat=unixtime"),
+        "&forecast_days=4&timezone=auto&timeformat=unixtime"),
         s.weatherLat, s.weatherLon);
 
     WiFiClient client;
@@ -136,7 +136,7 @@ bool fetch(const Settings& s) {
     w.windKmh  = cur["wind_speed_10m"]       | -1.0f;
 
     JsonObject daily = doc["daily"].as<JsonObject>();
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 4; i++) {
         WeatherDay& d = w.forecast[i];
         d.tmin    = daily["temperature_2m_min"][i] | -999.0f;
         d.tmax    = daily["temperature_2m_max"][i] | -999.0f;

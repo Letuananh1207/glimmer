@@ -7,13 +7,18 @@
 #include "dock_core.h"
 
 namespace Dock {
-    // Full paint: frame, icons, the active tab, the badge. accent = the
-    // channel's colour (the active tab's 2-px bar).
-    void draw(Tab active, uint16_t accent, int waiting);
+    // Full paint: frame, the tabs in [mask] (tabMask of the enabled skills),
+    // the active tab, the badge. accent = the channel's colour (the active
+    // tab's 2-px bar).
+    void draw(uint8_t mask, Tab active, uint16_t accent, int waiting);
 
     // Repaint only the Claude badge when the waiting count changed.
     void tick(int waiting);
 
     // A full-screen channel took over: stop tick() painting a dock.
     void hide();
+
+    // The dock on screen carries the Claude tab, so its badge shows agents
+    // waiting (otherwise the y 230 strip has to).
+    bool showsBadge();
 }
