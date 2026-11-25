@@ -5,6 +5,42 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-25.3 — Dock dọc nổi bám lề trái (thanh tab kiểu iPad)
+
+- **Thành phần Dock** (`source/Dock.dc.html`, `screen_specs.md` §15; token `component.dock`):
+  - Khối 30×150 tại (2, 34), nền PANEL viền LINE, 4 tab dọc bước 36 px: Claude (Clawd), Tin nhắn (bong bóng), Thời tiết
+    (mặt trời), Đồng hồ — icon bitmap 16 px nét 2 px, INK_DIM; Clawd màu CLAWD.
+  - Tab đang hiện: ô PANEL2 24×24 + vạch 2×10 màu nhấn của kênh ở mép trái. Info: không tab nào sáng.
+  - Huy hiệu số 9×9 (vạt góc 1 px, chữ số bitmap 3×5 màu BG; > 9 → `+`; 0 → ẩn): AMBER trên Claude = số agent chờ
+    duyệt / câu hỏi; SKY trên Tin nhắn = số tin mới.
+- **Bố cục có dock** — 11 kênh xếp lại, nội dung x 40–228 (ảnh `ClaudeDock`, `HomeDock`, `AgentsDock`, `CodexDock`,
+  `AIDock`, `TrendDock`, `WeatherDock`, `ForecastDock`, `ClockDock`, `InfoDock`, `SetupDock`; `screen_specs.md` §15):
+  - Home: thêm status bar `Trang chủ`, meta `29° Ít mây` (70 px); giờ VT323-86 x 40–210 y 30–100 tách khỏi thời tiết;
+    `c.giác 33°` TR (228, 105); IP riêng ở (228, 204) — hết chồng phút / cột thời tiết.
+  - Agents: status bar `Tác tử`, meta `3 MỤC`; 3 dòng từ y 32 bước 60, chữ từ x 54.
+  - Clock: status bar `Đồng hồ`, meta `tuần 48`; ngày, giờ, lời chào, dải 24 giờ căn giữa x 134.
+  - Info: bước 19 px từ y 30 — dòng cuối y 201–214, hết tràn đáy.
+  - Weather: 2 ô ngày 92×64 (MAI, KIA); `31°/24°` hôm nay TR (228, 119) cạnh mô tả.
+  - Trend: cột 23 px bước 27 từ x 40; chú thích `% hạn mức tuần mỗi ngày` (161 px).
+  - Claude, Codex, AI, Forecast, Setup: bố cục cũ dịch sang x 40, co theo bề ngang 188 px; hàng project Claude bỏ phần
+    chi tiết khi không vừa (`Cần duyệt` thay `Cần duyệt · Bash`).
+  - Chỉ vẽ trạng thái bình thường mỗi kênh; trạng thái đang tải / cũ / lỗi theo cùng lề x 40–228.
+- Liên quan phiếu `docs/phieu_panel/2026-11-25-ve-lai-dung-luat-khung.md` mục 1–3 (Home / Agents / Clock status bar, Home
+  chồng chữ, Info tràn đáy) — **chỉ giải trong bố cục có dock**; phiếu chưa đánh dấu đã vẽ. Mục 4 (Forecast gradient) và
+  phiếu `2026-11-25-sua-ban-ve-cho-khop-may.md` chưa làm.
+- Đổi luật: (1) vùng nội dung mọi kênh có dock là x 40–228 (dock chiếm x 2–31, y 34–183); (2) huy hiệu trên dock thay
+  vạch vàng / xanh liền y 230 khi agent chờ — vạch y 230 chỉ còn tiến độ slide; (3) tab = skill: Claude, Tin nhắn, Thời
+  tiết, Đồng hồ cùng xoay vòng, khác luật hiện tại "một skill chiếm màn" — phía code chốt trước khi áp.
+- Cần firmware: bitmap 3 icon dock + chữ số 3×5 (token `component.dock`); đếm số tin mới cho huy hiệu Tin nhắn (gói
+  `chat` đang chờ duyệt — tới lúc đó huy hiệu Tin nhắn ẩn).
+
+**Việc cần làm trong code:**
+- Chờ chốt 3 dòng "Đổi luật" trên; nếu không chốt, bỏ qua mục này.
+- Thành phần dock: vẽ một lần khi vào kênh; khi đổi kênh chỉ vẽ lại ô tab cũ và mới; huy hiệu vẽ lại khi số đổi.
+- Mọi kênh có dock: lề trái nội dung x 40, phải x 228; Home / Agents / Clock thêm status bar theo đặc tả §15.
+- Attention, Night, màn hệ thống: không vẽ dock (giữ toàn màn).
+- Bản xem trước màn trên máy tính vẽ thêm các màn có dock.
+
 ## P-2026-11-25.2 — Clawd đang ngủ khi chưa có project
 
 - **Kênh Claude** (`source/Claude-NoProject.dc.html`, `source/Clawd.dc.html`, `screen_specs.md` §6; ảnh `ClaudeNoProject.png`):

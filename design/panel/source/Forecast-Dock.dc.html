@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Forecast · có dock</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&amp;family=VT323&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#8A7F96}a:hover{color:#FFF8E8}
+</style>
+</helmet>
+<div style="position: relative; width: 240px; height: 240px; overflow: hidden; background: #000000; color: #FFF8E8; font-family: 'JetBrains Mono', monospace;">
+<div style="position: absolute; left: 0px; top: 0px; width: 240px; height: 22px; background: #000000;"></div>
+<div style="position: absolute; left: -30px; width: 300px; text-align: center; top: 5px; height: 15px; line-height: 15px; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; letter-spacing: -0.2px; white-space: nowrap; color: #FFF8E8;">Dự báo</div>
+<div style="position: absolute; right: 4px; text-align: right; top: 5px; height: 13px; line-height: 13px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.4px; white-space: nowrap; color: #8A7F96;">3 NGÀY</div>
+<div style="position: absolute; left: 0px; top: 22px; width: 240px; height: 1px; background: #54B6FF;"></div>
+<div style="position: absolute; left: 36px; top: 32px; width: 204px; height: 52px; background: #1F1A28;"></div>
+<div style="position: absolute; left: 36px; top: 32px; width: 2px; height: 52px; background: #FF5247;"></div>
+<div style="position: absolute; left: 44px; top: 36px; height: 20px; line-height: 20px; font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; letter-spacing: 0.4px; white-space: nowrap; color: #FFF8E8;">NAY</div>
+<svg aria-hidden="true" style="position: absolute; left: 44px; top: 58px;" width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#54B6FF" d="M10 1h1v1h-1zM9 2h1v1h-1zM11 2h1v1h-1zM10 3h1v1h-1zM7 4h1v1h-1zM10 4h1v1h-1zM12 4h1v1h-1zM13 4h1v1h-1zM14 4h1v1h-1zM8 5h1v1h-1zM9 5h1v1h-1zM10 5h1v1h-1zM11 5h1v1h-1zM12 5h1v1h-1zM13 5h1v1h-1zM4 6h1v1h-1zM5 6h1v1h-1zM9 6h1v1h-1zM11 6h1v1h-1zM12 6h1v1h-1zM13 6h1v1h-1zM14 6h1v1h-1zM3 7h1v1h-1zM5 7h1v1h-1zM2 8h1v1h-1zM6 8h1v1h-1zM2 9h1v1h-1zM6 9h1v1h-1zM4 10h1v1h-1zM5 10h1v1h-1zM6 10h1v1h-1zM7 10h1v1h-1z"></path></svg>
+<div style="position: absolute; left: 62px; top: 60px; height: 13px; line-height: 13px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.4px; white-space: nowrap; color: #8A7F96;">Ít mây</div>
+<div style="position: absolute; left: 104px; top: 42px; width: 92px; height: 8px; background: #2A2236;"></div>
+<div style="position: absolute; left: 115px; top: 42px; width: 81px; height: 8px; background: linear-gradient(90deg, #52C3FF, #FF514A);"></div>
+<div style="position: absolute; right: 34px; text-align: right; top: 60px; height: 13px; line-height: 13px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.4px; white-space: nowrap; color: #8A7F96;">24</div>
+<div style="position: absolute; right: 12px; text-align: right; top: 60px; height: 13px; line-height: 13px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.4px; white-space: nowrap; color: #FFF8E8;">31</div>
+<div style="position: absolute; left: 36px; top: 88px; width: 2px; height: 52px; background: #34293F;"></div>
+<div style="position: absolute; left: 44px; top: 92px; height: 20px; line-height: 20px; font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; letter-spacing: 0.4px; white-space: nowrap; color: #D8CDB8;">MAI</div>
+<svg aria-hidden="true" style="position: absolute; left: 44px; top: 114px;" width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#8A7F96" d="M5 2h1v1h-1zM6 2h1v1h-1zM7 2h1v1h-1zM8 2h1v1h-1zM9 2h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM5 3h1v1h-1zM10 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM5 4h1v1h-1zM6 4h1v1h-1zM7 4h1v1h-1zM8 4h1v1h-1zM12 4h1v1h-1zM1 5h1v1h-1zM4 5h1v1h-1zM10 5h1v1h-1zM13 5h1v1h-1zM1 6h1v1h-1zM13 6h1v1h-1zM2 7h1v1h-1zM3 7h1v1h-1zM4 7h1v1h-1zM5 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM8 7h1v1h-1zM9 7h1v1h-1zM10 7h1v1h-1zM11 7h1v1h-1zM12 7h1v1h-1zM3 9h1v1h-1zM6 9h1v1h-1zM9 9h1v1h-1zM3 10h1v1h-1zM6 10h1v1h-1zM9 10h1v1h-1zM4 11h1v1h-1zM7 11h1v1h-1zM10 11h1v1h-1zM4 12h1v1h-1zM7 12h1v1h-1zM10 12h1v1h-1z"></path></svg>
+<div style="position: absolute; left: 62px; top: 116px; height: 13px; line-height: 13px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.4px; white-space: nowrap; color: #8A7F96;">Mưa rào</div>
+<div style="position: absolute; left: 104px; top: 98px; width: 92px; height: 8px; background: #2A2236;"></div>
+<div style="position: absolute; left: 115px; top: 98px; width: 70px; height: 8px; background: linear-gradient(90deg, #52C3FF, #FF514A);"></div>
+<div style="position: absolute; right: 34px; text-align: right; top: 116px; height: 13px; line-height: 13px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.4px; white-space: nowrap; color: #8A7F96;">24</div>
+<div style="position: absolute; right: 12px; text-align: right; top: 116px; height: 13px; line-height: 13px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.4px; white-space: nowrap; color: #FFF8E8;">30</div>
+<div style="position: absolute; left: 36px; top: 144px; width: 2px; height: 52px; background: #34293F;"></div>
+<div style="position: absolute; left: 44px; top: 148px; height: 20px; line-height: 20px; font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; letter-spacing: 0.4px; white-space: nowrap; color: #D8CDB8;">KIA</div>
+<svg aria-hidden="true" style="position: absolute; left: 44px; top: 170px;" width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#8A7F96" d="M5 2h1v1h-1zM6 2h1v1h-1zM7 2h1v1h-1zM8 2h1v1h-1zM9 2h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM5 3h1v1h-1zM10 3h1v1h-1zM11 3h1v1h-1zM2 4h1v1h-1zM5 4h1v1h-1zM6 4h1v1h-1zM7 4h1v1h-1zM8 4h1v1h-1zM12 4h1v1h-1zM1 5h1v1h-1zM4 5h1v1h-1zM10 5h1v1h-1zM13 5h1v1h-1zM1 6h1v1h-1zM13 6h1v1h-1zM2 7h1v1h-1zM3 7h1v1h-1zM4 7h1v1h-1zM5 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1zM8 7h1v1h-1zM9 7h1v1h-1zM10 7h1v1h-1zM11 7h1v1h-1zM12 7h1v1h-1zM3 9h1v1h-1zM6 9h1v1h-1zM9 9h1v1h-1zM3 10h1v1h-1zM6 10h1v1h-1zM9 10h1v1h-1zM4 11h1v1h-1zM7 11h1v1h-1zM10 11h1v1h-1zM4 12h1v1h-1zM7 12h1v1h-1zM10 12h1v1h-1z"></path></svg>
+<div style="position: absolute; left: 62px; top: 172px; height: 13px; line-height: 13px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.4px; white-space: nowrap; color: #8A7F96;">Mưa</div>
+<div style="position: absolute; left: 104px; top: 154px; width: 92px; height: 8px; background: #2A2236;"></div>
+<div style="position: absolute; left: 104px; top: 154px; width: 58px; height: 8px; background: linear-gradient(90deg, #52C3FF, #FF514A);"></div>
+<div style="position: absolute; right: 34px; text-align: right; top: 172px; height: 13px; line-height: 13px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.4px; white-space: nowrap; color: #8A7F96;">23</div>
+<div style="position: absolute; right: 12px; text-align: right; top: 172px; height: 13px; line-height: 13px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.4px; white-space: nowrap; color: #FFF8E8;">28</div>
+<div style="position: absolute; left: 2px; top: 34px; width: 30px; height: 150px;"><dc-import name="Dock" active="weather" accent="#54B6FF" claude-badge="1" chat-badge="3" hint-size="30px,150px"></dc-import></div>
+<div style="position: absolute; left: 0px; top: 230px; width: 96px; height: 2px; background: #54B6FF;"></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":240,"height":240}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

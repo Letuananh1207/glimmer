@@ -106,6 +106,8 @@ Nguồn `source/Night.dc.html` · ảnh `screens/@2x/Night.png`
 
 ## 3. Setup — kênh `Setup`
 
+> **P-2026-11-25.3 — Dock dọc:** bố cục có dock của kênh này ở §15 · `Setup-Dock` (chờ chốt "Đổi luật").
+
 > **P-2026-11-25.1 — Bản đầu:** vẽ lại đúng màn firmware v0.23.0 đang chạy.
 
 Danh sách cài đặt lần đầu — chỉ hiện khi chưa có khóa Claude lẫn token Codex.
@@ -138,6 +140,8 @@ Nguồn `source/Setup.dc.html` · ảnh `screens/@2x/Setup.png`
 | 0, 230, 96×2 |  |  | AMBER | vạch tiến độ slide (vẽ ở 40 %) |  |
 
 ## 4. Home — kênh `Home`
+
+> **P-2026-11-25.3 — Dock dọc:** bố cục có dock của kênh này ở §15 · `Home-Dock` (chờ chốt "Đổi luật").
 
 > **P-2026-11-25.1 — Bản đầu:** vẽ lại đúng màn firmware v0.23.0 đang chạy.
 
@@ -259,6 +263,8 @@ Nguồn `source/Home-KeyBad.dc.html` · ảnh `screens/@2x/HomeKeyBad.png`
 
 ## 5. Agents — kênh `Agents`
 
+> **P-2026-11-25.3 — Dock dọc:** bố cục có dock của kênh này ở §15 · `Agents-Dock` (chờ chốt "Đổi luật").
+
 > **P-2026-11-25.1 — Bản đầu:** vẽ lại đúng màn firmware v0.23.0 đang chạy.
 
 Danh sách hàng đợi agent (≤ 3 dòng; > 3 → 2 dòng + `+ N mục khác`).
@@ -306,6 +312,8 @@ Nguồn `source/Agents-More.dc.html` · ảnh `screens/@2x/AgentsMore.png`
 | 0, 230, 96×2 |  |  | AMBER | vạch tiến độ slide (vẽ ở 40 %) |  |
 
 ## 6. Claude — kênh `Claude`
+
+> **P-2026-11-25.3 — Dock dọc:** bố cục có dock của kênh này ở §15 · `Claude-Dock` (chờ chốt "Đổi luật").
 
 > **P-2026-11-25.2 — Clawd ngủ khi chưa có project:** bảng project trống → Clawd mắt `sleep` (vạch ngang 2 ô ở hàng mắt dưới) thay cho `shut`, kèm chữ "Zz" pixel MUTED ở góc trên phải Clawd. Xem `Claude-NoProject`.
 > **P-2026-11-25.1 — Bản đầu:** vẽ lại đúng màn firmware v0.23.0 đang chạy.
@@ -507,6 +515,8 @@ Nguồn `source/Claude-Offline.dc.html` · ảnh `screens/@2x/ClaudeOffline.png`
 
 ## 7. Codex — kênh `Codex`
 
+> **P-2026-11-25.3 — Dock dọc:** bố cục có dock của kênh này ở §15 · `Codex-Dock` (chờ chốt "Đổi luật").
+
 > **P-2026-11-25.1 — Bản đầu:** vẽ lại đúng màn firmware v0.23.0 đang chạy.
 
 Hạn mức Codex — bố cục như Claude, nhấn LILAC, đáy là dải 24 giờ.
@@ -639,6 +649,8 @@ Nguồn `source/Codex-Expired.dc.html` · ảnh `screens/@2x/CodexExpired.png`
 
 ## 8. AI — kênh `AI`
 
+> **P-2026-11-25.3 — Dock dọc:** bố cục có dock của kênh này ở §15 · `AI-Dock` (chờ chốt "Đổi luật").
+
 > **P-2026-11-25.1 — Bản đầu:** vẽ lại đúng màn firmware v0.23.0 đang chạy.
 
 Claude + Codex cạnh nhau (chỉ khi có cả hai khóa).
@@ -715,6 +727,8 @@ Nguồn `source/AI-KeyBad.dc.html` · ảnh `screens/@2x/AIKeyBad.png`
 | 0, 230, 96×2 |  |  | INK_DIM | vạch tiến độ slide (vẽ ở 40 %) |  |
 
 ## 9. Trend — kênh `Trend`
+
+> **P-2026-11-25.3 — Dock dọc:** bố cục có dock của kênh này ở §15 · `Trend-Dock` (chờ chốt "Đổi luật").
 
 > **P-2026-11-25.1 — Bản đầu:** vẽ lại đúng màn firmware v0.23.0 đang chạy.
 
@@ -809,6 +823,8 @@ Nguồn `source/Trend-Collecting.dc.html` · ảnh `screens/@2x/TrendCollecting.
 
 ## 10. Weather — kênh `Weather`
 
+> **P-2026-11-25.3 — Dock dọc:** bố cục có dock của kênh này ở §15 · `Weather-Dock` (chờ chốt "Đổi luật").
+
 > **P-2026-11-25.1 — Bản đầu:** vẽ lại đúng màn firmware v0.23.0 đang chạy.
 
 Thời tiết hiện tại + 3 ô ngày.
@@ -896,6 +912,8 @@ Nguồn `source/Weather-Loading.dc.html` · ảnh `screens/@2x/WeatherLoading.pn
 
 ## 11. Forecast — kênh `Forecast`
 
+> **P-2026-11-25.3 — Dock dọc:** bố cục có dock của kênh này ở §15 · `Forecast-Dock` (chờ chốt "Đổi luật").
+
 > **P-2026-11-25.1 — Bản đầu:** vẽ lại đúng màn firmware v0.23.0 đang chạy.
 
 3 dòng ngày: NAY / MAI / KIA.
@@ -950,6 +968,8 @@ Nguồn `source/Forecast-Empty.dc.html` · ảnh `screens/@2x/ForecastEmpty.png`
 
 ## 12. Clock — kênh `Clock`
 
+> **P-2026-11-25.3 — Dock dọc:** bố cục có dock của kênh này ở §15 · `Clock-Dock` (chờ chốt "Đổi luật").
+
 > **P-2026-11-25.1 — Bản đầu:** vẽ lại đúng màn firmware v0.23.0 đang chạy.
 
 Đồng hồ lớn + lời chào + dải 24 giờ.
@@ -998,6 +1018,8 @@ Nguồn `source/Clock.dc.html` · ảnh `screens/@2x/Clock.png`
 | 0, 230, 96×2 |  |  | AMBER | vạch tiến độ slide (vẽ ở 40 %) |  |
 
 ## 13. Info — kênh `Info`
+
+> **P-2026-11-25.3 — Dock dọc:** bố cục có dock của kênh này ở §15 · `Info-Dock` (chờ chốt "Đổi luật").
 
 > **P-2026-11-25.1 — Bản đầu:** vẽ lại đúng màn firmware v0.23.0 đang chạy.
 
@@ -1129,3 +1151,424 @@ Nguồn `source/NoChannels.dc.html` · ảnh `screens/@2x/NoChannels.png`
 |---|---|---|---|---|---|
 | 120, 90 | MC | `JBMono-16B` | CORAL | `CHƯA CÓ KÊNH` | 120 |
 | 120, 135 | MC | `JBMono-11` | MUTED | `bật kênh trên trang web` | 161 |
+
+## 15. Dock dọc — thành phần dùng chung và bố cục có dock
+
+> **P-2026-11-25.3 — Dock dọc nổi bám lề trái:** thành phần mới `Dock` + 11 kênh xếp lại theo bề ngang mới. **Chờ phía code chốt dòng "Đổi luật" trong CHANGELOG** trước khi áp.
+
+Dock = thanh tab kiểu Slide Over của iPad: báo đang ở tab nào và tab nào có việc. Không có nút bấm — tab đổi theo vòng xoay.
+
+**Thành phần `Dock`** (`source/Dock.dc.html`) — khối 30×150 tại (2, 34), nằm dưới status bar, không chạm vạch y 230:
+
+| phần | tọa độ trong dock (gốc = góc trong viền) | màu |
+|---|---|---|
+| khung | 30×150, viền 1 px | nền PANEL, viền LINE |
+| ô tab k (k = 0…3: Claude, Tin nhắn, Thời tiết, Đồng hồ) | tâm (14, 19 + 36k) | — |
+| icon | Clawd 18×10 (ô 1 px) · bong bóng 16×12 · mặt trời 16×14 · đồng hồ 16×14, căn giữa tâm ô; nét 2 px | Clawd CLAWD, còn lại INK_DIM |
+| tab đang hiện | ô 24×24 tại (2, cy − 12) + vạch 2×10 tại (0, cy − 5) | ô PANEL2, vạch = màu nhấn của kênh |
+| huy hiệu số | 9×9 vạt góc 1 px tại (19, cy − 14); chữ số bitmap 3×5 tại (22, cy − 12); > 9 → `+`; 0 → ẩn | Claude AMBER (agent chờ duyệt), Tin nhắn SKY (tin mới); chữ số BG |
+
+Bitmap icon và chữ số (lưới `#`) nằm trong `source/Dock.dc.html` (`ICONS`, `DIGITS`) và `tokens/panel_tokens.json` → `component.dock`.
+
+**Bố cục có dock:** nội dung kênh x 40–228 (rộng 188), y 24–219 như cũ; status bar và vạch tiến độ y 230 phủ hết 240 px. Huy hiệu thay cho vạch vàng / xanh liền y 230 khi agent chờ. Tab đang hiện theo kênh: Claude cho kênh skill agent (Home, Agents, Claude, Codex, AI, Trend, Setup); Thời tiết cho Weather, Forecast; Đồng hồ cho Clock; Info không tab nào (`none`). Không dock: Attention, Night, màn hệ thống.
+
+Khác bản không dock: Home, Agents, Clock có status bar (`Trang chủ` meta `29° Ít mây` 70 px; `Tác tử` meta `3 MỤC`; `Đồng hồ` meta `tuần 48`); Home tách giờ (x 40–210, y 30–100) khỏi thời tiết (chuyển lên meta + dòng `c.giác`); Info bước 19 px (dòng cuối y 201–214); Weather 2 ô ngày 92 px (MAI, KIA), nhiệt cao/thấp hôm nay `31°/24°` cạnh mô tả; Trend cột 23 px bước 27, chú thích `% hạn mức tuần mỗi ngày`; Forecast nền dòng hôm nay từ x 36, rãnh nhiệt 92 px tại x 104.
+
+Vẫn như bản đầu (chưa giải quyết trong mục này): thanh nhiệt Forecast tô chuyển màu; nhãn thứ Trend chữ Anh; đếm ngược `3d` / `2h 14m`.
+
+### Claude-Dock — Claude · có dock
+
+Nguồn `source/Claude-Dock.dc.html` · ảnh `screens/@2x/ClaudeDock.png`
+
+| x, y (w×h) | datum | font | màu | nội dung | px |
+|---|---|---|---|---|---|
+| 0, 0, 240×22 |  |  | BG | khối |  |
+| 120, 11 | MC | `JBMono-12B` | INK | `Claude` | 42 |
+| 0, 22, 240×1 |  |  | CORAL | khối |  |
+| 40, 32 | TL | `JBMono-11` | MUTED | `TUẦN` | 28 |
+| 156, 58, 72×40 |  |  | CLAWD | Clawd (ô 4, mắt `open`, chân `stand`) |  |
+| 228, 112 | TR | `JBMono-12B` | CORAL | `4d` | 14 |
+| 40, 46 | TL | `VT323-86` | MINT | `38` | 68 |
+| 110, 76 | TL | `VT323-44` | MINT | `%` | 18 |
+| 40, 128, 188×8 |  |  | MINT | `pixelBar` 9 ô, 38 % |  |
+| 40, 146, w 188 |  |  | LINE | chấm kẻ (1 px mỗi 4 px) |  |
+| 40, 150 | TL | `JBMono-11` | MUTED | `PHIÊN 5 GIỜ` | 77 |
+| 228, 150 | TR | `JBMono-11` | INK_DIM | `12% · 2h 14m` | 84 |
+| 40, 164, 188×4 |  |  | MINT | `pixelBar` 9 ô, 12 % |  |
+| 40, 170, w 188 |  |  | LINE | chấm kẻ (1 px mỗi 4 px) |  |
+| 40, 180, 5×5 |  |  | AMBER | khối |  |
+| 228, 176 | TR | `JBMono-11` | MUTED | `2M` | 14 |
+| 50, 176 | TL | `JBMono-11` | INK_DIM | `glimmer` | 49 |
+| 107, 176 | TL | `JBMono-11` | AMBER | `Cần duyệt` | 63 |
+| 40, 194, 5×5 |  |  | LILAC | khối |  |
+| 228, 190 | TR | `JBMono-11` | MUTED | `5M` | 14 |
+| 50, 190 | TL | `JBMono-11` | INK_DIM | `TieuMac3d` | 63 |
+| 121, 190 | TL | `JBMono-11` | LILAC | `Đang chạy` | 63 |
+| 40, 208, 5×5 |  |  | MINT | khối |  |
+| 228, 204 | TR | `JBMono-11` | MUTED | `1H` | 14 |
+| 50, 204 | TL | `JBMono-11` | INK_DIM | `api` | 21 |
+| 79, 204 | TL | `JBMono-11` | MINT | `Xong` | 28 |
+| 2, 34, 30×150 |  |  | nhấn CORAL | Dock (`Dock.dc.html`), tab đang hiện `claude`, huy hiệu Claude 1 / Tin nhắn 3 |  |
+| 0, 230, 96×2 |  |  | CORAL | khối |  |
+
+### Home-Dock — Home · có dock
+
+Nguồn `source/Home-Dock.dc.html` · ảnh `screens/@2x/HomeDock.png`
+
+| x, y (w×h) | datum | font | màu | nội dung | px |
+|---|---|---|---|---|---|
+| 0, 0, 240×22 | MC / MR | `JBMono-12B` / `JBMono-11` | INK / nhấn AMBER | Status bar `Trang chủ` · meta `29° Ít mây` (MUTED, 70 px); gạch nhấn y 22 | 63 |
+| 40, 30 | TL | `VT323-86` | INK | `14` | 68 |
+| 108, 30 | TL | `VT323-86` | CORAL | `:` | 34 |
+| 142, 30 | TL | `VT323-86` | AMBER | `32` | 68 |
+| 40, 104 | TL | `JBMono-12B` | INK_DIM | `THỨ TƯ 25/11` | 84 |
+| 228, 105 | TR | `JBMono-11` | MUTED | `c.giác 33°` | 70 |
+| 40, 122, w 188 |  |  | LINE | chấm kẻ (1 px mỗi 4 px) |  |
+| 40, 128 | TL | `JBMono-12B` | CORAL | `CL` | 14 |
+| 66, 131, 120×7 |  |  | MINT | `pixelBar` 9 ô, 38 % |  |
+| 228, 128 | TR | `JBMono-11` | MINT | `38%` | 21 |
+| 40, 146 | TL | `JBMono-12B` | LILAC | `CX` | 14 |
+| 66, 149, 120×7 |  |  | AMBER | `pixelBar` 9 ô, 71 % |  |
+| 228, 146 | TR | `JBMono-11` | AMBER | `71%` | 21 |
+| 40, 166, w 188 |  |  | LINE | chấm kẻ (1 px mỗi 4 px) |  |
+| 40, 170 | TL | `JBMono-12B` | MUTED | `HÔM NAY` | 49 |
+| 228, 170 | TR | `JBMono-11` | INK_DIM | `CÒN 9H` | 42 |
+| 40, 198, 188×1 |  |  | LINE | khối |  |
+| 40, 195, 1×3 |  |  | INK_DIM | khối |  |
+| 47, 196, 1×2 |  |  | LINE | khối |  |
+| 55, 196, 1×2 |  |  | LINE | khối |  |
+| 63, 196, 1×2 |  |  | LINE | khối |  |
+| 71, 196, 1×2 |  |  | LINE | khối |  |
+| 79, 196, 1×2 |  |  | LINE | khối |  |
+| 87, 195, 1×3 |  |  | INK_DIM | khối |  |
+| 94, 196, 1×2 |  |  | LINE | khối |  |
+| 102, 196, 1×2 |  |  | LINE | khối |  |
+| 110, 196, 1×2 |  |  | LINE | khối |  |
+| 118, 196, 1×2 |  |  | LINE | khối |  |
+| 126, 196, 1×2 |  |  | LINE | khối |  |
+| 134, 195, 1×3 |  |  | INK_DIM | khối |  |
+| 141, 196, 1×2 |  |  | LINE | khối |  |
+| 149, 192, 1×6 |  |  | CORAL | khối |  |
+| 157, 196, 1×2 |  |  | LINE | khối |  |
+| 165, 196, 1×2 |  |  | LINE | khối |  |
+| 173, 196, 1×2 |  |  | LINE | khối |  |
+| 181, 195, 1×3 |  |  | INK_DIM | khối |  |
+| 188, 196, 1×2 |  |  | LINE | khối |  |
+| 196, 196, 1×2 |  |  | LINE | khối |  |
+| 204, 196, 1×2 |  |  | LINE | khối |  |
+| 212, 196, 1×2 |  |  | LINE | khối |  |
+| 220, 196, 1×2 |  |  | LINE | khối |  |
+| 148, 190, 3×3 |  |  | AMBER | khối |  |
+| 228, 204 | TR | `JBMono-11` | MUTED | `192.168.100.40` | 98 |
+| 2, 34, 30×150 |  |  | nhấn AMBER | Dock (`Dock.dc.html`), tab đang hiện `claude`, huy hiệu Claude 1 / Tin nhắn 3 |  |
+| 0, 230, 96×2 |  |  | AMBER | khối |  |
+
+### Agents-Dock — Agents · có dock
+
+Nguồn `source/Agents-Dock.dc.html` · ảnh `screens/@2x/AgentsDock.png`
+
+| x, y (w×h) | datum | font | màu | nội dung | px |
+|---|---|---|---|---|---|
+| 0, 0, 240×22 | MC / MR | `JBMono-12B` / `JBMono-11` | INK / nhấn AMBER | Status bar `Tác tử` · meta `3 MỤC` (MUTED, 35 px); gạch nhấn y 22 | 42 |
+| 40, 36, 6×6 |  |  | AMBER | khối |  |
+| 54, 32 | TL | `JBMono-11` | INK | `Cần bạn · Bash` | 98 |
+| 54, 47 | TL | `JBMono-11` | MUTED | `claude · glimmer · 2m` | 147 |
+| 40, 76, 188×1 |  |  | LINE | khối |  |
+| 40, 96, 6×6 |  |  | LILAC | khối |  |
+| 54, 92 | TL | `JBMono-11` | INK | `Tests · 64%` | 77 |
+| 54, 107 | TL | `JBMono-11` | MUTED | `codex · api · 5m` | 112 |
+| 40, 136, 188×1 |  |  | LINE | khối |  |
+| 40, 156, 6×6 |  |  | MINT | khối |  |
+| 54, 152 | TL | `JBMono-11` | INK | `Xong` | 28 |
+| 54, 167 | TL | `JBMono-11` | MUTED | `claude · TieuMac3d · 12m` | 168 |
+| 2, 34, 30×150 |  |  | nhấn AMBER | Dock (`Dock.dc.html`), tab đang hiện `claude`, huy hiệu Claude 1 / Tin nhắn 3 |  |
+| 0, 230, 96×2 |  |  | AMBER | khối |  |
+
+### Codex-Dock — Codex · có dock
+
+Nguồn `source/Codex-Dock.dc.html` · ảnh `screens/@2x/CodexDock.png`
+
+| x, y (w×h) | datum | font | màu | nội dung | px |
+|---|---|---|---|---|---|
+| 0, 0, 240×22 | MC / MR | `JBMono-12B` / `JBMono-11` | INK / nhấn LILAC | Status bar `Codex`; gạch nhấn y 22 | 35 |
+| 40, 32 | TL | `JBMono-12B` | MUTED | `TUẦN` | 28 |
+| 228, 26 | TR | `VT323-32` | LILAC | `3d` | 26 |
+| 40, 46 | TL | `VT323-86` | MINT | `41` | 68 |
+| 110, 76 | TL | `VT323-44` | MINT | `%` | 18 |
+| 40, 128, 188×8 |  |  | MINT | `pixelBar` 9 ô, 41 % |  |
+| 40, 146, w 188 |  |  | LINE | chấm kẻ (1 px mỗi 4 px) |  |
+| 40, 150 | TL | `JBMono-11` | MUTED | `SPARK` | 35 |
+| 228, 150 | TR | `JBMono-11` | INK_DIM | `2h 14m` | 42 |
+| 40, 164, 188×4 |  |  | MINT | `pixelBar` 9 ô, 12 % |  |
+| 40, 170, w 188 |  |  | LINE | chấm kẻ (1 px mỗi 4 px) |  |
+| 40, 174 | TL | `JBMono-11` | MUTED | `24H` | 21 |
+| 228, 174 | TR | `JBMono-11` | INK_DIM | `~70% KHI ĐẶT LẠI` | 112 |
+| 40, 188 | TL | `JBMono-11` | MINT | `ĐẶT LẠI` | 49 |
+| 228, 188 | TR | `JBMono-11` | INK_DIM | `CÒN 2 · 3NG` | 77 |
+| 40, 219, 6×1 |  |  | LINE | khối |  |
+| 47, 219, 6×1 |  |  | LINE | khối |  |
+| 54, 219, 6×1 |  |  | LINE | khối |  |
+| 61, 219, 6×1 |  |  | LINE | khối |  |
+| 68, 219, 6×1 |  |  | LINE | khối |  |
+| 75, 208, 6×12 |  |  | INK_DIM | khối |  |
+| 82, 208, 6×12 |  |  | INK_DIM | khối |  |
+| 89, 209, 6×11 |  |  | INK_DIM | khối |  |
+| 96, 209, 6×11 |  |  | INK_DIM | khối |  |
+| 103, 209, 6×11 |  |  | INK_DIM | khối |  |
+| 110, 209, 6×11 |  |  | INK_DIM | khối |  |
+| 117, 209, 6×11 |  |  | INK_DIM | khối |  |
+| 124, 209, 6×11 |  |  | INK_DIM | khối |  |
+| 131, 209, 6×11 |  |  | INK_DIM | khối |  |
+| 138, 209, 6×11 |  |  | INK_DIM | khối |  |
+| 145, 209, 6×11 |  |  | INK_DIM | khối |  |
+| 152, 210, 6×10 |  |  | INK_DIM | khối |  |
+| 159, 210, 6×10 |  |  | INK_DIM | khối |  |
+| 166, 210, 6×10 |  |  | INK_DIM | khối |  |
+| 173, 210, 6×10 |  |  | INK_DIM | khối |  |
+| 180, 210, 6×10 |  |  | INK_DIM | khối |  |
+| 187, 210, 6×10 |  |  | INK_DIM | khối |  |
+| 194, 210, 6×10 |  |  | INK_DIM | khối |  |
+| 201, 210, 6×10 |  |  | LILAC | khối |  |
+| 2, 34, 30×150 |  |  | nhấn LILAC | Dock (`Dock.dc.html`), tab đang hiện `claude`, huy hiệu Claude 1 / Tin nhắn 3 |  |
+| 0, 230, 96×2 |  |  | LILAC | khối |  |
+
+### AI-Dock — AI · có dock
+
+Nguồn `source/AI-Dock.dc.html` · ảnh `screens/@2x/AIDock.png`
+
+| x, y (w×h) | datum | font | màu | nội dung | px |
+|---|---|---|---|---|---|
+| 0, 0, 240×22 | MC / MR | `JBMono-12B` / `JBMono-11` | INK / nhấn INK_DIM | Status bar `AI hôm nay` · meta `$4.20` (MUTED, 35 px); gạch nhấn y 22 | 70 |
+| 40, 32 | TL | `JBMono-12B` | CORAL | `CLAUDE` | 42 |
+| 228, 32 | TR | `JBMono-12B` | LILAC | `CODEX` | 35 |
+| 40, 50 | TL | `VT323-32` | MINT | `38%` | 39 |
+| 228, 50 | TR | `VT323-32` | AMBER | `71%` | 39 |
+| 40, 92, 188×10 |  |  | MINT | `pixelBar` 9 ô, 38 % |  |
+| 40, 110, 188×10 |  |  | AMBER | `pixelBar` 9 ô, 71 % |  |
+| 40, 130, w 188 |  |  | LINE | chấm kẻ (1 px mỗi 4 px) |  |
+| 40, 138 | TL | `JBMono-11` | MUTED | `ĐẶT LẠI` | 49 |
+| 40, 158 | TL | `JBMono-12B` | CORAL | `CL` | 14 |
+| 228, 158 | TR | `JBMono-11` | INK_DIM | `2h 14m` | 42 |
+| 40, 174 | TL | `JBMono-12B` | LILAC | `CX` | 14 |
+| 228, 174 | TR | `JBMono-11` | INK_DIM | `3d` | 14 |
+| 40, 192, w 188 |  |  | LINE | chấm kẻ (1 px mỗi 4 px) |  |
+| 134, 198 | TC | `JBMono-11` | INK | `DÙNG CLAUDE · ĐẶT LẠI 2G` | 168 |
+| 2, 34, 30×150 |  |  | nhấn INK_DIM | Dock (`Dock.dc.html`), tab đang hiện `claude`, huy hiệu Claude 1 / Tin nhắn 3 |  |
+| 0, 230, 96×2 |  |  | INK_DIM | khối |  |
+
+### Trend-Dock — Trend · có dock
+
+Nguồn `source/Trend-Dock.dc.html` · ảnh `screens/@2x/TrendDock.png`
+
+| x, y (w×h) | datum | font | màu | nội dung | px |
+|---|---|---|---|---|---|
+| 0, 0, 240×22 | MC / MR | `JBMono-12B` / `JBMono-11` | INK / nhấn MINT | Status bar `Xu hướng` · meta `7 NGÀY` (MUTED, 42 px); gạch nhấn y 22 | 56 |
+| 40, 30 | TL | `JBMono-12B` | CORAL | `CLAUDE` | 42 |
+| 228, 31 | TR | `JBMono-11` | MUTED | `HÔM NAY 9 · ĐỈNH T2` | 133 |
+| 40, 90, 23×1 |  |  | LINE | khối |  |
+| 40, 68, 23×22 |  |  | INK_DIM | khối |  |
+| 67, 90, 23×1 |  |  | LINE | khối |  |
+| 67, 57, 23×33 |  |  | INK_DIM | khối |  |
+| 94, 90, 23×1 |  |  | LINE | khối |  |
+| 94, 79, 23×11 |  |  | INK_DIM | khối |  |
+| 121, 90, 23×1 |  |  | LINE | khối |  |
+| 148, 90, 23×1 |  |  | LINE | khối |  |
+| 148, 46, 23×44 |  |  | INK_DIM | khối |  |
+| 175, 90, 23×1 |  |  | LINE | khối |  |
+| 175, 61, 23×29 |  |  | INK_DIM | khối |  |
+| 202, 90, 23×1 |  |  | LINE | khối |  |
+| 202, 57, 23×33 |  |  | CORAL | khối |  |
+| 40, 98 | TL | `JBMono-12B` | LILAC | `CODEX` | 35 |
+| 228, 99 | TR | `JBMono-11` | MUTED | `HÔM NAY 4 · ĐỈNH CN` | 133 |
+| 40, 158, 23×1 |  |  | LINE | khối |  |
+| 40, 143, 23×15 |  |  | INK_DIM | khối |  |
+| 67, 158, 23×1 |  |  | LINE | khối |  |
+| 67, 151, 23×7 |  |  | INK_DIM | khối |  |
+| 94, 158, 23×1 |  |  | LINE | khối |  |
+| 94, 140, 23×18 |  |  | INK_DIM | khối |  |
+| 121, 158, 23×1 |  |  | LINE | khối |  |
+| 121, 132, 23×26 |  |  | INK_DIM | khối |  |
+| 148, 158, 23×1 |  |  | LINE | khối |  |
+| 148, 147, 23×11 |  |  | INK_DIM | khối |  |
+| 175, 158, 23×1 |  |  | LINE | khối |  |
+| 175, 136, 23×22 |  |  | INK_DIM | khối |  |
+| 202, 158, 23×1 |  |  | LINE | khối |  |
+| 202, 143, 23×15 |  |  | LILAC | khối |  |
+| 51, 168 | TC | `JBMono-11` | MUTED | `TH` | 14 |
+| 78, 168 | TC | `JBMono-11` | MUTED | `FR` | 14 |
+| 105, 168 | TC | `JBMono-11` | MUTED | `SA` | 14 |
+| 132, 168 | TC | `JBMono-11` | MUTED | `SU` | 14 |
+| 159, 168 | TC | `JBMono-11` | MUTED | `MO` | 14 |
+| 186, 168 | TC | `JBMono-11` | MUTED | `TU` | 14 |
+| 213, 168 | TC | `JBMono-11` | INK | `WE` | 14 |
+| 134, 194 | TC | `JBMono-11` | MUTED | `% hạn mức tuần mỗi ngày` | 161 |
+| 2, 34, 30×150 |  |  | nhấn MINT | Dock (`Dock.dc.html`), tab đang hiện `claude`, huy hiệu Claude 1 / Tin nhắn 3 |  |
+| 0, 230, 96×2 |  |  | MINT | khối |  |
+
+### Weather-Dock — Weather · có dock
+
+Nguồn `source/Weather-Dock.dc.html` · ảnh `screens/@2x/WeatherDock.png`
+
+| x, y (w×h) | datum | font | màu | nội dung | px |
+|---|---|---|---|---|---|
+| 0, 0, 240×22 | MC / MR | `JBMono-12B` / `JBMono-11` | INK / nhấn SKY | Status bar `Thời tiết` · meta `LẶN 17:24` (MUTED, 63 px); gạch nhấn y 22 | 63 |
+| 40, 32 | TL | `VT323-86` | INK | `29` | 68 |
+| 110, 42 | TL | `VT323-32` | SKY | `°` | 13 |
+| 228, 36 | TR | `JBMono-11` | MUTED | `cảm giác 33°` | 84 |
+| 228, 54 | TR | `JBMono-11` | MUTED | `ẩm 74%` | 42 |
+| 228, 72 | TR | `JBMono-11` | MUTED | `gió 12km` | 56 |
+| 228, 90 | TR | `JBMono-11` | AMBER | `UV 7` | 28 |
+| 40, 117, 16×16 |  |  | SKY | bitmap `PARTCLOUD` |  |
+| 60, 118 | TL | `JBMono-13` | INK_DIM | `Ít mây` | 48 |
+| 228, 119 | TR | `JBMono-11` | INK_DIM | `31°/24°` | 49 |
+| 40, 140, w 188 |  |  | LINE | chấm kẻ (1 px mỗi 4 px) |  |
+| 40, 150, 92×64 |  |  | PANEL | khối |  |
+| 40, 150, 92×64 |  |  | LINE | viền 1 px |  |
+| 86, 160 | MC | `JBMono-12B` | MUTED | `MAI` | 21 |
+| 86, 180 | MC | `VT323-32` | INK | `30/24` | 65 |
+| 86, 202 | MC | `JBMono-11` | MUTED | `Mưa rào` | 49 |
+| 136, 150, 92×64 |  |  | PANEL | khối |  |
+| 136, 150, 92×64 |  |  | LINE | viền 1 px |  |
+| 182, 160 | MC | `JBMono-12B` | MUTED | `KIA` | 21 |
+| 182, 180 | MC | `VT323-32` | INK | `28/23` | 65 |
+| 182, 202 | MC | `JBMono-11` | MUTED | `Mưa` | 21 |
+| 2, 34, 30×150 |  |  | nhấn SKY | Dock (`Dock.dc.html`), tab đang hiện `weather`, huy hiệu Claude 1 / Tin nhắn 3 |  |
+| 0, 230, 96×2 |  |  | SKY | khối |  |
+
+### Forecast-Dock — Forecast · có dock
+
+Nguồn `source/Forecast-Dock.dc.html` · ảnh `screens/@2x/ForecastDock.png`
+
+| x, y (w×h) | datum | font | màu | nội dung | px |
+|---|---|---|---|---|---|
+| 0, 0, 240×22 | MC / MR | `JBMono-12B` / `JBMono-11` | INK / nhấn SKY | Status bar `Dự báo` · meta `3 NGÀY` (MUTED, 42 px); gạch nhấn y 22 | 42 |
+| 36, 32, 204×52 |  |  | PANEL | khối |  |
+| 36, 32, 2×52 |  |  | CORAL | khối |  |
+| 44, 36 | TL | `JBMono-16B` | INK | `NAY` | 30 |
+| 44, 58, 16×16 |  |  | SKY | bitmap `PARTCLOUD` |  |
+| 62, 60 | TL | `JBMono-11` | MUTED | `Ít mây` | 42 |
+| 104, 42, 92×8 |  |  | PANEL2 | khối |  |
+| 115, 42, 81×8 |  |  | xanh→đỏ | đoạn nhiệt min→max (chuyển màu) |  |
+| 206, 60 | TR | `JBMono-11` | MUTED | `24` | 14 |
+| 228, 60 | TR | `JBMono-11` | INK | `31` | 14 |
+| 36, 88, 2×52 |  |  | LINE | khối |  |
+| 44, 92 | TL | `JBMono-16B` | INK_DIM | `MAI` | 30 |
+| 44, 114, 16×16 |  |  | MUTED | bitmap `RAIN` |  |
+| 62, 116 | TL | `JBMono-11` | MUTED | `Mưa rào` | 49 |
+| 104, 98, 92×8 |  |  | PANEL2 | khối |  |
+| 115, 98, 70×8 |  |  | xanh→đỏ | đoạn nhiệt min→max (chuyển màu) |  |
+| 206, 116 | TR | `JBMono-11` | MUTED | `24` | 14 |
+| 228, 116 | TR | `JBMono-11` | INK | `30` | 14 |
+| 36, 144, 2×52 |  |  | LINE | khối |  |
+| 44, 148 | TL | `JBMono-16B` | INK_DIM | `KIA` | 30 |
+| 44, 170, 16×16 |  |  | MUTED | bitmap `RAIN` |  |
+| 62, 172 | TL | `JBMono-11` | MUTED | `Mưa` | 21 |
+| 104, 154, 92×8 |  |  | PANEL2 | khối |  |
+| 104, 154, 58×8 |  |  | xanh→đỏ | đoạn nhiệt min→max (chuyển màu) |  |
+| 206, 172 | TR | `JBMono-11` | MUTED | `23` | 14 |
+| 228, 172 | TR | `JBMono-11` | INK | `28` | 14 |
+| 2, 34, 30×150 |  |  | nhấn SKY | Dock (`Dock.dc.html`), tab đang hiện `weather`, huy hiệu Claude 1 / Tin nhắn 3 |  |
+| 0, 230, 96×2 |  |  | SKY | khối |  |
+
+### Clock-Dock — Clock · có dock
+
+Nguồn `source/Clock-Dock.dc.html` · ảnh `screens/@2x/ClockDock.png`
+
+| x, y (w×h) | datum | font | màu | nội dung | px |
+|---|---|---|---|---|---|
+| 0, 0, 240×22 | MC / MR | `JBMono-12B` / `JBMono-11` | INK / nhấn AMBER | Status bar `Đồng hồ` · meta `tuần 48` (MUTED, 49 px); gạch nhấn y 22 | 49 |
+| 134, 32 | TC | `JBMono-11` | MUTED | `THỨ TƯ · 25/11` | 98 |
+| 49, 50 | TL | `VT323-86` | INK | `14` | 68 |
+| 117, 50 | TL | `VT323-86` | CORAL | `:` | 34 |
+| 151, 50 | TL | `VT323-86` | INK | `32` | 68 |
+| 134, 148 | MC | `JBMono-13` | INK_DIM | `chào buổi chiều, bạn` | 160 |
+| 52, 178, 4×4 |  |  | AMBER | khối |  |
+| 59, 178, 4×4 |  |  | AMBER | khối |  |
+| 66, 178, 4×4 |  |  | AMBER | khối |  |
+| 73, 178, 4×4 |  |  | AMBER | khối |  |
+| 80, 178, 4×4 |  |  | AMBER | khối |  |
+| 87, 178, 4×4 |  |  | AMBER | khối |  |
+| 94, 178, 4×4 |  |  | AMBER | khối |  |
+| 101, 178, 4×4 |  |  | AMBER | khối |  |
+| 108, 178, 4×4 |  |  | AMBER | khối |  |
+| 115, 178, 4×4 |  |  | AMBER | khối |  |
+| 122, 178, 4×4 |  |  | AMBER | khối |  |
+| 129, 178, 4×4 |  |  | AMBER | khối |  |
+| 136, 178, 4×4 |  |  | AMBER | khối |  |
+| 143, 178, 4×4 |  |  | AMBER | khối |  |
+| 150, 178, 4×4 |  |  | INK | khối |  |
+| 157, 178, 4×4 |  |  | LINE | khối |  |
+| 164, 178, 4×4 |  |  | LINE | khối |  |
+| 171, 178, 4×4 |  |  | LINE | khối |  |
+| 178, 178, 4×4 |  |  | LINE | khối |  |
+| 185, 178, 4×4 |  |  | LINE | khối |  |
+| 192, 178, 4×4 |  |  | LINE | khối |  |
+| 199, 178, 4×4 |  |  | LINE | khối |  |
+| 206, 178, 4×4 |  |  | LINE | khối |  |
+| 213, 178, 4×4 |  |  | LINE | khối |  |
+| 2, 34, 30×150 |  |  | nhấn AMBER | Dock (`Dock.dc.html`), tab đang hiện `clock`, huy hiệu Claude 1 / Tin nhắn 3 |  |
+| 0, 230, 96×2 |  |  | AMBER | khối |  |
+
+### Info-Dock — Info · có dock
+
+Nguồn `source/Info-Dock.dc.html` · ảnh `screens/@2x/InfoDock.png`
+
+| x, y (w×h) | datum | font | màu | nội dung | px |
+|---|---|---|---|---|---|
+| 0, 0, 240×22 | MC / MR | `JBMono-12B` / `JBMono-11` | INK / nhấn MINT | Status bar `Thông tin` · meta `CHẨN ĐOÁN` (MUTED, 63 px); gạch nhấn y 22 | 63 |
+| 40, 30 | TL | `JBMono-11` | MUTED | `IP` | 14 |
+| 228, 30 | TR | `JBMono-11` | INK | `192.168.100.40` | 98 |
+| 40, 45, w 188 |  |  | LINE | chấm kẻ (1 px mỗi 4 px) |  |
+| 40, 49 | TL | `JBMono-11` | MUTED | `SSID` | 28 |
+| 228, 49 | TR | `JBMono-11` | INK | `Anh Viet` | 56 |
+| 40, 64, w 188 |  |  | LINE | chấm kẻ (1 px mỗi 4 px) |  |
+| 40, 68 | TL | `JBMono-11` | MUTED | `Sóng` | 28 |
+| 228, 68 | TR | `JBMono-11` | MINT | `-58 dBm` | 49 |
+| 40, 83, w 188 |  |  | LINE | chấm kẻ (1 px mỗi 4 px) |  |
+| 40, 87 | TL | `JBMono-11` | MUTED | `Đã chạy` | 49 |
+| 228, 87 | TR | `JBMono-11` | INK_DIM | `312m` | 28 |
+| 40, 102, w 188 |  |  | LINE | chấm kẻ (1 px mỗi 4 px) |  |
+| 40, 106 | TL | `JBMono-11` | MUTED | `Bộ nhớ` | 42 |
+| 228, 106 | TR | `JBMono-11` | AMBER | `27K trống` | 63 |
+| 40, 121, w 188 |  |  | LINE | chấm kẻ (1 px mỗi 4 px) |  |
+| 40, 125 | TL | `JBMono-11` | MUTED | `Khối lớn` | 56 |
+| 228, 125 | TR | `JBMono-11` | INK_DIM | `21K` | 21 |
+| 40, 140, w 188 |  |  | LINE | chấm kẻ (1 px mỗi 4 px) |  |
+| 40, 144 | TL | `JBMono-11` | MUTED | `Firmware` | 56 |
+| 228, 144 | TR | `JBMono-11` | INK_DIM | `v0.23.0-glimmer` | 105 |
+| 40, 159, w 188 |  |  | LINE | chấm kẻ (1 px mỗi 4 px) |  |
+| 40, 163 | TL | `JBMono-11` | MUTED | `Kênh` | 28 |
+| 228, 163 | TR | `JBMono-11` | INK_DIM | `9 / 13` | 42 |
+| 40, 178, w 188 |  |  | LINE | chấm kẻ (1 px mỗi 4 px) |  |
+| 40, 182 | TL | `JBMono-11` | MUTED | `Cập nhật` | 56 |
+| 228, 182 | TR | `JBMono-11` | INK_DIM | `1m trước` | 56 |
+| 40, 197, w 188 |  |  | LINE | chấm kẻ (1 px mỗi 4 px) |  |
+| 40, 201 | TL | `JBMono-11` | MUTED | `Lần tới` | 49 |
+| 228, 201 | TR | `JBMono-11` | MINT | `sau 4m` | 42 |
+| 2, 34, 30×150 |  |  | nhấn MINT | Dock (`Dock.dc.html`), tab đang hiện `none`, huy hiệu Claude 1 / Tin nhắn 3 |  |
+| 0, 230, 96×2 |  |  | MINT | khối |  |
+
+### Setup-Dock — Setup · có dock
+
+Nguồn `source/Setup-Dock.dc.html` · ảnh `screens/@2x/SetupDock.png`
+
+| x, y (w×h) | datum | font | màu | nội dung | px |
+|---|---|---|---|---|---|
+| 0, 0, 240×22 | MC / MR | `JBMono-12B` / `JBMono-11` | INK / nhấn AMBER | Status bar `glimmer` · meta `CÀI ĐẶT` (AMBER, 49 px); gạch nhấn y 22 | 49 |
+| 134, 40 | MC | `JBMono-12B` | AMBER | `HOÀN TẤT CÀI ĐẶT` | 112 |
+| 44, 63, 11×11 |  |  | LINE | viền 1 px |  |
+| 62, 62 | TL | `JBMono-11` | INK | `Khóa Claude` | 77 |
+| 228, 62 | TR | `JBMono-11` | MUTED | `Tài khoản` | 63 |
+| 44, 85, 11×11 |  |  | LINE | viền 1 px |  |
+| 62, 84 | TL | `JBMono-11` | INK | `Token Codex` | 77 |
+| 228, 84 | TR | `JBMono-11` | MUTED | `Tài khoản` | 63 |
+| 44, 107, 11×11 |  |  | MINT | viền 1 px |  |
+| 47, 110, 5×5 |  |  | MINT | khối |  |
+| 62, 106 | TL | `JBMono-11` | INK_DIM | `Thời tiết` | 63 |
+| 228, 106 | TR | `JBMono-11` | MUTED | `Vị trí & giờ` | 84 |
+| 52, 140, w 164 |  |  | LINE | chấm kẻ (1 px mỗi 4 px) |  |
+| 134, 158 | MC | `JBMono-11` | MUTED | `mở trong trình duyệt` | 140 |
+| 134, 180 | MC | `JBMono-16B` | SKY | `glimmer.local` | 130 |
+| 134, 202 | MC | `JBMono-11` | MUTED | `192.168.100.40` | 98 |
+| 2, 34, 30×150 |  |  | nhấn AMBER | Dock (`Dock.dc.html`), tab đang hiện `claude`, huy hiệu Claude 1 / Tin nhắn 3 |  |
+| 0, 230, 96×2 |  |  | AMBER | khối |  |
