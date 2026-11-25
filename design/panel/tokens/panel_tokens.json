@@ -1,0 +1,202 @@
+{
+  "meta": {
+    "name": "glimmer panel",
+    "version": "P-2026-11-25.1",
+    "frame": {
+      "width": 240,
+      "height": 240,
+      "unit": "px"
+    },
+    "note": "Chép tay sang src/core/theme.h và data/fonts/ — không có script sinh. Panel chạy invertDisplay(true); giá trị dưới là màu thiết kế."
+  },
+  "zone": {
+    "status": [
+      0,
+      21
+    ],
+    "accentLine": 22,
+    "content": [
+      24,
+      219
+    ],
+    "gap": [
+      220,
+      229
+    ],
+    "indicator": {
+      "y": 230,
+      "h": 2
+    }
+  },
+  "color": {
+    "bg": {
+      "value": "#000000",
+      "rgb565": "0x0000",
+      "use": "Nền mọi màn (đừng đổi: #0E0D12 lên panel thành xám xanh)"
+    },
+    "panel": {
+      "value": "#1F1A28",
+      "rgb565": "0x20C5",
+      "use": "Ô ngày Weather, dòng hôm nay Forecast, ô tắt của pixelBar"
+    },
+    "panel2": {
+      "value": "#2A2236",
+      "rgb565": "0x2907",
+      "use": "Rãnh thanh nhiệt Forecast"
+    },
+    "line": {
+      "value": "#34293F",
+      "rgb565": "0x3148",
+      "use": "Viền, kẻ, chấm kẻ, chấm tải tắt"
+    },
+    "ink": {
+      "value": "#FFF8E8",
+      "rgb565": "0xFFBC",
+      "use": "Chữ chính"
+    },
+    "inkDim": {
+      "value": "#D8CDB8",
+      "rgb565": "0xD676",
+      "use": "Chữ phụ sáng, cột ngày cũ"
+    },
+    "muted": {
+      "value": "#8A7F96",
+      "rgb565": "0x8BF2",
+      "use": "Nhãn, meta, chữ phụ"
+    },
+    "coral": {
+      "value": "#FF5247",
+      "rgb565": "0xFA89",
+      "use": "Nhấn Claude; lỗi; còn ≤ 20 %"
+    },
+    "amber": {
+      "value": "#FFD23F",
+      "rgb565": "0xFE88",
+      "use": "Nhấn Clock / Home / Setup; cần duyệt; còn ≤ 50 %; dữ liệu cũ"
+    },
+    "mint": {
+      "value": "#8FE574",
+      "rgb565": "0x8F2E",
+      "use": "Nhấn Info / Trend; xong; còn > 50 %"
+    },
+    "sky": {
+      "value": "#54B6FF",
+      "rgb565": "0x55BF",
+      "use": "Nhấn Weather / Forecast; câu hỏi; glimmer.local"
+    },
+    "lilac": {
+      "value": "#C385FF",
+      "rgb565": "0xC43F",
+      "use": "Nhấn Codex; đang chạy / tiến độ"
+    },
+    "clawd": {
+      "value": "#D97757",
+      "rgb565": "0xDBAA",
+      "use": "Linh vật Clawd (Claude)"
+    }
+  },
+  "font": {
+    "jb11": {
+      "file": "JBMono-11",
+      "family": "JetBrains Mono",
+      "size": 11,
+      "weight": 400,
+      "line": 13,
+      "use": "Chữ phụ, meta, dòng bảng"
+    },
+    "jb13": {
+      "file": "JBMono-13",
+      "family": "JetBrains Mono",
+      "size": 13,
+      "weight": 400,
+      "line": 14,
+      "use": "Lời chào Clock, mô tả Weather"
+    },
+    "jb12b": {
+      "file": "JBMono-12B",
+      "family": "JetBrains Mono",
+      "size": 12,
+      "weight": 700,
+      "line": 15,
+      "use": "Tiêu đề status bar, nhãn"
+    },
+    "jb16b": {
+      "file": "JBMono-16B",
+      "family": "JetBrains Mono",
+      "size": 16,
+      "weight": 700,
+      "line": 20,
+      "use": "Tiêu đề thẻ, thông báo giữa màn"
+    },
+    "vt32": {
+      "file": "VT323-32",
+      "family": "VT323",
+      "size": 32,
+      "weight": 400,
+      "line": 26,
+      "use": "Số vừa (nhiệt độ, %, đếm ngược)"
+    },
+    "vt44": {
+      "file": "VT323-44",
+      "family": "VT323",
+      "size": 44,
+      "weight": 400,
+      "line": 36,
+      "use": "Ký hiệu %, số OTA"
+    },
+    "vt86": {
+      "file": "VT323-86",
+      "family": "VT323",
+      "size": 86,
+      "weight": 400,
+      "line": 70,
+      "use": "Số to (chỉ chữ số và :)"
+    }
+  },
+  "slot": {
+    "statusTitle": 88,
+    "statusMeta": 72
+  },
+  "component": {
+    "statusBar": {
+      "h": 22,
+      "title": "jb12b INK MC (120, 11)",
+      "meta": "jb11 MR (236, 11)",
+      "accentLine": "y 22, 1 px, màu kênh"
+    },
+    "pixelBar": {
+      "segments": 9,
+      "gap": 1,
+      "outline": "line",
+      "off": "panel",
+      "rule": "ô i sáng khi pct > i × 11.11 — không tô một phần ô"
+    },
+    "dotsDivider": {
+      "step": 4,
+      "color": "line"
+    },
+    "loadingDots": {
+      "size": 6,
+      "step": 9,
+      "on": "màu kênh",
+      "off": "line"
+    },
+    "clawd": {
+      "grid": [
+        18,
+        10
+      ],
+      "eyes": [
+        "open",
+        "wide",
+        "happy",
+        "shut",
+        "sad"
+      ],
+      "legs": [
+        "stand",
+        "walk"
+      ]
+    }
+  }
+}
