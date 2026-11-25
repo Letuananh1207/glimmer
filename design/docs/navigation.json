@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-25.3",
+  "version": "2026-11-25.4",
   "start": "Connect",
   "rule": "Chưa kết nối được thiết bị → Connect. Kết nối được → khung 4 tab: tab 1 = Màn hình (Dashboard) chia theo các tab dock đang bật, tab 2 = Skills (bật / tắt), tab 3 = Settings, tab 4 = Device. Settings và Device dùng chung; Connect và WifiSetup ngoài khung tab.",
   "screens": {
@@ -27,24 +27,35 @@
         "weather",
         "weatherNoLoc",
         "clock",
-        "single"
+        "single",
+        "photo",
+        "photoEmpty",
+        "photoFull",
+        "photoAdd",
+        "photoDelete",
+        "photoDeleting",
+        "photoDeleteError"
       ],
       "refresh": "Kéo để làm mới; tự làm mới mỗi 5 s khi app mở",
       "dockTabs": {
         "order": [
           "agent",
-          "chat",
+          "photo",
           "weather",
-          "clock"
+          "clock",
+          "chat"
         ],
         "show": "Chỉ skill đang bật; một skill bật → không có thanh tab",
         "badge": "Tab agent: số agent chờ (approval + input); cũng ở tab 1 thanh dưới",
         "agent": "Thân Tổng quan cũ (mức dùng, project, thẻ)",
         "weather": "Thời tiết hôm nay + 3 ngày; chưa có vị trí → nút sang Settings",
-        "clock": "Giờ thiết bị, múi giờ, kiểu giờ, ban đêm"
+        "clock": "Giờ thiết bị, múi giờ, kiểu giờ, ban đêm",
+        "photo": "Lưới ảnh trên thiết bị (GET /api/photos), ô + Thêm ảnh → bảng chọn nguồn → PhotoCrop; bấm ảnh → hỏi xoá (DELETE /api/photos). Hình thu nhỏ = bản sao app giữ của ảnh đã gửi",
+        "layout": "≥ 4 tab: icon trên, nhãn dưới (ô 56); 2–3 tab: icon cạnh nhãn (ô 48)"
       },
       "to": {
-        "Settings": "Nút 'Đặt vị trí trong Cài đặt' (weatherNoLoc)"
+        "Settings": "Nút 'Đặt vị trí trong Cài đặt' (weatherNoLoc)",
+        "PhotoCrop": "Bảng 'Thêm ảnh' → chọn trong thư viện / chụp ảnh (push)"
       }
     },
     "Settings": {
@@ -89,7 +100,9 @@
         "switching",
         "error",
         "lastOne",
-        "legacy"
+        "legacy",
+        "photoHint",
+        "photoFw"
       ],
       "rules": [
         "R-SK-1",
@@ -99,7 +112,33 @@
         "R-SK-5"
       ],
       "to": {
-        "Device": "Nút 'Cập nhật firmware' ở trạng thái legacy"
+        "Device": "Nút 'Cập nhật firmware' (legacy) / nút 'Cập nhật' trên dòng skill cần firmware (photoFw)"
+      }
+    },
+    "PhotoCrop": {
+      "source": "source/PhotoCrop.dc.html",
+      "route": "push từ Dashboard tab Ảnh, ngoài khung tab (không thanh dưới)",
+      "states": [
+        "crop",
+        "sending",
+        "done",
+        "full",
+        "tooBig",
+        "noSpace",
+        "rejected",
+        "offline"
+      ],
+      "send": "POST /api/photos (multipart photo): JPEG baseline 188×188 ≤ 40 KB; app tự giảm chất lượng trước khi báo tooBig",
+      "errors": {
+        "full": "full",
+        "tooBig": "too_big (413)",
+        "noSpace": "no_space (507)",
+        "rejected": "not_jpeg / progressive / bad_size / truncated / empty (400)",
+        "offline": "lỗi mạng / hết giờ"
+      },
+      "to": {
+        "Dashboard": "Quay lại / 'Xong' / 'Về danh sách ảnh' (về tab Ảnh)",
+        "photoPicker": "'Chọn ảnh khác' / 'Thêm ảnh khác' (mở lại trình chọn ảnh của hệ thống)"
       }
     }
   },
@@ -141,6 +180,16 @@
         "dockTab": "agent",
         "pack": true,
         "default": true
+      },
+      {
+        "id": "photo",
+        "name": "skillPhotoName",
+        "accent": "skillPhoto",
+        "dockTab": "photo",
+        "pack": true,
+        "default": false,
+        "device": "skills_on có photo; ảnh qua /api/photos; /api/state photos = số ảnh",
+        "needsFirmware": "photos có trong /api/state"
       },
       {
         "id": "weather",

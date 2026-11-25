@@ -117,6 +117,14 @@
     "skillClockTint": {
       "value": "rgba(255, 210, 63, 0.16)",
       "use": "Nền ô icon skill Đồng hồ"
+    },
+    "skillPhoto": {
+      "value": "#8FE574",
+      "use": "Màu nhấn skill Ảnh (= mint, như kênh Photo trên thiết bị)"
+    },
+    "skillPhotoTint": {
+      "value": "rgba(143, 229, 116, 0.16)",
+      "use": "Nền ô icon skill Ảnh; nền ô \"+ Thêm ảnh\" dùng mint 8 %"
     }
   },
   "font": {
@@ -237,7 +245,12 @@
     "switchW": 52,
     "switchH": 32,
     "chip": 36,
-    "headerClawd": 44
+    "headerClawd": 44,
+    "dockTabStacked": 56,
+    "cropStage": 340,
+    "cropFrame": 260,
+    "devicePreview": 180,
+    "devicePreviewPhoto": 141
   },
   "radius": {
     "card": 14,
@@ -251,7 +264,9 @@
     "dockBar": 14,
     "dockTab": 10,
     "chip": 18,
-    "badge": 4
+    "badge": 4,
+    "photoTile": 10,
+    "sheet": 20
   },
   "border": {
     "hairline": 1

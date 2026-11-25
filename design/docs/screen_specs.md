@@ -18,7 +18,32 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
   `connectManualHint` (label) → ô `connectManualIp` (đã điền IP lần trước) → ô `connectManualToken` (ẩn chữ) → nút chữ
   `commonCancel` + nút chính `connectManualOk` căn phải.
 
-## 2. Màn hình — `DashboardScreen` (Dashboard.png, DashboardEmpty.png, DashboardStale.png, DashboardSetup.png, DashboardLoading.png, DashboardWeather.png, DashboardWeatherNoLocation.png, DashboardClock.png, DashboardSingle.png)
+## 2. Màn hình — `DashboardScreen` (Dashboard.png, DashboardEmpty.png, DashboardStale.png, DashboardSetup.png, DashboardLoading.png, DashboardWeather.png, DashboardWeatherNoLocation.png, DashboardClock.png, DashboardSingle.png, DashboardPhoto.png, DashboardPhotoEmpty.png, DashboardPhotoFull.png, DashboardPhotoAdd.png, DashboardPhotoDelete.png, DashboardPhotoDeleting.png, DashboardPhotoDeleteError.png)
+
+> **2026-11-25.4 — Tab Ảnh** (phiếu `app/docs/phieu_thiet_ke/2026-11-25-gui-anh-len-thiet-bi.md`): skill Ảnh (`photo`, màu nhấn `skillPhoto` = mint) thành tab thứ 2 của
+> `DockTabBar` khi bật. Prop `state` thêm `photo`, `photoEmpty`, `photoFull`, `photoAdd`, `photoDelete`, `photoDeleting`,
+> `photoDeleteError`; ảnh mỗi trạng thái một file `DashboardPhoto*.png`. Cả màn vừa 844 (`photoFull`, `photoDeleteError` 900).
+> - **`DockTabBar` 4 tab** (đã vẽ): lưới 4 cột, tab ≥ 56 (`dockTabStacked`), đệm 0 2, cột: icon ×1.25 + 4 + nhãn 12. Huy hiệu
+>   Agent nằm trên góc phải icon (tuyệt đối: trên 4, giữa + 10). Đang chọn / vạch màu như 3 tab. 2–3 tab giữ bố cục cũ.
+>   Icon tab Ảnh `icons/dock-photo.svg` (khung ảnh 16×11 của dock thiết bị), nhãn `skillPhotoName`.
+> - **Thẻ ảnh** (`photo`): thẻ đệm 16 — nhãn `photoOnDevice` + meta `photoCount` ("5/8 · còn 3 chỗ", muted). Lưới 3 cột
+>   cách 8, lề trên 14, ô vuông bo 10 (`photoTile`). Ô ảnh = hình thu nhỏ phủ kín ô, cả ô là nút (`photoTileA11y`) → hỏi xoá.
+>   Ảnh app không có bản sao (gửi từ trang web thiết bị / máy khác): ô nền `panel2`, icon ảnh ×1.75 muted, tên file 11
+>   inkDim, `photoNoPreview` 10 muted. Ô cuối "+ Thêm ảnh": viền 1.5 đứt mint, nền mint 8 %, "+" 28 + `photoAdd` 13/500 mint
+>   → bảng `photoAdd`. Thứ tự ô = thứ tự trên thiết bị (`photos[]`). Không đánh dấu ảnh đang chiếu (thiết bị không báo).
+> - Dưới thẻ: ô vuông 8 amber + `photoNote` 12 muted (lề 6 20 0) — nhắc cập nhật đầy đủ xoá ảnh. Rồi `ShowOnDeviceButton`
+>   (`homeShowOnDevice`, skill = "Ảnh").
+> - **`photoEmpty`**: meta `photoCountEmpty`; giữa thẻ (đệm 28 8 8): icon ảnh ×3 muted, cách 10 `photoEmptyTitle` 16/700, `photoEmptyBody`
+>   13 inkDim; nút đặc mint cao 48 bo 24, đệm 0 24, "+" 20 + `photoAdd` 14/700 màu bg → bảng chọn nguồn. Không có `photoNote`.
+> - **`photoFull`** (8/8): meta `photoCountFull` amber; ô thêm khoá: viền 1 đứt `line`, ổ khoá 20 + `photoFullTile` 12 muted,
+>   không bấm được; dưới lưới (cách 12) `photoFullBody` 13 inkDim.
+> - **`photoAdd`** (bảng dưới): lớp phủ đen 60 %; bảng nền `panel`, bo trên 20 (`sheet`), đệm 10 20 28: tay nắm 36×4
+>   `line`, cách 14 `photoAdd` 16/700, `photoAddHint` 12 muted, hai dòng ≥ 56 (icon 24 mint + 16 + chữ 15 ink, kẻ `line`):
+>   `photoFromGallery`, `photoFromCamera` → trình chọn / máy ảnh của hệ thống → `PhotoCrop`; nút `commonCancel` cao 48 bo 14 `panel2`.
+> - **`photoDelete`** (hộp thoại): rộng 312, nền `panel`, bo 20, đệm 24, cách 14: `photoDeleteTitle` 18/700; hình ảnh 96 bo
+>   10 + `photoDeleteBody` 13 inkDim; nút chữ `commonCancel` (inkDim) và `photoDelete` (coral 700), cao 44.
+> - **`photoDeleting`**: ô đang xoá phủ bg 66 %, vòng xoay 24 mint + `photoDeleting` 11 ink; ô khác vẫn bấm được.
+> - **`photoDeleteError`**: thanh báo trên thẻ (như lỗi skill): `photoDeleteErrorTitle` coral, `photoDeleteErrorBody`, `commonRetry`.
 
 > **2026-11-25.3 — Màn hình theo tab dock** (phiếu `app/docs/phieu_thiet_ke/2026-11-25-skill-theo-dock.md`): tab 1 của thanh dưới thành **Màn hình** (`navHome`), chia theo
 > các tab dock đang bật giống màn thiết bị. Prop `state` thêm `weather`, `weatherNoLoc`, `clock`, `single`. Ảnh 5 trạng
@@ -125,7 +150,15 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
 - Các trạng thái khác: dòng trạng thái `heading` căn giữa (ink / mint / coral) → 10 → chi tiết `body` → 24 → vòng xoay
   (working) hoặc nút `commonRetry` (failed) / `wifiDoneButton` (done). Đang làm thì không quay lại được.
 
-## 6. Skill — `SkillsScreen` (Skills.png, SkillsSwitching.png, SkillsError.png, SkillsLegacy.png, SkillsLastOne.png)
+## 6. Skill — `SkillsScreen` (Skills.png, SkillsSwitching.png, SkillsError.png, SkillsLegacy.png, SkillsLastOne.png, SkillsPhotoHint.png, SkillsPhotoFirmware.png)
+
+> **2026-11-25.4 — Dòng skill Ảnh** (phiếu `app/docs/phieu_thiet_ke/2026-11-25-gui-anh-len-thiet-bi.md`): `SkillRow` Ảnh đứng thứ 2 (thứ tự dock: Agent, Ảnh, Thời tiết, Đồng hồ),
+> icon `dock-photo` ×1.5, màu nhấn `skillPhoto`, `skillPhotoName` / `skillPhotoDesc`; **mặc định tắt**. Có thêm trong mọi
+> trạng thái trừ `legacy`. Prop `state` thêm `photoHint`, `photoFw`. Màn cao 900 (lỗi 990) vì thêm một dòng; ảnh 4 trạng
+> thái cũ (trừ legacy) chụp lại + `SkillsPhotoHint.png`, `SkillsPhotoFirmware.png`.
+> - **`photoHint`** (skill Ảnh tắt, `/api/state` `photos` > 0): mô tả thay bằng `skillsPhotoHint` màu mint.
+> - **`photoFw`** (firmware không có `photos` trong `/api/state`): ô icon nền `panel2` icon muted, mô tả `skillsNeedFirmware`
+>   amber; thay công tắc bằng nút viền ≥ 44 bo 22 (viền `line`, icon tải firmware 16 + `skillsUpdateFirmware` 13/500 `clawd`) → tab Thiết bị.
 
 > **2026-11-25.3 — Bật / tắt skill theo dock** (phiếu `app/docs/phieu_thiet_ke/2026-11-25-skill-theo-dock.md`): thay lưới chọn một skill bằng **danh sách có công tắc**; mọi mục
 > của bản .2 bên dưới (lưới, `SkillTile`, thẻ kênh, thanh báo đang đổi) **bỏ**, trừ đầu màn. Prop `state`: `normal`,
@@ -172,3 +205,33 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
 - Trạng thái `switching` / `error` trên canvas minh họa bằng Nhạc như đã có gói; hiện chỉ Agent có gói nên thực tế
   chưa có ô "chọn được".
 - Thanh điều hướng dưới, tab 2 (Skill).
+
+## 7. Cắt ảnh — `PhotoCropScreen` (PhotoCrop.png, PhotoCropSending.png, PhotoCropDone.png, PhotoCropFull.png, PhotoCropTooBig.png, PhotoCropNoSpace.png, PhotoCropRejected.png, PhotoCropOffline.png)
+
+> **2026-11-25.4 — Màn mới** (phiếu `app/docs/phieu_thiet_ke/2026-11-25-gui-anh-len-thiet-bi.md`). Push từ tab Ảnh sau khi chọn / chụp ảnh; ngoài khung tab (không thanh dưới).
+> Prop `state`: `crop`, `sending`, `done`, `full`, `tooBig`, `noSpace`, `rejected`, `offline`. Mọi trạng thái 844.
+
+- **Thanh trên** cao 56, đệm 0 8: nút quay lại 48 (mũi tên 24 ink) → tab Ảnh; `photoCropTitle` 18/700.
+- **Vùng cắt** cao 340 (`cropStage`), nền đen: ảnh phủ ngang 390, giữa dọc. Khung vuông 260 (`cropFrame`) giữa vùng: viền 1
+  ink, ngoài khung phủ đen 60 %, lưới chia ba 1 px ink 35 %, 4 góc chữ L 22 nét 4 ink. Kéo để dời ảnh, chụm để phóng
+  (ảnh luôn phủ kín khung; phóng nhỏ nhất = cạnh ngắn của ảnh bằng khung). Nhãn đọc màn hình `photoCropAreaA11y`.
+- `photoCropHint` 12 muted giữa, cách vùng cắt 10.
+- **Xem trước**: nhãn `photoCropPreview` 12 muted (đệm 14 20 8). Hàng đệm 0 16 cách 16: ô 180 (`devicePreview`) = màn thiết
+  bị 240 px thu ×0.75, nền đen, bo 6, viền 1 `line` — vẽ lại bố cục màn Ảnh của thiết bị (`design/panel` `Photo.png`): tiêu
+  đề "Ảnh" 12 ink giữa, meta "6/6" 10 muted phải, kẻ 1 mint dưới tiêu đề, dock dọc trái (4 icon ×0.75, tab Ảnh nền `panel2`
+  + vạch mint), **vùng ảnh 141 (`devicePreviewPhoto`) tại (30, 21)** = đúng vùng đang cắt, vạch tiến độ 2 mint ở đáy. Cột
+  phải: `photoCropPreviewBody` 13 ink, `photoCropPreviewNote` 12 muted. Xem trước cập nhật theo khi kéo / phóng.
+- **Đáy** (đệm 16 16 24, cách 12), theo `state`:
+  - `crop`: hai nút cao 48 bo 24 chia đều cách 10 — `photoCropPickOther` (viền `line`, icon thư viện 18 inkDim, chữ ink 500) và
+    `photoCropSend` (nền mint, icon gửi 18 + chữ màu bg 700).
+  - `sending`: thẻ `panel` bo 14 đệm 16: vòng xoay 24 mint + `photoCropSending` 14 ink + phần trăm 14/700 mint; thanh 6 bo 3
+    nền `panel2` phần chạy mint; `photoCropKeepOpen` 12 muted. Dưới: nút `commonCancel` (viền). Gồm cả bước nén ảnh.
+  - `done`: thẻ `panel`: vòng 32 nền mint 16 % dấu tích 20 mint + `photoCropDoneTitle` 15/700, `photoCropDoneBody` 13 inkDim.
+    Nút `photoCropAddAnother` (viền) → trình chọn ảnh; `photoCropDone` (mint) → tab Ảnh.
+  - Lỗi: thanh báo `panel2` bo 14 đệm 14 16 (`role=alert`): tiêu đề 14/700 coral + nội dung 13 inkDim; rồi hàng nút:
+    `full` → `photoCropErrorFull*` + `photoCropBackToList`; `tooBig` → `photoCropErrorTooBig*` + `photoCropPickOther`, `photoCropRecrop` (mint);
+    `noSpace` → `photoCropErrorNoSpace*` + `photoCropBackToList`, `commonRetry` (mint); `rejected` → `photoCropErrorRejected*` +
+    `commonCancel`, `commonRetry`; `offline` → `photoCropErrorOffline*` + `commonCancel`, `commonRetry`. Vùng cắt giữ nguyên.
+- Gửi: thu nhỏ vùng cắt về 188 × 188, JPEG **baseline**, ≤ 40 KB — quá thì giảm chất lượng dần, chỉ báo `tooBig` khi đã hết bậc.
+  Gửi xong app giữ bản sao (làm hình thu nhỏ ở tab Ảnh).
+

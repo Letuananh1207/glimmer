@@ -5,6 +5,48 @@ widget và việc cần làm — không ghi đường dẫn file hay cách code.
 
 ---
 
+## 2026-11-25.4 — Skill Ảnh: gửi ảnh từ điện thoại lên thiết bị
+
+- **Màn hình · `DashboardScreen`** (`source/Dashboard.dc.html`, `screen_specs.md` §2; ảnh mới `DashboardPhoto.png`,
+  `DashboardPhotoEmpty.png`, `DashboardPhotoFull.png`, `DashboardPhotoAdd.png`, `DashboardPhotoDelete.png`,
+  `DashboardPhotoDeleting.png`, `DashboardPhotoDeleteError.png`):
+  - Tab **Ảnh** thứ 2 của `DockTabBar` (khi skill Ảnh bật). Bốn tab → nhãn xuống dưới icon, ô 56; 2–3 tab như cũ.
+  - Thẻ "ẢNH TRÊN THIẾT BỊ" + "5/8 · còn 3 chỗ", `PhotoGrid` 3 cột: hình thu nhỏ, ô "không có bản xem" cho ảnh không do
+    app gửi, ô `AddPhotoTile` cuối (đủ 8 → khoá + dòng giải thích). Bấm ảnh → `DeletePhotoDialog`; đang xoá phủ vòng xoay
+    trên ô; xoá lỗi → thanh báo + Thử lại. Chưa có ảnh → giữa thẻ + nút mint "+ Thêm ảnh".
+  - "+ Thêm ảnh" → `PhotoSourceSheet` (thư viện / chụp ảnh) → màn Cắt ảnh. Chú thích: cập nhật đầy đủ xoá hết ảnh.
+  - Nút cuối `ShowOnDeviceButton` "Hiện Ảnh trên thiết bị" (kênh `Photo`).
+- **Cắt ảnh · `PhotoCropScreen`** — màn mới (`source/PhotoCrop.dc.html`, §7; ảnh `PhotoCrop.png`,
+  `PhotoCropSending.png`, `PhotoCropDone.png`, `PhotoCropFull.png`, `PhotoCropTooBig.png`, `PhotoCropNoSpace.png`,
+  `PhotoCropRejected.png`, `PhotoCropOffline.png`):
+  - `CropFrame` vuông 260 kéo / phóng; `DevicePhotoPreview` 180 vẽ lại đúng màn Ảnh của thiết bị (ảnh 188 tại 40, 28 có dock).
+  - Gửi: tiến độ %, xong (thêm ảnh khác / xong), lỗi `full`, `too_big` (sau khi app đã tự giảm chất lượng), `no_space`,
+    từ chối (`not_jpeg` / `progressive` / `bad_size` / `truncated` / `empty` — báo chung), mất kết nối.
+- **Skill · `SkillsScreen`** (`source/Skills.dc.html`, §6; ảnh `Skills.png`, `SkillsSwitching.png`, `SkillsError.png`,
+  `SkillsLastOne.png` chụp lại, mới `SkillsPhotoHint.png`, `SkillsPhotoFirmware.png`):
+  - Dòng **Ảnh** thứ 2 (thứ tự dock), mặc định tắt. Tắt mà thiết bị có ảnh → mô tả mint "N ảnh đã có trên thiết bị. Bật
+    để xoay." Firmware chưa có ảnh → "Cần firmware mới" + nút "Cập nhật" sang Thiết bị.
+- **Token:** `skillPhoto` (#8FE574 = mint), `skillPhotoTint`; size `dockTabStacked` 56, `cropStage`, `cropFrame`,
+  `devicePreview`, `devicePreviewPhoto`; radius `photoTile` 10, `sheet` 20. **Icon:** `icons/dock-photo.svg`.
+  **Chuỗi:** 53 khoá mới (`skillPhoto…`, `skills…`, `photo…`, `photoCrop…`).
+- Phiếu: `app/docs/phieu_thiet_ke/2026-11-25-gui-anh-len-thiet-bi.md`
+- Đổi luật: không — theo R-SK-1 (Ảnh mặc định tắt), R-SK-2, R-SK-3. Đề xuất ghi thêm: tab Ảnh chỉ có khi skill Ảnh bật;
+  quản lý ảnh khi skill tắt = bật skill trước (màn Skill gợi ý).
+- Cần firmware: không bắt buộc. Hình thu nhỏ lấy từ **bản sao app giữ** khi gửi; ảnh gửi từ nơi khác hiện ô "không có
+  bản xem". Nếu muốn hình thật cho mọi ảnh → firmware thêm `GET /api/photos/<name>`; muốn đánh dấu ảnh đang chiếu →
+  `/api/state` trả ảnh hiện tại (chưa vẽ).
+
+**Việc cần làm trong code:**
+- `DockTabBar`: thêm tab Ảnh (thứ 2, icon `dock-photo`, vạch mint); ≥ 4 tab dùng bố cục icon trên nhãn dưới, ô 56.
+- `DashboardScreen` tab Ảnh: tải `GET /api/photos`, hiện `PhotoGrid` (bản sao app làm hình thu nhỏ, ghép theo tên
+  file; không có → ô không có bản xem), meta số ảnh / chỗ trống (`max_count`), các trạng thái chưa có / đủ 8 / xoá.
+  Xoá: `DeletePhotoDialog` → `DELETE /api/photos?name=` → đang xoá trên ô → lỗi thì thanh báo + Thử lại.
+- `PhotoSourceSheet` → trình chọn ảnh / máy ảnh hệ thống → `PhotoCropScreen`.
+- `PhotoCropScreen` (mới, ngoài khung tab): cắt vuông kéo / phóng, xem trước kiểu màn thiết bị cập nhật theo; gửi
+  JPEG baseline 188 × 188 ≤ 40 KB (giảm chất lượng dần), tiến độ, xong, 5 lỗi như đặc tả; gửi xong giữ bản sao ảnh.
+- `SkillsScreen`: dòng Ảnh (mặc định tắt), gợi ý bật khi `photos` > 0, kiểu "cần firmware" khi `/api/state` không có `photos`.
+- Chuỗi, token, icon mới theo trên.
+
 ## 2026-11-25.3 — Skill bật / tắt theo dock, Màn hình chia tab như thiết bị
 
 - **Skill · `SkillsScreen`** (`source/Skills.dc.html`, `screen_specs.md` §6; ảnh `Skills.png`, `SkillsSwitching.png`,

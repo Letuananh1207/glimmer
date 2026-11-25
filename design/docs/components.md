@@ -22,8 +22,14 @@
 | Vòng xoay | 40, nét 4, `clawd`. |
 | `SkillTile` | **2026-11-25.3: bỏ** — thay bằng `SkillRow`. **2026-11-25.2:** ô skill trong lưới màn Skill — 4 kiểu: đang dùng / chọn được / đang đổi / sắp có. Số đo ở `screen_specs.md` §6. Màu nhấn theo skill: `skillAgent`, `skillMusic`, `skillSocial`, `skillFun`. |
 | Thanh báo trạng thái | **2026-11-25.2:** thẻ `panel2` đầu màn: tiêu đề 14/700 màu loại (coral lỗi, amber cảnh báo) hoặc vòng xoay 24 + chữ 14 ink; thân 13 inkDim; nút căn phải hoặc nút viền. |
-| `DockTabBar` | **2026-11-25.3:** thanh tab của Màn hình, giống dock thiết bị nằm ngang. Số đo `screen_specs.md` §2. Tab = skill đang bật theo thứ tự dock; tab đang chọn nền `panel2` + vạch màu nhấn 20×3; tab Agent mang huy hiệu amber. Ẩn khi chỉ một skill bật. |
-| `SkillRow` | **2026-11-25.3:** dòng skill trong thẻ danh sách màn Skill: ô icon 44 + tên / mô tả + `SkillSwitch` (hoặc vòng xoay khi đang gửi, ổ khoá khi firmware cũ). §6. |
+| `DockTabBar` | **2026-11-25.4:** ≥ 4 tab → icon trên, nhãn 12 dưới, ô 56 (`dockTabStacked`); tab Ảnh (`dock-photo`, vạch mint). **2026-11-25.3:** thanh tab của Màn hình, giống dock thiết bị nằm ngang. Số đo `screen_specs.md` §2. Tab = skill đang bật theo thứ tự dock; tab đang chọn nền `panel2` + vạch màu nhấn 20×3; tab Agent mang huy hiệu amber. Ẩn khi chỉ một skill bật. |
+| `SkillRow` | **2026-11-25.4:** thêm kiểu "cần firmware" (mô tả amber + nút viền "Cập nhật" → Thiết bị) và mô tả gợi ý màu mint. **2026-11-25.3:** dòng skill trong thẻ danh sách màn Skill: ô icon 44 + tên / mô tả + `SkillSwitch` (hoặc vòng xoay khi đang gửi, ổ khoá khi firmware cũ). §6. |
 | `SkillSwitch` | **2026-11-25.3:** công tắc tô theo màu nhấn của skill (không phải `clawd` chung): rãnh 52×32, vùng chạm 60×48. §6. |
 | `ShowOnDeviceButton` | **2026-11-25.3:** nút cuối mỗi tab của Màn hình — rộng hết, cao 48, bo 14, nền `panel2`, icon tv + "Hiện {skill} trên thiết bị". Thay hai nút xanh đặc. §2. |
-| Icon dock | **2026-11-25.3:** `icons/dock-clawd.svg`, `dock-weather.svg`, `dock-clock.svg`, `dock-chat.svg` — bitmap đúng của dock thiết bị (`panel/tokens/panel_tokens.json` → `component.dock.icon`), tô `currentColor`, vẽ sắc cạnh (crispEdges), phóng ×1–×3.5. |
+| Icon dock | **2026-11-25.4:** + `icons/dock-photo.svg` (16×11). **2026-11-25.3:** `icons/dock-clawd.svg`, `dock-weather.svg`, `dock-clock.svg`, `dock-chat.svg` — bitmap đúng của dock thiết bị (`panel/tokens/panel_tokens.json` → `component.dock.icon`), tô `currentColor`, vẽ sắc cạnh (crispEdges), phóng ×1–×3.5. |
+| `PhotoGrid` | **2026-11-25.4:** lưới ảnh tab Ảnh — 3 cột cách 8, ô vuông bo 10; ô ảnh (bấm → `DeletePhotoDialog`), ô không có bản xem, ô `AddPhotoTile` cuối. `screen_specs.md` §2. |
+| `AddPhotoTile` | **2026-11-25.4:** ô "+ Thêm ảnh" viền đứt mint nền mint 8 %; đủ ảnh → khoá (viền `line`, ổ khoá, `photoFullTile`). §2. |
+| `PhotoSourceSheet` | **2026-11-25.4:** bảng dưới chọn nguồn ảnh: thư viện / chụp ảnh / huỷ. Bo trên 20 (`sheet`). §2. |
+| `DeletePhotoDialog` | **2026-11-25.4:** hộp thoại 312 hỏi xoá ảnh, có hình ảnh 96; nút Xoá coral. §2. |
+| `CropFrame` | **2026-11-25.4:** vùng cắt vuông kéo / phóng: khung 260 trong vùng 340, phủ ngoài 60 %, lưới chia ba, 4 góc L. §7. |
+| `DevicePhotoPreview` | **2026-11-25.4:** ô 180 vẽ lại màn Ảnh của thiết bị (×0.75): tiêu đề, dock, ảnh 141 tại (30, 21), vạch mint. §7. |
