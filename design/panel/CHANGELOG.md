@@ -5,6 +5,49 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-25.4 — Khớp máy, Việt hoá đơn vị, vẽ lại đúng luật khung
+
+- **Mọi màn có vạch chỉ báo** (`screen_specs.md` mọi mục; ảnh mọi màn): vạch y 230 = tiến độ màu kênh + phần chưa chạy
+  **PANEL** hết 240 px. Setup, Agents: vạch MUTED; Agents có mục chờ duyệt: **AMBER liền** 240 px (câu hỏi: SKY liền).
+  Night không vạch. Áp cả các màn có dock (§15).
+- **Đơn vị tiếng Việt** (token `text`): thời lượng `P` / `G` / `NG` — đếm ngược `4NG`, `2G 14P`, `18G 5P`, `14P`, quá hạn
+  `ngay`, chưa đồng bộ `--`; meta `CŨ 14P`, `CŨ 18P`; tuổi hàng project `2P`, `5P`, `1G`; danh sách Agents chữ thường `2p`,
+  `12p`; thẻ chờ `chờ bạn · 2P`, dưới 1 phút `chờ bạn · 45 giây` (84–119 px, vừa 216). 12 giờ `SA` / `CH` thay `AM` / `PM`
+  (Clock, Night, gợi ý mưa `MƯA 60% 4CH`). Trend nhãn thứ `T5 T6 T7 CN T2 T3 T4`. Info `312P`, `1P trước`, `sau 4P`.
+- **Kênh Home** (`source/Home*.dc.html`, §4; ảnh `Home`, `HomeKeyBad`, `HomeNoWeather`):
+  - Status bar `Trang chủ`, meta thời tiết `29° Ít mây` (70 px) / `--°`. Giờ VT323-86 x 12–182, y 30–100; biểu tượng
+    thời tiết ×2 SKY tại (194, 40) — hai vùng không chạm nhau.
+  - Ngày (12, 104); `c.giác 33°` / `c.giác --` TR (228, 105); đồng hồ đo y 128 / 146; `HÔM NAY` + `CÒN 9G` y 170; dải 24
+    giờ đáy y 198; chấm đang tải x 206 / 215 / 224.
+  - Chân trang y 204: thông báo viết theo thẻ đồng hồ đo — `CL BỊ TỪ CHỐI` (91 px), `CL HẾT HẠN`, `CL BỊ CHẶN`,
+    `CX CÒN 2NG`, gợi ý mưa; IP TR (228, 204), dài nhất `192.168.100.200` 105 px → khe ≥ 20 px.
+  - Mới: **Home · chưa có thời tiết** (`--°`, `c.giác --`, không biểu tượng).
+- **Kênh Agents** (§5; ảnh `Agents`, `AgentsMore`, `AgentsIdle`): status bar `Tác tử`, meta `3 MỤC`, gạch MUTED; dòng từ
+  y 32 bước 60; `+ N mục khác` TC (120, 152). Mới: **Agents · không mục nào chờ** (vạch MUTED).
+- **Kênh Clock** (§12; ảnh `Clock`, `Clock12h`): status bar `Đồng hồ`, meta `tuần 48` (49 px); ngày TC (120, 32); giờ
+  căn giữa y 46; mới **Clock · 12 giờ**: giờ ` 2` (`%2d`) + `CH` 12B AMBER tại (209, 95).
+- **Kênh Info** (§13): bước 19 từ y 30, dòng cuối y 201–214 (hết tràn đáy).
+- **Kênh Forecast** (§11): đoạn nhiệt min→max **màu đặc** — SKY hôm nay, MUTED ngày khác; điểm cuối ≤ x 219.
+- **Kênh Weather** (§10): mới **Weather · lỗi** — `Chưa có thời tiết` 16B MUTED MC (120, 100), chi tiết 11 MUTED MC
+  (120, 124), chấm kẻ (30, 140), `đang tự thử lại` INK_DIM MC (120, 158).
+- **Kênh AI** (§8): đang tải → cột đặt lại `--` (giờ đã đồng bộ mà quá hạn: `ngay`), không đếm ngược.
+- Ảnh vẽ bằng font VLW thật; chuỗi phiên bản màn hệ thống `v0.23.0-glimmer`.
+- Phiếu: `docs/phieu_panel/2026-11-25-sua-ban-ve-cho-khop-may.md`, `docs/phieu_panel/2026-11-25-ve-lai-dung-luat-khung.md`
+- Đổi luật: Home, Agents, Clock có status bar như mọi kênh (bỏ ngoại lệ "toàn khung").
+
+**Việc cần làm trong code:**
+- Vạch chỉ báo: phần chưa chạy PANEL hết 240 px — đã đúng trên máy, giữ.
+- Thời lượng / đếm ngược / 12 giờ / thứ / Info: đổi chữ theo token `text` (`P`, `G`, `NG`, `ngay`, `--`, `SA`, `CH`,
+  `T2`…`CN`); danh sách Agents giữ chữ thường; thẻ chờ dưới 1 phút `<n> giây`.
+- Kênh `Home`: bố cục mới theo §4 (status bar, giờ trái, biểu tượng thời tiết phải, chân trang viết tắt `CL` / `CX`);
+  xoá vùng giờ và vùng thời tiết riêng (gỡ lỗi chồng phút). Trạng thái chưa có thời tiết.
+- Kênh `Agents`, `Clock`: thêm status bar, dời nội dung theo §5 / §12; Clock 12 giờ vẽ `SA` / `CH` cạnh giờ.
+- Kênh `Info`: bước 19 px từ y 30.
+- Kênh `Forecast`: đoạn nhiệt màu đặc, kẹp điểm cuối trong rãnh.
+- Kênh `Weather`: trạng thái lỗi 3 dòng, đổi chuỗi lỗi theo bảng `text.weatherError`.
+- Kênh `AI`: đang tải hiện `--` / `ngay` ở cột đặt lại.
+- Bản xem trước màn trên máy tính vẽ lại cho khớp.
+
 ## P-2026-11-25.3 — Dock dọc nổi bám lề trái (thanh tab kiểu iPad)
 
 - **Thành phần Dock** (`source/Dock.dc.html`, `screen_specs.md` §15; token `component.dock`):

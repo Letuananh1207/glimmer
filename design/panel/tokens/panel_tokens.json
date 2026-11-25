@@ -1,7 +1,7 @@
 {
   "meta": {
     "name": "glimmer panel",
-    "version": "P-2026-11-25.3",
+    "version": "P-2026-11-25.4",
     "frame": {
       "width": 240,
       "height": 240,
@@ -25,7 +25,14 @@
     ],
     "indicator": {
       "y": 230,
-      "h": 2
+      "h": 2,
+      "progress": "màu nhấn kênh",
+      "rest": "panel",
+      "waiting": "amber / sky liền 240 px",
+      "muted": [
+        "Setup",
+        "Agents"
+      ]
     },
     "withDock": {
       "dock": {
@@ -449,6 +456,50 @@
         "over9": "+",
         "zero": "ẩn"
       }
+    }
+  },
+  "text": {
+    "duration": {
+      "minute": "P",
+      "hour": "G",
+      "day": "NG",
+      "examples": [
+        "14P",
+        "2G",
+        "2G 14P",
+        "3NG",
+        "CŨ 14P",
+        "HẾT SAU 5G"
+      ],
+      "countdown": {
+        "≥ 24 giờ": "<n>NG",
+        "≥ 1 giờ": "<g>G <p>P",
+        "< 1 giờ": "<p>P",
+        "đã qua": "ngay",
+        "chưa đồng bộ giờ": "--"
+      },
+      "agentsList": "chữ thường: 2p, 1g, 3ng",
+      "waitingUnder1Min": "<n> giây"
+    },
+    "ampm": [
+      "SA",
+      "CH"
+    ],
+    "weekdayShort": [
+      "CN",
+      "T2",
+      "T3",
+      "T4",
+      "T5",
+      "T6",
+      "T7"
+    ],
+    "weatherError": {
+      "HTTP <mã ≥ 100>": "máy chủ trả lỗi <mã>",
+      "HTTP <mã âm>": "không kết nối được",
+      "http begin": "không mở được kết nối",
+      "JSON …": "dữ liệu lỗi",
+      "no current": "thiếu số liệu hiện tại"
     }
   }
 }
