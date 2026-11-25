@@ -553,6 +553,7 @@ uint16_t Theme::channelColor(const char* name) {
     if (!strcmp(name, "AI"))      return INK_DIM;
     if (!strcmp(name, "Trend"))   return MINT;
     if (!strcmp(name, "Info"))    return MINT;
+    if (!strcmp(name, "Photo"))   return MINT;
     if (!strcmp(name, "Push"))    return CORAL;  // overridden per-card
     return MUTED;
 }

@@ -39,7 +39,9 @@ class ToggleSkillUseCase {
     }
     final next = toggledSkills(enabled, id, enable: enable, packs: _packs);
     if (next == null) return Result.error(AppError(AppErrorKind.skillLastOne, detail: id));
-    final r = await _device.saveSettings({'skillsOn': next});
+    // Skill thiết bị đang bật mà app chưa có gói (vd `photo` từ trang web thiết bị) giữ nguyên (R-SK-2).
+    final keep = [for (final s in _device.state?.skillsOn ?? const <String>[]) if (!_packs.contains(s)) s];
+    final r = await _device.saveSettings({'skillsOn': [...next, ...keep]});
     if (r is Ok) {
       _skills.setEnabled(next);
       await _device.refresh();

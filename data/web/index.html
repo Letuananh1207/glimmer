@@ -49,6 +49,7 @@
     <button x-bind:class="{active: page==='screen'}"   x-on:click="page='screen'">Màn hình</button>
     <button x-bind:class="{active: page==='place'}"    x-on:click="page='place'">Vị trí &amp; giờ</button>
     <button x-bind:class="{active: page==='agents'}"   x-on:click="page='agents'; refreshCards()">Tác tử</button>
+    <button x-bind:class="{active: page==='photos'}"   x-on:click="page='photos'; loadPhotos()">Ảnh</button>
     <button x-bind:class="{active: page==='device'}"   x-on:click="page='device'">Thiết bị</button>
   </nav>
 
@@ -410,6 +411,33 @@
   </section>
 
   <!-- DEVICE -->
+  <!-- PHOTOS (skill photo) -->
+  <section x-show="page==='photos'">
+    <article>
+      <h2>Ảnh</h2>
+      <div class="hint" x-show="!(settings.skillsOn || []).includes('photo')" style="color: var(--amber);">
+        Skill Ảnh đang tắt: bật ở Màn hình → Kênh để ảnh xoay vòng trên thiết bị.</div>
+      <input type="file" x-ref="photoFile" accept="image/*" multiple x-on:change="uploadPhotos($event)" style="display:none">
+      <button type="button" class="secondary" x-on:click="$refs.photoFile.click()"
+              x-bind:disabled="photoBusy || photos.length >= (photoInfo.max_count || 8)"
+              x-text="photoBusy ? 'Đang gửi...' : 'Thêm ảnh'"></button>
+      <div class="hint">Trình duyệt cắt vuông phần giữa và thu nhỏ còn 188×188 trước khi gửi.
+        Tối đa <span x-text="photoInfo.max_count || 8"></span> ảnh,
+        <span x-text="Math.round((photoInfo.max_bytes || 40960) / 1024)"></span> KB mỗi ảnh.</div>
+      <template x-for="p in photos" :key="p.name">
+        <div class="card-row">
+          <span class="what" x-text="p.name"></span>
+          <span class="muted" x-text="(p.size / 1024).toFixed(1) + ' KB'"></span>
+          <button type="button" class="secondary small" x-on:click="deletePhoto(p.name)">Xóa</button>
+        </div>
+      </template>
+      <div class="hint" x-show="!photos.length">Chưa có ảnh nào.</div>
+      <div class="hint" x-show="photoInfo.free !== undefined"
+           x-text="'Bộ nhớ còn trống: ' + Math.round(photoInfo.free / 1024) + ' KB (giữ lại ' + Math.round(photoInfo.reserve / 1024) + ' KB cho cấu hình)'"></div>
+      <div class="hint">Ảnh nằm trên bộ nhớ LittleFS: nạp lại ảnh LittleFS (phông chữ, giao diện web) sẽ xóa hết ảnh.</div>
+    </article>
+  </section>
+
   <section x-show="page==='device'">
     <article>
       <h2>Firmware</h2>
@@ -456,7 +484,10 @@ function app() {
     weatherCity: '',
     cityResults: [],
     switchTo: 'Home',
-    channelNames: ['Home', 'Claude', 'Codex', 'AI', 'Trend', 'Weather', 'Forecast', 'Clock', 'Info', 'Setup'],
+    channelNames: ['Home', 'Claude', 'Codex', 'AI', 'Trend', 'Photo', 'Weather', 'Forecast', 'Clock', 'Info', 'Setup'],
+    photos: [],
+    photoInfo: {},
+    photoBusy: false,
 
     // Claude hero as a two-way choice instead of a bare checkbox.
     get claudeHero() { return this.settings.claudeWeeklyHero ? 'weekly' : 'session'; },
@@ -498,14 +529,15 @@ function app() {
     },
 
     // Skill ids stay English on the wire (R-SK-2); labels are Vietnamese.
-    skillLabel(k) { return {agent: 'Agent (Claude / Codex)', weather: 'Thời tiết', clock: 'Đồng hồ'}[k] || k; },
+    skillLabel(k) { return {agent: 'Agent (Claude / Codex)', photo: 'Ảnh', weather: 'Thời tiết', clock: 'Đồng hồ'}[k] || k; },
 
     // Display labels only — channel names and card kinds sent to / compared
     // with the device stay English.
     chLabel(c) {
       return {Home: 'Trang chủ', Claude: 'Claude', Codex: 'Codex', AI: 'AI', Trend: 'Xu hướng',
               Weather: 'Thời tiết', Forecast: 'Dự báo', Clock: 'Đồng hồ', Info: 'Thông tin',
-              Setup: 'Cài đặt', Night: 'Ban đêm', Agents: 'Tác tử', Attention: 'Thông báo'}[c] || c;
+              Setup: 'Cài đặt', Night: 'Ban đêm', Agents: 'Tác tử', Attention: 'Thông báo',
+              Photo: 'Ảnh'}[c] || c;
     },
     kindLabel(k) {
       return {info: 'thông tin', success: 'thành công', warning: 'cảnh báo', error: 'lỗi',
@@ -843,6 +875,82 @@ export GLIMMER_URL=${this.deviceUrl()}` + (tok ? `\nexport GLIMMER_TOKEN=${tok}`
         else this.showToast('Gửi thất bại (HTTP ' + r.status + ')', true);
       } catch (e) { this.showToast('Lỗi mạng', true); }
       this.refreshCards();
+    },
+
+    // ── Photos: GET/POST/DELETE /api/photos ──
+    async loadPhotos() {
+      try {
+        const r = await fetch('/api/photos');
+        if (r.ok) { const j = await r.json(); this.photos = j.photos || []; this.photoInfo = j; }
+      } catch (e) { /* keep last list */ }
+    },
+    photoError(code) {
+      return {full: 'Đã đủ số ảnh tối đa, hãy xóa bớt', too_big: 'Ảnh quá lớn',
+              no_space: 'Bộ nhớ thiết bị gần đầy', not_jpeg: 'Không phải ảnh JPEG',
+              progressive: 'JPEG progressive không được hỗ trợ', bad_size: 'Ảnh phải đúng 188×188',
+              truncated: 'Ảnh bị cắt ngang', empty: 'Tệp rỗng', fs: 'Lỗi bộ nhớ thiết bị',
+              unauthorized: 'Sai API token'}[code] || ('Lỗi: ' + code);
+    },
+    // Centre square crop → side×side baseline JPEG (canvas encoders write baseline).
+    async photoToJpeg(file, side, maxBytes) {
+      const url = URL.createObjectURL(file);
+      try {
+        const img = await new Promise((ok, bad) => {
+          const i = new Image(); i.onload = () => ok(i); i.onerror = bad; i.src = url;
+        });
+        const c = document.createElement('canvas');
+        c.width = c.height = side;
+        const g = c.getContext('2d');
+        g.fillStyle = '#000'; g.fillRect(0, 0, side, side);
+        const s = Math.min(img.naturalWidth, img.naturalHeight);
+        g.imageSmoothingQuality = 'high';
+        g.drawImage(img, (img.naturalWidth - s) / 2, (img.naturalHeight - s) / 2, s, s, 0, 0, side, side);
+        for (const q of [0.85, 0.7, 0.55, 0.4]) {
+          const b = await new Promise(ok => c.toBlob(ok, 'image/jpeg', q));
+          if (b && b.size <= maxBytes) return b;
+        }
+        return null;
+      } finally { URL.revokeObjectURL(url); }
+    },
+    async uploadPhotos(ev) {
+      const files = [...(ev.target.files || [])];
+      ev.target.value = '';
+      if (!files.length) return;
+      if (this.photoInfo.side === undefined) await this.loadPhotos();
+      const side = this.photoInfo.side || 188, max = this.photoInfo.max_bytes || 40960;
+      this.photoBusy = true;
+      let sent = 0;
+      try {
+        for (const f of files) {
+          let blob;
+          try { blob = await this.photoToJpeg(f, side, max); } catch (e) { blob = null; }
+          if (!blob) { this.showToast(f.name + ': không đọc được ảnh', true); continue; }
+          const fd = new FormData();
+          fd.append('photo', blob, 'photo.jpg');
+          const r = await fetch('/api/photos', {method: 'POST', headers: this.authHeaders(), body: fd});
+          let j = {};
+          try { j = await r.json(); } catch (e) {}
+          if (!r.ok) {
+            const code = j.error || (r.status === 401 ? 'unauthorized' : 'HTTP ' + r.status);
+            this.showToast(f.name + ': ' + this.photoError(code), true);
+            if (code === 'full' || code === 'no_space') break;
+            continue;
+          }
+          sent++;
+        }
+      } catch (e) { this.showToast('Lỗi mạng', true); }
+      this.photoBusy = false;
+      if (sent) this.showToast('Đã gửi ' + sent + ' ảnh');
+      this.loadPhotos();
+    },
+    async deletePhoto(name) {
+      if (!confirm('Xóa ảnh ' + name + '?')) return;
+      try {
+        const r = await fetch('/api/photos?name=' + encodeURIComponent(name),
+                              {method: 'DELETE', headers: this.authHeaders()});
+        if (!r.ok) this.showToast('Xóa thất bại (HTTP ' + r.status + ')', true);
+      } catch (e) { this.showToast('Lỗi mạng', true); }
+      this.loadPhotos();
     },
 
     mcpSnippet() {

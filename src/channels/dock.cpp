@@ -20,6 +20,10 @@ const uint32_t kClaude[10] PROGMEM = {
     0x07FF8, 0x07FF8, 0x06FD8, 0x06FD8, 0x1FFFE,
     0x1FFFE, 0x07FF8, 0x07FF8, 0x02850, 0x02850,
 };
+const uint32_t kPhoto[11] PROGMEM = {
+    0xFFFF, 0x8001, 0x8019, 0x803D, 0x8019, 0x8001,
+    0x8801, 0x9C21, 0xBE71, 0xFDFD, 0xFFFF,
+};
 const uint32_t kWeather[14] PROGMEM = {
     0x0180, 0x2184, 0x1008, 0x07E0, 0x0FF0, 0x0FF0, 0xCFF3,
     0xCFF3, 0x0FF0, 0x0FF0, 0x07E0, 0x1008, 0x2184, 0x0180,
@@ -29,7 +33,7 @@ const uint32_t kClock[14] PROGMEM = {
     0xC0FB, 0xC003, 0x6006, 0x6006, 0x381C, 0x1FF8, 0x07E0,
 };
 const Icon kIcons[Dock::kTabCount] = {
-    {18, 10, kClaude}, {16, 14, kWeather}, {16, 14, kClock},
+    {18, 10, kClaude}, {16, 11, kPhoto}, {16, 14, kWeather}, {16, 14, kClock},
 };
 
 // 3×5 digits 0–9 then '+'; bit (2-x) of row y.
@@ -125,5 +129,18 @@ void tick(int waiting) {
 void hide() { s_waiting = -1; }
 
 bool showsBadge() { return s_waiting >= 0 && (s_mask >> TAB_CLAUDE & 1); }
+
+void drawPhotoIcon(int x, int y, int scale, uint16_t color) {
+    for (int r = 0; r < 11; r++) {
+        uint32_t row = pgm_read_dword(&kPhoto[r]);
+        for (int c = 0; c < 16;) {
+            if (!(row >> (15 - c) & 1)) { c++; continue; }
+            int run = 0;
+            while (c + run < 16 && (row >> (15 - c - run) & 1)) run++;
+            tft.fillRect(x + c * scale, y + r * scale, run * scale, scale, color);
+            c += run;
+        }
+    }
+}
 
 }  // namespace Dock

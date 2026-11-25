@@ -32,6 +32,7 @@
 #include "attention.h"
 #include "skill_core.h"
 #include "dock.h"
+#include "photos.h"
 
 // ── Channel registry — declared in their own .cpp files ─────────────────────
 extern bool chClaudeEnabled(const ChannelCtx&);  extern void chClaudeDraw(const ChannelCtx&);
@@ -47,6 +48,8 @@ extern bool chForecastEnabled(const ChannelCtx&); extern void chForecastDraw(con
 extern bool chTrendEnabled   (const ChannelCtx&); extern void chTrendDraw   (const ChannelCtx&);
 extern bool chNightEnabled   (const ChannelCtx&); extern void chNightDraw   (const ChannelCtx&);
 extern bool chSetupEnabled   (const ChannelCtx&); extern void chSetupDraw   (const ChannelCtx&);
+extern bool chPhotoEnabled   (const ChannelCtx&); extern void chPhotoDraw   (const ChannelCtx&);
+extern bool chPhotoEmpty();
 extern void chAttentionTick  (const ChannelCtx&);
 extern void chAgentsTick     (const ChannelCtx&);
 extern void chClockTick      (const ChannelCtx&);
@@ -71,6 +74,7 @@ static const Channel kChannels[] = {
     { "Codex",    chCodexEnabled,    chCodexDraw,    chCodexTick,    "agent" },
     { "AI",       chAiDashEnabled,   chAiDashDraw,   chAiDashTick,   "agent" },
     { "Trend",    chTrendEnabled,    chTrendDraw,    chTrendTick,    "agent" },
+    { "Photo",    chPhotoEnabled,    chPhotoDraw,    nullptr,        "photo" },
     { "Weather",  chWeatherEnabled,  chWeatherDraw,  chWeatherTick,  "weather" },
     { "Forecast", chForecastEnabled, chForecastDraw, chForecastTick, "weather" },
     { "Clock",    chClockEnabled,    chClockDraw,    chClockTick,    "clock" },
@@ -244,6 +248,11 @@ static void drawIndicator(uint32_t now) {
     }
     if (g_nightFace || !docked) {
         tft.fillRect(0, INDICATOR_Y, SCREEN_W, INDICATOR_H, Theme::BG);
+        return;
+    }
+    // Photo with nothing to show: solid MUTED, the slide has no progress to tell.
+    if (!strcmp(name, "Photo") && chPhotoEmpty()) {
+        tft.fillRect(0, INDICATOR_Y, SCREEN_W, INDICATOR_H, Theme::MUTED);
         return;
     }
     if (g_activeCount <= 1) return;
@@ -592,6 +601,7 @@ void setup() {
     Weather::begin();
     UsageHistory::begin();
     AttentionQueue::projectsBegin();
+    Photos::begin();
     Api::refreshCred(g_settings, g_claude, g_codex);
 
     Display::drawSplash("đang kết nối Wi-Fi");
@@ -730,8 +740,11 @@ void loop() {
     uint32_t slideMs = (uint32_t)g_settings.channelSec * 1000UL;
     const bool holding = attention && g_activeCount
                       && !strcmp(kChannels[g_activeIdx[g_activePtr]].name, "Attention");
-    if (!g_apMode && g_settings.autoRotate && !g_nightFace && !holding && g_activeCount > 1
-        && now - g_lastSlide >= slideMs) {
+    // Photo alone in the rotation still steps through the photos (a frame of one channel).
+    const bool photoSolo = g_activeCount == 1 && Photos::count() > 1
+                        && !strcmp(kChannels[g_activeIdx[0]].name, "Photo");
+    if (!g_apMode && g_settings.autoRotate && !g_nightFace && !holding
+        && (g_activeCount > 1 || photoSolo) && now - g_lastSlide >= slideMs) {
         g_lastSlide = now;
         // Pick up any settings toggles before deciding what's next.
         recomputeActive();

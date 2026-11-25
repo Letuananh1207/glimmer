@@ -38,8 +38,15 @@ Play Store thì cần tạo khóa ký riêng.
 
 ## API thiết bị dùng tới
 
-`GET /api/state` (có `claude_usage`, `projects`, `time`, `skill`, `skills`, `skills_on`, `weather`), `GET/POST
+`GET /api/state` (có `claude_usage`, `projects`, `time`, `skill`, `skills`, `skills_on`, `weather`, `photos` = số
+ảnh), `GET/POST
 /api/settings`, `GET /api/export`, `POST /api/import`, `POST /api/reboot`,
 `POST /api/refresh`, `POST /api/channel`, `GET /push`, `POST /push/clear`,
 `POST /update` (multipart `firmware` / `filesystem`). Token (nếu đặt) gửi qua
 `Authorization: Bearer …`.
+
+Ảnh (skill `photo`): `GET /api/photos` → `{photos: [{name, size}], free, total, max_count: 8, max_bytes: 40960,
+reserve: 65536, side: 188}`; `POST /api/photos` multipart, trường `photo` = JPEG **baseline** đúng **188×188**,
+≤ 40 KB (app cắt vuông + thu nhỏ trước khi gửi) → 200 `{ok, name, count}`; lỗi `{error}` với mã `full` / `too_big`
+(413), `no_space` (507), `not_jpeg` / `progressive` / `bad_size` / `truncated` / `empty` / `field` (400), `fs` (500);
+`DELETE /api/photos?name=p3.jpg` → `{ok, count}` / 404. Upload và xoá cần token (nếu đặt).

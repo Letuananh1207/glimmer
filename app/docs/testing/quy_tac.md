@@ -71,7 +71,7 @@ Ban đêm, Thông tin) hiện ở mọi skill.
 | Mã | Quy tắc | Ví dụ | App |
 | --- | --- | --- | --- |
 | R-SK-1 | Nhiều skill bật cùng lúc, ít nhất một; mặc định Agent + Thời tiết + Đồng hồ. Không tắt được skill bật cuối cùng. Danh sách lưu trên máy bỏ id không còn trong danh mục, rỗng → mặc định. | Mới cài app → Agent, Thời tiết, Đồng hồ bật; chỉ còn Agent → công tắc Agent khoá | ok |
-| R-SK-2 | Bật / tắt trên app → gửi thiết bị danh sách skill bật (`skillsOn` trong `/api/settings`, theo thứ tự dock), thiết bị nhận rồi mới lưu máy; thiết bị xoay mọi tab dock đang bật + Thông tin, Ban đêm. | Tắt Thời tiết → gửi `[agent, clock]`; thiết bị xoay Agent, Đồng hồ + Thông tin | ok |
+| R-SK-2 | Bật / tắt trên app → gửi thiết bị danh sách skill bật (`skillsOn` trong `/api/settings`, theo thứ tự dock), thiết bị nhận rồi mới lưu máy; skill thiết bị đang bật mà app chưa có gói (vd `photo`) gửi kèm, giữ nguyên; thiết bị xoay mọi tab dock đang bật + Thông tin, Ban đêm. | Tắt Thời tiết → gửi `[agent, clock]`; thiết bị xoay Agent, Đồng hồ + Thông tin | ok |
 | R-SK-3 | Thẻ cần duyệt / chờ trả lời vẫn chen ngang ở mọi skill. | Skill Nhạc, Claude Code xin duyệt → thẻ amber hiện | ok · miễn test (luật firmware: kênh Attention là kênh hệ thống, `test/test_logic` `test_skill_filter_and_default`) |
 | R-SK-4 | Thiết bị không báo danh sách skill bật (`skills_on`, firmware cũ) → app chỉ có skill Agent, không cho bật / tắt, không gửi gì. | Firmware 0.22 → Agent ổ khoá, Thời tiết / Đồng hồ "Luôn có" | ok |
 | R-SK-5 | Danh sách skill bật trên thiết bị khác danh sách app lưu (đổi từ trang web thiết bị) → app theo thiết bị và lưu lại. | Web tắt Đồng hồ, app lưu cả ba → app thành Agent, Thời tiết | ok |

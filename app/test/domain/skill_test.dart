@@ -93,6 +93,17 @@ void main() {
       expect(skills.enabled, ['agent', 'clock']);
     });
 
+    test('R-SK-2 a skill the app has no pack for (photo, on from the device web page) stays on', () async {
+      await rig.connect(_url, {..._state(const ['agent', 'photo', 'weather', 'clock']),
+        'skills': const ['agent', 'photo', 'weather', 'clock']});
+      rig.api.on(_url, 'POST', '/api/settings', <String, dynamic>{});
+      expect(await toggle('weather', enable: false), isA<Ok<void>>());
+      expect(rig.posts('/api/settings').single.body, {
+        'skillsOn': ['agent', 'clock', 'photo'],
+      });
+      expect(skills.enabled, ['agent', 'clock']);
+    });
+
     test('R-SK-2 the device refusing → nothing stored', () async {
       await rig.connect(_url, _state(_all));
       expect(await toggle('weather', enable: false), isA<Error<void>>());

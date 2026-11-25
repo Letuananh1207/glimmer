@@ -375,7 +375,7 @@ bool chAgentsEnabled(const ChannelCtx& ctx) {
 }
 
 // Dock layout (P-2026-11-25.3 §15 "Agents-Dock"): kind square x 40, text
-// x 54..228 (174 px), hairline x 40 w 188. The dock (x 2..31, y 34..147) is
+// x 54..228 (174 px), hairline x 40 w 188. The dock (x 2..31, y 34..183) is
 // painted by main.cpp and the list never clears left of x 39.
 static constexpr int kRowSqX = Layout::CONTENT_LEFT;                          // 40
 static constexpr int kRowTextX = 54;

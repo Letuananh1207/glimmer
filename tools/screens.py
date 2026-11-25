@@ -166,9 +166,12 @@ class Screen:
 # Attention / Night. Channels with a dock keep content in x 40..228 (L..R).
 L, R, CW, MID = 40, 228, 188, 134
 
-DOCK_ICONS = [   # (w, h, rows): bit (w-1-x) of row y = pixel (x, y)
+DOCK_PHOTO = (16, 11, [0xFFFF, 0x8001, 0x8019, 0x803D, 0x8019, 0x8001,
+                       0x8801, 0x9C21, 0xBE71, 0xFDFD, 0xFFFF])
+DOCK_ICONS = [   # (w, h, rows): bit (w-1-x) of row y = pixel (x, y); tab order claude/photo/weather/clock
     (18, 10, [0x07FF8, 0x07FF8, 0x06FD8, 0x06FD8, 0x1FFFE,
               0x1FFFE, 0x07FF8, 0x07FF8, 0x02850, 0x02850]),
+    DOCK_PHOTO,
     (16, 14, [0x0180, 0x2184, 0x1008, 0x07E0, 0x0FF0, 0x0FF0, 0xCFF3,
               0xCFF3, 0x0FF0, 0x0FF0, 0x07E0, 0x1008, 0x2184, 0x0180]),
     (16, 14, [0x07E0, 0x1FF8, 0x381C, 0x60C6, 0x60C6, 0xC0C3, 0xC0C3,
@@ -180,10 +183,12 @@ DOCK_DIGITS = [[7, 5, 5, 5, 7], [2, 6, 2, 2, 7], [6, 1, 2, 4, 7], [6, 1, 2, 1, 6
 
 
 def dock(sc, accent, active=0, waiting=1):
-    """Dock::draw(active, accent, waiting): frame 30x114 at (2,34), 3 tabs."""
+    """Dock::draw(active, accent, waiting): frame 30x150 at (2,34), 4 tabs
+    (all skills on): 0 Claude, 1 Ảnh, 2 Thời tiết, 3 Đồng hồ."""
     ox, oy = 3, 35                                   # inside the 1-px border
-    sc.rect(2, 34, 30, 114, PANEL)
-    sc.outline(2, 34, 30, 114, LINE)
+    fh = len(DOCK_ICONS) * 36 + 6
+    sc.rect(2, 34, 30, fh, PANEL)
+    sc.outline(2, 34, 30, fh, LINE)
 
     def cy_of(k):
         return oy + 19 + 36 * k
@@ -430,6 +435,43 @@ def setup(sc, done=(False, False, True)):
     dock(sc, MUTED, waiting=0)
 
 
+# ── Photo channel (ch_photo.cpp, P-2026-11-25.7) ────────────────────────────
+
+def sample_photo():
+    """Placeholder for a user photo: a 188x188 gradient with a sun and hills."""
+    im = Image.new("RGB", (188, 188))
+    px = im.load()
+    for y in range(188):
+        for x in range(188):
+            px[x, y] = (40 + y * 120 // 187, 70 + x * 80 // 187, 170 - y * 90 // 187)
+    d = ImageDraw.Draw(im)
+    d.ellipse([120, 26, 160, 66], fill=(255, 210, 120))
+    d.polygon([(0, 150), (60, 100), (120, 140), (188, 96), (188, 188), (0, 188)], fill=(40, 90, 60))
+    return im
+
+
+def photo(sc, i=2, n=5):
+    sc.status_bar("Ảnh", f"{i}/{n}", MINT)
+    sc.img.paste(sample_photo(), (L, 28))
+    dock(sc, MINT, active=1)
+    sc.rect(0, 230, 96, 2, MINT)                     # slide at 40 %
+    sc.rect(96, 230, 144, 2, PANEL)
+
+
+def photo_empty(sc):
+    sc.status_bar("Ảnh", "", MINT)
+    w, h, rows = DOCK_PHOTO
+    for y, row in enumerate(rows):
+        for x in range(w):
+            if row >> (w - 1 - x) & 1:
+                sc.rect(110 + x * 3, 56 + y * 3, 3, 3, LINE)
+    sc.text("JBMono-16B", "Chưa có ảnh", MID, 104, MUTED, "TC")
+    sc.text("JBMono-11", "Gửi ảnh từ app glimmer", MID, 132, INK_DIM, "TC")
+    sc.text("JBMono-11", "hoặc glimmer.local", MID, 148, MUTED, "TC")
+    dock(sc, MINT, active=1)
+    sc.indicator(MUTED)
+
+
 # ── system screens (display.cpp) ────────────────────────────────────────────
 
 def splash(sc, line):
@@ -650,6 +692,8 @@ SCREENS = [
     ("Claude · đã xong hết", "Mọi project Xong: Clawd ngủ (P-2026-11-25.5)",
      lambda s: claude(s, rows=[("glimmer", "Xong", "", "2P"), ("TieuMac3d", "Xong", "", "5P"),
                                ("api", "Xong", "", "1G")], mood="sleep", waiting=0)),
+    ("Ảnh", "Ảnh 2/5 (P-2026-11-25.7)", lambda s: photo(s)),
+    ("Ảnh · chưa có ảnh", "Chưa gửi ảnh nào", photo_empty),
 ]
 
 

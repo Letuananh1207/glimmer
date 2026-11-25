@@ -22,8 +22,8 @@ https://claude.ai/artifact/WzLqGhKvD1MYxqaiRkzq1r, exported to `design/` by a de
   Version: `-D FW_VERSION` in `platformio.ini`.
 - **mDNS** `glimmer.local`; setup AP `glimmer-setup` (open) at `192.168.4.1`.
 - **LittleFS files**: `/config.json` (settings), `/usage.bin` (history ring),
-  `/weather.json` (last-good weather), `/fonts/*.vlw`, `/web/*`. A filesystem
-  flash replaces all of them.
+  `/weather.json` (last-good weather), `/photos/p<N>.jpg` (skill `photo`),
+  `/fonts/*.vlw`, `/web/*`. A filesystem flash replaces all of them.
 
 ## Flashing (OTA over HTTP)
 
@@ -57,8 +57,9 @@ trash "$S"                                # delete the secrets copy
 pio run -e nodemcuv2 -t buildfs           # rebuild the normal (config-free) image
 ```
 
-`PLATFORMIO_DATA_DIR` must be absolute. Usage history and the weather cache
-are still lost (they live on the FS); history refills over 7 days.
+`PLATFORMIO_DATA_DIR` must be absolute. Usage history, the weather cache and
+the user's **photos** are still lost (they live on the FS); history refills
+over 7 days, photos must be re-uploaded (`GET /api/photos` first to know).
 
 **Fallback: restore via the setup AP.** Flash `littlefs.bin` as-is; the
 device reboots into `glimmer-setup`. Join it, then:
@@ -130,11 +131,12 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
   every rotation tick, so settings toggles apply within one slide.
 - **Skills** (`src/data/skill_core.h`; R-SK-1/2, design 2026-11-25.3): several
   on at once, at least one — `Settings::skillsOn` CSV in `Skill::kAll` order
-  (`agent`, `weather`, `clock`); `skills_on` in config.json (missing → all on),
+  (`agent`, `photo`, `weather`, `clock`); `skills_on` in config.json (missing →
+  agent,weather,clock — `photo` starts off),
   `skillsOn` array in `/api/settings`, `skills_on` + `skills` (+ legacy
   `skill` = first on) in `/api/state`. Channels of enabled skills rotate, plus
   `skill = nullptr` system channels (Attention, Night, Info). Weather +
-  Forecast = `weather`, Clock = `clock`. New pack = id in `Skill::kAll` + dock
+  Forecast = `weather`, Clock = `clock`, Photo = `photo`. New pack = id in `Skill::kAll` + dock
   tab + tag its channels. App rules `R-SK-*`.
 - `draw(ctx)` — full repaint on activation, may `Display::clear()`.
 - `tick(ctx)` — 5 Hz while active. **Never** `Display::clear()` /
@@ -143,13 +145,13 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
   cache. References: `ch_clock.cpp`, `ch_home.cpp`.
 - **No animated transitions** — rotation is an instant cut.
 - **Dock** (`src/channels/dock.{h,cpp}`, `dock_core.h`; P-2026-11-25.3): frame
-  at (2,34), one tab per enabled skill (36 px each + 6; all 3 = 114 tall):
-  Claude / Thời tiết / Đồng hồ (Tin nhắn waits for its pack). Painted by `main.cpp` after `draw()`, never by a channel; badge
+  at (2,34), one tab per enabled skill (36 px each + 6; all 4 = 150 tall):
+  Claude / Ảnh / Thời tiết / Đồng hồ (Tin nhắn waits for its pack). Painted by `main.cpp` after `draw()`, never by a channel; badge
   on the Claude tab = agents waiting (`countWaiting`), repainted on change.
   Tab: agent channels → Claude, Weather/Forecast → Thời tiết, Clock → Đồng
-  hồ, Info → none; Attention + Night have no dock. Docked channels keep
+  hồ, Photo → Ảnh, Info → none; Attention + Night have no dock. Docked channels keep
   content — and every `tick()` clear band — in x 40..228
-  (`Layout::CONTENT_LEFT/RIGHT`), never x < 36 in y 34..147.
+  (`Layout::CONTENT_LEFT/RIGHT`), never x < 36 in y 34..183.
 - Indicator strip (y=230, 2 px): slide progress in the channel colour. An
   agent waiting = the dock badge; screens without the dock's Claude tab
   (Attention card, night face, agent skill off) still turn the strip solid
@@ -157,6 +159,17 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
 - System screens (`drawSplash`, `drawConnecting`, `drawOtaProgress`) follow the
   same discipline; call `Display::resetSystemScreens()` from non-system entry
   points so the next one repaints its chrome.
+
+## Photos (skill `photo`, `src/data/photos.{h,cpp}`, `photos_core.h`)
+
+- Baseline JPEG, exactly 188×188 (the device never scales), ≤ 8 photos, ≤ 40
+  KB each, upload refused if LittleFS would keep < 64 KB + 1 block free. The
+  header is checked while the upload streams (`JpegSniffer`); chunks go straight
+  to `/photos/up.tmp`, renamed on success.
+- Decode: TJpgDec's C core (`tjpgd.c`, not the `TJpgDec` class, whose 3.5 KB
+  workspace would be static) with a malloc'd workspace freed after each draw;
+  MCU blocks are `pushImage`d with swap bytes on. Peak ≈ 3.7 KB; the font is
+  released first if the largest block is short.
 
 ## Fetch scheduler & heap gate
 

@@ -1,5 +1,5 @@
 // Clock — design P-2026-11-25.4 §12 on the dock layout of P-2026-11-25.3
-// §15 "Clock-Dock", with partial-redraw tick(). The dock (x 2..31, y 34..147)
+// §15 "Clock-Dock", with partial-redraw tick(). The dock (x 2..31, y 34..183)
 // is painted by main.cpp; everything here is centred on x 134 and every
 // clear band stays in x 40..228.
 //

@@ -13,9 +13,10 @@ namespace Skill {
 
 // Every skill this firmware has channels for, in dock order. Add a pack: add its id here (and a dock
 // tab), tag its channels in kChannels[].
-static const char* const kAll[] = {"agent", "weather", "clock"};
+static const char* const kAll[] = {"agent", "photo", "weather", "clock"};
 static constexpr int kCount = sizeof(kAll) / sizeof(kAll[0]);
-// Default = everything that rotated before skills were switchable (upgrade keeps the same screen).
+// Default = everything that rotated before skills were switchable (upgrade keeps the same screen);
+// photo (P-2026-11-25.7) starts off — the user turns it on once photos are uploaded.
 static constexpr const char* kDefaultOn = "agent,weather,clock";
 
 inline bool known(const char* id) {

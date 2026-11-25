@@ -6,7 +6,7 @@
 //
 // Layout: design P-2026-11-25.4 §4 re-fitted to the dock layout of
 // P-2026-11-25.3 §15 "Home-Dock" (design/panel/docs/screen_specs.md).
-// The dock (x 2..31, y 34..147) is painted by main.cpp after draw(): content
+// The dock (x 2..31, y 34..183) is painted by main.cpp after draw(): content
 // and every clear band stay in x 40..228. Every region below owns a clear
 // band that touches no other region (fixes L-1 / L-2). The weather icon is
 // gone in the dock design — weather lives in the status meta + "c.giác".

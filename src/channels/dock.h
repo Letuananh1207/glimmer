@@ -21,4 +21,8 @@ namespace Dock {
     // The dock on screen carries the Claude tab, so its badge shows agents
     // waiting (otherwise the y 230 strip has to).
     bool showsBadge();
+
+    // The photo-frame tab icon (16×11 grid) with cells of [scale] px, for the
+    // Photo channel's empty screen (×3 → 48×33).
+    void drawPhotoIcon(int x, int y, int scale, uint16_t color);
 }

@@ -13,7 +13,9 @@
 #include "skill_core.h"
 #include "projects_core.h"
 #include "dock_core.h"
+#include "photos_core.h"
 #include <time.h>
+#include <initializer_list>
 #if defined(_WIN32)   // host tests on Windows (MinGW) lack the POSIX localtime_r
 static inline struct tm* localtime_r(const time_t* t, struct tm* out) { *out = *localtime(t); return out; }
 #endif
@@ -785,6 +787,108 @@ void test_dock_tabs_follow_enabled_skills() {
     TEST_ASSERT_EQUAL(78, Dock::frameH(m));
     TEST_ASSERT_EQUAL(114, Dock::frameH(Dock::tabMask(Skill::kDefaultOn)));
     TEST_ASSERT_EQUAL(0, Dock::slotOf(Dock::TAB_WEATHER, Dock::tabMask("weather")));
+    // Ảnh (P-2026-11-25.7): tab 2, off by default.
+    TEST_ASSERT_TRUE(Skill::known("photo"));
+    TEST_ASSERT_FALSE(Skill::inList(Skill::kDefaultOn, "photo"));
+    TEST_ASSERT_EQUAL(Dock::TAB_PHOTO, Dock::tabFor("Photo"));
+    uint8_t all = Dock::tabMask("clock,photo,weather,agent");
+    TEST_ASSERT_EQUAL(150, Dock::frameH(all));
+    TEST_ASSERT_EQUAL(1, Dock::slotOf(Dock::TAB_PHOTO, all));
+    TEST_ASSERT_EQUAL(3, Dock::slotOf(Dock::TAB_CLOCK, all));
+    char on[48];
+    Skill::normalise("clock,photo,agent", on, sizeof(on), true);
+    TEST_ASSERT_EQUAL_STRING("agent,photo,clock", on);
+}
+
+// ── Photos (P-2026-11-25.7) ─────────────────────────────────────────────────
+
+// SOI, APP0 (JFIF), DQT, SOFn (w×h, 3 comps), then a few scan bytes.
+static size_t makeJpeg(uint8_t* b, uint8_t sof, uint16_t w, uint16_t h) {
+    size_t n = 0;
+    auto put = [&](std::initializer_list<int> v) { for (int x : v) b[n++] = (uint8_t)x; };
+    put({0xFF, 0xD8});
+    put({0xFF, 0xE0, 0x00, 0x10, 'J', 'F', 'I', 'F', 0, 1, 1, 0, 0, 1, 0, 1, 0, 0});
+    put({0xFF, 0xDB, 0x00, 0x43, 0x00});
+    for (int i = 0; i < 64; i++) b[n++] = 1;
+    put({0xFF, 0xFF, sof, 0x00, 0x11, 0x08, h >> 8, h & 0xFF, w >> 8, w & 0xFF, 3,
+         1, 0x22, 0, 2, 0x11, 1, 3, 0x11, 1});
+    put({0xFF, 0xDA, 0x00, 0x0C});
+    return n;
+}
+
+void test_photo_jpeg_header_check() {
+    uint8_t b[200];
+    using namespace Photos;
+    // Baseline 188×188, fed one byte at a time (upload chunk boundaries anywhere).
+    size_t n = makeJpeg(b, 0xC0, 188, 188);
+    JpegSniffer a;
+    for (size_t i = 0; i < n; i++) a.feed(b + i, 1);
+    TEST_ASSERT_EQUAL(JPEG_OK, a.verdict());
+    TEST_ASSERT_EQUAL(188, a.width());
+    // Whole buffer at once, same answer; later bytes don't change it.
+    JpegSniffer w; TEST_ASSERT_EQUAL(JPEG_OK, w.feed(b, n));
+    TEST_ASSERT_EQUAL(JPEG_OK, w.feed((const uint8_t*)"junk", 4));
+    // Progressive, wrong size (w ≠ h too), not a JPEG, cut before the SOF.
+    n = makeJpeg(b, 0xC2, 188, 188);
+    JpegSniffer p; TEST_ASSERT_EQUAL(JPEG_PROGRESSIVE, p.feed(b, n));
+    n = makeJpeg(b, 0xC0, 240, 188);
+    JpegSniffer z; TEST_ASSERT_EQUAL(JPEG_BAD_SIZE, z.feed(b, n));
+    TEST_ASSERT_EQUAL(240, z.width()); TEST_ASSERT_EQUAL(188, z.height());
+    const uint8_t png[] = {0x89, 'P', 'N', 'G'};
+    JpegSniffer q; TEST_ASSERT_EQUAL(JPEG_NOT_JPEG, q.feed(png, sizeof(png)));
+    n = makeJpeg(b, 0xC0, 188, 188);
+    JpegSniffer t; TEST_ASSERT_EQUAL(JPEG_PENDING, t.feed(b, 30));
+    TEST_ASSERT_EQUAL(JPEG_TRUNCATED, t.finish());
+    TEST_ASSERT_EQUAL_STRING("progressive", verdictCode(JPEG_PROGRESSIVE));
+}
+
+void test_photo_names_order_and_rotation() {
+    using namespace Photos;
+    TEST_ASSERT_EQUAL_UINT32(3, idOf("p3.jpg"));
+    TEST_ASSERT_EQUAL_UINT32(120, idOf("p120.jpg"));
+    TEST_ASSERT_EQUAL_UINT32(0, idOf("../config.json"));
+    TEST_ASSERT_EQUAL_UINT32(0, idOf("p03.jpg"));
+    TEST_ASSERT_EQUAL_UINT32(0, idOf("p3.jpg/x"));
+    TEST_ASSERT_EQUAL_UINT32(0, idOf("p.jpg"));
+    TEST_ASSERT_EQUAL_UINT32(0, idOf("up.tmp"));
+    TEST_ASSERT_EQUAL_UINT32(0, idOf(nullptr));
+    char nm[16]; nameOf(42, nm, sizeof(nm));
+    TEST_ASSERT_EQUAL_STRING("p42.jpg", nm);
+
+    // Directory order is arbitrary; the list is upload (numeric) order.
+    uint32_t ids[kMax]; int n = 0;
+    n = insertId(ids, n, 10); n = insertId(ids, n, 2); n = insertId(ids, n, 9);
+    n = insertId(ids, n, 9);                                  // duplicate
+    TEST_ASSERT_EQUAL(3, n);
+    TEST_ASSERT_EQUAL_UINT32(2, ids[0]); TEST_ASSERT_EQUAL_UINT32(9, ids[1]);
+    TEST_ASSERT_EQUAL_UINT32(10, ids[2]);
+    TEST_ASSERT_EQUAL_UINT32(11, nextId(ids, n));
+    n = removeId(ids, n, 9);
+    TEST_ASSERT_EQUAL(2, n); TEST_ASSERT_EQUAL_UINT32(10, ids[1]);
+    TEST_ASSERT_EQUAL(2, removeId(ids, n, 77));
+    TEST_ASSERT_EQUAL_UINT32(1, nextId(ids, 0));
+    for (uint32_t k = 20; k < 40; k++) n = insertId(ids, n, k);
+    TEST_ASSERT_EQUAL(kMax, n);                               // capped
+
+    // Rotation: none shown yet → first; wraps; clamps after a delete.
+    TEST_ASSERT_EQUAL(-1, nextIndex(-1, 0));
+    TEST_ASSERT_EQUAL(0, nextIndex(-1, 3));
+    TEST_ASSERT_EQUAL(1, nextIndex(0, 3));
+    TEST_ASSERT_EQUAL(0, nextIndex(2, 3));
+    TEST_ASSERT_EQUAL(0, nextIndex(5, 3));
+}
+
+void test_photo_room_limits() {
+    using namespace Photos;
+    const uint32_t blk = 8192;
+    TEST_ASSERT_EQUAL(ROOM_OK, room(0, 30000, 300000, blk));
+    TEST_ASSERT_EQUAL(ROOM_FULL, room(kMax, 1, 300000, blk));
+    TEST_ASSERT_EQUAL(ROOM_TOO_BIG, room(0, kMaxBytes + 1, 300000, blk));
+    TEST_ASSERT_EQUAL(ROOM_OK, room(0, kMaxBytes, 300000, blk));
+    // 64 KB reserve + one block of slack must stay free after the photo.
+    TEST_ASSERT_EQUAL(ROOM_NO_SPACE, room(0, 30000, kReserveBytes + blk + 29999, blk));
+    TEST_ASSERT_EQUAL(ROOM_OK, room(0, 30000, kReserveBytes + blk + 30000, blk));
+    TEST_ASSERT_EQUAL_STRING("no_space", roomCode(ROOM_NO_SPACE));
 }
 
 int main(int, char**) {
@@ -834,5 +938,8 @@ int main(int, char**) {
     RUN_TEST(test_projects_from_pushed_cards);
     RUN_TEST(test_skill_filter_and_default);
     RUN_TEST(test_dock_tabs_follow_enabled_skills);
+    RUN_TEST(test_photo_jpeg_header_check);
+    RUN_TEST(test_photo_names_order_and_rotation);
+    RUN_TEST(test_photo_room_limits);
     return UNITY_END();
 }

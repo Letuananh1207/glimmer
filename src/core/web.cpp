@@ -12,7 +12,10 @@
 //   POST /hook         — trimmed agent hook event (tools/agents/glimmer-hook.sh)
 //   POST /api/channel  — show a channel / next
 //   POST /mcp          — JSON-RPC: push_card, clear_card, list_cards, get_state, show/next_channel
-//   The API token (when set) guards /push*, /hook, /mcp, /api/refresh, /api/channel.
+//   GET  /api/photos   — photos on the device + limits; POST uploads one (multipart field
+//                        "photo", baseline JPEG 188×188); DELETE /api/photos?name=p3.jpg
+//   The API token (when set) guards /push*, /hook, /mcp, /api/refresh, /api/channel,
+//   photo upload and delete.
 //   POST /update       — OTA firmware + filesystem (ESP8266HTTPUpdateServer)
 
 #include "web.h"
@@ -23,6 +26,7 @@
 #include "attention.h"
 #include "attention_json.h"
 #include "skill_core.h"
+#include "photos.h"
 #include <ESP8266HTTPUpdateServer.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
@@ -149,6 +153,7 @@ static void handleApiState() {
             if (Skill::inList(on, Skill::kAll[i])) so.add(Skill::kAll[i]);
     }
     d["night_face"]          = mainNightFace();
+    d["photos"]              = Photos::count();
     d["next_fetch_s"]        = mainNextFetchInMs() / 1000;
     d["claude_configured"]   = pSettings && !pSettings->claudeKey.isEmpty();
     d["codex_configured"]    = pSettings && !pSettings->codexToken.isEmpty();
@@ -725,6 +730,82 @@ static void handleMcp() {
     server.send(200, "application/json", out);
 }
 
+// ── Photos (skill `photo`) ──────────────────────────────────────────────────
+
+static void handlePhotoList() {
+    JsonDocument d;
+    JsonArray a = d["photos"].to<JsonArray>();
+    char nm[16];
+    for (int i = 0; i < Photos::count(); i++) {
+        JsonObject o = a.add<JsonObject>();
+        o["name"] = Photos::name(i, nm, sizeof(nm));
+        o["size"] = Photos::size(i);
+    }
+    d["free"]        = Photos::fsFree();
+    d["total"]       = Photos::fsTotal();
+    d["max_count"]   = Photos::kMax;
+    d["max_bytes"]   = Photos::kMaxBytes;
+    d["reserve"]     = Photos::kReserveBytes;
+    d["side"]        = Photos::kSide;
+    sendJson(200, d);
+}
+
+// Multipart chunks: auth is checked once headers are in (UPLOAD_FILE_START).
+static bool s_photoAuthBad = false;
+
+static void handlePhotoUploadChunk() {
+    HTTPUpload& up = server.upload();
+    switch (up.status) {
+        case UPLOAD_FILE_START:
+            s_photoAuthBad = !checkAuth();
+            if (!s_photoAuthBad) Photos::uploadStart(up.name.c_str());
+            break;
+        case UPLOAD_FILE_WRITE:
+            if (!s_photoAuthBad) Photos::uploadWrite(up.buf, up.currentSize);
+            break;
+        case UPLOAD_FILE_ABORTED:
+            if (!s_photoAuthBad) Photos::uploadAbort();
+            break;
+        default: break;
+    }
+}
+
+static void handlePhotoUploadDone() {
+    if (s_photoAuthBad || !checkAuth()) {
+        s_photoAuthBad = false;
+        server.send(401, "application/json", "{\"error\":\"unauthorized\"}");
+        return;
+    }
+    char nm[16];
+    const char* err = Photos::uploadEnd(nm, sizeof(nm));
+    JsonDocument d;
+    if (*err) {
+        d["error"] = err;
+        d["count"] = Photos::count();
+        // full / no_space / too_big = limits (413 / 507); format problems = 400.
+        int code = !strcmp(err, "full") || !strcmp(err, "too_big") ? 413
+                 : !strcmp(err, "no_space") ? 507 : !strcmp(err, "fs") ? 500 : 400;
+        sendJson(code, d);
+        return;
+    }
+    d["ok"]    = true;
+    d["name"]  = nm;
+    d["count"] = Photos::count();
+    sendJson(200, d);
+}
+
+static void handlePhotoDelete() {
+    if (!checkAuth()) { server.send(401, "application/json", "{\"error\":\"unauthorized\"}"); return; }
+    if (!Photos::remove(server.arg("name").c_str())) {
+        server.send(404, "application/json", "{\"error\":\"no such photo\"}");
+        return;
+    }
+    JsonDocument d;
+    d["ok"]    = true;
+    d["count"] = Photos::count();
+    sendJson(200, d);
+}
+
 // ── Public API ──────────────────────────────────────────────────────────────
 
 void Web::begin(Settings& settings) {
@@ -775,6 +856,9 @@ void Web::begin(Settings& settings) {
     server.on("/push/clear",         HTTP_POST, handlePushClear);
     server.on("/hook",               HTTP_POST, handleHook);
     server.on("/mcp",                HTTP_POST, handleMcp);
+    server.on("/api/photos",         HTTP_GET,    handlePhotoList);
+    server.on("/api/photos",         HTTP_POST,   handlePhotoUploadDone, handlePhotoUploadChunk);
+    server.on("/api/photos",         HTTP_DELETE, handlePhotoDelete);
 
     // Backwards-compat status (used by some scripts)
     server.on("/status",             HTTP_GET,  handleApiState);
