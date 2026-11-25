@@ -307,12 +307,13 @@ Nguồn `source/Agents-More.dc.html` · ảnh `screens/@2x/AgentsMore.png`
 
 ## 6. Claude — kênh `Claude`
 
+> **P-2026-11-25.2 — Clawd ngủ khi chưa có project:** bảng project trống → Clawd mắt `sleep` (vạch ngang 2 ô ở hàng mắt dưới) thay cho `shut`, kèm chữ "Zz" pixel MUTED ở góc trên phải Clawd. Xem `Claude-NoProject`.
 > **P-2026-11-25.1 — Bản đầu:** vẽ lại đúng màn firmware v0.23.0 đang chạy.
 
 Hạn mức Claude: số to tuần, phiên 5 giờ, bảng project.
 
 - Số to VT323-86 = phần **đã dùng**; màu theo phần còn lại; dữ liệu cũ / khóa lỗi → MUTED.
-- Cột phải: Clawd 72×40 (ô 4) tại (156, 58), biểu cảm theo bảng project (không có project → nhắm mắt); đếm ngược JBMono-12B CORAL TR (228, 112).
+- Cột phải: Clawd 72×40 (ô 4) tại (156, 58), biểu cảm theo bảng project (không có project → ngủ: mắt `sleep` + "Zz", từ P-2026-11-25.2); đếm ngược JBMono-12B CORAL TR (228, 112).
 - Hàng dưới y 176, mỗi dòng 14 px, ≤ 3 dòng: project (cắt 84 px) + trạng thái màu (`Cần duyệt` AMBER, `Chờ bạn` SKY, `Lỗi` CORAL, `Đang chạy` LILAC, `Xong` MINT) + tuổi TR. Khóa lỗi khi còn số → dải 224×14 màu lỗi chiếm dòng đầu.
 - Không có số liệu mà khóa lỗi / mất mạng → thẻ credential (biểu tượng chìa khóa hoặc vòng cấm, tiêu đề JBMono-16B, 2 dòng lý do, `glimmer.local` SKY + IP).
 - Meta status bar (≈ 72 px): `CŨ 14M` AMBER khi cũ; `KHÓA LỖI` CORAL khi khóa lỗi; `BỊ CHẶN` AMBER.
@@ -357,7 +358,9 @@ Nguồn `source/Claude-NoProject.dc.html` · ảnh `screens/@2x/ClaudeNoProject.
 |---|---|---|---|---|---|
 | 0, 0, 240×22 | MC / MR | `JBMono-12B` / `JBMono-11` | INK / nhấn CORAL | Status bar `Claude`; gạch nhấn y 22 | 42 |
 | 12, 32 | TL | `JBMono-11` | MUTED | `TUẦN` | 28 |
-| 156, 58, 72×40 |  |  | CLAWD | Clawd (ô 4, mắt `shut`, chân `stand`) |  |
+| 156, 58, 72×40 |  |  | CLAWD | Clawd (ô 4, mắt `sleep`, chân `stand`) |  |
+| 202, 46, 8×8 |  |  | MUTED | bitmap `z` 4×4 ô, ô 2 px (`####` `..#.` `.#..` `####`) |  |
+| 214, 30, 10×10 |  |  | MUTED | bitmap `Z` 5×5 ô, ô 2 px (`#####` `...#.` `..#..` `.#...` `#####`) |  |
 | 228, 112 | TR | `JBMono-12B` | CORAL | `4d` | 14 |
 | 12, 46 | TL | `VT323-86` | MINT | `38` | 68 |
 | 82, 76 | TL | `VT323-44` | MINT | `%` | 18 |

@@ -1,7 +1,7 @@
 {
   "meta": {
     "name": "glimmer panel",
-    "version": "P-2026-11-25.1",
+    "version": "P-2026-11-25.2",
     "frame": {
       "width": 240,
       "height": 240,
@@ -191,12 +191,40 @@
         "wide",
         "happy",
         "shut",
-        "sad"
+        "sad",
+        "sleep"
       ],
       "legs": [
         "stand",
         "walk"
-      ]
+      ],
+      "eyesNote": {
+        "shut": "lấp kín lỗ mắt — chỉ dùng để chớp mắt",
+        "sleep": "hàng mắt trên lấp, hàng mắt dưới khoét cột 4–5 và 12–13 (vạch ngang 2 ô) — đang ngủ"
+      },
+      "sleepMark": {
+        "z": {
+          "rows": [
+            "####",
+            "..#.",
+            ".#..",
+            "####"
+          ],
+          "cell": 2,
+          "color": "muted"
+        },
+        "Z": {
+          "rows": [
+            "#####",
+            "...#.",
+            "..#..",
+            ".#...",
+            "#####"
+          ],
+          "cell": 2,
+          "color": "muted"
+        }
+      }
     }
   }
 }
