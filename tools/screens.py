@@ -227,13 +227,12 @@ def claude(sc, *, hero_used=38, hero_label="TUẦN", reset="4NG", sec_label="PHI
     sc.text("JBMono-11", hero_label, L, 32, MUTED)
     # right column: Clawd (mood from the board); countdown above the bar
     clawd(sc, R - 72, 58, 4, eyes=mood)
-    if mood == "sleep":                 # "Zz" (ch_claude.cpp paintZz): 2-px cells, MUTED
-        for glyph, gx, gy in ((["####", "..#.", ".#..", "####"], 202, 46),
-                              (["#####", "...#.", "..#..", ".#...", "#####"], 214, 30)):
-            for j, row in enumerate(glyph):
-                for i, c in enumerate(row):
-                    if c == "#":
-                        sc.rect(gx + i * 2, gy + j * 2, 2, 2, MUTED)
+    if mood == "sleep":                 # animated Zz (ch_claude.cpp kZz): preview = frame 6
+        glyph, gx, gy = ["####", "..#.", ".#..", "####"], 202, 38   # z4, MUTED, 2-px cells
+        for j, row in enumerate(glyph):
+            for i, c in enumerate(row):
+                if c == "#":
+                    sc.rect(gx + i * 2, gy + j * 2, 2, 2, MUTED)
     sc.text("JBMono-12B", reset, R, 112, CORAL, "TR")
     # hero ("100" drops its "%": it would run into Clawd at x 156)
     remaining = 100 - hero_used if hero_used >= 0 else -1

@@ -89,9 +89,22 @@ static uint8_t clawdFrame() {
     return eyes | (walk ? 0x10 : 0);
 }
 
-// "Zz" over a sleeping Clawd (design P-2026-11-25.2): bitmap glyphs, 2-px cells,
-// MUTED — z 4×4 at (202,46), Z 5×5 at (214,30). Band 202..223 × 30..53.
-static constexpr int kZzX = 202, kZzY = 30, kZzW = 22, kZzH = 24;
+// Animated "Zz" over a sleeping Clawd (design P-2026-11-25.6, token
+// component.clawd.sleepMark): one z drifting up and growing, 12 frames × 400 ms
+// then a 1.2 s pause (6 s cycle). Each frame repaints only 196..225 × 24..57.
+static constexpr int kZzX = 196, kZzY = 24, kZzW = 30, kZzH = 34;
+static constexpr uint32_t kZzFrameMs = 400, kZzCycleMs = 6000;
+static constexpr int kZzFrames = 12;
+
+struct ZzFrame { uint8_t glyph, x, y; bool faint; };   // glyph 0 = z3, 1 = z4, 2 = Z5
+static const ZzFrame kZz[kZzFrames] PROGMEM = {
+    {0, 198, 52, true},  {0, 200, 50, false}, {0, 202, 48, false}, {0, 203, 45, false},
+    {1, 202, 42, false}, {1, 202, 40, false}, {1, 202, 38, false}, {1, 203, 36, false},
+    {2, 204, 32, false}, {2, 206, 30, false}, {2, 208, 28, true},  {2, 209, 26, true},
+};
+
+static uint32_t s_zzT0    = 0;    // millis() of frame 0
+static int8_t   s_zzShown = -1;   // frame on screen; kZzFrames = pause (blank); -1 = none
 
 static void drawGlyph(const uint8_t* rows, int n, int x, int y, uint16_t color) {
     for (int j = 0; j < n; j++)
@@ -99,13 +112,27 @@ static void drawGlyph(const uint8_t* rows, int n, int x, int y, uint16_t color) 
             if (rows[j] & (1 << (n - 1 - i))) tft.fillRect(x + i * 2, y + j * 2, 2, 2, color);
 }
 
-static void paintZz(bool on) {
-    static const uint8_t kz[4] = {0x0F, 0x02, 0x04, 0x0F};
-    static const uint8_t kZ[5] = {0x1F, 0x02, 0x04, 0x08, 0x1F};
+// k < kZzFrames: that frame; kZzFrames: blank (pause); -1: blank, Zz off.
+static void paintZzFrame(int k) {
+    static const uint8_t kz3[3] = {0x07, 0x02, 0x07};
+    static const uint8_t kz4[4] = {0x0F, 0x02, 0x04, 0x0F};
+    static const uint8_t kZ5[5] = {0x1F, 0x02, 0x04, 0x08, 0x1F};
     tft.fillRect(kZzX, kZzY, kZzW, kZzH, Theme::BG);
-    if (!on) return;
-    drawGlyph(kz, 4, 202, 46, Theme::MUTED);
-    drawGlyph(kZ, 5, 214, 30, Theme::MUTED);
+    if (k >= 0 && k < kZzFrames) {
+        ZzFrame f;
+        memcpy_P(&f, &kZz[k], sizeof(f));
+        const uint8_t* rows = f.glyph == 0 ? kz3 : f.glyph == 1 ? kz4 : kZ5;
+        drawGlyph(rows, 3 + f.glyph, f.x, f.y, f.faint ? Theme::LINE : Theme::MUTED);
+    }
+    s_zzShown = (int8_t)k;
+}
+
+// Advance the Zz while asleep (called every tick); no-op between frames.
+static void tickZz() {
+    if (s_zzShown < 0) return;
+    int k = (int)((millis() - s_zzT0) % kZzCycleMs / kZzFrameMs);
+    if (k > kZzFrames) k = kZzFrames;
+    if (k != s_zzShown) paintZzFrame(k);
 }
 
 static void paintClawd(bool force = false) {
@@ -114,7 +141,8 @@ static void paintClawd(bool force = false) {
     const bool asleep    = (f & 0x0F) == Display::CLAWD_SLEEP;
     const bool wasAsleep = s_clawdFrame != 0xFF && (s_clawdFrame & 0x0F) == Display::CLAWD_SLEEP;
     Display::drawClawd(kClawdX, kClawdY, kClawdS, Display::CLAWD_ORANGE, f & 0x0F, f & 0x10);
-    if (asleep != wasAsleep || force) paintZz(asleep);
+    if (asleep && (!wasAsleep || force)) { s_zzT0 = millis(); paintZzFrame(0); }
+    else if (!asleep && (wasAsleep || force)) paintZzFrame(-1);
     s_clawdFrame = f;
 }
 
@@ -351,6 +379,7 @@ void chClaudeTick(const ChannelCtx& ctx) {
     const time_t secRst  = swapped ? d.sessionReset: d.weeklyReset;
 
     paintClawd();                       // mood / blink / step — only when the frame changes
+    tickZz();                           // sleeping: next Zz frame every 400 ms
 
     if (minTick) {
         MetaSlot m = metaFor(ctx);

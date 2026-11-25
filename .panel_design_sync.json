@@ -1,11 +1,12 @@
 {
-  "appliedVersion": "P-2026-11-25.5",
+  "appliedVersion": "P-2026-11-25.6",
   "applied": [
     "P-2026-11-25.1",
     "P-2026-11-25.2",
     "P-2026-11-25.3",
     "P-2026-11-25.4",
-    "P-2026-11-25.5"
+    "P-2026-11-25.5",
+    "P-2026-11-25.6"
   ],
-  "note": "P-2026-11-25.2: Clawd ngủ (CLAWD_SLEEP + Zz) — chưa làm phần tuỳ chọn Zz đổi hình mỗi 1 s. P-2026-11-25.3 (áp 2026-11-25 sau .4, người dùng chốt cả 3 dòng 'Đổi luật'): dock chỉ 3 tab (bỏ Tin nhắn tới khi có gói chat) nên khung 30×114 thay 30×150; vạch y 230 vẫn vàng/xanh liền trên màn không dock (Attention, Night); Home bỏ biểu tượng thời tiết; Claude 100% bỏ dấu %; băng/chân trang tự rút chữ khi không vừa khe. P-2026-11-25.4: meta thời tiết Home tự rút về chỉ nhiệt độ khi > 72 px."
+  "note": "P-2026-11-25.2: Clawd ngủ (CLAWD_SLEEP + Zz); Zz động làm ở P-2026-11-25.6. P-2026-11-25.3 (áp 2026-11-25 sau .4, người dùng chốt cả 3 dòng 'Đổi luật'): dock chỉ 3 tab (bỏ Tin nhắn tới khi có gói chat) nên khung 30×114 thay 30×150; vạch y 230 vẫn vàng/xanh liền trên màn không dock (Attention, Night); Home bỏ biểu tượng thời tiết; Claude 100% bỏ dấu %; băng/chân trang tự rút chữ khi không vừa khe. P-2026-11-25.4: meta thời tiết Home tự rút về chỉ nhiệt độ khi > 72 px."
 }
