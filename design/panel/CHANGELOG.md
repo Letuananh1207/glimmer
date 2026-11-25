@@ -5,6 +5,23 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-25.5 — Xong hết thì Clawd ngủ; Clawd vui mới cho thẻ xong
+
+- **Kênh Claude** (`source/Claude-Done.dc.html`, `screen_specs.md` §6; ảnh `ClaudeDone.png`):
+  - Mới **Claude · đã xong hết**: mọi project trên bảng `Xong` (ô + chữ MINT, tuổi MUTED TR) → Clawd **ngủ** (mắt
+    `sleep` + "Zz" MUTED tại (202, 46) / (214, 30)), y như bảng trống.
+  - Máy đang vẽ mắt `happy` khi project gấp nhất là P_DONE → đổi sang ngủ. Các trạng thái khác giữ: chờ duyệt `wide`,
+    lỗi `sad`, đang chạy `open` + bước đi.
+- **Clawd** (`source/Clawd.dc.html`, token `component.clawd`): mắt `happy` vẽ lại — lấp kín lỗ mắt rồi khoét theo
+  **nửa ô** (ô 4 px → lỗ 2 px; ô 5 px → lỗ 2 px, vị trí `x + hx·ô/2` làm tròn xuống): mỗi mắt `^` 3×2 nửa ô, miệng cười
+  `‿` 4×2 nửa ô. Tọa độ nửa ô trong `happyHoles`. Dùng ở thẻ **Attention · xong** (§1; ảnh `AttentionDone.png`).
+- Đổi luật: mặt Clawd trên màn Claude khi mọi project đã xong = ngủ (trước: vui).
+
+**Việc cần làm trong code:**
+- Kênh `Claude`: project đứng đầu bảng là P_DONE → Clawd mắt `sleep` + "Zz" (như bảng trống), không chớp.
+- Clawd mắt `happy`: lấp lỗ mắt, khoét lỗ nửa ô theo `happyHoles` (mắt `^ ^` + miệng cười); dùng cho thẻ Attention ·
+  xong (ô 5 px). Bản xem trước màn trên máy tính vẽ theo.
+
 ## P-2026-11-25.4 — Khớp máy, Việt hoá đơn vị, vẽ lại đúng luật khung
 
 - **Mọi màn có vạch chỉ báo** (`screen_specs.md` mọi mục; ảnh mọi màn): vạch y 230 = tiến độ màu kênh + phần chưa chạy

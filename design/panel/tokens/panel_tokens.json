@@ -1,7 +1,7 @@
 {
   "meta": {
     "name": "glimmer panel",
-    "version": "P-2026-11-25.4",
+    "version": "P-2026-11-25.5",
     "frame": {
       "width": 240,
       "height": 240,
@@ -226,7 +226,8 @@
       ],
       "eyesNote": {
         "shut": "lấp kín lỗ mắt — chỉ dùng để chớp mắt",
-        "sleep": "hàng mắt trên lấp, hàng mắt dưới khoét cột 4–5 và 12–13 (vạch ngang 2 ô) — đang ngủ"
+        "sleep": "hàng mắt trên lấp, hàng mắt dưới khoét cột 4–5 và 12–13 (vạch ngang 2 ô) — đang ngủ",
+        "happy": "vui: lấp lỗ mắt, khoét theo nửa ô (lỗ ô/2 px, vị trí x + hx·ô/2 làm tròn xuống) — mắt ^ ^ + miệng cười; chỉ thẻ Attention · xong"
       },
       "sleepMark": {
         "z": {
@@ -250,6 +251,64 @@
           "cell": 2,
           "color": "muted"
         }
+      },
+      "happyHoles": {
+        "grid": [
+          36,
+          20
+        ],
+        "eyes": [
+          [
+            10,
+            5
+          ],
+          [
+            9,
+            6
+          ],
+          [
+            11,
+            6
+          ],
+          [
+            25,
+            5
+          ],
+          [
+            24,
+            6
+          ],
+          [
+            26,
+            6
+          ]
+        ],
+        "mouth": [
+          [
+            16,
+            9
+          ],
+          [
+            19,
+            9
+          ],
+          [
+            17,
+            10
+          ],
+          [
+            18,
+            10
+          ]
+        ]
+      },
+      "mood": {
+        "P_APPROVAL": "wide",
+        "P_ERROR": "sad",
+        "P_WORKING": "open + đi",
+        "P_INPUT": "open",
+        "P_DONE": "sleep + Zz",
+        "trống": "sleep + Zz"
       }
     },
     "dock": {

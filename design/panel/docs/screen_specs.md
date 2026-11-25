@@ -12,6 +12,8 @@ Chữ trên màn là tiếng Việt: thời lượng `P` phút · `G` giờ · `
 
 > **P-2026-11-25.1 — Bản đầu:** vẽ lại đúng màn firmware v0.23.0 đang chạy.
 
+> **P-2026-11-25.5 — Clawd vui mới:** thẻ `Attention-Done` dùng mắt `happy` mới: lấp kín lỗ mắt cũ rồi khoét theo **nửa ô** (ô 4 px → lỗ 2×2 px; ô 5 px → lỗ 2×2 px, vị trí `x + hx·ô/2` làm tròn xuống) — mỗi mắt `^` (đỉnh nửa-ô (10, 5) / (25, 5), chân (9, 6) (11, 6) / (24, 6) (26, 6)), miệng cười `‿` (16, 9) (19, 9) (17, 10) (18, 10); lưới nửa ô 36×20. Badge, tia sáng, chữ giữ nguyên.
+
 Thẻ toàn màn cho agent (duyệt / câu hỏi / xong / tiến độ / lỗi).
 
 - Không có status bar: nền đen từ y 0, dòng `AGENT · project` ở y 30.
@@ -392,6 +394,8 @@ Nguồn `source/Agents-Idle.dc.html` · ảnh `screens/@2x/AgentsIdle.png`
 
 ## 6. Claude — kênh `Claude`
 
+> **P-2026-11-25.5 — Xong hết thì Clawd ngủ:** mọi project trên bảng đều `Xong` (project gấp nhất là P_DONE) → Clawd mắt `sleep` + "Zz" MUTED như bảng trống, **không** còn mắt `happy`. Xem `Claude-Done`.
+
 > **P-2026-11-25.4 — Khớp máy, Việt hoá, đúng luật khung:** đơn vị `4NG`, `2G 14P`, `18G 5P`, `CŨ 14P`, tuổi `2P` / `1G`; vạch y 230 phần còn lại PANEL.
 
 > **P-2026-11-25.3 — Dock dọc:** bố cục có dock của kênh này ở §15 · `Claude-Dock` (chờ chốt "Đổi luật").
@@ -461,6 +465,42 @@ Nguồn `source/Claude-NoProject.dc.html` · ảnh `screens/@2x/ClaudeNoProject.
 | 12, 164, 216×4 |  |  | MINT | `pixelBar` 9 ô, 12 % |  |
 | 12, 170, w 216 |  |  | LINE | chấm kẻ (1 px mỗi 4 px) |  |
 | 12, 176 | TL | `JBMono-11` | MUTED | `Chưa có hoạt động project` | 175 |
+| 0, 230, 240×2 |  |  | CORAL / PANEL | vạch tiến độ slide (vẽ ở 40 %), phần chưa chạy PANEL |  |
+
+### Claude-Done — Claude · đã xong hết (Clawd ngủ)
+
+Giống `Claude-NoProject` (Clawd ngủ + Zz), chỉ khác bảng project: mọi hàng `Xong` MINT. Clawd ngủ khi project đứng đầu `ordered()` là P_DONE; còn project chờ duyệt / câu hỏi / lỗi / đang chạy thì mặt theo project đó như cũ.
+
+Nguồn `source/Claude-Done.dc.html` · ảnh `screens/@2x/ClaudeDone.png`
+
+| x, y (w×h) | datum | font | màu | nội dung | px |
+|---|---|---|---|---|---|
+| 0, 0, 240×22 | MC / MR | `JBMono-12B` / `JBMono-11` | INK / nhấn CORAL | Status bar `Claude`; gạch nhấn y 22 | 42 |
+| 12, 32 | TL | `JBMono-11` | MUTED | `TUẦN` | 28 |
+| 156, 58, 72×40 |  |  | CLAWD | Clawd (ô 4, mắt `sleep`, chân `stand`) |  |
+| 202, 46, 8×8 |  |  | MUTED | bitmap `z` 4×4 ô, ô 2 px (`####` `..#.` `.#..` `####`) |  |
+| 214, 30, 10×10 |  |  | MUTED | bitmap `Z` 5×5 ô, ô 2 px (`#####` `...#.` `..#..` `.#...` `#####`) |  |
+| 228, 112 | TR | `JBMono-12B` | CORAL | `4NG` | 21 |
+| 12, 46 | TL | `VT323-86` | MINT | `38` | 68 |
+| 82, 76 | TL | `VT323-44` | MINT | `%` | 18 |
+| 12, 128, 216×8 |  |  | MINT | `pixelBar` 9 ô, 38 % |  |
+| 12, 146, w 216 |  |  | LINE | chấm kẻ (1 px mỗi 4 px) |  |
+| 12, 150 | TL | `JBMono-11` | MUTED | `PHIÊN 5 GIỜ` | 77 |
+| 228, 150 | TR | `JBMono-11` | INK_DIM | `12% · 2G 14P` | 84 |
+| 12, 164, 216×4 |  |  | MINT | `pixelBar` 9 ô, 12 % |  |
+| 12, 170, w 216 |  |  | LINE | chấm kẻ (1 px mỗi 4 px) |  |
+| 12, 180, 5×5 |  |  | MINT | ô trạng thái hàng 1 |  |
+| 22, 176 | TL | `JBMono-11` | INK_DIM | `glimmer` | 49 |
+| 79, 176 | TL | `JBMono-11` | MINT | `Xong` (x = 22 + tên + 8) | 28 |
+| 228, 176 | TR | `JBMono-11` | MUTED | `2P` | 14 |
+| 12, 194, 5×5 |  |  | MINT | ô trạng thái hàng 2 |  |
+| 22, 190 | TL | `JBMono-11` | INK_DIM | `TieuMac3d` | 63 |
+| 93, 190 | TL | `JBMono-11` | MINT | `Xong` | 28 |
+| 228, 190 | TR | `JBMono-11` | MUTED | `40P` | 21 |
+| 12, 208, 5×5 |  |  | MINT | ô trạng thái hàng 3 |  |
+| 22, 204 | TL | `JBMono-11` | INK_DIM | `api` | 21 |
+| 51, 204 | TL | `JBMono-11` | MINT | `Xong` | 28 |
+| 228, 204 | TR | `JBMono-11` | MUTED | `1G` | 14 |
 | 0, 230, 240×2 |  |  | CORAL / PANEL | vạch tiến độ slide (vẽ ở 40 %), phần chưa chạy PANEL |  |
 
 ### Claude-Low — Claude · sắp hết hạn mức
