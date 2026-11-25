@@ -57,4 +57,8 @@ abstract final class AppColors {
   static const Color skillWeatherTint = Color(0x2954B6FF);
   /// Nền ô icon skill Đồng hồ
   static const Color skillClockTint = Color(0x29FFD23F);
+  /// Màu nhấn skill Ảnh (= mint, như kênh Photo trên thiết bị)
+  static const Color skillPhoto = Color(0xFF8FE574);
+  /// Nền ô icon skill Ảnh; nền ô "+ Thêm ảnh" dùng mint 8 %
+  static const Color skillPhotoTint = Color(0x298FE574);
 }

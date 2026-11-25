@@ -2,7 +2,9 @@ import 'package:flutter/foundation.dart';
 
 import '../../../domain/models/app_error.dart';
 import '../../../domain/models/attention_card.dart';
+import '../../../domain/models/device_photo.dart';
 import '../../../domain/models/device_state.dart';
+import '../../../utils/cancel_token.dart';
 import '../../../utils/result.dart';
 
 /// The display the app talks to: which one, its latest state and cards, polling, and every call to it.
@@ -78,6 +80,19 @@ abstract class DeviceRepository extends ChangeNotifier {
 
   /// OTA upload ("firmware" / "filesystem"); the device reboots after it.
   Future<Result<void>> upload(String field, Uint8List image, {void Function(double)? onProgress});
+
+  // ── photos (skill `photo`, GET / POST / DELETE /api/photos) ──
+
+  /// Photos on the device + its limits.
+  Future<Result<PhotoInfo>> photos();
+
+  /// Send one baseline JPEG (multipart field `photo`). Errors: `photoFull`, `photoTooBig`, `photoNoSpace`,
+  /// `photoRejected` (detail = device code), `unreachable` (offline), `unauthorized`, `cancelled`, `http`.
+  /// [onProgress] = share of bytes sent, 0…1. Refreshes the state (`photos`) after success.
+  Future<Result<SentPhoto>> uploadPhoto(Uint8List jpeg, {void Function(double)? onProgress, CancelToken? cancel});
+
+  /// Delete photo [name]; returns the photos left. 404 → `photoNotFound`.
+  Future<Result<int>> deletePhoto(String name);
 
   /// Wait until the display answers again (after a reboot); null after [max].
   Future<DeviceState?> waitOnline({Duration max = const Duration(minutes: 3)});

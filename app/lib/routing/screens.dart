@@ -4,7 +4,11 @@ import 'package:provider/provider.dart';
 
 import '../data/repositories/backup/backup_repository.dart';
 import '../data/repositories/device/device_repository.dart';
+import '../data/repositories/photo/photo_repository.dart';
 import '../data/repositories/release/release_repository.dart';
+import '../domain/use_cases/delete_photo_use_case.dart';
+import '../domain/use_cases/load_photos_use_case.dart';
+import '../domain/use_cases/send_photo_use_case.dart';
 import '../domain/use_cases/toggle_skill_use_case.dart';
 import '../ui/connect/view_models/connect_view_model.dart';
 import '../ui/connect/widgets/connect_screen.dart';
@@ -13,7 +17,10 @@ import '../ui/dashboard/view_models/dashboard_view_model.dart';
 import '../ui/dashboard/widgets/dashboard_screen.dart';
 import '../ui/device/view_models/device_view_model.dart';
 import '../ui/device/widgets/device_screen.dart';
+import '../ui/dashboard/view_models/photo_tab_view_model.dart';
 import '../ui/home/view_models/home_view_model.dart';
+import '../ui/photo_crop/view_models/photo_crop_view_model.dart';
+import '../ui/photo_crop/widgets/photo_crop_screen.dart';
 import '../ui/home/widgets/home_shell.dart';
 import '../ui/settings/view_models/settings_view_model.dart';
 import '../ui/settings/widgets/settings_screen.dart';
@@ -21,6 +28,7 @@ import '../ui/skills/view_models/skills_view_model.dart';
 import '../ui/skills/widgets/skills_screen.dart';
 import '../ui/wifi_setup/view_models/wifi_setup_view_model.dart';
 import '../ui/wifi_setup/widgets/wifi_setup_screen.dart';
+import 'routes.dart';
 
 Widget connectScreen({required VoidCallback onNewDevice}) => ViewModelHost(
       create: (c) => ConnectViewModel(device: c.read<DeviceRepository>()),
@@ -32,10 +40,38 @@ Widget wifiSetupScreen() => ViewModelHost(
       builder: (_, vm) => WifiSetupScreen(viewModel: vm),
     );
 
-Widget dashboardScreen({required VoidCallback onOpenSettings}) => ViewModelHost(
+/// [onCropPhoto] opens PhotoCrop and completes when it closes (the Ảnh tab then reloads).
+Widget dashboardScreen({
+  required VoidCallback onOpenSettings,
+  required Future<void> Function(PhotoCropArgs args) onCropPhoto,
+}) =>
+    ViewModelHost(
       create: (c) =>
           DashboardViewModel(device: c.read<DeviceRepository>(), toggleSkill: c.read<ToggleSkillUseCase>()),
-      builder: (_, vm) => DashboardScreen(viewModel: vm, onOpenSettings: onOpenSettings),
+      builder: (_, vm) => ViewModelHost(
+        create: (c) => PhotoTabViewModel(
+          loadPhotos: c.read<LoadPhotosUseCase>(),
+          deletePhoto: c.read<DeletePhotoUseCase>(),
+          photos: c.read<PhotoRepository>(),
+        ),
+        builder: (_, photos) => DashboardScreen(
+          viewModel: vm,
+          photos: photos,
+          onOpenSettings: onOpenSettings,
+          onCropPhoto: onCropPhoto,
+        ),
+      ),
+    );
+
+/// Cắt ảnh (screen_specs §7); [onClose] = back to the Ảnh tab.
+Widget photoCropScreen(PhotoCropArgs args, {required VoidCallback onClose}) => ViewModelHost(
+      create: (c) => PhotoCropViewModel(
+        image: args.image,
+        info: args.info,
+        send: c.read<SendPhotoUseCase>(),
+        photos: c.read<PhotoRepository>(),
+      ),
+      builder: (_, vm) => PhotoCropScreen(viewModel: vm, onClose: onClose),
     );
 
 Widget settingsScreen() => ViewModelHost(

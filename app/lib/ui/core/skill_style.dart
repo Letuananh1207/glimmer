@@ -31,6 +31,8 @@ class SkillStyle {
   static SkillStyle of(String id) => switch (id) {
         'agent' => const SkillStyle._(AppColors.skillAgent, AppColors.skillAgentTint,
             dock: '$_icons/dock-clawd.svg', dockScale: _clawdScale),
+        'photo' => const SkillStyle._(AppColors.skillPhoto, AppColors.skillPhotoTint,
+            dock: '$_icons/dock-photo.svg', dockScale: _pixelScale),
         'weather' => const SkillStyle._(AppColors.skillWeather, AppColors.skillWeatherTint,
             dock: '$_icons/dock-weather.svg', dockScale: _pixelScale),
         'clock' => const SkillStyle._(AppColors.skillClock, AppColors.skillClockTint,
@@ -43,6 +45,7 @@ class SkillStyle {
 
   static String name(AppLocalizations l, String id) => switch (id) {
         'agent' => l.skillAgentName,
+        'photo' => l.skillPhotoName,
         'weather' => l.skillWeatherName,
         'clock' => l.skillClockName,
         'chat' => l.skillChatName,
@@ -55,6 +58,7 @@ class SkillStyle {
   /// One-line description of a skill row.
   static String description(AppLocalizations l, String id) => switch (id) {
         'agent' => l.skillAgentDesc,
+        'photo' => l.skillPhotoDesc,
         'weather' => l.skillWeatherDesc,
         'clock' => l.skillClockDesc,
         _ => '',

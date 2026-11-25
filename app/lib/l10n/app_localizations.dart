@@ -1611,6 +1611,342 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đã chuyển sang màn {skill}'**
   String devShowOnDeviceDone(String skill);
+
+  /// Tên skill / tab dock Ảnh
+  ///
+  /// In vi, this message translates to:
+  /// **'Ảnh'**
+  String get skillPhotoName;
+
+  /// Mô tả dòng skill Ảnh
+  ///
+  /// In vi, this message translates to:
+  /// **'Ảnh của bạn, gửi từ điện thoại'**
+  String get skillPhotoDesc;
+
+  /// Thay mô tả dòng Ảnh khi skill tắt mà thiết bị có ảnh, màu mint
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} ảnh đã có trên thiết bị. Bật để xoay.'**
+  String skillsPhotoHint(int count);
+
+  /// Mô tả dòng skill khi firmware chưa có skill đó, amber
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần firmware mới'**
+  String get skillsNeedFirmware;
+
+  /// Nút nhỏ trên dòng skill cần firmware → tab Thiết bị
+  ///
+  /// In vi, this message translates to:
+  /// **'Cập nhật'**
+  String get skillsUpdateFirmware;
+
+  /// Nhãn thẻ tab Ảnh
+  ///
+  /// In vi, this message translates to:
+  /// **'ẢNH TRÊN THIẾT BỊ'**
+  String get photoOnDevice;
+
+  /// Meta thẻ tab Ảnh
+  ///
+  /// In vi, this message translates to:
+  /// **'{count}/{max} · còn {free} chỗ'**
+  String photoCount(int count, int max, int free);
+
+  /// Meta thẻ tab Ảnh khi đủ, amber
+  ///
+  /// In vi, this message translates to:
+  /// **'{max}/{max} · hết chỗ'**
+  String photoCountFull(int max);
+
+  /// Meta thẻ tab Ảnh khi chưa có ảnh
+  ///
+  /// In vi, this message translates to:
+  /// **'0/{max}'**
+  String photoCountEmpty(int max);
+
+  /// Ô cuối lưới, nút ở trạng thái chưa có ảnh, tiêu đề bảng chọn nguồn
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm ảnh'**
+  String get photoAdd;
+
+  /// Ô thêm ảnh khi đã đủ (khoá)
+  ///
+  /// In vi, this message translates to:
+  /// **'Đủ {max} ảnh'**
+  String photoFullTile(int max);
+
+  /// Dòng dưới lưới khi đủ ảnh
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiết bị giữ tối đa {max} ảnh. Xoá bớt một ảnh để thêm ảnh mới.'**
+  String photoFullBody(int max);
+
+  /// Nhãn đọc màn hình của ô ảnh
+  ///
+  /// In vi, this message translates to:
+  /// **'Ảnh {index}, bấm để xoá'**
+  String photoTileA11y(int index);
+
+  /// Nhãn đọc màn hình ô ảnh không có bản xem
+  ///
+  /// In vi, this message translates to:
+  /// **'Ảnh {name}, gửi từ nơi khác, bấm để xoá'**
+  String photoUnknownA11y(String name);
+
+  /// Dòng nhỏ trong ô ảnh app không giữ bản sao
+  ///
+  /// In vi, this message translates to:
+  /// **'không có bản xem'**
+  String get photoNoPreview;
+
+  /// Chú thích dưới thẻ tab Ảnh
+  ///
+  /// In vi, this message translates to:
+  /// **'Bấm vào ảnh để xoá. Cập nhật đầy đủ ở tab Thiết bị sẽ xoá hết ảnh trên thiết bị.'**
+  String get photoNote;
+
+  /// Tab Ảnh chưa có ảnh
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có ảnh'**
+  String get photoEmptyTitle;
+
+  /// Tab Ảnh chưa có ảnh
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn ảnh trong máy, cắt vuông rồi gửi lên. Thiết bị xoay từng ảnh, tối đa {max} ảnh.'**
+  String photoEmptyBody(int max);
+
+  /// Dòng phụ bảng chọn nguồn ảnh
+  ///
+  /// In vi, this message translates to:
+  /// **'Ảnh sẽ được cắt vuông 188 × 188 trước khi gửi.'**
+  String get photoAddHint;
+
+  /// Bảng chọn nguồn ảnh
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn trong thư viện'**
+  String get photoFromGallery;
+
+  /// Bảng chọn nguồn ảnh
+  ///
+  /// In vi, this message translates to:
+  /// **'Chụp ảnh'**
+  String get photoFromCamera;
+
+  /// Hộp thoại xoá ảnh
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá ảnh này?'**
+  String get photoDeleteTitle;
+
+  /// Hộp thoại xoá ảnh
+  ///
+  /// In vi, this message translates to:
+  /// **'Ảnh bị xoá khỏi thiết bị, không lấy lại được.'**
+  String get photoDeleteBody;
+
+  /// Nút xoá (coral) trong hộp thoại
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá'**
+  String get photoDelete;
+
+  /// Lớp phủ trên ô ảnh đang xoá
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang xoá'**
+  String get photoDeleting;
+
+  /// Thanh báo xoá lỗi
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa xoá được ảnh'**
+  String get photoDeleteErrorTitle;
+
+  /// Thanh báo xoá lỗi
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiết bị không trả lời. Ảnh vẫn còn trên thiết bị.'**
+  String get photoDeleteErrorBody;
+
+  /// Tiêu đề màn cắt ảnh
+  ///
+  /// In vi, this message translates to:
+  /// **'Cắt ảnh'**
+  String get photoCropTitle;
+
+  /// Nhãn đọc màn hình vùng cắt
+  ///
+  /// In vi, this message translates to:
+  /// **'Vùng cắt, kéo để dời, chụm để phóng'**
+  String get photoCropAreaA11y;
+
+  /// Dòng hướng dẫn dưới vùng cắt
+  ///
+  /// In vi, this message translates to:
+  /// **'Kéo để dời · chụm hai ngón để phóng'**
+  String get photoCropHint;
+
+  /// Nhãn phần xem trước
+  ///
+  /// In vi, this message translates to:
+  /// **'XEM TRƯỚC TRÊN THIẾT BỊ'**
+  String get photoCropPreview;
+
+  /// Cạnh ô xem trước
+  ///
+  /// In vi, this message translates to:
+  /// **'Ảnh 188 × 188, đúng như màn thiết bị hiện.'**
+  String get photoCropPreviewBody;
+
+  /// Cạnh ô xem trước, muted
+  ///
+  /// In vi, this message translates to:
+  /// **'App tự thu nhỏ và nén dưới 40 KB trước khi gửi.'**
+  String get photoCropPreviewNote;
+
+  /// Nút phụ màn cắt ảnh
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn ảnh khác'**
+  String get photoCropPickOther;
+
+  /// Nút chính màn cắt ảnh
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi ảnh'**
+  String get photoCropSend;
+
+  /// Thẻ tiến độ khi gửi
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang gửi ảnh…'**
+  String get photoCropSending;
+
+  /// Thẻ tiến độ khi gửi
+  ///
+  /// In vi, this message translates to:
+  /// **'Giữ app mở tới khi xong.'**
+  String get photoCropKeepOpen;
+
+  /// Thẻ gửi xong
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gửi lên thiết bị'**
+  String get photoCropDoneTitle;
+
+  /// Thẻ gửi xong
+  ///
+  /// In vi, this message translates to:
+  /// **'Ảnh {count}/{max}. Thiết bị hiện ảnh này ở lượt xoay tới.'**
+  String photoCropDoneBody(int count, int max);
+
+  /// Nút phụ khi gửi xong
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm ảnh khác'**
+  String get photoCropAddAnother;
+
+  /// Nút chính khi gửi xong → tab Ảnh
+  ///
+  /// In vi, this message translates to:
+  /// **'Xong'**
+  String get photoCropDone;
+
+  /// Nút khi lỗi đủ ảnh / hết chỗ → tab Ảnh
+  ///
+  /// In vi, this message translates to:
+  /// **'Về danh sách ảnh'**
+  String get photoCropBackToList;
+
+  /// Nút chính khi ảnh quá lớn
+  ///
+  /// In vi, this message translates to:
+  /// **'Cắt lại'**
+  String get photoCropRecrop;
+
+  /// Lỗi full
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiết bị đã đủ {max} ảnh'**
+  String photoCropErrorFullTitle(int max);
+
+  /// Lỗi full
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá bớt một ảnh rồi gửi lại. Vùng cắt này được giữ.'**
+  String get photoCropErrorFullBody;
+
+  /// Lỗi too_big sau khi app đã tự giảm chất lượng
+  ///
+  /// In vi, this message translates to:
+  /// **'Ảnh vẫn quá lớn'**
+  String get photoCropErrorTooBigTitle;
+
+  /// Lỗi too_big
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã giảm chất lượng mà ảnh vẫn trên 40 KB. Chọn vùng ít chi tiết hơn, hoặc ảnh khác.'**
+  String get photoCropErrorTooBigBody;
+
+  /// Lỗi no_space
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiết bị hết chỗ lưu'**
+  String get photoCropErrorNoSpaceTitle;
+
+  /// Lỗi no_space
+  ///
+  /// In vi, this message translates to:
+  /// **'Bộ nhớ thiết bị gần đầy. Xoá bớt ảnh rồi thử lại.'**
+  String get photoCropErrorNoSpaceBody;
+
+  /// Lỗi not_jpeg / progressive / bad_size / truncated / empty
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiết bị không nhận ảnh'**
+  String get photoCropErrorRejectedTitle;
+
+  /// Lỗi thiết bị từ chối ảnh
+  ///
+  /// In vi, this message translates to:
+  /// **'Ảnh app tạo ra bị lỗi. Thử lại; nếu vẫn lỗi, hãy báo lỗi app.'**
+  String get photoCropErrorRejectedBody;
+
+  /// Lỗi mạng khi gửi
+  ///
+  /// In vi, this message translates to:
+  /// **'Mất kết nối với thiết bị'**
+  String get photoCropErrorOfflineTitle;
+
+  /// Lỗi mạng khi gửi
+  ///
+  /// In vi, this message translates to:
+  /// **'Kiểm tra thiết bị còn bật và cùng mạng Wi-Fi với điện thoại.'**
+  String get photoCropErrorOfflineBody;
+
+  /// PhotoCrop: điện thoại không giải mã được ảnh vừa chọn (thiết kế chưa vẽ)
+  ///
+  /// In vi, this message translates to:
+  /// **'Không mở được ảnh này'**
+  String get devPhotoUnreadableTitle;
+
+  /// PhotoCrop: nội dung thanh báo ảnh không mở được
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn ảnh khác (JPEG, PNG hoặc HEIC).'**
+  String get devPhotoUnreadableBody;
+
+  /// Tab Ảnh: GET /api/photos lỗi (thiết kế chưa vẽ)
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa tải được danh sách ảnh'**
+  String get devPhotoLoadErrorTitle;
 }
 
 class _AppLocalizationsDelegate

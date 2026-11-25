@@ -31,8 +31,8 @@ class UsageRowData {
   final int? resetInS;
 }
 
-/// Màn hình (screen_specs §2, 2026-11-25.3): one tab per enabled dock skill — Agent (usage, project board, cards),
-/// Thời tiết, Đồng hồ — plus the agents-waiting badge.
+/// Màn hình (screen_specs §2, 2026-11-25.3 / .4): one tab per enabled dock skill — Agent (usage, project board, cards),
+/// Ảnh (its own `PhotoTabViewModel`), Thời tiết, Đồng hồ — plus the agents-waiting badge.
 class DashboardViewModel extends ChangeNotifier with SafeNotifier {
   DashboardViewModel({
     required DeviceRepository device,
@@ -84,6 +84,9 @@ class DashboardViewModel extends ChangeNotifier with SafeNotifier {
 
   /// Badge on the Agent tab: null at 0, "9+" above 9.
   String? get waitingBadge => badgeText(waiting);
+
+  /// Photos on the device (`photos` of `/api/state`): the Ảnh tab reloads when it changes.
+  int? get photoCount => _device.state?.photos;
 
   /// Đang tải: chưa có trạng thái nào từ thiết bị.
   DeviceState? get state => _device.state;

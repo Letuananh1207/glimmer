@@ -3,9 +3,14 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:glimmer_app/data/repositories/backup/backup_repository.dart';
 import 'package:glimmer_app/data/repositories/device/device_repository.dart';
+import 'package:glimmer_app/data/repositories/photo/photo_repository.dart';
+import 'package:glimmer_app/data/repositories/photo/photo_repository_local.dart';
 import 'package:glimmer_app/data/repositories/release/release_repository.dart';
 import 'package:glimmer_app/data/repositories/skill/skill_repository.dart';
 import 'package:glimmer_app/data/repositories/skill/skill_repository_local.dart';
+import 'package:glimmer_app/domain/use_cases/delete_photo_use_case.dart';
+import 'package:glimmer_app/domain/use_cases/load_photos_use_case.dart';
+import 'package:glimmer_app/domain/use_cases/send_photo_use_case.dart';
 import 'package:glimmer_app/domain/use_cases/toggle_skill_use_case.dart';
 import 'package:glimmer_app/l10n/app_localizations.dart';
 import 'package:glimmer_app/routing/polling_lifecycle.dart';
@@ -49,6 +54,7 @@ Widget _app(DeviceRig rig, Widget home, {FakeReleaseRepository? releases, FakeBa
         Provider<ToggleSkillUseCase>.value(value: _toggle),
         Provider<ReleaseRepository>.value(value: releases ?? FakeReleaseRepository()),
         Provider<BackupRepository>.value(value: backups ?? FakeBackupRepository()),
+        ...photoProviders(rig),
       ],
       child: MaterialApp(
         theme: AppTheme.dark(),
@@ -63,6 +69,17 @@ Widget _app(DeviceRig rig, Widget home, {FakeReleaseRepository? releases, FakeBa
         home: Scaffold(body: home),
       ),
     );
+
+/// Skill Ảnh over [rig] with in-memory copies and picker.
+List<Provider<Object>> photoProviders(DeviceRig rig) {
+  final photos = PhotoRepositoryLocal(store: FakePhotoStoreService(), picker: FakePhotoPickerService());
+  return [
+    Provider<PhotoRepository>.value(value: photos),
+    Provider<LoadPhotosUseCase>.value(value: LoadPhotosUseCase(device: rig.repo, photos: photos)),
+    Provider<DeletePhotoUseCase>.value(value: DeletePhotoUseCase(device: rig.repo, photos: photos)),
+    Provider<SendPhotoUseCase>.value(value: SendPhotoUseCase(device: rig.repo, photos: photos)),
+  ];
+}
 
 /// Clawd and progress indicators animate forever — pump a few frames instead of settling.
 Future<void> _frames(WidgetTester t) async {
@@ -95,7 +112,7 @@ void main() {
 
   group('Tổng quan', () {
     testWidgets('loading while there is no state yet', (t) async {
-      await t.pumpWidget(_app(rig, dashboardScreen(onOpenSettings: () {})));
+      await t.pumpWidget(_app(rig, dashboardScreen(onOpenSettings: () {}, onCropPhoto: (_) async {})));
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
@@ -103,7 +120,7 @@ void main() {
       await t.runAsync(() => rig.connect(_url, _state(projects: [
             {'project': 'glimmer', 'agent': 'claude', 'state': 'approval', 'detail': 'Bash', 'shown': true},
           ])));
-      await t.pumpWidget(_app(rig, dashboardScreen(onOpenSettings: () {})));
+      await t.pumpWidget(_app(rig, dashboardScreen(onOpenSettings: () {}, onCropPhoto: (_) async {})));
       await _frames(t);
       expect(find.text(_vi.dashboardUsageTitle), findsOneWidget);
       expect(find.text('66'), findsOneWidget);
@@ -113,7 +130,7 @@ void main() {
 
     testWidgets('empty: no key, empty board text', (t) async {
       await t.runAsync(() => rig.connect(_url, _state(key: false)));
-      await t.pumpWidget(_app(rig, dashboardScreen(onOpenSettings: () {})));
+      await t.pumpWidget(_app(rig, dashboardScreen(onOpenSettings: () {}, onCropPhoto: (_) async {})));
       await _frames(t);
       expect(find.text(_vi.dashboardUsageNoKey), findsOneWidget);
       expect(find.text(_vi.dashboardProjectsEmpty), findsOneWidget);
@@ -121,14 +138,14 @@ void main() {
 
     testWidgets('R-DUNG-2 stale: "số liệu cũ (25m trước)"', (t) async {
       await t.runAsync(() => rig.connect(_url, _state(stale: true)));
-      await t.pumpWidget(_app(rig, dashboardScreen(onOpenSettings: () {})));
+      await t.pumpWidget(_app(rig, dashboardScreen(onOpenSettings: () {}, onCropPhoto: (_) async {})));
       await _frames(t);
       expect(find.text(_vi.dashboardUsageStale('25m')), findsOneWidget);
     });
 
     testWidgets('setup mode: amber note and setup line', (t) async {
       await t.runAsync(() => rig.connect(DeviceRepository.setupApUrl, _state(wifi: 'ap')));
-      await t.pumpWidget(_app(rig, dashboardScreen(onOpenSettings: () {})));
+      await t.pumpWidget(_app(rig, dashboardScreen(onOpenSettings: () {}, onCropPhoto: (_) async {})));
       await _frames(t);
       expect(find.text(_vi.dashboardSetupNote), findsOneWidget);
       expect(find.text(_vi.dashboardSetupMode('192.168.4.1')), findsOneWidget);
@@ -173,7 +190,7 @@ void main() {
         await rig.repo.connectTo(_url);
         await rig.repo.refresh();
       });
-      await t.pumpWidget(_app(rig, dashboardScreen(onOpenSettings: onOpenSettings ?? () {})));
+      await t.pumpWidget(_app(rig, dashboardScreen(onOpenSettings: onOpenSettings ?? () {}, onCropPhoto: (_) async {})));
       await _frames(t);
     }
 
@@ -349,6 +366,7 @@ void main() {
           Provider<BackupRepository>.value(value: FakeBackupRepository()),
           ChangeNotifierProvider<SkillRepository>.value(value: skills),
           Provider<ToggleSkillUseCase>.value(value: ToggleSkillUseCase(skills: skills, device: rig.repo)),
+          ...photoProviders(rig),
         ],
         child: MaterialApp.router(
           locale: const Locale('vi'),

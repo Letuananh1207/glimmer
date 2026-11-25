@@ -39,7 +39,22 @@ GoRouter buildRouter(DeviceRepository device) {
         routes: [
           GoRoute(
             path: Routes.dashboard,
-            pageBuilder: (context, s) => _tab(s, dashboardScreen(onOpenSettings: () => context.go(Routes.settings))),
+            pageBuilder: (context, s) => _tab(
+              s,
+              dashboardScreen(
+                onOpenSettings: () => context.go(Routes.settings),
+                onCropPhoto: (args) => context.push(Routes.photoCrop, extra: args),
+              ),
+            ),
+            routes: [
+              GoRoute(
+                path: Routes.photoCropName,
+                parentNavigatorKey: root,
+                // Needs the picked image: opened any other way (restored, deep link) → back to the tab.
+                redirect: (_, s) => s.extra is PhotoCropArgs ? null : Routes.dashboard,
+                builder: (context, s) => photoCropScreen(s.extra! as PhotoCropArgs, onClose: () => context.pop()),
+              ),
+            ],
           ),
           GoRoute(
             path: Routes.skills,

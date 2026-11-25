@@ -22,11 +22,18 @@ enum SkillRowMode {
 
   /// Old firmware, Thời tiết / Đồng hồ: on, no switch, description `skillsAlwaysOn` (R-SK-4).
   alwaysOn,
+
+  /// The firmware has no channels for this skill (Ảnh: no `photos` in /api/state): muted icon, amber
+  /// `skillsNeedFirmware`, button `skillsUpdateFirmware` → tab Thiết bị instead of the switch (`photoFw`).
+  needsFirmware,
 }
 
 class SkillRowData {
-  const SkillRowData(this.id, {required this.on, required this.mode, required this.enabled});
+  const SkillRowData(this.id, {required this.on, required this.mode, required this.enabled, this.photoHint = 0});
   final String id;
+
+  /// Ảnh off while the device holds photos: description `skillsPhotoHint` (mint) with this count; 0 = none (R-SK-6).
+  final int photoHint;
 
   /// On on the device (the app shows what the device has until it takes a change, R-SK-5).
   final bool on;
@@ -85,21 +92,27 @@ class SkillsViewModel extends ChangeNotifier with SafeNotifier {
     final available = _toggle.available;
     final legacy = _toggle.legacy;
     final busy = _sending != null;
+    final device = _device.state;
     return [
-      for (final s in _catalog)
-        if (s.hasPack)
-          if (legacy)
-            SkillRowData(s.id,
-                on: true,
-                mode: s.id == SkillIds.agent ? SkillRowMode.legacyLocked : SkillRowMode.alwaysOn,
-                enabled: false)
-          else if (s.id == _sending)
-            SkillRowData(s.id, on: on.contains(s.id), mode: SkillRowMode.sending, enabled: false)
-          else if (on.length == 1 && on.contains(s.id))
-            SkillRowData(s.id, on: true, mode: SkillRowMode.lastOne, enabled: false)
-          else
-            SkillRowData(s.id,
-                on: on.contains(s.id), mode: SkillRowMode.toggle, enabled: !busy && available.contains(s.id)),
+      // Old firmware: only the three channels it always rotates; no Ảnh row (screen_specs §6 `legacy`).
+      for (final s in _catalog.where((s) => s.hasPack && (!legacy || defaultSkillsOn.contains(s.id))))
+        if (legacy)
+          SkillRowData(s.id,
+              on: true,
+              mode: s.id == SkillIds.agent ? SkillRowMode.legacyLocked : SkillRowMode.alwaysOn,
+              enabled: false)
+        else if (skillNeedsFirmware(device, s.id))
+          SkillRowData(s.id, on: false, mode: SkillRowMode.needsFirmware, enabled: false)
+        else if (s.id == _sending)
+          SkillRowData(s.id, on: on.contains(s.id), mode: SkillRowMode.sending, enabled: false)
+        else if (on.length == 1 && on.contains(s.id))
+          SkillRowData(s.id, on: true, mode: SkillRowMode.lastOne, enabled: false)
+        else
+          SkillRowData(s.id,
+              on: on.contains(s.id),
+              mode: SkillRowMode.toggle,
+              enabled: !busy && available.contains(s.id),
+              photoHint: s.id == SkillIds.photo ? photoHintCount(device, on) : 0),
     ];
   }
 
