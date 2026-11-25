@@ -503,8 +503,8 @@ def clawd_grid(eyes="open", legs="stand"):
     g = [list(r) for r in CLAWD]
     if eyes == "wide":                  # surprised: eyes 1×3
         g[1][5] = g[1][12] = "."
-    elif eyes == "happy":               # squint: a low 1-px slit
-        g[2][5] = g[2][12] = "#"
+    elif eyes == "happy":               # holes filled; "^ ^" + smile cut on half cells (clawd())
+        g[2][5] = g[2][12] = "#"; g[3][5] = g[3][12] = "#"
     elif eyes == "shut":                # blink
         g[2][5] = g[2][12] = "#"; g[3][5] = g[3][12] = "#"
     elif eyes == "sleep":               # asleep: lid row filled, 2-cell slits below
@@ -519,11 +519,19 @@ def clawd_grid(eyes="open", legs="stand"):
     return ["".join(r) for r in g]
 
 
-def clawd(sc, x, y, scale, **kw):
+# Half-cell holes of the happy face (display.cpp kHappyHoles, P-2026-11-25.5).
+HAPPY_HOLES = [(10, 5), (9, 6), (11, 6), (25, 5), (24, 6), (26, 6), (16, 9), (19, 9), (17, 10), (18, 10)]
+
+
+def clawd(sc, x, y, scale, bg=None, **kw):
     for j, row in enumerate(clawd_grid(**kw)):
         for i, c in enumerate(row):
             if c == "#":
                 sc.rect(x + i * scale, y + j * scale, scale, scale, CLAWD_ORANGE)
+    if kw.get("eyes") == "happy":
+        h = max(scale // 2, 1)
+        for hx, hy in HAPPY_HOLES:
+            sc.rect(x + hx * scale // 2, y + hy * scale // 2, h, h, bg if bg is not None else BG)
 
 
 BADGES = {   # 7×7 symbols drawn beside Clawd's head, one per state
@@ -640,6 +648,9 @@ SCREENS = [
          ("CLAUDE", CORAL, [None] * 7, f"khóa bị từ chối {DOT} cập nhật", CORAL, True),
          ("CODEX", LILAC, [None] * 6 + [2], "đang thu thập", MUTED, False)])),
     ("Cài đặt", "Chưa có khóa nào", lambda s: setup(s)),
+    ("Claude · đã xong hết", "Mọi project Xong: Clawd ngủ (P-2026-11-25.5)",
+     lambda s: claude(s, rows=[("glimmer", "Xong", "", "2P"), ("TieuMac3d", "Xong", "", "5P"),
+                               ("api", "Xong", "", "1G")], mood="sleep", waiting=0)),
 ]
 
 

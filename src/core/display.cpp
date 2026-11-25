@@ -128,7 +128,7 @@ void Display::drawClawd(int x, int y, int s, uint16_t color, uint8_t eyes, bool 
     memcpy(rows, kClawd, sizeof(rows));
     switch (eyes) {
         case CLAWD_WIDE:  rows[1] &= ~kEyeBits; break;                       // 1×3 eyes
-        case CLAWD_HAPPY: rows[2] |= kEyeBits; break;                        // low slit
+        case CLAWD_HAPPY: rows[2] |= kEyeBits; rows[3] |= kEyeBits; break;   // filled; holes below
         case CLAWD_SAD:   rows[2] = (rows[2] | kEyeBits) & ~kInnerBits; break; // "\ /" droop
         case CLAWD_SHUT:  rows[2] |= kEyeBits; rows[3] |= kEyeBits; break;   // blink
         case CLAWD_SLEEP: rows[2] |= kEyeBits;                                // "- -" asleep
@@ -146,6 +146,17 @@ void Display::drawClawd(int x, int y, int s, uint16_t color, uint8_t eyes, bool 
             tft.fillRect(x + i * s, y + j * s, (k - i) * s, s, on ? color : bg);
             i = k;
         }
+    }
+    if (eyes == CLAWD_HAPPY) {
+        // "^ ^" + smile cut on a half-cell grid (P-2026-11-25.5, token
+        // component.clawd.happyHoles): hole s/2 px at x + hx·s/2 (floored).
+        static const uint8_t kHappyHoles[][2] = {
+            {10, 5}, {9, 6}, {11, 6}, {25, 5}, {24, 6}, {26, 6},   // eyes
+            {16, 9}, {19, 9}, {17, 10}, {18, 10},                  // mouth
+        };
+        const int h = s / 2 > 0 ? s / 2 : 1;
+        for (const auto& c : kHappyHoles)
+            tft.fillRect(x + c[0] * s / 2, y + c[1] * s / 2, h, h, bg);
     }
 }
 

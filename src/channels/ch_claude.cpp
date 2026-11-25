@@ -66,9 +66,9 @@ static constexpr int kClawdY = 58;
 static uint8_t s_clawdFrame = 0xFF;
 
 // Clawd's mood from the project board: alarmed for an approval, sad for an
-// error, walking while something runs, pleased when all is done, asleep
-// with nothing on the board (sleep eyes + "Zz", no blink). Blinks every 4 s
-// while awake.
+// error, walking while something runs, asleep (sleep eyes + "Zz", no blink)
+// when everything is done or nothing is on the board (P-2026-11-25.5). Blinks
+// every 4 s while awake.
 static uint8_t clawdFrame() {
     const Projects::Board& b = AttentionQueue::projects();
     int ord[Projects::kMax];
@@ -79,7 +79,7 @@ static uint8_t clawdFrame() {
         switch (b.e[ord[0]].state) {             // ordered: most urgent first
             case Projects::P_APPROVAL: eyes = Display::CLAWD_WIDE; break;
             case Projects::P_ERROR:    eyes = Display::CLAWD_SAD;  break;
-            case Projects::P_DONE:     eyes = Display::CLAWD_HAPPY; break;
+            case Projects::P_DONE:     eyes = Display::CLAWD_SLEEP; break;   // all done
             case Projects::P_WORKING:  eyes = Display::CLAWD_OPEN; walk = (millis() / 400) % 2; break;
             default:                   eyes = Display::CLAWD_OPEN; break;
         }
