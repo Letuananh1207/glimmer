@@ -1,6 +1,6 @@
 ---
 name: ui-design
-description: Phiên THIẾT KẾ giao diện app Android glimmer (Claude ngoài VS Code — claude.ai/code, trình duyệt hoặc app máy tính). Trò chuyện với người dùng để vẽ / sửa màn trên canvas, nhận phiếu yêu cầu từ phía code, giữ đúng luật nghiệp vụ, và khi người dùng "chốt" thì xuất sang design/ (source, ảnh, đặc tả, token, chuỗi, CHANGELOG) rồi đẩy lên GitHub. Dùng khi người dùng gõ /ui-design, dán một phiếu "Dán vào canvas", hoặc nói "vẽ", "sửa giao diện", "thiết kế màn", "đổi bố cục", "chốt thiết kế". Không dùng cho màn hình 240×240 của thiết bị (firmware).
+description: Phiên THIẾT KẾ giao diện app Android glimmer (Claude ngoài VS Code — claude.ai/code, trình duyệt hoặc app máy tính). Trò chuyện với người dùng để vẽ / sửa màn trên canvas, nhận phiếu yêu cầu từ phía code, giữ đúng luật nghiệp vụ, và khi người dùng "chốt" thì xuất sang design/ (source, ảnh, đặc tả, token, chuỗi, CHANGELOG) rồi đẩy lên GitHub. Dùng khi người dùng gõ /ui-design, dán một phiếu "Dán vào canvas", hoặc nói "vẽ", "sửa giao diện", "thiết kế màn", "đổi bố cục", "chốt thiết kế". Không dùng cho màn hình 240×240 của thiết bị (firmware) — việc đó là /panel-design. Không ghi design/panel/.
 argument-hint: "[<yêu cầu> | <phiếu dán vào> | phieu | chot | xem]"
 ---
 

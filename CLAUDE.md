@@ -263,8 +263,13 @@ when `pct > i * 11.11`, so anything ≥ 89% is full.
 
 ## Where the design lives
 
-`design/` at the repo root is the **Android app's** design (see above), not the
-panel's. The panel's visual design (palette, type, layouts) is in the
-`/tmp/smalltv-design/smalltv/project/screens.jsx` archive — not in this repo.
-Tokens are mirrored in `src/core/theme.h` (RGB565) and `data/fonts/*.vlw`
-(design-spec pixel sizes).
+`design/` at the repo root is the **Android app's** design (see above), except
+`design/panel/`: the **panel's** 240×240 design. Same design-first flow as the
+app: drawn on the canvas https://claude.ai/artifact/Kkt5gUfTSSTjxKBZ6mPuZA by
+`/panel-design` (outside VS Code), exported to `design/panel/` (CHANGELOG codes
+`P-YYYY-MM-DD.N`), applied to firmware by `/panel-apply` (progress in
+`.panel_design_sync.json`); tickets in `docs/phieu_panel/`. Don't hand-edit
+`design/panel/`. The old `/tmp/smalltv-design` archive is gone; until the first
+redraw is chốt, the code is the reference — `tools/screens.py` renders it with
+the real fonts. Tokens live in `src/core/theme.h` (RGB565) and
+`data/fonts/*.vlw` (design-spec pixel sizes).

@@ -19,6 +19,8 @@ mỗi `.claude/skills/*/SKILL.md` chỉ đọc phần frontmatter (`name`, `desc
 3. **Luồng thường dùng** — chỉ những luồng mà mọi skill trong đó **đều có** trong dự án:
    - Tính năng mới: `/lead <yêu cầu>` → duyệt kế hoạch → làm → `/lead tiep` nếu dừng giữa chừng.
    - Lỗi: `/loi <mô tả>` (ghi) → `/loi sua` → thử máy → `/loi xong L-…` hoặc `/loi mo L-…`.
+   - Thiết kế app: (ngoài VS Code) `/ui-design <yêu cầu>` → `chốt` → (VS Code) `/ui-apply`.
+   - Thiết kế màn thiết bị: (ngoài VS Code) `/panel-design <yêu cầu>` → `chốt` → (VS Code) `/panel-apply` → nạp máy.
    - Chốt chặn tự động: hook Stop + git pre-commit chạy `dart tool/guard.dart` (quy tắc lớp + lỗi biên dịch).
 4. Dòng cuối: "Chi tiết một lệnh: `/guide <tên>` · Hỏi việc: `/guide <việc muốn làm>`".
 
