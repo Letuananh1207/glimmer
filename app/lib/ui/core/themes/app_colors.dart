@@ -49,4 +49,12 @@ abstract final class AppColors {
   static const Color skillSocialTint = Color(0x2954B6FF);
   /// Nền ô icon skill Giải trí
   static const Color skillFunTint = Color(0x29FFD23F);
+  /// Màu nhấn skill Thời tiết (= sky, như kênh Weather)
+  static const Color skillWeather = Color(0xFF54B6FF);
+  /// Màu nhấn skill Đồng hồ (= amber, như kênh Clock)
+  static const Color skillClock = Color(0xFFFFD23F);
+  /// Nền ô icon skill Thời tiết
+  static const Color skillWeatherTint = Color(0x2954B6FF);
+  /// Nền ô icon skill Đồng hồ
+  static const Color skillClockTint = Color(0x29FFD23F);
 }

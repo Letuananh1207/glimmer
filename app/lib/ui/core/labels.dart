@@ -49,6 +49,7 @@ extension Labels on AppLocalizations {
         AppErrorKind.configUnreadable => devErrConfigUnreadable,
         AppErrorKind.invalidBackup => devErrInvalidBackup,
         AppErrorKind.skillUnsupported => devErrSkillUnsupported,
+        AppErrorKind.skillLastOne => skillsLastOne,
         AppErrorKind.other => e.detail,
       };
 }

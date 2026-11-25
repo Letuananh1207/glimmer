@@ -38,6 +38,8 @@ void main() {
     expect(s.fw, isNotEmpty);
     expect(s.ip, isNotEmpty);
     expect(s.usage.cred, isNotEmpty, reason: 'firmware must expose claude_usage');
+    expect(s.skillsOn, isNotEmpty, reason: 'firmware 2026-11-25.3 reports skills_on');
+    if (s.weatherConfigured) expect(s.weather?.days.length, 4, reason: 'today + 3 days');
     final settings = (await repo.settings() as Ok<Map<String, dynamic>>).value;
     expect(settings['brightness'], isA<int>());
     expect(settings['wifiPass'], anyOf('***', ''), reason: 'secrets stay masked');

@@ -322,7 +322,7 @@ abstract class AppLocalizations {
   /// **'Tải số liệu ngay'**
   String get dashboardRefreshNow;
 
-  /// Nút
+  /// Không dùng từ 2026-11-25.3 — Nút
   ///
   /// In vi, this message translates to:
   /// **'Hiện màn Claude'**
@@ -1192,13 +1192,13 @@ abstract class AppLocalizations {
   /// **'Agent'**
   String get skillAgentName;
 
-  /// Mô tả ô skill
+  /// Mô tả dòng skill (một dòng)
   ///
   /// In vi, this message translates to:
-  /// **'Claude Code & Codex: mức dùng, project, thẻ duyệt.'**
+  /// **'Mức dùng và thẻ duyệt'**
   String get skillAgentDesc;
 
-  /// Kênh thiết bị của skill Agent
+  /// Không dùng từ 2026-11-25.3 — Kênh thiết bị của skill Agent
   ///
   /// In vi, this message translates to:
   /// **'Trang chủ · Danh sách agent · Claude · Codex · AI · Xu hướng'**
@@ -1210,7 +1210,7 @@ abstract class AppLocalizations {
   /// **'Nhạc'**
   String get skillMusicName;
 
-  /// Mô tả ô skill
+  /// Không dùng từ 2026-11-25.3 — Mô tả ô skill
   ///
   /// In vi, this message translates to:
   /// **'Bài đang phát và điều khiển nhạc.'**
@@ -1222,7 +1222,7 @@ abstract class AppLocalizations {
   /// **'Mạng xã hội'**
   String get skillSocialName;
 
-  /// Mô tả ô skill
+  /// Không dùng từ 2026-11-25.3 — Mô tả ô skill
   ///
   /// In vi, this message translates to:
   /// **'Thông báo và số liệu mạng xã hội.'**
@@ -1234,7 +1234,7 @@ abstract class AppLocalizations {
   /// **'Giải trí'**
   String get skillFunName;
 
-  /// Mô tả ô skill
+  /// Không dùng từ 2026-11-25.3 — Mô tả ô skill
   ///
   /// In vi, this message translates to:
   /// **'Nội dung vui cho màn hình.'**
@@ -1246,19 +1246,19 @@ abstract class AppLocalizations {
   /// **'Skill'**
   String get skillsTitle;
 
-  /// Dòng dưới tiêu đề
+  /// Phụ đề màn Skill
   ///
   /// In vi, this message translates to:
-  /// **'Chọn gói chức năng cho màn hình glimmer. Mỗi lúc một skill.'**
+  /// **'Mỗi skill bật là một tab trên dock thiết bị.'**
   String get skillsSubtitle;
 
-  /// Nhãn ô skill đang dùng
+  /// Không dùng từ 2026-11-25.3 — Nhãn ô skill đang dùng
   ///
   /// In vi, this message translates to:
   /// **'Đang dùng'**
   String get skillsCurrent;
 
-  /// Nhãn đọc màn hình của ô đang dùng
+  /// Không dùng từ 2026-11-25.3 — Nhãn đọc màn hình của ô đang dùng
   ///
   /// In vi, this message translates to:
   /// **'{skill} — đang dùng, mở màn chính'**
@@ -1270,37 +1270,37 @@ abstract class AppLocalizations {
   /// **'Sắp có'**
   String get skillsSoon;
 
-  /// Nhãn ô skill chọn được
+  /// Không dùng từ 2026-11-25.3 — Nhãn ô skill chọn được
   ///
   /// In vi, this message translates to:
   /// **'Dùng skill này'**
   String get skillsUse;
 
-  /// Nhãn ô skill đang đổi
+  /// Không dùng từ 2026-11-25.3 — Nhãn ô skill đang đổi
   ///
   /// In vi, this message translates to:
   /// **'Đang đổi…'**
   String get skillsSwitching;
 
-  /// Thanh báo khi đang đổi
+  /// Không dùng từ 2026-11-25.3 — Thanh báo khi đang đổi
   ///
   /// In vi, this message translates to:
   /// **'Đang chuyển màn thiết bị sang {skill}…'**
   String skillsSwitchingBanner(String skill);
 
-  /// Dòng phụ thanh báo đang đổi
+  /// Không dùng từ 2026-11-25.3 — Dòng phụ thanh báo đang đổi
   ///
   /// In vi, this message translates to:
   /// **'Chờ thiết bị nhận, vài giây.'**
   String get skillsSwitchingHint;
 
-  /// Thanh báo lỗi, coral
+  /// Không dùng từ 2026-11-25.3 — Thanh báo lỗi, coral
   ///
   /// In vi, this message translates to:
   /// **'Chưa đổi được skill'**
   String get skillsErrorTitle;
 
-  /// skill = skill đang dùng
+  /// Không dùng từ 2026-11-25.3 — skill = skill đang dùng
   ///
   /// In vi, this message translates to:
   /// **'Thiết bị không trả lời. Màn thiết bị vẫn là {skill}.'**
@@ -1309,32 +1309,308 @@ abstract class AppLocalizations {
   /// Thanh báo firmware cũ, amber
   ///
   /// In vi, this message translates to:
-  /// **'Firmware chưa hỗ trợ skill'**
+  /// **'Firmware chưa có dock'**
   String get skillsLegacyTitle;
 
   /// fw = phiên bản firmware
   ///
   /// In vi, this message translates to:
-  /// **'Thiết bị đang chạy {fw} — chỉ có skill Agent. Cập nhật firmware để đổi skill.'**
+  /// **'Thiết bị đang chạy {fw} — chỉ có skill Agent, không bật / tắt được. Cập nhật firmware để dùng dock.'**
   String skillsLegacyBody(String fw);
 
-  /// Nhãn thẻ kênh
+  /// Không dùng từ 2026-11-25.3 — Nhãn thẻ kênh
   ///
   /// In vi, this message translates to:
   /// **'MÀN THIẾT BỊ ĐANG XOAY'**
   String get skillsChannelsTitle;
 
-  /// Kênh hệ thống (R-SK-2)
+  /// Không dùng từ 2026-11-25.3 — Kênh hệ thống (R-SK-2)
   ///
   /// In vi, this message translates to:
   /// **'+ luôn có: Đồng hồ · Thời tiết · Dự báo · Thông tin · Ban đêm'**
   String get skillsChannelsSystem;
 
-  /// R-SK-3
+  /// Không dùng từ 2026-11-25.3 — R-SK-3
   ///
   /// In vi, this message translates to:
   /// **'Thẻ cần duyệt / chờ trả lời của agent vẫn chen ngang ở mọi skill.'**
   String get skillsAttentionNote;
+
+  /// Tab 1 thanh dưới (2026-11-25.3), mọi skill
+  ///
+  /// In vi, this message translates to:
+  /// **'Màn hình'**
+  String get navHome;
+
+  /// Đọc màn hình cho huy hiệu tab 1 / tab Agent
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} agent đang chờ'**
+  String navHomeBadgeA11y(String count);
+
+  /// Nhãn thanh tab dock
+  ///
+  /// In vi, this message translates to:
+  /// **'Tab của Màn hình'**
+  String get homeTabsA11y;
+
+  /// Nút cuối mỗi tab Màn hình
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiện {skill} trên thiết bị'**
+  String homeShowOnDevice(String skill);
+
+  /// Tên skill / tab dock
+  ///
+  /// In vi, this message translates to:
+  /// **'Thời tiết'**
+  String get skillWeatherName;
+
+  /// Mô tả dòng skill
+  ///
+  /// In vi, this message translates to:
+  /// **'Hôm nay và 3 ngày tới'**
+  String get skillWeatherDesc;
+
+  /// Tên skill / tab dock
+  ///
+  /// In vi, this message translates to:
+  /// **'Đồng hồ'**
+  String get skillClockName;
+
+  /// Mô tả dòng skill
+  ///
+  /// In vi, this message translates to:
+  /// **'Giờ, ngày, giờ ban đêm'**
+  String get skillClockDesc;
+
+  /// Tên skill (sắp có)
+  ///
+  /// In vi, this message translates to:
+  /// **'Tin nhắn'**
+  String get skillChatName;
+
+  /// Nhãn công tắc
+  ///
+  /// In vi, this message translates to:
+  /// **'Bật / tắt skill {skill}'**
+  String skillsToggleA11y(String skill);
+
+  /// Mô tả dòng skill khi đang gửi
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang gửi thiết bị…'**
+  String get skillsSending;
+
+  /// Thanh báo lỗi, coral
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa tắt được {skill}'**
+  String skillsErrorOffTitle(String skill);
+
+  /// Thanh báo lỗi, coral
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa bật được {skill}'**
+  String skillsErrorOnTitle(String skill);
+
+  /// Thân thanh báo lỗi
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiết bị không trả lời. {skill} vẫn bật trên thiết bị.'**
+  String skillsErrorOffBody(String skill);
+
+  /// Thân thanh báo lỗi
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiết bị không trả lời. {skill} vẫn tắt trên thiết bị.'**
+  String skillsErrorOnBody(String skill);
+
+  /// Thay mô tả dòng skill bật duy nhất, amber
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần ít nhất một skill bật'**
+  String get skillsLastOne;
+
+  /// Mô tả Thời tiết / Đồng hồ khi firmware cũ
+  ///
+  /// In vi, this message translates to:
+  /// **'Luôn có (firmware cũ)'**
+  String get skillsAlwaysOn;
+
+  /// Chú thích dưới danh sách (R-SK-3)
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiết bị xoay các tab theo thứ tự trên. Thẻ cần duyệt vẫn chen ngang mọi tab.'**
+  String get skillsOrderNote;
+
+  /// Nhãn nhóm chip sắp có
+  ///
+  /// In vi, this message translates to:
+  /// **'SẮP CÓ'**
+  String get skillsSoonTitle;
+
+  /// Nhãn thẻ tab Thời tiết
+  ///
+  /// In vi, this message translates to:
+  /// **'THỜI TIẾT'**
+  String get weatherTitle;
+
+  /// Meta thẻ thời tiết; place = tên nơi (bỏ "place ·" nếu thiết bị không có)
+  ///
+  /// In vi, this message translates to:
+  /// **'{place} · {age} trước'**
+  String weatherMeta(String place, String age);
+
+  /// Nhiệt cao / thấp hôm nay
+  ///
+  /// In vi, this message translates to:
+  /// **'cao {hi}° · thấp {lo}°'**
+  String weatherHiLo(String hi, String lo);
+
+  /// Nhiệt cảm giác
+  ///
+  /// In vi, this message translates to:
+  /// **'cảm giác {t}°'**
+  String weatherFeels(String t);
+
+  /// Dòng dự báo ngày mai (như kênh Weather)
+  ///
+  /// In vi, this message translates to:
+  /// **'MAI'**
+  String get weatherDayTomorrow;
+
+  /// Dòng dự báo ngày kia; ngày sau dùng thứ T2…CN
+  ///
+  /// In vi, this message translates to:
+  /// **'KIA'**
+  String get weatherDayAfter;
+
+  /// Meta amber khi thiếu vị trí
+  ///
+  /// In vi, this message translates to:
+  /// **'chưa có vị trí'**
+  String get weatherNoLocationMeta;
+
+  /// Tiêu đề trạng thái thiếu vị trí
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa đặt vị trí'**
+  String get weatherNoLocationTitle;
+
+  /// Thân trạng thái thiếu vị trí
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiết bị cần vĩ độ / kinh độ để lấy thời tiết và dự báo.'**
+  String get weatherNoLocationBody;
+
+  /// Nút viền → Cài đặt
+  ///
+  /// In vi, this message translates to:
+  /// **'Đặt vị trí trong Cài đặt'**
+  String get weatherSetLocation;
+
+  /// Nhãn thẻ tab Đồng hồ
+  ///
+  /// In vi, this message translates to:
+  /// **'ĐỒNG HỒ'**
+  String get clockTitle;
+
+  /// Dòng ngày dưới giờ, viết hoa thứ
+  ///
+  /// In vi, this message translates to:
+  /// **'{weekday} {date} · tuần {week}'**
+  String clockDate(String weekday, String date, String week);
+
+  /// Nhãn dòng
+  ///
+  /// In vi, this message translates to:
+  /// **'Múi giờ'**
+  String get clockTz;
+
+  /// Nhãn dòng
+  ///
+  /// In vi, this message translates to:
+  /// **'Kiểu giờ'**
+  String get clockFormat;
+
+  /// Giá trị kiểu giờ
+  ///
+  /// In vi, this message translates to:
+  /// **'24 giờ'**
+  String get clockFormat24;
+
+  /// Giá trị kiểu giờ
+  ///
+  /// In vi, this message translates to:
+  /// **'12 giờ'**
+  String get clockFormat12;
+
+  /// Nhãn dòng
+  ///
+  /// In vi, this message translates to:
+  /// **'Ban đêm'**
+  String get clockNight;
+
+  /// mode = làm tối / chỉ đồng hồ / tắt màn
+  ///
+  /// In vi, this message translates to:
+  /// **'{start} – {end} · {mode}'**
+  String clockNightValue(String start, String end, String mode);
+
+  /// Màn hình · dòng dự báo: thứ (day = DateTime.weekday, 1 = thứ Hai)
+  ///
+  /// In vi, this message translates to:
+  /// **'{day, select, 1{T2} 2{T3} 3{T4} 4{T5} 5{T6} 6{T7} other{CN}}'**
+  String devWeekdayShort(String day);
+
+  /// Màn hình · tab Đồng hồ: thứ trong clockDate (day = DateTime.weekday)
+  ///
+  /// In vi, this message translates to:
+  /// **'{day, select, 1{THỨ HAI} 2{THỨ BA} 3{THỨ TƯ} 4{THỨ NĂM} 5{THỨ SÁU} 6{THỨ BẢY} other{CHỦ NHẬT}}'**
+  String devWeekdayLong(String day);
+
+  /// clockNightValue mode: nightMode 1
+  ///
+  /// In vi, this message translates to:
+  /// **'làm tối'**
+  String get devClockNightDim;
+
+  /// clockNightValue mode: nightMode 2
+  ///
+  /// In vi, this message translates to:
+  /// **'chỉ đồng hồ'**
+  String get devClockNightClock;
+
+  /// clockNightValue mode: nightMode 3
+  ///
+  /// In vi, this message translates to:
+  /// **'tắt màn'**
+  String get devClockNightOff;
+
+  /// Tab Đồng hồ, kiểu 12 giờ: sáng (như ClockFmt firmware)
+  ///
+  /// In vi, this message translates to:
+  /// **'SA'**
+  String get devClockAm;
+
+  /// Tab Đồng hồ, kiểu 12 giờ: chiều
+  ///
+  /// In vi, this message translates to:
+  /// **'CH'**
+  String get devClockPm;
+
+  /// Meta thẻ thời tiết khi thiết bị có vị trí nhưng chưa tải được lần nào
+  ///
+  /// In vi, this message translates to:
+  /// **'chưa có số liệu'**
+  String get devWeatherNoData;
+
+  /// Snackbar sau ShowOnDeviceButton
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã chuyển sang màn {skill}'**
+  String devShowOnDeviceDone(String skill);
 }
 
 class _AppLocalizationsDelegate

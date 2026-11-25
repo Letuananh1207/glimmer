@@ -641,8 +641,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get skillAgentName => 'Agent';
 
   @override
-  String get skillAgentDesc =>
-      'Claude Code & Codex: mức dùng, project, thẻ duyệt.';
+  String get skillAgentDesc => 'Mức dùng và thẻ duyệt';
 
   @override
   String get skillAgentChannels =>
@@ -670,8 +669,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get skillsTitle => 'Skill';
 
   @override
-  String get skillsSubtitle =>
-      'Chọn gói chức năng cho màn hình glimmer. Mỗi lúc một skill.';
+  String get skillsSubtitle => 'Mỗi skill bật là một tab trên dock thiết bị.';
 
   @override
   String get skillsCurrent => 'Đang dùng';
@@ -707,11 +705,11 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get skillsLegacyTitle => 'Firmware chưa hỗ trợ skill';
+  String get skillsLegacyTitle => 'Firmware chưa có dock';
 
   @override
   String skillsLegacyBody(String fw) {
-    return 'Thiết bị đang chạy $fw — chỉ có skill Agent. Cập nhật firmware để đổi skill.';
+    return 'Thiết bị đang chạy $fw — chỉ có skill Agent, không bật / tắt được. Cập nhật firmware để dùng dock.';
   }
 
   @override
@@ -724,4 +722,192 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get skillsAttentionNote =>
       'Thẻ cần duyệt / chờ trả lời của agent vẫn chen ngang ở mọi skill.';
+
+  @override
+  String get navHome => 'Màn hình';
+
+  @override
+  String navHomeBadgeA11y(String count) {
+    return '$count agent đang chờ';
+  }
+
+  @override
+  String get homeTabsA11y => 'Tab của Màn hình';
+
+  @override
+  String homeShowOnDevice(String skill) {
+    return 'Hiện $skill trên thiết bị';
+  }
+
+  @override
+  String get skillWeatherName => 'Thời tiết';
+
+  @override
+  String get skillWeatherDesc => 'Hôm nay và 3 ngày tới';
+
+  @override
+  String get skillClockName => 'Đồng hồ';
+
+  @override
+  String get skillClockDesc => 'Giờ, ngày, giờ ban đêm';
+
+  @override
+  String get skillChatName => 'Tin nhắn';
+
+  @override
+  String skillsToggleA11y(String skill) {
+    return 'Bật / tắt skill $skill';
+  }
+
+  @override
+  String get skillsSending => 'Đang gửi thiết bị…';
+
+  @override
+  String skillsErrorOffTitle(String skill) {
+    return 'Chưa tắt được $skill';
+  }
+
+  @override
+  String skillsErrorOnTitle(String skill) {
+    return 'Chưa bật được $skill';
+  }
+
+  @override
+  String skillsErrorOffBody(String skill) {
+    return 'Thiết bị không trả lời. $skill vẫn bật trên thiết bị.';
+  }
+
+  @override
+  String skillsErrorOnBody(String skill) {
+    return 'Thiết bị không trả lời. $skill vẫn tắt trên thiết bị.';
+  }
+
+  @override
+  String get skillsLastOne => 'Cần ít nhất một skill bật';
+
+  @override
+  String get skillsAlwaysOn => 'Luôn có (firmware cũ)';
+
+  @override
+  String get skillsOrderNote =>
+      'Thiết bị xoay các tab theo thứ tự trên. Thẻ cần duyệt vẫn chen ngang mọi tab.';
+
+  @override
+  String get skillsSoonTitle => 'SẮP CÓ';
+
+  @override
+  String get weatherTitle => 'THỜI TIẾT';
+
+  @override
+  String weatherMeta(String place, String age) {
+    return '$place · $age trước';
+  }
+
+  @override
+  String weatherHiLo(String hi, String lo) {
+    return 'cao $hi° · thấp $lo°';
+  }
+
+  @override
+  String weatherFeels(String t) {
+    return 'cảm giác $t°';
+  }
+
+  @override
+  String get weatherDayTomorrow => 'MAI';
+
+  @override
+  String get weatherDayAfter => 'KIA';
+
+  @override
+  String get weatherNoLocationMeta => 'chưa có vị trí';
+
+  @override
+  String get weatherNoLocationTitle => 'Chưa đặt vị trí';
+
+  @override
+  String get weatherNoLocationBody =>
+      'Thiết bị cần vĩ độ / kinh độ để lấy thời tiết và dự báo.';
+
+  @override
+  String get weatherSetLocation => 'Đặt vị trí trong Cài đặt';
+
+  @override
+  String get clockTitle => 'ĐỒNG HỒ';
+
+  @override
+  String clockDate(String weekday, String date, String week) {
+    return '$weekday $date · tuần $week';
+  }
+
+  @override
+  String get clockTz => 'Múi giờ';
+
+  @override
+  String get clockFormat => 'Kiểu giờ';
+
+  @override
+  String get clockFormat24 => '24 giờ';
+
+  @override
+  String get clockFormat12 => '12 giờ';
+
+  @override
+  String get clockNight => 'Ban đêm';
+
+  @override
+  String clockNightValue(String start, String end, String mode) {
+    return '$start – $end · $mode';
+  }
+
+  @override
+  String devWeekdayShort(String day) {
+    String _temp0 = intl.Intl.selectLogic(day, {
+      '1': 'T2',
+      '2': 'T3',
+      '3': 'T4',
+      '4': 'T5',
+      '5': 'T6',
+      '6': 'T7',
+      'other': 'CN',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String devWeekdayLong(String day) {
+    String _temp0 = intl.Intl.selectLogic(day, {
+      '1': 'THỨ HAI',
+      '2': 'THỨ BA',
+      '3': 'THỨ TƯ',
+      '4': 'THỨ NĂM',
+      '5': 'THỨ SÁU',
+      '6': 'THỨ BẢY',
+      'other': 'CHỦ NHẬT',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get devClockNightDim => 'làm tối';
+
+  @override
+  String get devClockNightClock => 'chỉ đồng hồ';
+
+  @override
+  String get devClockNightOff => 'tắt màn';
+
+  @override
+  String get devClockAm => 'SA';
+
+  @override
+  String get devClockPm => 'CH';
+
+  @override
+  String get devWeatherNoData => 'chưa có số liệu';
+
+  @override
+  String devShowOnDeviceDone(String skill) {
+    return 'Đã chuyển sang màn $skill';
+  }
 }

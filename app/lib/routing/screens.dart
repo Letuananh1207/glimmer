@@ -5,8 +5,7 @@ import 'package:provider/provider.dart';
 import '../data/repositories/backup/backup_repository.dart';
 import '../data/repositories/device/device_repository.dart';
 import '../data/repositories/release/release_repository.dart';
-import '../data/repositories/skill/skill_repository.dart';
-import '../domain/use_cases/switch_skill_use_case.dart';
+import '../domain/use_cases/toggle_skill_use_case.dart';
 import '../ui/connect/view_models/connect_view_model.dart';
 import '../ui/connect/widgets/connect_screen.dart';
 import '../ui/core/widgets/view_model_host.dart';
@@ -33,9 +32,10 @@ Widget wifiSetupScreen() => ViewModelHost(
       builder: (_, vm) => WifiSetupScreen(viewModel: vm),
     );
 
-Widget dashboardScreen() => ViewModelHost(
-      create: (c) => DashboardViewModel(device: c.read<DeviceRepository>()),
-      builder: (_, vm) => DashboardScreen(viewModel: vm),
+Widget dashboardScreen({required VoidCallback onOpenSettings}) => ViewModelHost(
+      create: (c) =>
+          DashboardViewModel(device: c.read<DeviceRepository>(), toggleSkill: c.read<ToggleSkillUseCase>()),
+      builder: (_, vm) => DashboardScreen(viewModel: vm, onOpenSettings: onOpenSettings),
     );
 
 Widget settingsScreen() => ViewModelHost(
@@ -52,22 +52,16 @@ Widget deviceScreen({required VoidCallback onChangeWifi}) => ViewModelHost(
       builder: (_, vm) => DeviceScreen(viewModel: vm, onChangeWifi: onChangeWifi),
     );
 
-Widget skillsScreen({required ValueChanged<String> onOpenHome, required VoidCallback onOpenDevice}) => ViewModelHost(
-      create: (c) => SkillsViewModel(switchSkill: c.read<SwitchSkillUseCase>(), device: c.read<DeviceRepository>()),
-      builder: (_, vm) => SkillsScreen(viewModel: vm, onOpenHome: onOpenHome, onOpenDevice: onOpenDevice),
+Widget skillsScreen({required VoidCallback onOpenDevice}) => ViewModelHost(
+      create: (c) => SkillsViewModel(toggleSkill: c.read<ToggleSkillUseCase>(), device: c.read<DeviceRepository>()),
+      builder: (_, vm) => SkillsScreen(viewModel: vm, onOpenDevice: onOpenDevice),
     );
 
-/// Khung 4 tab; [onSelect] nhận chỉ số tab và skill đang dùng (tab 1 = màn chính của skill đó).
-Widget homeShell({required int index, required void Function(int tab, String skill) onSelect, required Widget child}) =>
-    ViewModelHost(
-      create: (c) => HomeViewModel(
-        switchSkill: c.read<SwitchSkillUseCase>(),
-        device: c.read<DeviceRepository>(),
-        skills: c.read<SkillRepository>(),
-      ),
+/// Khung 4 tab (tab 1 = Màn hình); [onSelect] nhận chỉ số tab.
+Widget homeShell({required int index, required ValueChanged<int> onSelect, required Widget child}) => ViewModelHost(
+      create: (c) => HomeViewModel(toggleSkill: c.read<ToggleSkillUseCase>(), device: c.read<DeviceRepository>()),
       builder: (_, vm) => ListenableBuilder(
         listenable: vm,
-        builder: (_, _) =>
-            HomeShell(skill: vm.active, index: index, onSelect: (i) => onSelect(i, vm.active), child: child),
+        builder: (_, _) => HomeShell(waiting: vm.waiting, badge: vm.badge, index: index, onSelect: onSelect, child: child),
       ),
     );

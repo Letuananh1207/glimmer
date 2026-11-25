@@ -81,6 +81,13 @@ abstract final class AppSize {
   static const double skillTile = 176;
   static const double skillBadge = 48;
   static const int navTabs = 4;
+  static const double dockTab = 48;
+  static const double skillRow = 72;
+  static const double skillIcon = 44;
+  static const double switchW = 52;
+  static const double switchH = 32;
+  static const double chip = 36;
+  static const double headerClawd = 44;
 
   static const double radiusCard = 14;
   static const double radiusButton = 20;
@@ -90,6 +97,10 @@ abstract final class AppSize {
   static const double radiusNavIndicator = 16;
   static const double radiusSkillTile = 14;
   static const double radiusSkillBadge = 12;
+  static const double radiusDockBar = 14;
+  static const double radiusDockTab = 10;
+  static const double radiusChip = 18;
+  static const double radiusBadge = 4;
 
   static const double hairline = 1;
 }

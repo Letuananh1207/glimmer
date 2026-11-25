@@ -2,99 +2,132 @@ import 'package:flutter/foundation.dart';
 
 import '../../../data/repositories/device/device_repository.dart';
 import '../../../domain/rules/skill_rules.dart';
-import '../../../domain/use_cases/switch_skill_use_case.dart';
+import '../../../domain/use_cases/toggle_skill_use_case.dart';
 import '../../../utils/result.dart';
 import '../../../utils/safe_notifier.dart';
 
-/// How one tile reads (screen_specs §6).
-enum SkillTileState { current, available, switching, soon }
+/// What sits at the right of a skill row and what its description says (screen_specs §6).
+enum SkillRowMode {
+  /// Switch, tappable unless another row is sending.
+  toggle,
 
-/// Banner at the top of the screen (none when null).
-enum SkillsBanner { switching, error, legacy }
+  /// Spinner instead of the switch, description `skillsSending`.
+  sending,
 
-class SkillTileData {
-  const SkillTileData(this.id, this.state, {required this.enabled});
+  /// The only skill on: switch locked, description `skillsLastOne` (R-SK-1).
+  lastOne,
+
+  /// Old firmware, Agent: padlock instead of the switch (R-SK-4).
+  legacyLocked,
+
+  /// Old firmware, Thời tiết / Đồng hồ: on, no switch, description `skillsAlwaysOn` (R-SK-4).
+  alwaysOn,
+}
+
+class SkillRowData {
+  const SkillRowData(this.id, {required this.on, required this.mode, required this.enabled});
   final String id;
-  final SkillTileState state;
 
-  /// Tappable now (current → open its home; available → switch; never while switching).
+  /// On on the device (the app shows what the device has until it takes a change, R-SK-5).
+  final bool on;
+  final SkillRowMode mode;
+
+  /// The switch can be tapped now.
   final bool enabled;
 }
 
-/// Màn Skill: lưới skill, đổi skill (R-SK-1…5).
+/// Banner at the top of the screen (none when null).
+enum SkillsBanner { error, legacy }
+
+/// Màn Skill: danh sách công tắc skill theo dock (R-SK-1…5).
 class SkillsViewModel extends ChangeNotifier with SafeNotifier {
   SkillsViewModel({
-    required SwitchSkillUseCase switchSkill,
+    required ToggleSkillUseCase toggleSkill,
     required DeviceRepository device,
     List<SkillInfo> catalog = skillCatalog,
-  })  : _switch = switchSkill,
+  })  : _toggle = toggleSkill,
         _device = device,
         _catalog = catalog {
     _device.addListener(_onDevice);
-    _switch.syncFromDevice();
+    _toggle.syncFromDevice();
   }
 
-  final SwitchSkillUseCase _switch;
+  final ToggleSkillUseCase _toggle;
   final DeviceRepository _device;
   final List<SkillInfo> _catalog;
 
-  String? _target;
-  String? _failed;
+  String? _sending;
+  ({String id, bool enable})? _failed;
 
-  /// Skill owning the device screen (follows the device, R-SK-5).
-  String get active => _switch.active;
-
-  /// Skill being switched to, null when idle.
-  String? get target => _target;
+  /// Skills on, dock order (follows the device, R-SK-5).
+  List<String> get enabled => _toggle.enabled;
 
   /// Firmware version for the legacy banner.
-  String get firmware => _switch.firmware;
+  String get firmware => _toggle.firmware;
+
+  bool get legacy => _toggle.legacy;
+
+  /// The change that failed (for the error banner), null otherwise.
+  ({String id, bool enable})? get failed => _failed;
 
   SkillsBanner? get banner {
-    if (_target != null) return SkillsBanner.switching;
+    if (_toggle.legacy) return SkillsBanner.legacy;
     if (_failed != null) return SkillsBanner.error;
-    if (_switch.legacy) return SkillsBanner.legacy;
     return null;
   }
 
-  List<SkillTileData> get tiles {
-    final available = _switch.available;
-    final busy = _target != null;
+  /// One caption line under the list (not on old firmware).
+  bool get showOrderNote => !_toggle.legacy;
+
+  /// Rows in dock order.
+  List<SkillRowData> get rows {
+    final on = enabled;
+    final available = _toggle.available;
+    final legacy = _toggle.legacy;
+    final busy = _sending != null;
     return [
       for (final s in _catalog)
-        if (s.id == active)
-          SkillTileData(s.id, SkillTileState.current, enabled: !busy)
-        else if (s.id == _target)
-          SkillTileData(s.id, SkillTileState.switching, enabled: false)
-        else if (s.hasPack && available.contains(s.id))
-          SkillTileData(s.id, SkillTileState.available, enabled: !busy)
-        else
-          SkillTileData(s.id, SkillTileState.soon, enabled: false),
+        if (s.hasPack)
+          if (legacy)
+            SkillRowData(s.id,
+                on: true,
+                mode: s.id == SkillIds.agent ? SkillRowMode.legacyLocked : SkillRowMode.alwaysOn,
+                enabled: false)
+          else if (s.id == _sending)
+            SkillRowData(s.id, on: on.contains(s.id), mode: SkillRowMode.sending, enabled: false)
+          else if (on.length == 1 && on.contains(s.id))
+            SkillRowData(s.id, on: true, mode: SkillRowMode.lastOne, enabled: false)
+          else
+            SkillRowData(s.id,
+                on: on.contains(s.id), mode: SkillRowMode.toggle, enabled: !busy && available.contains(s.id)),
     ];
   }
 
+  /// "Sắp có" chips, catalogue order.
+  List<String> get soon => List.unmodifiable([for (final s in _catalog) if (!s.hasPack) s.id]);
+
   void _onDevice() {
-    _switch.syncFromDevice();
+    _toggle.syncFromDevice();
     notifyListeners();
   }
 
-  /// Switch to [id] at once (no confirm). Only for an available tile; the current one stays current
-  /// until the device takes it (R-SK-2).
-  Future<void> select(String id) async {
-    if (_target != null || id == active) return;
-    _target = id;
+  /// Switch tapped: send the new list to the device at once (no confirm). The row keeps the device's state with
+  /// a spinner until the device takes it (R-SK-2, R-SK-5); on failure the switch stays as the device has it.
+  Future<void> toggle(String id, {required bool enable}) async {
+    if (_sending != null) return;
+    _sending = id;
     _failed = null;
     notifyListeners();
-    final r = await _switch(id);
-    _target = null;
-    if (r is Error) _failed = id;
+    final r = await _toggle(id, enable: enable);
+    _sending = null;
+    if (r is Error) _failed = (id: id, enable: enable);
     notifyListeners();
   }
 
-  /// Error banner → send the skill just chosen again.
+  /// Error banner → send the change again.
   Future<void> retry() async {
-    final id = _failed;
-    if (id != null) await select(id);
+    final f = _failed;
+    if (f != null) await toggle(f.id, enable: f.enable);
   }
 
   @override

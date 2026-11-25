@@ -1,7 +1,10 @@
 // Shapes of the display's JSON API (see src/core/web.cpp in the firmware).
 import '../../utils/json.dart';
+import 'device_weather.dart';
 import 'project.dart';
 import 'usage.dart';
+
+export 'device_weather.dart';
 
 /// GET /api/state.
 class DeviceState {
@@ -27,6 +30,9 @@ class DeviceState {
     required this.projects,
     this.skill = '',
     this.skills = const [],
+    this.skillsOn = const [],
+    this.weatherConfigured = false,
+    this.weather,
   });
 
   factory DeviceState.fromJson(Map<String, dynamic> j) => DeviceState(
@@ -55,6 +61,11 @@ class DeviceState {
             .map(Project.fromJson)),
         skill: jsonStr(j['skill']),
         skills: List.unmodifiable((j['skills'] as List? ?? const []).whereType<String>()),
+        skillsOn: List.unmodifiable((j['skills_on'] as List? ?? const []).whereType<String>()),
+        weatherConfigured: jsonBool(j['weather_configured']) || j['weather'] is Map,
+        weather: j['weather'] is Map<String, dynamic>
+            ? DeviceWeather.fromJson(j['weather'] as Map<String, dynamic>)
+            : null,
       );
 
   final String fw, build, wifi, ip, ssid, activeChannel, resetReason;
@@ -64,11 +75,20 @@ class DeviceState {
   final Usage usage;
   final List<Project> projects;
 
-  /// Skill owning the screen; '' on firmware without skills (R-SK-4).
+  /// Legacy: first enabled skill; '' on firmware without skills.
   final String skill;
 
-  /// Every skill the firmware has channels for; empty on firmware without skills.
+  /// Every skill the firmware has channels for, in dock order; empty on firmware without skills.
   final List<String> skills;
+
+  /// Skills enabled on the device (one dock tab each), in dock order; empty on firmware before the dock (R-SK-4).
+  final List<String> skillsOn;
+
+  /// The device has a weather location set.
+  final bool weatherConfigured;
+
+  /// Weather now + today and 3 days; null when the device has no location or the firmware has none.
+  final DeviceWeather? weather;
 
   /// In setup-AP mode the device reports wifi "ap".
   bool get inSetupMode => wifi == 'ap';

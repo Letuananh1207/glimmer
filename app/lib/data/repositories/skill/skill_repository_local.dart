@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../../../domain/rules/skill_rules.dart';
 import '../../services/local_store_service.dart';
 import 'skill_repository.dart';
@@ -13,13 +15,14 @@ class SkillRepositoryLocal extends SkillRepository {
   final List<String>? _packs;
 
   @override
-  String get active => resolveStoredSkill(_store.activeSkill, packs: _packs);
+  List<String> get enabled => resolveStoredSkills(_store.skillsOn, packs: _packs);
 
   @override
-  void setActive(String id) {
-    final next = resolveStoredSkill(id, packs: _packs);
-    if (next == active && _store.activeSkill == next) return;
-    _store.activeSkill = next;
-    notifyListeners();
+  void setEnabled(List<String> ids) {
+    final next = resolveStoredSkills(ids, packs: _packs);
+    final changed = !listEquals(next, enabled);
+    if (!changed && _store.skillsOn != null) return;
+    _store.skillsOn = next;
+    if (changed) notifyListeners();
   }
 }

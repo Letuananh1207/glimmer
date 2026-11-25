@@ -1,4 +1,5 @@
 // Bảng project ở Tổng quan và biểu cảm Clawd — giống firmware.
+import '../models/attention_card.dart';
 import '../models/clawd_mood.dart';
 import '../models/project.dart';
 
@@ -18,3 +19,11 @@ ClawdMood moodFor(List<String> states) {
   if (states.contains('working') || states.contains('input')) return ClawdMood.open;
   return ClawdMood.happy;
 }
+
+/// Agents waiting on the user — visible approval / input cards, like the firmware's `countWaiting`
+/// (badge on the Agent dock tab and the Màn hình nav tab).
+int agentsWaiting(List<AttentionCard> cards) =>
+    cards.where((c) => c.showsInS <= 0 && (c.kind == 'approval' || c.kind == 'input')).length;
+
+/// Badge text: hidden (null) at 0, "9+" above 9.
+String? badgeText(int n) => n <= 0 ? null : (n > 9 ? '9+' : '$n');

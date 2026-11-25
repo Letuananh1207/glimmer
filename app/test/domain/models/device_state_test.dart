@@ -50,4 +50,36 @@ void main() {
     final c = AttentionCard.fromJson({'id': 'k1', 'kind': 'approval', 'title': 'APPROVAL NEEDED'});
     expect((c.id, c.kind, c.progress, c.body), ('k1', 'approval', -1, ''));
   });
+
+  test('skills_on and weather (firmware 2026-11-25.3); -999 / -1 → unknown', () {
+    final s = DeviceState.fromJson({
+      'skills': ['agent', 'weather', 'clock'],
+      'skills_on': ['agent', 'clock'],
+      'weather_configured': true,
+      'weather': {
+        'valid': true,
+        'temp_c': 24.5,
+        'feels_c': -999,
+        'code': 3,
+        'desc': 'Nhiều mây',
+        'is_day': false,
+        'humidity': -1,
+        'wind_kmh': 7.2,
+        'last_ok': 1795500000,
+        'stale': true,
+        'err': '',
+        'days': [
+          {'tmin': 20, 'tmax': 27.5, 'code': 61, 'desc': 'Mưa nhẹ'},
+          {'tmin': -999, 'tmax': -999, 'code': 0, 'desc': 'Quang'},
+        ],
+      },
+    });
+    expect(s.skillsOn, ['agent', 'clock']);
+    final w = s.weather!;
+    expect((w.valid, w.tempC, w.feelsC, w.code, w.desc, w.isDay), (true, 24.5, null, 3, 'Nhiều mây', false));
+    expect((w.humidity, w.windKmh, w.lastOk, w.stale), (null, 7.2, 1795500000, true));
+    expect(w.days.map((d) => (d.tmin, d.tmax, d.code, d.desc)), [(20.0, 27.5, 61, 'Mưa nhẹ'), (null, null, 0, 'Quang')]);
+    final none = DeviceState.fromJson({'fw': '0.22.0'});
+    expect((none.weather, none.weatherConfigured, none.skillsOn.length), (null, false, 0));
+  });
 }

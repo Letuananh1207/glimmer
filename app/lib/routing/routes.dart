@@ -11,15 +11,10 @@ abstract final class Routes {
   static const connectWifi = '$connect/$wifiSetupName';
   static const deviceWifi = '$device/$wifiSetupName';
 
-  /// Màn chính (tab 1) của từng skill có gói (navigation.json `tabs[0].bySkill`).
-  static const skillHomes = {'agent': dashboard};
-
-  static String skillHome(String skill) => skillHomes[skill] ?? dashboard;
-
   /// Tab 2–4, dùng chung mọi skill.
   static const sharedTabs = [skills, settings, device];
 
-  /// Tab đang chọn theo đường dẫn: 0 = màn chính của skill, 1 Skill, 2 Cài đặt, 3 Thiết bị.
+  /// Tab đang chọn theo đường dẫn: 0 = Màn hình, 1 Skill, 2 Cài đặt, 3 Thiết bị.
   static int tabOf(String location) {
     final i = sharedTabs.indexWhere(location.startsWith);
     return i < 0 ? 0 : i + 1;

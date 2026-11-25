@@ -63,14 +63,15 @@ Các quy tắc dưới đây ghi lại hành vi app đang có lúc chuyển sang
 
 ## 7. Skill (gói chức năng)
 
-Một skill = các màn của nó trong app + bộ kênh của nó trên màn thiết bị. Kế hoạch
-`docs/tasks/2026-11-25-he-sinh-thai-skill.md`. Kênh hệ thống (Thông báo, Ban đêm, Đồng hồ, Thời tiết, Dự báo,
-Thông tin) hiện ở mọi skill.
+Một skill = các màn của nó trong app + một tab trên dock thiết bị (bộ kênh của nó). Kế hoạch
+`docs/tasks/2026-11-25-he-sinh-thai-skill.md`; từ thiết kế 2026-11-25.3 (`docs/tasks/2026-11-25-thiet-ke-2026-11-25.3.md`)
+skill là danh sách bật / tắt: Agent, Thời tiết (Weather + Forecast), Đồng hồ (Clock). Kênh hệ thống (Thông báo,
+Ban đêm, Thông tin) hiện ở mọi skill.
 
 | Mã | Quy tắc | Ví dụ | App |
 | --- | --- | --- | --- |
-| R-SK-1 | Mỗi lúc đúng một skill đang dùng; mặc định `agent`. Skill lưu trên máy không còn trong danh mục → về `agent`. | Mới cài app → Agent | ok |
-| R-SK-2 | Đổi skill trên app → lưu máy và gửi thiết bị (`skill` trong `/api/settings`); thiết bị chỉ xoay kênh của skill đó + kênh hệ thống. | Chọn Agent → thiết bị xoay Trang chủ, Claude, … + Đồng hồ | ok |
+| R-SK-1 | Nhiều skill bật cùng lúc, ít nhất một; mặc định Agent + Thời tiết + Đồng hồ. Không tắt được skill bật cuối cùng. Danh sách lưu trên máy bỏ id không còn trong danh mục, rỗng → mặc định. | Mới cài app → Agent, Thời tiết, Đồng hồ bật; chỉ còn Agent → công tắc Agent khoá | ok |
+| R-SK-2 | Bật / tắt trên app → gửi thiết bị danh sách skill bật (`skillsOn` trong `/api/settings`, theo thứ tự dock), thiết bị nhận rồi mới lưu máy; thiết bị xoay mọi tab dock đang bật + Thông tin, Ban đêm. | Tắt Thời tiết → gửi `[agent, clock]`; thiết bị xoay Agent, Đồng hồ + Thông tin | ok |
 | R-SK-3 | Thẻ cần duyệt / chờ trả lời vẫn chen ngang ở mọi skill. | Skill Nhạc, Claude Code xin duyệt → thẻ amber hiện | ok · miễn test (luật firmware: kênh Attention là kênh hệ thống, `test/test_logic` `test_skill_filter_and_default`) |
-| R-SK-4 | Thiết bị không báo `skill` (firmware cũ) → app chỉ có skill Agent, không cho đổi, không gửi gì. | Firmware 0.22 → không có nút đổi skill | ok |
-| R-SK-5 | Skill thiết bị đang dùng khác skill app lưu (đổi từ trang web thiết bị) → app theo thiết bị và lưu lại. | Web đổi sang X, app lưu Agent → app thành X | ok |
+| R-SK-4 | Thiết bị không báo danh sách skill bật (`skills_on`, firmware cũ) → app chỉ có skill Agent, không cho bật / tắt, không gửi gì. | Firmware 0.22 → Agent ổ khoá, Thời tiết / Đồng hồ "Luôn có" | ok |
+| R-SK-5 | Danh sách skill bật trên thiết bị khác danh sách app lưu (đổi từ trang web thiết bị) → app theo thiết bị và lưu lại. | Web tắt Đồng hồ, app lưu cả ba → app thành Agent, Thời tiết | ok |

@@ -12,7 +12,11 @@ import 'package:glimmer_app/ui/settings/view_models/settings_view_model.dart';
 import 'package:glimmer_app/ui/wifi_setup/view_models/wifi_setup_view_model.dart';
 import 'package:glimmer_app/utils/result.dart';
 
+import 'package:glimmer_app/data/repositories/skill/skill_repository_local.dart';
+import 'package:glimmer_app/domain/use_cases/toggle_skill_use_case.dart';
+
 import '../../testing/fakes/fake_repositories.dart';
+import '../../testing/fakes/fake_services.dart';
 
 const _url = 'http://192.168.1.50';
 const _now = 1795500000;
@@ -39,6 +43,11 @@ Map<String, dynamic> _state({bool stale = false, String wifi = 'connected', Stri
         {'project': 'b', 'state': 'working', 'shown': true},
       ],
     };
+
+Future<DashboardViewModel> _dashboard(DeviceRig rig) async => DashboardViewModel(
+      device: rig.repo,
+      toggleSkill: ToggleSkillUseCase(skills: SkillRepositoryLocal(store: await fakeStore()), device: rig.repo),
+    );
 
 void main() {
   late DeviceRig rig;
@@ -69,7 +78,7 @@ void main() {
   group('Dashboard', () {
     test('rows, mood and usage rows come from the device state', () async {
       await rig.connect(_url, _state());
-      final vm = DashboardViewModel(device: rig.repo);
+      final vm = await _dashboard(rig);
       expect(vm.rows.map((p) => p.project), ['b', 'a']);
       expect((vm.mood, vm.walking), (ClawdMood.open, true));
       expect((vm.week.used, vm.week.level, vm.week.resetInS), (66, UsageLevel.low, 3 * 86400));
@@ -80,7 +89,7 @@ void main() {
 
     test('R-DUNG-4 stale data dims both rows', () async {
       await rig.connect(_url, _state(stale: true));
-      final vm = DashboardViewModel(device: rig.repo);
+      final vm = await _dashboard(rig);
       expect((vm.week.level, vm.session.level), (UsageLevel.unknown, UsageLevel.unknown));
       expect(vm.meta.kind, UsageMetaKind.stale);
       vm.dispose();
@@ -89,7 +98,7 @@ void main() {
     test('actions post to the device and refresh on success', () async {
       await rig.connect(_url, _state());
       rig.api.on(_url, 'POST', '/push/clear', <String, dynamic>{});
-      final vm = DashboardViewModel(device: rig.repo);
+      final vm = await _dashboard(rig);
       final before = rig.api.calls.length;
       expect(await vm.clearCard('k1'), isA<Ok<void>>());
       expect(rig.posts('/push/clear').last.body, {'id': 'k1'});

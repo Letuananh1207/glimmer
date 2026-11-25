@@ -4,24 +4,22 @@ import '../../../l10n/app_localizations.dart';
 import '../../core/skill_style.dart';
 import '../../core/themes/app_colors.dart';
 import '../../core/themes/app_text.dart';
-import '../../core/widgets/skill_tile.dart';
+import '../../core/widgets/skill_row.dart';
+import '../../core/widgets/skill_switch.dart';
 import '../../core/widgets/status_banner.dart';
 import '../view_models/skills_view_model.dart';
 
-/// Màn Skill — tab 2 (screen_specs §6).
+/// Màn Skill — tab 2 (screen_specs §6, 2026-11-25.3): danh sách công tắc skill theo dock + chip "Sắp có".
 class SkillsScreen extends StatelessWidget {
-  const SkillsScreen({super.key, required this.viewModel, required this.onOpenHome, required this.onOpenDevice});
+  const SkillsScreen({super.key, required this.viewModel, required this.onOpenDevice});
 
   final SkillsViewModel viewModel;
-
-  /// Chạm ô đang dùng → màn chính của skill đó (tab 1).
-  final ValueChanged<String> onOpenHome;
 
   /// Firmware cũ → tab Thiết bị.
   final VoidCallback onOpenDevice;
 
-  static const _gridGap = AppSpace.m;
-  static const _gridPad = EdgeInsets.symmetric(horizontal: AppSpace.l, vertical: AppSpace.s);
+  static const _cardMargin = EdgeInsets.symmetric(horizontal: AppSpace.l, vertical: 6);
+  static const _cardPad = EdgeInsets.symmetric(horizontal: AppSpace.l, vertical: AppSpace.xs);
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +27,7 @@ class SkillsScreen extends StatelessWidget {
     return ListenableBuilder(
       listenable: viewModel,
       builder: (context, _) {
-        final tiles = viewModel.tiles;
+        final rows = viewModel.rows;
         return ListView(padding: const EdgeInsets.only(bottom: AppSpace.l), children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(AppSpace.xl, AppSpace.l, AppSpace.xl, AppSpace.s),
@@ -40,119 +38,175 @@ class SkillsScreen extends StatelessWidget {
             ]),
           ),
           ?_banner(l),
-          Padding(
-            padding: _gridPad,
-            child: _Grid(gap: _gridGap, children: [
-              for (final t in tiles)
-                SkillTile(
-                  id: t.id,
-                  kind: switch (t.state) {
-                    SkillTileState.current => SkillTileKind.current,
-                    SkillTileState.available => SkillTileKind.available,
-                    SkillTileState.switching => SkillTileKind.switching,
-                    SkillTileState.soon => SkillTileKind.soon,
-                  },
-                  onTap: !t.enabled
-                      ? null
-                      : t.state == SkillTileState.current
-                          ? () => onOpenHome(t.id)
-                          : () => viewModel.select(t.id),
-                ),
+          Container(
+            margin: _cardMargin,
+            padding: _cardPad,
+            decoration: BoxDecoration(color: AppColors.panel, borderRadius: BorderRadius.circular(AppSize.radiusCard)),
+            child: Column(children: [
+              for (var i = 0; i < rows.length; i++) ...[
+                if (i > 0) const Divider(height: AppSize.hairline, thickness: AppSize.hairline, color: AppColors.line),
+                _Row(row: rows[i], onChanged: (v) => viewModel.toggle(rows[i].id, enable: v)),
+              ],
             ]),
           ),
-          _ChannelsCard(skill: viewModel.active),
+          if (viewModel.showOrderNote) const _OrderNote(),
+          _Soon(ids: viewModel.soon),
         ]);
       },
     );
   }
 
-  Widget? _banner(AppLocalizations l) => switch (viewModel.banner) {
-        null => null,
-        SkillsBanner.switching => StatusBanner(
-            busy: true,
-            title: l.skillsSwitchingBanner(SkillStyle.name(l, viewModel.target ?? '')),
-            body: l.skillsSwitchingHint,
+  Widget? _banner(AppLocalizations l) {
+    final f = viewModel.failed;
+    return switch (viewModel.banner) {
+      null => null,
+      SkillsBanner.error when f != null => StatusBanner(
+          title: f.enable
+              ? l.skillsErrorOnTitle(SkillStyle.name(l, f.id))
+              : l.skillsErrorOffTitle(SkillStyle.name(l, f.id)),
+          titleColor: AppColors.coral,
+          body: f.enable
+              ? l.skillsErrorOnBody(SkillStyle.name(l, f.id))
+              : l.skillsErrorOffBody(SkillStyle.name(l, f.id)),
+          trailing: TextButton(onPressed: viewModel.retry, child: Text(l.commonRetry)),
+        ),
+      SkillsBanner.error => null,
+      SkillsBanner.legacy => StatusBanner(
+          title: l.skillsLegacyTitle,
+          titleColor: AppColors.amber,
+          body: l.skillsLegacyBody(viewModel.firmware),
+          action: OutlinedButton.icon(
+            onPressed: onOpenDevice,
+            icon: const Icon(Icons.system_update),
+            label: Text(l.deviceUpdateFw),
           ),
-        SkillsBanner.error => StatusBanner(
-            title: l.skillsErrorTitle,
-            titleColor: AppColors.coral,
-            body: l.skillsErrorBody(SkillStyle.name(l, viewModel.active)),
-            trailing: TextButton(onPressed: viewModel.retry, child: Text(l.commonRetry)),
-          ),
-        SkillsBanner.legacy => StatusBanner(
-            title: l.skillsLegacyTitle,
-            titleColor: AppColors.amber,
-            body: l.skillsLegacyBody(viewModel.firmware),
-            action: OutlinedButton.icon(
-              onPressed: onOpenDevice,
-              icon: const Icon(Icons.system_update),
-              label: Text(l.deviceUpdateFw),
-            ),
-          ),
-      };
+        ),
+    };
+  }
 }
 
-/// Two equal columns; rows as tall as their tallest tile.
-class _Grid extends StatelessWidget {
-  const _Grid({required this.gap, required this.children});
+/// One `SkillRow` with what its mode puts on the right and in the description.
+class _Row extends StatelessWidget {
+  const _Row({required this.row, required this.onChanged});
 
-  final double gap;
-  final List<Widget> children;
+  final SkillRowData row;
+  final ValueChanged<bool> onChanged;
 
-  @override
-  Widget build(BuildContext context) => Column(children: [
-        for (var i = 0; i < children.length; i += 2) ...[
-          if (i > 0) SizedBox(height: gap),
-          IntrinsicHeight(
-            child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              Expanded(child: children[i]),
-              SizedBox(width: gap),
-              Expanded(child: i + 1 < children.length ? children[i + 1] : const SizedBox()),
-            ]),
-          ),
-        ],
-      ]);
-}
-
-/// MÀN THIẾT BỊ ĐANG XOAY: kênh của skill + kênh hệ thống + nhắc thẻ duyệt (R-SK-3).
-class _ChannelsCard extends StatelessWidget {
-  const _ChannelsCard({required this.skill});
-
-  final String skill;
-
-  static const _square = 8.0;
-  static const _textSize = 13.0;
-  static const _textLine = 18 / 13;
-  static const _margin = EdgeInsets.symmetric(horizontal: AppSpace.l, vertical: 6);
+  static const _spinner = 24.0;
+  static const _spinnerStroke = 3.0;
+  static const _lock = 20.0;
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final small = AppFonts.label.copyWith(letterSpacing: 0, height: 16 / 12);
-    return Container(
-      margin: _margin,
-      padding: const EdgeInsets.all(AppSpace.l),
-      decoration: BoxDecoration(color: AppColors.panel, borderRadius: BorderRadius.circular(AppSize.radiusCard)),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(l.skillsChannelsTitle, style: AppFonts.label),
-        const SizedBox(height: AppSpace.s),
-        Text(SkillStyle.channels(l, skill),
-            style: const TextStyle(fontSize: _textSize, height: _textLine, color: AppColors.ink)),
-        const SizedBox(height: AppSpace.xs),
-        Text(l.skillsChannelsSystem, style: small),
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: AppSpace.m),
-          child: Divider(height: AppSize.hairline, thickness: AppSize.hairline, color: AppColors.line),
+    final style = SkillStyle.of(row.id);
+    final name = SkillStyle.name(l, row.id);
+    final (desc, descColor) = switch (row.mode) {
+      SkillRowMode.sending => (l.skillsSending, AppColors.inkDim),
+      SkillRowMode.lastOne => (l.skillsLastOne, AppColors.amber),
+      SkillRowMode.alwaysOn => (l.skillsAlwaysOn, AppColors.muted),
+      _ => (SkillStyle.description(l, row.id), AppColors.muted),
+    };
+    final Widget trailing = switch (row.mode) {
+      SkillRowMode.sending => SizedBox(
+          width: SkillSwitch.tapW,
+          height: SkillSwitch.tapH,
+          child: Center(
+            child: Semantics(
+              label: l.skillsSending,
+              child: const SizedBox.square(
+                dimension: _spinner,
+                child: CircularProgressIndicator(strokeWidth: _spinnerStroke, color: AppColors.clawd),
+              ),
+            ),
+          ),
         ),
-        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      SkillRowMode.legacyLocked => const SizedBox.square(
+          dimension: SkillSwitch.tapH,
+          child: Icon(Icons.lock_outline, size: _lock, color: AppColors.muted),
+        ),
+      SkillRowMode.alwaysOn => const SizedBox.shrink(),
+      _ => SkillSwitch(
+          value: row.on,
+          accent: style.accent,
+          label: l.skillsToggleA11y(name),
+          onChanged: row.enabled ? onChanged : null,
+        ),
+    };
+    return SkillRow(
+      icon: SkillStyle.dockIcon(row.id, color: row.on ? style.accent : AppColors.muted),
+      on: row.on,
+      tint: style.tint,
+      name: name,
+      description: desc,
+      descriptionColor: descColor,
+      trailing: trailing,
+    );
+  }
+}
+
+/// Dưới thẻ: ô vuông 8 amber + `skillsOrderNote` (R-SK-3).
+class _OrderNote extends StatelessWidget {
+  const _OrderNote();
+
+  static const _square = 8.0;
+  static const _pad = EdgeInsets.fromLTRB(AppSpace.xl, 6, AppSpace.xl, 0);
+  static const _squareTop = 4.0; // centre the square on the first 16-px line
+  static const _line = 16 / 12;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: _pad,
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Padding(
-            padding: EdgeInsets.only(top: AppSpace.xs),
+            padding: EdgeInsets.only(top: _squareTop),
             child: SizedBox.square(dimension: _square, child: ColoredBox(color: AppColors.amber)),
           ),
           const SizedBox(width: AppSpace.s),
-          Expanded(child: Text(l.skillsAttentionNote, style: small.copyWith(color: AppColors.inkDim))),
+          Expanded(
+            child: Text(AppLocalizations.of(context).skillsOrderNote,
+                style: AppFonts.label.copyWith(letterSpacing: 0, height: _line)),
+          ),
         ]),
-      ]),
-    );
+      );
+}
+
+/// `skillsSoonTitle` + chip "Sắp có" (không bấm được).
+class _Soon extends StatelessWidget {
+  const _Soon({required this.ids});
+
+  final List<String> ids;
+
+  static const _titlePad = EdgeInsets.fromLTRB(AppSpace.xl, 14, AppSpace.xl, AppSpace.xs);
+  static const _chipsPad = EdgeInsets.fromLTRB(AppSpace.l, AppSpace.xs, AppSpace.l, 0);
+  static const _chipPad = EdgeInsets.only(left: 10, right: AppSpace.m);
+  static const _icon = 16.0;
+  static const _text = 13.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Padding(padding: _titlePad, child: Text(l.skillsSoonTitle, style: AppFonts.label)),
+      Padding(
+        padding: _chipsPad,
+        child: Wrap(spacing: AppSpace.s, runSpacing: AppSpace.s, children: [
+          for (final id in ids)
+            Container(
+              height: AppSize.chip,
+              padding: _chipPad,
+              decoration: BoxDecoration(
+                border: Border.all(color: AppColors.line, width: AppSize.hairline),
+                borderRadius: BorderRadius.circular(AppSize.radiusChip),
+              ),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                SkillStyle.glyph(id, size: _icon, color: AppColors.muted),
+                const SizedBox(width: AppSpace.s),
+                Text(SkillStyle.name(l, id), style: const TextStyle(fontSize: _text, color: AppColors.muted)),
+              ]),
+            ),
+        ]),
+      ),
+    ]);
   }
 }

@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 
-/// Skill đang dùng, lưu trên máy (R-SK-1). Đổi skill cùng thiết bị: `SwitchSkillUseCase`.
+/// Skill đang bật, lưu trên máy (R-SK-1). Bật / tắt cùng thiết bị: `ToggleSkillUseCase`.
 abstract class SkillRepository extends ChangeNotifier {
-  /// Id skill đang dùng (luôn hợp lệ — không còn trong danh mục thì là mặc định).
-  String get active;
+  /// Id skill bật, theo thứ tự dock (luôn ít nhất một — thiếu / rỗng thì là mặc định).
+  List<String> get enabled;
 
-  void setActive(String id);
+  void setEnabled(List<String> ids);
 }

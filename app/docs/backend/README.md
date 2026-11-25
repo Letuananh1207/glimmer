@@ -12,7 +12,7 @@ thẳng từ thiết bị qua HTTP (`/api/*`, `/push` — hợp đồng do firmw
 | --- | --- | --- | --- |
 | `device_url` | string | `''` | Địa chỉ thiết bị trả lời lần trước, vd `http://192.168.100.40`. Không lưu AP cài đặt `192.168.4.1` (R-KN-1). |
 | `token` | string | `''` | API token của thiết bị (gửi `Authorization: Bearer …`); rỗng khi thiết bị không đặt token. Bí mật. |
-| `active_skill` | string | _(không có)_ | Id skill đang dùng (`agent`…, R-SK-1). Thiếu / không còn trong danh mục → `agent`. Thiết bị báo skill khác → ghi theo thiết bị (R-SK-5). |
+| `skills_on` | string list | _(không có)_ | Id skill đang bật, theo thứ tự dock (`agent`, `weather`, `clock`, R-SK-1). Thiếu / rỗng / toàn id lạ → `[agent, weather, clock]`. Thiết bị báo danh sách khác (`skills_on` trong `/api/state`) → ghi theo thiết bị (R-SK-5). |
 | `repo` | string | `Letuananh1207/glimmer` | Repo GitHub có bản phát hành `latest` chứa `firmware.bin` / `littlefs.bin`. |
 
 ## Tệp sao lưu cấu hình
@@ -30,3 +30,14 @@ Model chuyển sang `lib/domain/models/` (`DeviceState`, `Usage`, `Project`, `At
 
 `active_skill` chỉ nhận id có gói trong app (`skillCatalog` ở `lib/domain/rules/skill_rules.dart`, hiện chỉ `agent`).
 Id `music` / `social` / `fun` là ô "Sắp có" — không bao giờ được lưu. Khoá và kiểu không đổi.
+
+## Skill bật / tắt theo dock (2026-11-25.3)
+
+`active_skill` (string, một skill) **thay bằng** `skills_on` (string list). Không di trú giá trị: khoá cũ bị bỏ qua (mặc
+định mới gồm cả ba skill — đúng thứ thiết bị đang xoay trước khi nâng cấp) và bị xoá ở lần ghi đầu. Chỉ id có gói
+(`skillCatalog` ở `lib/domain/rules/skill_rules.dart`: `agent`, `weather`, `clock`) được lưu; `chat` / `music` /
+`social` / `fun` là chip "Sắp có". Model mới đọc từ thiết bị (không lưu): `DeviceState.skillsOn`,
+`DeviceState.weather` (`DeviceWeather` + `WeatherDay`, `lib/domain/models/device_weather.dart`).
+
+`AttentionCard.showsInS` (2026-11-25.3, đọc từ `shows_in_s` của `GET /push`, không lưu): thẻ còn ẩn trên thiết bị
+(Codex "tới lượt bạn" chờ 60 s) — không đếm vào huy hiệu agent chờ.

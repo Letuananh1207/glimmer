@@ -38,7 +38,7 @@ Play Store thì cần tạo khóa ký riêng.
 
 ## API thiết bị dùng tới
 
-`GET /api/state` (có `claude_usage`, `projects`, `time`, `skill`, `skills`), `GET/POST
+`GET /api/state` (có `claude_usage`, `projects`, `time`, `skill`, `skills`, `skills_on`, `weather`), `GET/POST
 /api/settings`, `GET /api/export`, `POST /api/import`, `POST /api/reboot`,
 `POST /api/refresh`, `POST /api/channel`, `GET /push`, `POST /push/clear`,
 `POST /update` (multipart `firmware` / `filesystem`). Token (nếu đặt) gửi qua
