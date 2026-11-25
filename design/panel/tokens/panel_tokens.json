@@ -1,7 +1,7 @@
 {
   "meta": {
     "name": "glimmer panel",
-    "version": "P-2026-11-25.6",
+    "version": "P-2026-11-25.7",
     "frame": {
       "width": 240,
       "height": 240,
@@ -103,7 +103,7 @@
     "mint": {
       "value": "#8FE574",
       "rgb565": "0x8F2E",
-      "use": "Nhấn Info / Trend; xong; còn > 50 %"
+      "use": "Nhấn Info / Trend; xong; còn > 50 % · nhấn kênh Ảnh"
     },
     "sky": {
       "value": "#54B6FF",
@@ -406,12 +406,13 @@
         "count": 4,
         "order": [
           "claude",
-          "chat",
+          "photo",
           "weather",
           "clock"
         ],
         "center": "(14, 19 + 36k) trong viền",
-        "step": 36
+        "step": 36,
+        "note": "tab 2 = Ảnh; Tin nhắn (chat) thay vào khi có gói chat"
       },
       "active": {
         "tile": {
@@ -441,6 +442,24 @@
             "...############...",
             "....#.#....#.#....",
             "....#.#....#.#...."
+          ]
+        },
+        "photo": {
+          "w": 16,
+          "h": 11,
+          "color": "inkDim",
+          "rows": [
+            "################",
+            "#..............#",
+            "#..........##..#",
+            "#.........####.#",
+            "#..........##..#",
+            "#..............#",
+            "#...#..........#",
+            "#..###....#....#",
+            "#.#####..###...#",
+            "######.#######.#",
+            "################"
           ]
         },
         "chat": {
@@ -643,6 +662,30 @@
       "http begin": "không mở được kết nối",
       "JSON …": "dữ liệu lỗi",
       "no current": "thiếu số liệu hiện tại"
+    }
+  },
+  "skill": {
+    "order": [
+      "agent",
+      "photo",
+      "weather",
+      "clock"
+    ],
+    "photo": {
+      "channel": "Photo",
+      "accent": "mint",
+      "dockTab": "photo",
+      "image": {
+        "format": "JPEG baseline",
+        "w": 188,
+        "h": 188,
+        "at": [
+          40,
+          28
+        ]
+      },
+      "meta": "<thứ tự>/<tổng>",
+      "empty": "Photo-Empty"
     }
   }
 }

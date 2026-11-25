@@ -5,6 +5,29 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-25.7 — Skill Ảnh: hiện ảnh của người dùng
+
+- **Kênh Ảnh** — mới (`source/Photo.dc.html`, `source/Photo-Empty.dc.html`, `screen_specs.md` §16; ảnh `Photo.png`,
+  `PhotoEmpty.png`):
+  - Skill thứ 2 sau agent; màu nhấn MINT. Status bar `Ảnh` (21 px), meta `2/5` = ảnh thứ mấy / tổng (21 px).
+  - Ảnh 188×188 tại (40, 28) trong bố cục có dock, vẽ thẳng không viền. Mỗi slide một ảnh, lượt sau ảnh kế tiếp.
+  - Chưa có ảnh: icon khung ảnh ×3 LINE (110, 56); `Chưa có ảnh` 16B MUTED TC (134, 104) 110 px; `Gửi ảnh từ app
+    glimmer` 11 INK_DIM (134, 132) 154 px; `hoặc glimmer.local` 11 MUTED (134, 148) 126 px; vạch y 230 MUTED liền.
+- **Dock** (`source/Dock.dc.html`, §15, token `component.dock`): tab 2 = **Ảnh** (icon khung ảnh 16×11 INK_DIM, không
+  huy hiệu) thay Tin nhắn. Thứ tự tab: Claude / Ảnh / Thời tiết / Đồng hồ. Ảnh 11 màn có dock vẽ lại phần tab 2.
+- Đổi luật: thêm skill `photo` vào `Skill::kAll` sau `agent` (`agent`, `photo`, `weather`, `clock`); kênh `Photo` gắn
+  skill `photo`, tab dock Ảnh.
+- Cần firmware: lưu ảnh JPEG trên LittleFS (thư mục ảnh, 15–30 KB mỗi ảnh; FS 1 MB → khoảng 5–8 ảnh), giải mã JPEG
+  baseline từng khối thẳng ra màn (không framebuffer); API tải ảnh lên / liệt kê / xoá; số ảnh trong `/api/state`.
+- Cần app: màn chọn ảnh, cắt vuông, thu nhỏ 188×188, gửi lên máy (phiên `/ui-design`).
+
+**Việc cần làm trong code:**
+- Kênh `Photo` (mới, skill `photo`): `draw()` vẽ status bar `Ảnh` + meta `<i>/<n>`, ảnh thứ i tại (40, 28); `tick()`
+  không vẽ. Hết slide → lượt sau ảnh kế tiếp. Ảnh hỏng → bỏ qua. Không ảnh → màn chưa có ảnh theo §16.
+- Dock: tab 2 Ảnh khi skill `photo` bật; vẽ icon khung ảnh. Tab Ảnh sáng (PANEL2 + vạch MINT) khi kênh `Photo` đang hiện.
+- Cài đặt skill: `photo` trong `skills_on` / `skillsOn`; tải ảnh lên / xoá qua web và API.
+- Bản xem trước màn trên máy tính: thêm màn Ảnh, Ảnh · chưa có ảnh; dock tab 2 Ảnh.
+
 ## P-2026-11-25.6 — Zz động khi Clawd ngủ
 
 - **Kênh Claude** (`source/Claude-NoProject.dc.html`, `source/Claude-Done.dc.html`, `screen_specs.md` §6 mục "Zz động";

@@ -1371,6 +1371,8 @@ Nguồn `source/NoChannels.dc.html` · ảnh `screens/@2x/NoChannels.png`
 
 ## 15. Dock dọc — thành phần dùng chung và bố cục có dock
 
+> **P-2026-11-25.7 — Tab Ảnh:** tab thứ 2 của dock là **Ảnh** (skill `photo`) thay cho Tin nhắn (chờ gói chat): icon khung ảnh 16×11 INK_DIM, không huy hiệu. Ảnh 11 màn có dock vẽ lại phần tab 2. Prop `second` (`photo` mặc định / `chat`).
+
 > **P-2026-11-25.4 — Khớp máy, Việt hoá:** vạch y 230 phần còn lại PANEL; Agents vạch AMBER liền khi có mục chờ; Setup MUTED; Forecast màu đặc; đơn vị `P` / `G` / `NG`, thứ `T2`…`CN`.
 
 > **P-2026-11-25.3 — Dock dọc nổi bám lề trái:** thành phần mới `Dock` + 11 kênh xếp lại theo bề ngang mới. **Chờ phía code chốt dòng "Đổi luật" trong CHANGELOG** trước khi áp.
@@ -1382,10 +1384,10 @@ Dock = thanh tab kiểu Slide Over của iPad: báo đang ở tab nào và tab n
 | phần | tọa độ trong dock (gốc = góc trong viền) | màu |
 |---|---|---|
 | khung | 30×150, viền 1 px | nền PANEL, viền LINE |
-| ô tab k (k = 0…3: Claude, Tin nhắn, Thời tiết, Đồng hồ) | tâm (14, 19 + 36k) | — |
-| icon | Clawd 18×10 (ô 1 px) · bong bóng 16×12 · mặt trời 16×14 · đồng hồ 16×14, căn giữa tâm ô; nét 2 px | Clawd CLAWD, còn lại INK_DIM |
+| ô tab k (k = 0…3: Claude, Ảnh, Thời tiết, Đồng hồ) | tâm (14, 19 + 36k) | — |
+| icon | Clawd 18×10 (ô 1 px) · khung ảnh 16×11 · mặt trời 16×14 · đồng hồ 16×14, căn giữa tâm ô; nét 2 px | Clawd CLAWD, còn lại INK_DIM |
 | tab đang hiện | ô 24×24 tại (2, cy − 12) + vạch 2×10 tại (0, cy − 5) | ô PANEL2, vạch = màu nhấn của kênh |
-| huy hiệu số | 9×9 vạt góc 1 px tại (19, cy − 14); chữ số bitmap 3×5 tại (22, cy − 12); > 9 → `+`; 0 → ẩn | Claude AMBER (agent chờ duyệt), Tin nhắn SKY (tin mới); chữ số BG |
+| huy hiệu số | 9×9 vạt góc 1 px tại (19, cy − 14); chữ số bitmap 3×5 tại (22, cy − 12); > 9 → `+`; 0 → ẩn | Claude AMBER (agent chờ duyệt); Tin nhắn SKY khi gói chat có (tab Ảnh không huy hiệu); chữ số BG |
 
 Bitmap icon và chữ số (lưới `#`) nằm trong `source/Dock.dc.html` (`ICONS`, `DIGITS`) và `tokens/panel_tokens.json` → `component.dock`.
 
@@ -1800,3 +1802,35 @@ Nguồn `source/Setup-Dock.dc.html` · ảnh `screens/@2x/SetupDock.png`
 | 2, 34, 30×150 |  |  | nhấn MUTED | Dock (`Dock.dc.html`), tab đang hiện `claude`, huy hiệu Claude 1 / Tin nhắn 3 |  |
 | 0, 230, 96×2 |  |  | MUTED | khối |  |
 | 96, 230, 144×2 |  |  | PANEL | khối |  |
+
+## 16. Ảnh — kênh `Photo` (skill `photo`)
+
+> **P-2026-11-25.7 — Kênh mới:** skill thứ 2 sau agent: hiện ảnh người dùng gửi lên, mỗi slide một ảnh, lượt sau ảnh kế tiếp. Bố cục có dock (đã chọn B). Màu nhấn MINT.
+
+Ảnh JPEG baseline vuông 188×188 (máy không co giãn — app / trang web cắt và thu nhỏ trước khi gửi), lưu LittleFS. `draw()` giải mã từng khối thẳng ra màn một lần; `tick()` không vẽ gì. Không có ảnh → `Photo-Empty`. Ảnh lỗi / không đọc được → bỏ qua sang ảnh kế tiếp; hết ảnh đọc được → `Photo-Empty`.
+
+### Photo — Ảnh · có dock
+
+Nguồn `source/Photo.dc.html` (ảnh minh hoạ `source/SamplePhoto.dc.html`) · ảnh `screens/@2x/Photo.png`
+
+| x, y (w×h) | datum | font | màu | nội dung | px |
+|---|---|---|---|---|---|
+| 0, 0, 240×22 | MC / TR | `JBMono-12B` / `JBMono-11` | INK / MUTED; gạch nhấn MINT | Status bar `Ảnh`; meta `2/5` TR (236, 5) = ảnh thứ mấy / tổng; gạch nhấn y 22 | 21 / 21 |
+| 40, 28, 188×188 |  |  | ảnh người dùng | ảnh JPEG đúng 188×188, vẽ thẳng (không viền, không bo góc); khoảng trống quanh ảnh BG |  |
+| 2, 34, 30×150 |  |  | PANEL / LINE | Dock (§15), tab `photo` đang hiện: ô PANEL2 + vạch MINT; Claude huy hiệu AMBER nếu có agent chờ |  |
+| 0, 230, 240×2 |  |  | MINT / PANEL | vạch tiến độ slide (vẽ ở 40 %), phần chưa chạy PANEL |  |
+
+### Photo-Empty — Ảnh · chưa có ảnh
+
+Nguồn `source/Photo-Empty.dc.html` · ảnh `screens/@2x/PhotoEmpty.png`
+
+| x, y (w×h) | datum | font | màu | nội dung | px |
+|---|---|---|---|---|---|
+| 0, 0, 240×22 | MC | `JBMono-12B` | INK; gạch nhấn MINT | Status bar `Ảnh`, không meta | 21 |
+| 110, 56, 48×33 |  |  | LINE | icon khung ảnh ×3 (lưới 16×11 như icon dock, ô 3 px) |  |
+| 134, 104 | TC | `JBMono-16B` | MUTED | `Chưa có ảnh` | 110 |
+| 134, 132 | TC | `JBMono-11` | INK_DIM | `Gửi ảnh từ app glimmer` | 154 |
+| 134, 148 | TC | `JBMono-11` | MUTED | `hoặc glimmer.local` | 126 |
+| 2, 34, 30×150 |  |  | PANEL / LINE | Dock (§15), tab `photo` đang hiện: ô PANEL2 + vạch MINT; Claude huy hiệu AMBER nếu có agent chờ |  |
+| 0, 230, 240×2 |  |  | MUTED | vạch liền MUTED (như Setup) — không có gì để xem |  |
+
