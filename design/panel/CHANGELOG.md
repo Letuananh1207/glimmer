@@ -5,6 +5,21 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-25.6 — Zz động khi Clawd ngủ
+
+- **Kênh Claude** (`source/Claude-NoProject.dc.html`, `source/Claude-Done.dc.html`, `screen_specs.md` §6 mục "Zz động";
+  ảnh `ClaudeNoProject.png`, `ClaudeDone.png`, `ClaudeZzFrames.png`):
+  - Chữ "Zz" đứng yên (z (202, 46) + Z (214, 30)) thay bằng **một chữ z bay lên**: 12 khung × 0,4 s, nghỉ 1,2 s, chu
+    kỳ 6,0 s. Bay ~2 px/khung từ (198, 52) lên (209, 26), lắc ngang 0…2 px, lớn dần `z3` 3×3 → `z4` 4×4 → `Z5` 5×5
+    (ô 2 px). Khung 0, 10, 11 màu LINE (hiện ra / tan đi), còn lại MUTED.
+  - Mỗi khung chỉ vẽ lại vùng 196, 24, 30×34 (tô BG rồi vẽ chữ). Clawd đứng yên, không chớp.
+  - Tọa độ từng khung: token `component.clawd.sleepMark.frames`.
+
+**Việc cần làm trong code:**
+- Kênh `Claude`, khi Clawd ngủ (bảng trống hoặc mọi project Xong): bỏ "Zz" tĩnh, vẽ Zz động theo bảng khung — đổi khung
+  trong `tick()` mỗi 0,4 s, xoá đúng vùng 196, 24, 30×34; `draw()` bắt đầu khung 0. Bản xem trước màn trên máy tính vẽ
+  khung 6.
+
 ## P-2026-11-25.5 — Xong hết thì Clawd ngủ; Clawd vui mới cho thẻ xong
 
 - **Kênh Claude** (`source/Claude-Done.dc.html`, `screen_specs.md` §6; ảnh `ClaudeDone.png`):

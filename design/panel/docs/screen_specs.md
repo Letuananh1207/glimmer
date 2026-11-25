@@ -394,6 +394,8 @@ Nguồn `source/Agents-Idle.dc.html` · ảnh `screens/@2x/AgentsIdle.png`
 
 ## 6. Claude — kênh `Claude`
 
+> **P-2026-11-25.6 — Zz động:** chữ "Zz" đứng yên khi Clawd ngủ (`Claude-NoProject`, `Claude-Done`) thay bằng **một chữ z bay lên** chậm, lắc nhẹ, lớn dần; hiện ra / tan đi bằng màu LINE. Bảng khung ở mục "Zz động" dưới đây; ảnh `ClaudeZzFrames.png`.
+
 > **P-2026-11-25.5 — Xong hết thì Clawd ngủ:** mọi project trên bảng đều `Xong` (project gấp nhất là P_DONE) → Clawd mắt `sleep` + "Zz" MUTED như bảng trống, **không** còn mắt `happy`. Xem `Claude-Done`.
 
 > **P-2026-11-25.4 — Khớp máy, Việt hoá, đúng luật khung:** đơn vị `4NG`, `2G 14P`, `18G 5P`, `CŨ 14P`, tuổi `2P` / `1G`; vạch y 230 phần còn lại PANEL.
@@ -453,8 +455,7 @@ Nguồn `source/Claude-NoProject.dc.html` · ảnh `screens/@2x/ClaudeNoProject.
 | 0, 0, 240×22 | MC / MR | `JBMono-12B` / `JBMono-11` | INK / nhấn CORAL | Status bar `Claude`; gạch nhấn y 22 | 42 |
 | 12, 32 | TL | `JBMono-11` | MUTED | `TUẦN` | 28 |
 | 156, 58, 72×40 |  |  | CLAWD | Clawd (ô 4, mắt `sleep`, chân `stand`) |  |
-| 202, 46, 8×8 |  |  | MUTED | bitmap `z` 4×4 ô, ô 2 px (`####` `..#.` `.#..` `####`) |  |
-| 214, 30, 10×10 |  |  | MUTED | bitmap `Z` 5×5 ô, ô 2 px (`#####` `...#.` `..#..` `.#...` `#####`) |  |
+| 196, 24, 30×34 |  |  | MUTED / LINE | **Zz động** (P-2026-11-25.5→.6): một chữ z bay lên 12 khung × 0,4 s rồi nghỉ 1,2 s (chu kỳ 6,0 s); mỗi khung xoá vùng này về BG rồi vẽ đúng một chữ — bảng khung ở mục Zz động §6; ảnh vẽ khung 6 |  |
 | 228, 112 | TR | `JBMono-12B` | CORAL | `4NG` | 21 |
 | 12, 46 | TL | `VT323-86` | MINT | `38` | 68 |
 | 82, 76 | TL | `VT323-44` | MINT | `%` | 18 |
@@ -478,8 +479,7 @@ Nguồn `source/Claude-Done.dc.html` · ảnh `screens/@2x/ClaudeDone.png`
 | 0, 0, 240×22 | MC / MR | `JBMono-12B` / `JBMono-11` | INK / nhấn CORAL | Status bar `Claude`; gạch nhấn y 22 | 42 |
 | 12, 32 | TL | `JBMono-11` | MUTED | `TUẦN` | 28 |
 | 156, 58, 72×40 |  |  | CLAWD | Clawd (ô 4, mắt `sleep`, chân `stand`) |  |
-| 202, 46, 8×8 |  |  | MUTED | bitmap `z` 4×4 ô, ô 2 px (`####` `..#.` `.#..` `####`) |  |
-| 214, 30, 10×10 |  |  | MUTED | bitmap `Z` 5×5 ô, ô 2 px (`#####` `...#.` `..#..` `.#...` `#####`) |  |
+| 196, 24, 30×34 |  |  | MUTED / LINE | **Zz động** (P-2026-11-25.5→.6): một chữ z bay lên 12 khung × 0,4 s rồi nghỉ 1,2 s (chu kỳ 6,0 s); mỗi khung xoá vùng này về BG rồi vẽ đúng một chữ — bảng khung ở mục Zz động §6; ảnh vẽ khung 6 |  |
 | 228, 112 | TR | `JBMono-12B` | CORAL | `4NG` | 21 |
 | 12, 46 | TL | `VT323-86` | MINT | `38` | 68 |
 | 82, 76 | TL | `VT323-44` | MINT | `%` | 18 |
@@ -502,6 +502,30 @@ Nguồn `source/Claude-Done.dc.html` · ảnh `screens/@2x/ClaudeDone.png`
 | 51, 204 | TL | `JBMono-11` | MINT | `Xong` | 28 |
 | 228, 204 | TR | `JBMono-11` | MUTED | `1G` | 14 |
 | 0, 230, 240×2 |  |  | CORAL / PANEL | vạch tiến độ slide (vẽ ở 40 %), phần chưa chạy PANEL |  |
+
+### Zz động — khi Clawd ngủ
+
+Dùng ở `Claude-NoProject` và `Claude-Done` (Clawd mắt `sleep`, không chớp). Ảnh dải khung `screens/@2x/ClaudeZzFrames.png` (vùng x 192–227, y 24–59, ×4).
+
+- Chu kỳ 6,0 s: 12 khung × 0,4 s (4,8 s) rồi nghỉ 1,2 s (vùng trống). Đổi khung trong `tick()` 5 Hz.
+- Mỗi khung: tô BG vùng **196, 24, 30×34** rồi vẽ một chữ, ô 2 px. Không chạm Clawd (y ≥ 58), không vượt y 24.
+- Bitmap: `z3` 3×3 (`###` `.#.` `###`) · `z4` 4×4 (`####` `..#.` `.#..` `####`) · `Z5` 5×5 (`#####` `...#.` `..#..` `.#...` `#####`).
+- Màn vào lại (`draw()`) bắt đầu từ khung 0.
+
+| khung | thời điểm | bitmap | x, y (trái-trên) | cỡ | màu |
+|---|---|---|---|---|---|
+| 0 | 0.0–0.4 s | `z3` | 198, 52 | 6 px | LINE |
+| 1 | 0.4–0.8 s | `z3` | 200, 50 | 6 px | MUTED |
+| 2 | 0.8–1.2 s | `z3` | 202, 48 | 6 px | MUTED |
+| 3 | 1.2–1.6 s | `z3` | 203, 45 | 6 px | MUTED |
+| 4 | 1.6–2.0 s | `z4` | 202, 42 | 8 px | MUTED |
+| 5 | 2.0–2.4 s | `z4` | 202, 40 | 8 px | MUTED |
+| 6 | 2.4–2.8 s | `z4` | 202, 38 | 8 px | MUTED |
+| 7 | 2.8–3.2 s | `z4` | 203, 36 | 8 px | MUTED |
+| 8 | 3.2–3.6 s | `Z5` | 204, 32 | 10 px | MUTED |
+| 9 | 3.6–4.0 s | `Z5` | 206, 30 | 10 px | MUTED |
+| 10 | 4.0–4.4 s | `Z5` | 208, 28 | 10 px | LINE |
+| 11 | 4.4–4.8 s | `Z5` | 209, 26 | 10 px | LINE |
 
 ### Claude-Low — Claude · sắp hết hạn mức
 

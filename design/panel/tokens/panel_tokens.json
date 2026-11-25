@@ -1,7 +1,7 @@
 {
   "meta": {
     "name": "glimmer panel",
-    "version": "P-2026-11-25.5",
+    "version": "P-2026-11-25.6",
     "frame": {
       "width": 240,
       "height": 240,
@@ -230,27 +230,111 @@
         "happy": "vui: lấp lỗ mắt, khoét theo nửa ô (lỗ ô/2 px, vị trí x + hx·ô/2 làm tròn xuống) — mắt ^ ^ + miệng cười; chỉ thẻ Attention · xong"
       },
       "sleepMark": {
-        "z": {
-          "rows": [
+        "animated": true,
+        "cycleMs": 6000,
+        "frameMs": 400,
+        "pauseMs": 1200,
+        "cell": 2,
+        "clearRect": [
+          196,
+          24,
+          30,
+          34
+        ],
+        "glyphs": {
+          "z3": [
+            "###",
+            ".#.",
+            "###"
+          ],
+          "z4": [
             "####",
             "..#.",
             ".#..",
             "####"
           ],
-          "cell": 2,
-          "color": "muted"
-        },
-        "Z": {
-          "rows": [
+          "Z5": [
             "#####",
             "...#.",
             "..#..",
             ".#...",
             "#####"
-          ],
-          "cell": 2,
-          "color": "muted"
-        }
+          ]
+        },
+        "frames": [
+          {
+            "glyph": "z3",
+            "x": 198,
+            "y": 52,
+            "color": "line"
+          },
+          {
+            "glyph": "z3",
+            "x": 200,
+            "y": 50,
+            "color": "muted"
+          },
+          {
+            "glyph": "z3",
+            "x": 202,
+            "y": 48,
+            "color": "muted"
+          },
+          {
+            "glyph": "z3",
+            "x": 203,
+            "y": 45,
+            "color": "muted"
+          },
+          {
+            "glyph": "z4",
+            "x": 202,
+            "y": 42,
+            "color": "muted"
+          },
+          {
+            "glyph": "z4",
+            "x": 202,
+            "y": 40,
+            "color": "muted"
+          },
+          {
+            "glyph": "z4",
+            "x": 202,
+            "y": 38,
+            "color": "muted"
+          },
+          {
+            "glyph": "z4",
+            "x": 203,
+            "y": 36,
+            "color": "muted"
+          },
+          {
+            "glyph": "Z5",
+            "x": 204,
+            "y": 32,
+            "color": "muted"
+          },
+          {
+            "glyph": "Z5",
+            "x": 206,
+            "y": 30,
+            "color": "muted"
+          },
+          {
+            "glyph": "Z5",
+            "x": 208,
+            "y": 28,
+            "color": "line"
+          },
+          {
+            "glyph": "Z5",
+            "x": 209,
+            "y": 26,
+            "color": "line"
+          }
+        ]
       },
       "happyHoles": {
         "grid": [
@@ -307,8 +391,8 @@
         "P_ERROR": "sad",
         "P_WORKING": "open + đi",
         "P_INPUT": "open",
-        "P_DONE": "sleep + Zz",
-        "trống": "sleep + Zz"
+        "P_DONE": "sleep + Zz động",
+        "trống": "sleep + Zz động"
       }
     },
     "dock": {
