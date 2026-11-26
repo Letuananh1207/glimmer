@@ -64,28 +64,41 @@ inline Icon iconOf(Btn b) {
     }
 }
 
-// Buttons on the taskbar = enabled skills (R-SK-2), packed from x 71 in
-// Skill::kAll order (agent, photo, weather, clock). Bit k = button k shown.
-inline uint8_t buttonMask(const char* skillsOn) {
-    static const char* const kSkillOf[kBtnCount] = {"agent", "photo", "weather", "clock"};
-    uint8_t m = 0;
-    for (int k = 0; k < kBtnCount; k++)
-        if (Skill::inList(skillsOn, kSkillOf[k])) m |= (uint8_t)(1u << k);
-    return m;
+// ── Programs (P-2026-11-26.14): the channels that open as a window ──
+// The app keeps the open windows (design 2026-11-26.7) and sends them down
+// (POST /api/windows); the taskbar shows one button per open window.
+enum Prog : int8_t {
+    PROG_NONE = -1,
+    PROG_CLAUDE, PROG_CODEX, PROG_AI, PROG_TREND, PROG_AGENTS,
+    PROG_PHOTO, PROG_WEATHER, PROG_FORECAST, PROG_CLOCK, PROG_INFO,
+    PROG_COUNT
+};
+inline const char* progName(int p) {
+    static const char* const kName[PROG_COUNT] = {"Claude", "Codex", "AI", "Trend", "Agents",
+                                                  "Photo", "Weather", "Forecast", "Clock", "Info"};
+    return p >= 0 && p < PROG_COUNT ? kName[p] : nullptr;
 }
-
-inline int buttonCount(uint8_t mask) {
-    int n = 0;
-    for (int k = 0; k < kBtnCount; k++) n += mask >> k & 1;
-    return n;
+// kChannels[] name → program (case-insensitive like /api/channel); PROG_NONE
+// for the desktop, cards, the night face, setup.
+inline Prog progOf(const char* name) {
+    if (!name) return PROG_NONE;
+    for (int p = 0; p < PROG_COUNT; p++) {
+        const char* a = progName(p); const char* b = name;
+        while (*a && *b && ((*a | 0x20) == (*b | 0x20))) { a++; b++; }
+        if (!*a && !*b) return (Prog)p;
+    }
+    return PROG_NONE;
 }
-
-// Slot (left = 0) of button [b] on a taskbar showing [mask]; -1 when not shown.
-inline int slotOf(Btn b, uint8_t mask) {
-    if (b < 0 || b >= kBtnCount || !(mask >> b & 1)) return -1;
-    int s = 0;
-    for (int k = 0; k < b; k++) s += mask >> k & 1;
-    return s;
+// Taskbar icon of a window: Clawd for agent programs, the skill icon, "i" on Info.
+inline Icon progIcon(int p) {
+    switch (p) {
+        case PROG_PHOTO:                    return ICON_PHOTO;
+        case PROG_WEATHER: case PROG_FORECAST: return ICON_WEATHER;
+        case PROG_CLOCK:                    return ICON_CLOCK;
+        case PROG_INFO:                     return ICON_INFO;
+        case PROG_NONE:                     return ICON_NONE;
+        default:                            return ICON_CLAWD;
+    }
 }
 
 // Button geometry (token themeXP.taskbar.buttons): 28×20 at x 71 + 30k, y 217.
@@ -104,43 +117,80 @@ inline bool flashes(Attention::Kind k) {
     return k == Attention::K_APPROVAL || k == Attention::K_INPUT || k == Attention::K_ERROR;
 }
 
-// Slide progress at the bottom of the active button: (x+1, 234), 2 high,
-// 26 × elapsed / slide. 0 when not rotating.
-constexpr int kProgressW = 26;
-inline int progressLen(uint32_t elapsedMs, uint32_t slideMs) {
-    if (!slideMs) return 0;
-    if (elapsedMs >= slideMs) return kProgressW;
-    return (int)((uint64_t)kProgressW * elapsedMs / slideMs);
-}
-
 // How a button looks.
 enum Look : uint8_t { LOOK_NORMAL, LOOK_PRESSED, LOOK_FLASH };
 
-// Everything the taskbar shows besides the clock; compare to repaint only what changed.
+// Everything the taskbar shows besides the clock (P-2026-11-26.14): one
+// button per open window (the last kSlots in opening order), the top
+// window's pressed while it is on screen, no slide progress. The badge and
+// the orange "needs you" look sit on the Claude window's button.
+constexpr int kSlots = 4;
 struct BarState {
-    uint8_t mask     = 0;          // buttonMask
-    int8_t  active   = BTN_NONE;   // pressed button
-    bool    flash    = false;      // Claude button orange (card needs you)
-    int8_t  badge    = -1;         // badgeGlyph of the agents waiting
-    uint8_t progress = 0;          // progressLen
-    uint16_t accent  = 0;          // progress colour (Theme::channelColor)
+    int8_t prog[kSlots] = {PROG_NONE, PROG_NONE, PROG_NONE, PROG_NONE};
+    int8_t pressed = -1;           // slot of the top window, -1 = none
+    bool   flash   = false;        // a card that needs the user holds the screen
+    int8_t badge   = -1;           // badgeGlyph of the agents waiting
 };
 
-inline Look lookOf(Btn b, const BarState& s) {
-    if (b == BTN_CLAUDE && s.flash) return LOOK_FLASH;
-    return b == s.active ? LOOK_PRESSED : LOOK_NORMAL;
+// Slots from the open windows [open] (opening order, [n] of them): the last
+// kSlots; [top] pressed when it is the program on screen ([shown]).
+inline void fillBar(BarState& s, const int8_t* open, int n, int top, int shown) {
+    const int first = n > kSlots ? n - kSlots : 0;
+    for (int i = 0; i < kSlots; i++) s.prog[i] = first + i < n ? open[first + i] : PROG_NONE;
+    s.pressed = -1;
+    for (int i = 0; i < kSlots; i++)
+        if (top >= 0 && s.prog[i] == top && top == shown) s.pressed = (int8_t)i;
+}
+
+inline Look lookOfSlot(int i, const BarState& s) {
+    if (s.prog[i] == PROG_CLAUDE && s.flash) return LOOK_FLASH;
+    return i == s.pressed ? LOOK_PRESSED : LOOK_NORMAL;
 }
 // The badge sits on the Claude button unless it is lit orange (the card says it all).
-inline int badgeOn(Btn b, const BarState& s) { return b == BTN_CLAUDE && !s.flash ? s.badge : -1; }
-// Progress length drawn on button b.
-inline int progressOn(Btn b, const BarState& s) {
-    return b == s.active && lookOf(b, s) == LOOK_PRESSED ? s.progress : 0;
+inline int badgeOnSlot(int i, const BarState& s) {
+    return s.prog[i] == PROG_CLAUDE && !s.flash ? s.badge : -1;
 }
-// Does button b need a repaint going from a to b2?
-inline bool buttonChanged(Btn b, const BarState& a, const BarState& b2) {
-    return lookOf(b, a) != lookOf(b, b2) || badgeOn(b, a) != badgeOn(b, b2)
-        || progressOn(b, a) != progressOn(b, b2)
-        || (progressOn(b, b2) && a.accent != b2.accent);
+// Does slot i need a repaint going from a to b?
+inline bool slotChanged(int i, const BarState& a, const BarState& b) {
+    return a.prog[i] != b.prog[i] || lookOfSlot(i, a) != lookOfSlot(i, b) || badgeOnSlot(i, a) != badgeOnSlot(i, b);
+}
+
+// ── Desktop icons (P-2026-11-26.14, XP-Desk, XP Auto Arrange) ──
+// Column 0 (centre x 40): Claude, Codex (agent), Ảnh (photo), then the
+// trash; column 1 (centre x 120): Thời tiết, Đồng hồ. Cells 48 tall from y 8.
+constexpr int kDeskMax = 6;
+constexpr int kDeskTrash = -2;              // DeskIcon::prog of the trash
+struct DeskIcon { int8_t prog; int16_t cx, y; };
+inline int deskIcons(const char* skillsOn, DeskIcon* out) {
+    int n = 0, c0 = 0, c1 = 0;
+    auto add0 = [&](int8_t p) { out[n++] = {p, 40, (int16_t)(8 + 48 * c0++)}; };
+    auto add1 = [&](int8_t p) { out[n++] = {p, 120, (int16_t)(8 + 48 * c1++)}; };
+    if (Skill::inList(skillsOn, "agent")) { add0(PROG_CLAUDE); add0(PROG_CODEX); }
+    if (Skill::inList(skillsOn, "photo")) add0(PROG_PHOTO);
+    add0(kDeskTrash);
+    if (Skill::inList(skillsOn, "weather")) add1(PROG_WEATHER);
+    if (Skill::inList(skillsOn, "clock")) add1(PROG_CLOCK);
+    return n;
+}
+
+// ── Context menus (P-2026-11-26.14, XP-Menu) ──
+// XP Luna menu: 1-px border, 1-px pad, items 17 tall, separators 7 tall.
+// Placed by the app (top-left), kept inside x 0..239, y 0..213.
+enum MenuKind : uint8_t { MENU_NONE, MENU_DESKTOP, MENU_WINDOW };
+constexpr int kMenuItemH = 17, kMenuSepH = 7, kMenuPad = 2;
+constexpr int kMenuDeskW = 166, kMenuWinW = 128;
+// Desktop: 6 items, 3 separators → 127; window: 6 items, 1 separator → 113.
+inline int menuW(MenuKind k) { return k == MENU_DESKTOP ? kMenuDeskW : kMenuWinW; }
+inline int menuH(MenuKind k) {
+    return k == MENU_DESKTOP ? 2 * kMenuPad + 6 * kMenuItemH + 3 * kMenuSepH
+                             : 2 * kMenuPad + 6 * kMenuItemH + 1 * kMenuSepH;
+}
+inline void menuClamp(MenuKind k, int& x, int& y) {
+    const int maxX = 240 - menuW(k), maxY = 214 - menuH(k);
+    if (x > maxX) x = maxX;
+    if (y > maxY) y = maxY;
+    if (x < 0) x = 0;
+    if (y < 0) y = 0;
 }
 
 // Start button (x 0–67) right edge: inset per row y 214..239 (token

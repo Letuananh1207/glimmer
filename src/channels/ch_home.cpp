@@ -8,12 +8,19 @@
 //               balloon's two text lines (solid INFO_BAR, no wallpaper).
 //
 //   y 0..213   wallpaper 240×214 at (0, 0) — no window, no title bar
-//   icons      column centre x 40, cells 48 tall from y 8:
-//                Clawd 18×10 ×2 (22, 9) · terminal 16×10 ×2 (24, 56)
-//                photo 16×11 ×2 (24, 104) · trash 14×10 ×2 (26, 152)
-//   labels     JBMono-11 white TC (40, cell + 24), black shadow (+1, +1):
-//                "Claude 38%" · "Codex 71%" · "Ảnh" · "Thùng rác"
-//   balloon    136×50 at (100, 150), black border, INFO_BAR, tail 8→1 px at
+//   icons      one per program of the enabled skills (P-2026-11-26.14, XP
+//              Auto Arrange, XPCore::deskIcons): column 0 centre x 40 —
+//              Claude, Codex, Ảnh, then Thùng rác; column 1 centre x 120 —
+//              Thời tiết, Đồng hồ; cells 48 tall from y 8. ×2, at (cx, cell):
+//                Clawd 18×10 (cx−18, +1) · terminal 16×10 (cx−16, 0)
+//                photo 16×11 (cx−16, 0) · trash 14×10 (cx−14, 0)
+//                weather / clock 16×14 (cx−16, −6)
+//   labels     JBMono-11 white TC (cx, cell + 24), black shadow (+1, +1):
+//                "Claude 38%" · "Codex 71%" · "Ảnh" · "Thùng rác" · "Thời tiết" · "Đồng hồ"
+//   selected   (the app's `sel`): icon tinted xpSelectIcon (Clawd xpSelectClawd),
+//              label white on xpSelect (text + 1 px each side, 13 tall), no
+//              shadow, 1-px dotted white border around it — as XP.
+//   balloon    136×50 at (100, 150) — only with the weather skill on, black border, INFO_BAR, tail 8→1 px at
 //              x 206 down to the tray clock (y 199..205); weather icon ×1
 //              xpAmber (106, 155), "Thời tiết" 12B TL (126, 155), lines
 //              JBMono-11 TL (106, 172) black and (106, 185) xpLabel.
@@ -35,9 +42,7 @@
 namespace {
 using namespace Theme::XP;
 
-constexpr int kColX = 40;                    // icon column centre
-constexpr int kCellY0 = 8, kCellH = 48;      // cell i: y 8 + 48 i
-constexpr int kLabels = 4;                   // Claude, Codex, Ảnh, Thùng rác
+constexpr int kLabels = XPCore::kDeskMax;    // icons on the desktop at most
 constexpr int kLabelH = 16;                  // band y−1 .. y+14 (line box 13 + shadow + accents)
 constexpr int kLabelMaxW = 80;               // column x 0..79
 constexpr uint16_t kTrash = 0xDF3D;          // #DDE6EE xpDesk_DDE6EE
@@ -69,14 +74,19 @@ void drawCells(const uint16_t* rows, int w, int h, int x, int y, int scale, uint
     }
 }
 
-int labelY(int i) { return kCellY0 + kCellH * i + 24; }
+// The icons of the current paint (seeded by draw()).
+XPCore::DeskIcon s_icons[kLabels];
+int s_iconN = 0;
+int8_t s_sel = XPCore::PROG_NONE;
 
-// Label band of a text tw px wide (+1 shadow), centred on the column.
+int labelY(int i) { return s_icons[i].y + 24; }
+
+// Label band of a text tw px wide (+1 shadow), centred on the icon's column.
 struct Band { int x, y, w, h; };
 Band bandFor(int i, int tw) {
     int w = tw + 3;
     if (w > kLabelMaxW + 4) w = kLabelMaxW + 4;
-    int x = kColX - w / 2;
+    int x = s_icons[i].cx - w / 2;
     if (x < 0) x = 0;
     return {x, labelY(i) - 1, w, kLabelH};
 }
@@ -98,7 +108,7 @@ uint16_t shadowAt(uint16_t, uint16_t) { return BLACK; }
 }  // namespace
 
 // ── File-static cache so tick() can diff vs last paint ──
-static char     s_label[2][16];            // Claude / Codex label as drawn ("Claude 100%")
+static char     s_label[kLabels][16];      // label as drawn ("Claude 100%")
 static int16_t  s_labelW[kLabels];         // drawn band width (0 = none)
 static bool     s_balloon = false;         // balloon shown (weather configured)
 static uint32_t s_balloonSig = 0;          // hash of the two lines + dim flag
@@ -110,6 +120,8 @@ static uint32_t sigOf(const char* a, const char* b, bool dim) {
     for (const char* p = b; *p; p++) h = (h ^ (uint8_t)*p) * 16777619u;
     return h;
 }
+
+extern int8_t mainSelectedIcon();   // the app's selected desktop icon (Control::Windows::sel)
 
 bool chHomeEnabled(const ChannelCtx& ctx) {
     return ctx.settings && ctx.settings->showHome
@@ -127,15 +139,19 @@ static void usageLabel(char* out, size_t n, const char* name, bool isClaude, Cre
 }
 
 static void labelText(int i, const ChannelCtx& ctx, char* out, size_t n) {
-    switch (i) {
-        case 0: usageLabel(out, n, "Claude", true, ctx.claude->cred,
-                           Api::claudeHeroPct(*ctx.settings, *ctx.claude)); break;
-        case 1: usageLabel(out, n, "Codex", false, ctx.codex->cred,
-                           Api::codexHeroPct(*ctx.settings, *ctx.codex)); break;
-        case 2: Utf8::copy(out, n, "Ảnh"); break;
-        default: Utf8::copy(out, n, "Thùng rác"); break;
+    switch (s_icons[i].prog) {
+        case XPCore::PROG_CLAUDE: usageLabel(out, n, "Claude", true, ctx.claude->cred,
+                                             Api::claudeHeroPct(*ctx.settings, *ctx.claude)); break;
+        case XPCore::PROG_CODEX:  usageLabel(out, n, "Codex", false, ctx.codex->cred,
+                                             Api::codexHeroPct(*ctx.settings, *ctx.codex)); break;
+        case XPCore::PROG_PHOTO:   Utf8::copy(out, n, "Ảnh"); break;
+        case XPCore::PROG_WEATHER: Utf8::copy(out, n, "Thời tiết"); break;
+        case XPCore::PROG_CLOCK:   Utf8::copy(out, n, "Đồng hồ"); break;
+        default:                   Utf8::copy(out, n, "Thùng rác"); break;
     }
 }
+
+static bool selected(int i) { return s_sel >= 0 && s_icons[i].prog == s_sel; }
 
 // Balloon lines: "29° · Ít mây" / "cảm giác 33°"; no reading yet →
 // "chưa có thời tiết" in xpDim (as the old Home's NoWeather).
@@ -161,6 +177,25 @@ static void drawLabelText(int i, const char* text, const Wallpaper::Cap* cap) {
     Display::useFont("JBMono-11");
     tft.setTextDatum(TC_DATUM);
     const int y = labelY(i);
+    const int kColX = s_icons[i].cx;
+    if (selected(i)) {
+        // XP selection: xpSelect behind the text (+1 px each side, 13 tall), no
+        // shadow, 1-px dotted white border around it.
+        const int tw = tft.textWidth(text);
+        const int bx = kColX - tw / 2 - 1, bw = tw + 2, bh = 13;
+        tft.fillRect(bx, y, bw, bh, SELECT);
+        for (int k = 0; k < bw + 2; k += 2) {
+            tft.drawPixel(bx - 1 + k, y - 1, WHITE);
+            tft.drawPixel(bx - 1 + k, y + bh, WHITE);
+        }
+        for (int k = 0; k < bh + 2; k += 2) {
+            tft.drawPixel(bx - 1, y - 1 + k, WHITE);
+            tft.drawPixel(bx + bw, y - 1 + k, WHITE);
+        }
+        tft.setTextColor(WHITE, SELECT);
+        tft.drawString(text, kColX, y);
+        return;
+    }
     s_bg = cap;
     tft.setCallback(bgAt);                   // shadow edges blend into the wallpaper
     tft.setTextColor(BLACK, WHITE);          // bg unused: the callback decides
@@ -192,7 +227,7 @@ static void paintLabel(int i, const char* text) {
     drawLabelText(i, t, cap.buf ? &cap : nullptr);
     free(cap.buf);
     s_labelW[i] = (int16_t)(measure(t) + 3);
-    if (i < 2) Utf8::copy(s_label[i], sizeof(s_label[i]), text);
+    Utf8::copy(s_label[i], sizeof(s_label[i]), text);
 }
 
 static void paintBalloonLines(const char* line1, const char* line2, bool dim) {
@@ -229,22 +264,36 @@ static void paintBalloon(const char* line1, const char* line2, bool dim) {
     paintBalloonLines(line1, line2, dim);
 }
 
-static void drawIcons() {
-    XP::drawIcon(XPCore::ICON_CLAWD, 22, 9, 2, 0);            // Clawd orange, black eyes
-    drawCells(kTermBits, 16, 10, 24, 56, 2, WHITE);           // command window
-    tft.fillRect(26, 62, 28, 12, BLACK);
-    drawCells(kPromptBits, 6, 3, 28, 64, 2, BAR);
-    XP::drawIcon(XPCore::ICON_PHOTO, 24, 104, 2, WHITE);
-    drawCells(kTrashBits, 14, 10, 26, 152, 2, kTrash);
+static void drawIcon(int i) {
+    const XPCore::DeskIcon& ic = s_icons[i];
+    const bool sel = selected(i);
+    const uint16_t white = sel ? SELECT_ICON : WHITE;
+    const int cx = ic.cx, y = ic.y;
+    switch (ic.prog) {
+        case XPCore::PROG_CLAUDE:                              // Clawd orange, black eyes
+            XP::drawIcon(XPCore::ICON_CLAWD, cx - 18, y + 1, 2, sel ? SELECT_CLAWD : Display::CLAWD_ORANGE);
+            break;
+        case XPCore::PROG_CODEX:                               // command window
+            drawCells(kTermBits, 16, 10, cx - 16, y, 2, white);
+            tft.fillRect(cx - 14, y + 6, 28, 12, BLACK);
+            drawCells(kPromptBits, 6, 3, cx - 12, y + 8, 2, BAR);
+            break;
+        case XPCore::PROG_PHOTO:   XP::drawIcon(XPCore::ICON_PHOTO, cx - 16, y, 2, white); break;
+        case XPCore::PROG_WEATHER: XP::drawIcon(XPCore::ICON_WEATHER, cx - 16, y - 6, 2, white); break;
+        case XPCore::PROG_CLOCK:   XP::drawIcon(XPCore::ICON_CLOCK, cx - 16, y - 6, 2, white); break;
+        default:                   drawCells(kTrashBits, 14, 10, cx - 14, y, 2, sel ? SELECT_ICON : kTrash); break;
+    }
 }
 
 // ── Full repaint ──
 
 void chHomeDraw(const ChannelCtx& ctx) {
+    s_iconN = XPCore::deskIcons(ctx.settings->skillsOn.c_str(), s_icons);
+    s_sel = mainSelectedIcon();
     // Label texts and bands first (the font is needed to measure them).
     char text[kLabels][24];
     Wallpaper::Cap caps[kLabels];
-    for (int i = 0; i < kLabels; i++) {
+    for (int i = 0; i < s_iconN; i++) {
         labelText(i, ctx, text[i], sizeof(text[i]));
         Display::useFont("JBMono-11");
         XP::fitText(text[i], kLabelMaxW);
@@ -256,18 +305,18 @@ void chHomeDraw(const ChannelCtx& ctx) {
     // for the text's anti-aliasing (~2 KB each; a failed malloc just means
     // that label blends against black).
     if (Wallpaper::present()) Display::releaseFont();
-    for (int i = 0; i < kLabels; i++) caps[i].buf = (uint16_t*)malloc((size_t)caps[i].w * caps[i].h * 2);
-    Wallpaper::paint(0, 0, Wallpaper::kW, Wallpaper::kH, caps, kLabels);
+    for (int i = 0; i < s_iconN; i++) caps[i].buf = (uint16_t*)malloc((size_t)caps[i].w * caps[i].h * 2);
+    Wallpaper::paint(0, 0, Wallpaper::kW, Wallpaper::kH, caps, s_iconN);
 
-    drawIcons();
-    for (int i = 0; i < kLabels; i++) {
+    for (int i = 0; i < s_iconN; i++) {
+        drawIcon(i);
         drawLabelText(i, text[i], caps[i].buf ? &caps[i] : nullptr);
         free(caps[i].buf);
-        if (i < 2) labelText(i, ctx, s_label[i], sizeof(s_label[i]));
+        labelText(i, ctx, s_label[i], sizeof(s_label[i]));
     }
 
-    // Tray balloon — weather, when a location is set.
-    s_balloon = Weather::configured(*ctx.settings);
+    // Tray balloon — weather, when a location is set and the weather skill is on.
+    s_balloon = Weather::configured(*ctx.settings) && Skill::inList(ctx.settings->skillsOn.c_str(), "weather");
     if (s_balloon) {
         char l1[48], l2[32]; bool dim;
         balloonText(ctx, l1, sizeof(l1), l2, sizeof(l2), dim);
@@ -280,7 +329,8 @@ void chHomeDraw(const ChannelCtx& ctx) {
 
 void chHomeTick(const ChannelCtx& ctx) {
     char t[16];
-    for (int i = 0; i < 2; i++) {             // Ảnh / Thùng rác never change
+    for (int i = 0; i < s_iconN; i++) {       // only Claude / Codex change
+        if (s_icons[i].prog != XPCore::PROG_CLAUDE && s_icons[i].prog != XPCore::PROG_CODEX) continue;
         labelText(i, ctx, t, sizeof(t));
         if (strcmp(t, s_label[i])) paintLabel(i, t);
     }

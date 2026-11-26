@@ -12,13 +12,15 @@
 //   POST /hook         — trimmed agent hook event (tools/agents/glimmer-hook.sh)
 //   POST /api/channel  — {"name":…} show a channel | {"action":"next"|"prev"|"pause"|"resume"}
 //   POST /api/screen   — {"on":false|true} backlight off / on now (RAM only)
+//   POST /api/windows  — {"open":[…],"top":…|null,"min":[…],"sel":…|null} the app's open windows (RAM only)
+//   POST /api/menu     — {"kind":"desktop"|"window"|"none","x","y","minimized"} context menu (RAM only)
 //   POST /mcp          — JSON-RPC: push_card, clear_card, list_cards, get_state, show/next_channel
 //   GET  /api/photos   — photos on the device + limits; POST uploads one (multipart field
 //                        "photo", baseline JPEG 188×188); DELETE /api/photos?name=p3.jpg
 //   GET  /api/wallpaper — desktop wallpaper state + limits; POST uploads it (multipart field
 //                        "wallpaper", baseline JPEG 240×214 ≤ 40 KB); DELETE removes it
 //   The API token (when set) guards /push*, /hook, /mcp, /api/refresh, /api/channel,
-//   /api/screen, photo and wallpaper upload / delete.
+//   /api/screen, /api/windows, /api/menu, photo and wallpaper upload / delete.
 //   POST /update       — OTA firmware + filesystem (ESP8266HTTPUpdateServer)
 
 #include "web.h"
@@ -31,6 +33,7 @@
 #include "skill_core.h"
 #include "photos.h"
 #include "wallpaper.h"
+#include "control_core.h"
 #include <ESP8266HTTPUpdateServer.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
@@ -65,6 +68,10 @@ extern void        mainSetScreenOn(bool on);
 extern bool        mainScreenOn();
 extern void        mainSlideTiming(uint32_t& totalMs, uint32_t& leftMs);
 extern void        mainWallpaperChanged();
+extern const Control::Windows& mainWindows();
+extern void        mainSetWindows(const Control::Windows& w);
+extern const Control::Menu& mainMenu();
+extern bool        mainSetMenu(const Control::Menu& m);
 extern void        mainSettingsChanged();
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -174,6 +181,21 @@ static void handleApiState() {
         mainSlideTiming(total, left);
         d["slide_ms"]        = total;
         d["slide_left_ms"]   = left;
+    }
+    // Open windows the app sent (P-2026-11-26.14) and the context menu on screen.
+    {
+        const Control::Windows& w = mainWindows();
+        JsonObject wo = d["windows"].to<JsonObject>();
+        JsonArray op = wo["open"].to<JsonArray>();
+        JsonArray mn = wo["min"].to<JsonArray>();
+        for (int i = 0; i < w.n; i++) {
+            op.add(XPCore::progName(w.open[i]));
+            if (w.minMask >> w.open[i] & 1) mn.add(XPCore::progName(w.open[i]));
+        }
+        if (w.top >= 0) wo["top"] = XPCore::progName(w.top); else wo["top"] = nullptr;
+        if (w.sel >= 0) wo["sel"] = XPCore::progName(w.sel); else wo["sel"] = nullptr;
+        const XPCore::MenuKind k = mainMenu().kind;
+        d["menu"] = k == XPCore::MENU_DESKTOP ? "desktop" : k == XPCore::MENU_WINDOW ? "window" : "none";
     }
     d["photos"]              = Photos::count();
     d["wallpaper"]           = Wallpaper::present();
@@ -948,6 +970,53 @@ void Web::begin(Settings& settings) {
         r["active"] = mainActiveChannelName();
         r["paused"] = mainPaused();
         sendJson(200, r);
+    });
+
+    // The app's open windows (design 2026-11-26.7, P-2026-11-26.14): the whole
+    // list each time, names as /api/channel's; unknown names are skipped.
+    server.on("/api/windows",        HTTP_POST, []() {
+        if (!checkAuth()) { server.send(401, "application/json", "{\"error\":\"unauthorized\"}"); return; }
+        JsonDocument d;
+        if (deserializeJson(d, server.arg("plain")) || !d["open"].is<JsonArray>()) {
+            server.send_P(400, PSTR("application/json"), PSTR("{\"error\":\"body must be {open: [...], top, min, sel}\"}"));
+            return;
+        }
+        Control::Windows w;
+        for (JsonVariant v : d["open"].as<JsonArray>()) Control::addOpen(w, XPCore::progOf(v | ""));
+        for (JsonVariant v : d["min"].as<JsonArray>()) {
+            const int p = XPCore::progOf(v | "");
+            if (p >= 0 && Control::isOpen(w, p)) w.minMask |= (uint16_t)(1u << p);
+        }
+        const int top = XPCore::progOf(d["top"] | "");
+        w.top = top >= 0 && Control::isOpen(w, top) ? (int8_t)top : XPCore::PROG_NONE;
+        w.sel = XPCore::progOf(d["sel"] | "");
+        mainSetWindows(w);
+        server.send(200, "application/json", "{\"ok\":true}");
+    });
+
+    // Context menu (P-2026-11-26.14 XP-Menu): the app places it (top-left)
+    // and picks the item itself; "none" closes it. 409 on a screen without one.
+    server.on("/api/menu",           HTTP_POST, []() {
+        if (!checkAuth()) { server.send(401, "application/json", "{\"error\":\"unauthorized\"}"); return; }
+        JsonDocument d;
+        if (deserializeJson(d, server.arg("plain"))) {
+            server.send(400, "application/json", "{\"error\":\"bad json\"}");
+            return;
+        }
+        const char* kind = d["kind"] | "none";
+        Control::Menu m;
+        m.kind = !strcmp(kind, "desktop") ? XPCore::MENU_DESKTOP
+               : !strcmp(kind, "window")  ? XPCore::MENU_WINDOW : XPCore::MENU_NONE;
+        int x = d["x"] | 0, y = d["y"] | 0;
+        if (m.kind != XPCore::MENU_NONE) XPCore::menuClamp(m.kind, x, y);
+        m.x = (int16_t)x;
+        m.y = (int16_t)y;
+        m.minimized = d["minimized"] | false;
+        if (!mainSetMenu(m)) {
+            server.send_P(409, PSTR("application/json"), PSTR("{\"error\":\"no menu on this screen\"}"));
+            return;
+        }
+        server.send(200, "application/json", "{\"ok\":true}");
     });
 
     // Backlight off / on now, whatever the night window says (RAM only; an

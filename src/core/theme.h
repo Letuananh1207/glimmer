@@ -70,6 +70,7 @@ namespace Theme {
         constexpr uint16_t TITLE_HI         = 0x3CBF;  // #3D95FF xpTitleHi
         constexpr uint16_t TRAY_HI          = 0x3D5E;  // #3FA9F5 xpTrayHi
         constexpr uint16_t LABEL            = 0x4A69;  // #4D4D4D xpLabel
+        constexpr uint16_t SELECT_CLAWD     = 0x8393;  // #85719E xpSelectClawd — selected Clawd icon (P-2026-11-26.14)
         constexpr uint16_t WELCOME          = 0x5BFB;  // #5A7EDC xpWelcome
         constexpr uint16_t TASK_HI          = 0x5CDE;  // #5A9BF6 xpTaskHi
         constexpr uint16_t START_HI         = 0x5E0B;  // #5CC15C xpStartHi
@@ -79,12 +80,15 @@ namespace Theme {
         constexpr uint16_t DIVIDER_FADE     = 0x7CDD;  // #7D9BE8 xpDividerFade
         constexpr uint16_t FIELD_BORDER     = 0x7CF7;  // #7F9DB9 xpFieldBorder
         constexpr uint16_t WELCOME_LINE     = 0x7D3E;  // #7FA4F0 xpWelcomeLine
+        constexpr uint16_t CAPTION_OFF      = 0x7D3E;  // #7FA4F0 xpCaptionOff — □ of a window that never resizes (P-2026-11-26.14)
         constexpr uint16_t FLAG_GREEN       = 0x85E0;  // #81BC06 xpFlagGreen
         constexpr uint16_t LAPTOP           = 0x8410;  // #808080 xpLaptop — Clawd at work (P-2026-11-26.13)
+        constexpr uint16_t SELECT_ICON      = 0x9DBC;  // #98B4E2 xpSelectIcon — selected desktop icon (P-2026-11-26.14)
         constexpr uint16_t BOOT_BLOCK_HI    = 0x9E1F;  // #9BC0FA xpBootBlockHi
         constexpr uint16_t BAND_EDGE_WARM   = 0x9B4D;  // #9C6A6A xpBandEdgeWarm
         constexpr uint16_t DIM              = 0xAD53;  // #ACA899 xpDim — XP disabled text (P-2026-11-26.11)
         constexpr uint16_t STATUS_LINE      = 0xAD53;  // #ACA899 xpStatusLine
+        constexpr uint16_t MENU_BORDER      = 0xAD53;  // #ACA899 xpMenuBorder — menu frame, dim items
         constexpr uint16_t BOOT_GREY        = 0xB596;  // #B2B2B2 xpBootGrey
         constexpr uint16_t FLASH_EDGE       = 0xBB23;  // #B8661E xpFlashEdge
         constexpr uint16_t EMPTY_ICON       = 0xBDB4;  // #B8B4A0 xpEmptyIcon

@@ -4,11 +4,11 @@
 // Painted by main.cpp only — never by a channel — after the channel's draw()
 // on every screen with a window (everything except Night / system screens).
 //
-//   start button x 0–67 (flag + italic "start"), skill buttons 28×20 at
-//   x 71 + 30k (enabled skills only), tray x 196–239 with the clock.
-//   Active channel's button pressed + 2-px slide progress at (x+1, 234);
-//   agents waiting = AMBER badge on the Claude button; a card that needs
-//   the user = Claude button lit orange (xpFlash).
+//   start button x 0–67 (flag + italic "start"), one 28×20 button per open
+//   window at x 71 + 30k (P-2026-11-26.14, ≤ 4, opening order), tray
+//   x 196–239 with the clock. The top window's button pressed (no slide
+//   progress); agents waiting = AMBER badge on the Claude window's button; a
+//   card that needs the user = that button lit orange (xpFlash).
 #include <stdint.h>
 #include "xp_core.h"
 
@@ -17,7 +17,7 @@ namespace Taskbar {
     void draw(const XPCore::BarState& s, bool h24);
 
     // Repaint only what changed since the last draw/update: a button whose
-    // look / badge / progress moved (its 28×23 cell incl. the badge zone),
+    // window / look / badge changed (its 28-px cell incl. the badge zone),
     // and the tray clock when its text changed (once a minute). No-op while
     // hidden. Call ~4 Hz.
     void update(const XPCore::BarState& s, bool h24);

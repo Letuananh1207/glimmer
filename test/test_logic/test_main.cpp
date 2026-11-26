@@ -669,34 +669,52 @@ void test_taskbar_buttons_and_badge() {
     TEST_ASSERT_FALSE(flashes(Attention::K_SUCCESS));
 }
 
+// P-2026-11-26.14: one button per open window (the last 4), the top one
+// pressed while it shows; badge / orange on the Claude window's button.
 void test_taskbar_state_looks() {
     using namespace XPCore;
     BarState s;
-    s.mask = buttonMask("agent,photo,weather,clock");
-    s.active = BTN_CLAUDE; s.badge = 1; s.progress = 10; s.accent = 0xFA89;
-    TEST_ASSERT_EQUAL(LOOK_PRESSED, lookOf(BTN_CLAUDE, s));
-    TEST_ASSERT_EQUAL(LOOK_NORMAL, lookOf(BTN_PHOTO, s));
-    TEST_ASSERT_EQUAL(1, badgeOn(BTN_CLAUDE, s));
-    TEST_ASSERT_EQUAL(-1, badgeOn(BTN_WEATHER, s));
-    TEST_ASSERT_EQUAL(10, progressOn(BTN_CLAUDE, s));
-    TEST_ASSERT_EQUAL(0, progressOn(BTN_CLOCK, s));
-    // A card that needs you: orange, no badge, no progress (XP-Attention).
+    const int8_t open[] = {PROG_CLAUDE, PROG_WEATHER};
+    fillBar(s, open, 2, PROG_WEATHER, PROG_WEATHER);
+    s.badge = 1;
+    TEST_ASSERT_EQUAL(PROG_CLAUDE, s.prog[0]);
+    TEST_ASSERT_EQUAL(PROG_WEATHER, s.prog[1]);
+    TEST_ASSERT_EQUAL(PROG_NONE, s.prog[2]);
+    TEST_ASSERT_EQUAL(1, s.pressed);
+    TEST_ASSERT_EQUAL(LOOK_NORMAL, lookOfSlot(0, s));
+    TEST_ASSERT_EQUAL(LOOK_PRESSED, lookOfSlot(1, s));
+    TEST_ASSERT_EQUAL(1, badgeOnSlot(0, s));      // on Claude, pressed or not
+    TEST_ASSERT_EQUAL(-1, badgeOnSlot(1, s));
+    // The desktop shows: nothing pressed; the top window stays a raised button.
+    BarState d;
+    fillBar(d, open, 2, PROG_WEATHER, PROG_NONE);
+    TEST_ASSERT_EQUAL(-1, d.pressed);
+    TEST_ASSERT_TRUE(slotChanged(1, s, d));
+    TEST_ASSERT_FALSE(slotChanged(2, s, d));
+    // A card that needs you: the Claude button orange, no badge (XP-Attention).
     BarState f = s; f.flash = true;
-    TEST_ASSERT_EQUAL(LOOK_FLASH, lookOf(BTN_CLAUDE, f));
-    TEST_ASSERT_EQUAL(-1, badgeOn(BTN_CLAUDE, f));
-    TEST_ASSERT_EQUAL(0, progressOn(BTN_CLAUDE, f));
-    TEST_ASSERT_TRUE(buttonChanged(BTN_CLAUDE, s, f));
-    TEST_ASSERT_FALSE(buttonChanged(BTN_PHOTO, s, f));
-    // Progress tick on the Weather button repaints only that button.
-    BarState w = s; w.active = BTN_WEATHER;
-    BarState w2 = w; w2.progress = 11;
-    TEST_ASSERT_TRUE(buttonChanged(BTN_WEATHER, w, w2));
-    TEST_ASSERT_FALSE(buttonChanged(BTN_CLAUDE, w, w2));
-    // Progress: 26 px × elapsed / slide, clamped; 0 for no slide.
-    TEST_ASSERT_EQUAL(0, progressLen(0, 20000));
-    TEST_ASSERT_EQUAL(13, progressLen(10000, 20000));
-    TEST_ASSERT_EQUAL(26, progressLen(30000, 20000));
-    TEST_ASSERT_EQUAL(0, progressLen(5000, 0));
+    TEST_ASSERT_EQUAL(LOOK_FLASH, lookOfSlot(0, f));
+    TEST_ASSERT_EQUAL(-1, badgeOnSlot(0, f));
+    TEST_ASSERT_TRUE(slotChanged(0, s, f));
+    TEST_ASSERT_FALSE(slotChanged(1, s, f));
+    // More than 4 open: the last 4 in opening order.
+    const int8_t many[] = {PROG_CLAUDE, PROG_CODEX, PROG_WEATHER, PROG_CLOCK, PROG_INFO};
+    BarState m;
+    fillBar(m, many, 5, PROG_INFO, PROG_INFO);
+    TEST_ASSERT_EQUAL(PROG_CODEX, m.prog[0]);
+    TEST_ASSERT_EQUAL(PROG_INFO, m.prog[3]);
+    TEST_ASSERT_EQUAL(3, m.pressed);
+    // Nothing open: only start + tray.
+    BarState e;
+    fillBar(e, many, 0, PROG_NONE, PROG_NONE);
+    for (int i = 0; i < kSlots; i++) TEST_ASSERT_EQUAL(PROG_NONE, e.prog[i]);
+    TEST_ASSERT_EQUAL(ICON_CLAWD, progIcon(PROG_CODEX));
+    TEST_ASSERT_EQUAL(ICON_WEATHER, progIcon(PROG_FORECAST));
+    TEST_ASSERT_EQUAL(ICON_INFO, progIcon(PROG_INFO));
+    TEST_ASSERT_EQUAL(PROG_CLAUDE, progOf("claude"));             // case-insensitive like /api/channel
+    TEST_ASSERT_EQUAL(PROG_NONE, progOf("Home"));
+    TEST_ASSERT_EQUAL(PROG_NONE, progOf("Attention"));
+    TEST_ASSERT_EQUAL_STRING("Forecast", progName(PROG_FORECAST));
     // Start button rounding: 5,3,2,1,1, 0×16, 1,1,2,3,5.
     TEST_ASSERT_EQUAL(5, startInset(0));
     TEST_ASSERT_EQUAL(0, startInset(5));
@@ -894,27 +912,74 @@ void test_skill_filter_and_default() {
 
 void test_taskbar_buttons_follow_enabled_skills() {
     using namespace XPCore;
-    uint8_t m = buttonMask("agent,clock");
-    TEST_ASSERT_EQUAL(2, buttonCount(m));
-    TEST_ASSERT_EQUAL(0, slotOf(BTN_CLAUDE, m));
-    TEST_ASSERT_EQUAL(-1, slotOf(BTN_WEATHER, m));
-    TEST_ASSERT_EQUAL(1, slotOf(BTN_CLOCK, m));
-    TEST_ASSERT_EQUAL(-1, slotOf(BTN_NONE, m));
-    TEST_ASSERT_EQUAL(101, buttonX(slotOf(BTN_CLOCK, m)));   // packed: x 71 + 30k
-    TEST_ASSERT_EQUAL(3, buttonCount(buttonMask(Skill::kDefaultOn)));
-    TEST_ASSERT_EQUAL(0, slotOf(BTN_WEATHER, buttonMask("weather")));
+    TEST_ASSERT_EQUAL(101, buttonX(1));   // x 71 + 30k
     // Ảnh (P-2026-11-25.7): tab 2, off by default.
     TEST_ASSERT_TRUE(Skill::known("photo"));
     TEST_ASSERT_FALSE(Skill::inList(Skill::kDefaultOn, "photo"));
     TEST_ASSERT_EQUAL(BTN_PHOTO, buttonFor("Photo"));
-    uint8_t all = buttonMask("clock,photo,weather,agent");
-    TEST_ASSERT_EQUAL(4, buttonCount(all));
-    TEST_ASSERT_EQUAL(1, slotOf(BTN_PHOTO, all));
-    TEST_ASSERT_EQUAL(3, slotOf(BTN_CLOCK, all));
-    TEST_ASSERT_EQUAL(161, buttonX(3));   // design: Đồng hồ at x 161
+    TEST_ASSERT_EQUAL(161, buttonX(3));   // the 4th window at x 161
     char on[48];
     Skill::normalise("clock,photo,agent", on, sizeof(on), true);
     TEST_ASSERT_EQUAL_STRING("agent,photo,clock", on);
+}
+
+
+// P-2026-11-26.14: open windows sent by the app; a channel opened without it is adopted.
+void test_windows_adopt_and_prune() {
+    using namespace XPCore;
+    Control::Windows w;
+    Control::adopt(w, PROG_CLAUDE);
+    Control::adopt(w, PROG_WEATHER);
+    TEST_ASSERT_EQUAL(2, w.n);
+    TEST_ASSERT_EQUAL(PROG_WEATHER, w.top);
+    Control::adopt(w, PROG_CLAUDE);                  // already open: no reorder (XP taskbar)
+    TEST_ASSERT_EQUAL(PROG_CLAUDE, w.open[0]);
+    TEST_ASSERT_EQUAL(PROG_CLAUDE, w.top);
+    w.minMask = 1u << PROG_WEATHER;
+    Control::adopt(w, PROG_WEATHER);                 // restored
+    TEST_ASSERT_EQUAL(0, w.minMask);
+    Control::adopt(w, PROG_NONE);                    // the desktop is not a window
+    TEST_ASSERT_EQUAL(2, w.n);
+    Control::prune(w, [](int p) { return p != PROG_WEATHER; });
+    TEST_ASSERT_EQUAL(1, w.n);
+    TEST_ASSERT_EQUAL(PROG_NONE, w.top);
+    Control::addOpen(w, PROG_CLAUDE);                // no duplicates
+    Control::addOpen(w, PROG_NONE);
+    TEST_ASSERT_EQUAL(1, w.n);
+}
+
+// P-2026-11-26.14 XP-Desk: icons per enabled skill, column 0 then column 1.
+void test_desk_icons_follow_skills() {
+    using namespace XPCore;
+    DeskIcon ic[kDeskMax];
+    int n = deskIcons("agent,photo,weather,clock", ic);
+    TEST_ASSERT_EQUAL(6, n);
+    TEST_ASSERT_EQUAL(PROG_CLAUDE, ic[0].prog); TEST_ASSERT_EQUAL(40, ic[0].cx); TEST_ASSERT_EQUAL(8, ic[0].y);
+    TEST_ASSERT_EQUAL(PROG_PHOTO, ic[2].prog);  TEST_ASSERT_EQUAL(104, ic[2].y);
+    TEST_ASSERT_EQUAL(kDeskTrash, ic[3].prog);  TEST_ASSERT_EQUAL(152, ic[3].y);
+    TEST_ASSERT_EQUAL(PROG_WEATHER, ic[4].prog); TEST_ASSERT_EQUAL(120, ic[4].cx); TEST_ASSERT_EQUAL(8, ic[4].y);
+    TEST_ASSERT_EQUAL(PROG_CLOCK, ic[5].prog);  TEST_ASSERT_EQUAL(56, ic[5].y);
+    n = deskIcons("agent", ic);                      // XPDeskAgent: trash at y 104
+    TEST_ASSERT_EQUAL(3, n);
+    TEST_ASSERT_EQUAL(kDeskTrash, ic[2].prog);
+    TEST_ASSERT_EQUAL(104, ic[2].y);
+}
+
+// P-2026-11-26.14 XP-Menu: sizes from the sources, kept inside y ≤ 213.
+void test_menu_geometry() {
+    using namespace XPCore;
+    TEST_ASSERT_EQUAL(166, menuW(MENU_DESKTOP));
+    TEST_ASSERT_EQUAL(127, menuH(MENU_DESKTOP));
+    TEST_ASSERT_EQUAL(128, menuW(MENU_WINDOW));
+    TEST_ASSERT_EQUAL(113, menuH(MENU_WINDOW));
+    int x = 200, y = 180;
+    menuClamp(MENU_DESKTOP, x, y);
+    TEST_ASSERT_EQUAL(74, x);
+    TEST_ASSERT_EQUAL(87, y);
+    x = 71; y = 100;                                 // window menu from the Claude button
+    menuClamp(MENU_WINDOW, x, y);
+    TEST_ASSERT_EQUAL(71, x);
+    TEST_ASSERT_EQUAL(100, y);
 }
 
 // ── Photos (P-2026-11-25.7) ─────────────────────────────────────────────────
@@ -1175,6 +1240,9 @@ int main(int, char**) {
     RUN_TEST(test_projects_from_pushed_cards);
     RUN_TEST(test_skill_filter_and_default);
     RUN_TEST(test_taskbar_buttons_follow_enabled_skills);
+    RUN_TEST(test_windows_adopt_and_prune);
+    RUN_TEST(test_desk_icons_follow_skills);
+    RUN_TEST(test_menu_geometry);
     RUN_TEST(test_photo_jpeg_header_check);
     RUN_TEST(test_photo_names_order_and_rotation);
     RUN_TEST(test_photo_room_limits);

@@ -1,5 +1,6 @@
 // XP taskbar — see taskbar.h. Geometry: design/panel/source/XP-*.dc.html,
-// token themeXP.taskbar (P-2026-11-26.9 start button + 28-px buttons).
+// token themeXP.taskbar (P-2026-11-26.9 start button + 28-px buttons;
+// P-2026-11-26.14: one button per open window, no slide progress).
 
 #include "taskbar.h"
 #include "xp.h"
@@ -65,24 +66,25 @@ const uint8_t kDigits[11][5] PROGMEM = {
     {3,4,7,5,7}, {7,1,2,2,2}, {7,5,7,5,7}, {7,5,7,1,6}, {0,2,7,2,0},
 };
 
-void paintButton(Btn b, int slot, const BarState& s) {
-    const int x = buttonX(slot);
+// Slot i: the window's button, or the bare taskbar band when the slot is empty.
+void paintSlot(int i, const BarState& s) {
+    const int x = buttonX(i);
+    const int p = s.prog[i];
+    if (p < 0) { bands(x, kBtnW, 0, Layout::TASKBAR_H - 1); return; }
     bands(x, kBtnW, 0, 2);                       // badge zone above the button
-    Look look = lookOf(b, s);
+    Look look = lookOfSlot(i, s);
     uint16_t edge = look == LOOK_FLASH ? FLASH_EDGE : look == LOOK_PRESSED ? BTN_PRESSED_EDGE : BTN_EDGE;
     uint16_t fill = look == LOOK_FLASH ? FLASH      : look == LOOK_PRESSED ? BTN_PRESSED      : BTN;
     tft.fillRect(x, kBtnY, kBtnW, kBtnH, edge);
     tft.fillRect(x + 1, kBtnY + 1, kBtnW - 2, kBtnH - 2, fill);
-    Icon ic = iconOf(b);
+    Icon ic = progIcon(p);
     if (ic == ICON_CLAWD) {
         XP::drawIcon(ic, x + 5, 222, 1, look == LOOK_FLASH ? WHITE : Display::CLAWD_ORANGE);
     } else {
         int w, h; XP::iconSize(ic, w, h);
         XP::drawIcon(ic, x + 14 - w / 2, 227 - h / 2, 1, WHITE);
     }
-    int p = progressOn(b, s);
-    if (p > 0) tft.fillRect(x + 1, 234, p, 2, s.accent);
-    int g = badgeOn(b, s);
+    int g = badgeOnSlot(i, s);
     if (g >= 0) {
         tft.fillRect(x + 19, 215, 7, 9, Theme::AMBER);
         tft.fillRect(x + 18, 216, 9, 7, Theme::AMBER);
@@ -91,13 +93,6 @@ void paintButton(Btn b, int slot, const BarState& s) {
             for (int c = 0; c < 3; c++)
                 if (row >> (2 - c) & 1) tft.drawPixel(x + 21 + c, 217 + r, Theme::BG);
         }
-    }
-}
-
-void paintButtons(const BarState& s) {
-    for (int k = 0; k < kBtnCount; k++) {
-        int sl = slotOf((Btn)k, s.mask);
-        if (sl >= 0) paintButton((Btn)k, sl, s);
     }
 }
 
@@ -137,18 +132,15 @@ void draw(const BarState& s, bool h24) {
     s_shown = true;
     bands(0, 196, 0, 25);   // behind the start's rounded edge + gaps between buttons
     paintStart();
-    paintButtons(s);
+    for (int i = 0; i < kSlots; i++) if (s.prog[i] >= 0) paintSlot(i, s);
     clockText(h24, s_clock, sizeof(s_clock));
     paintTray();
 }
 
 void update(const BarState& s, bool h24) {
     if (!s_shown) return;
-    if (s.mask != s_state.mask) { draw(s, h24); return; }
-    for (int k = 0; k < kBtnCount; k++) {
-        int sl = slotOf((Btn)k, s.mask);
-        if (sl >= 0 && buttonChanged((Btn)k, s_state, s)) paintButton((Btn)k, sl, s);
-    }
+    for (int i = 0; i < kSlots; i++)
+        if (slotChanged(i, s_state, s)) paintSlot(i, s);
     s_state = s;
     char c[8];
     clockText(h24, c, sizeof(c));

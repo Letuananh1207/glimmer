@@ -36,6 +36,7 @@
 #include "photos.h"
 #include "wallpaper.h"
 #include "control_core.h"
+#include "xp_menu.h"
 
 // ── Channel registry — declared in their own .cpp files ─────────────────────
 extern bool chClaudeEnabled(const ChannelCtx&);  extern void chClaudeDraw(const ChannelCtx&);
@@ -107,6 +108,13 @@ static bool        g_nightFace   = false; // night window + mode clock/dark
 static Control::Rotation g_rot;           // rotation paused + frozen slide time
 static bool        g_screenOff   = false; // backlight off on the app's command
 
+// The app is the computer, the device its screen (design 2026-11-26.6 / .7,
+// P-2026-11-26.14), RAM only: the open windows the app sends down, and a
+// context menu drawn over the screen. The device never rotates channels.
+static Control::Windows g_windows;
+static Control::Menu    g_menu;
+static bool        g_wantHome    = true;  // boot: the desktop as soon as it can show
+
 // ── Fetch scheduler state ────────────────────────────────────────────────────
 
 enum Job : uint8_t { JOB_CLAUDE, JOB_CODEX, JOB_CODEX_RESETS, JOB_WEATHER, JOB_STATUS_CLAUDE,
@@ -140,6 +148,9 @@ bool     mainAgentNightShow() { return g_settings.agentNightShow; }
 uint32_t mainApprovalTtlS()   { return (uint32_t)g_settings.approvalTtlMin * 60UL; }
 bool     mainAgentDoneCards() { return g_settings.agentDoneCards; }
 bool     mainPaused()       { return g_rot.paused; }
+int8_t   mainSelectedIcon() { return g_windows.sel; }
+const Control::Windows& mainWindows() { return g_windows; }
+const Control::Menu&    mainMenu()    { return g_menu; }
 bool     mainScreenOn()     { return !g_screenOff; }
 uint32_t mainHeapRefusals() { return g_heapRefusals; }
 uint32_t mainMinMaxBlock()  { return g_minMaxBlk; }
@@ -200,9 +211,26 @@ static void recomputeActive() {
         if (!Skill::shows(kChannels[i].skill, skillsOn)) continue;
         if (kChannels[i].enabled(ctx)) g_activeIdx[g_activeCount++] = i;
     }
-    g_activePtr = 0;
-    for (int i = 0; cur && i < g_activeCount; i++)
-        if (!strcmp(kChannels[g_activeIdx[i]].name, cur)) { g_activePtr = i; break; }
+    // Keep the same channel; when it is gone (a card ended, the night is over,
+    // a skill turned off) the top window comes back, else the desktop
+    // (P-2026-11-26.14: no rotation, the screen shows what the app opened).
+    auto find = [](const char* name) {
+        for (int i = 0; name && i < g_activeCount; i++)
+            if (!strcasecmp(kChannels[g_activeIdx[i]].name, name)) return i;
+        return -1;
+    };
+    int at = find(cur);
+    if (at < 0) at = find(XPCore::progName(g_windows.top));
+    if (at < 0) at = find("Home");
+    g_activePtr = at < 0 ? 0 : at;
+}
+
+// A program whose channel is on now (its skill enabled, its show* flag on).
+static bool progInstalled(int p) {
+    const char* name = XPCore::progName(p);
+    for (int i = 0; name && i < g_activeCount; i++)
+        if (!strcasecmp(kChannels[g_activeIdx[i]].name, name)) return true;
+    return false;
 }
 
 // Agents waiting on the user (approval / question) — the badge on the
@@ -211,23 +239,11 @@ static int waitingNow() {
     return Attention::countWaiting(AttentionQueue::get(), AttentionQueue::now());
 }
 
-// Slide-progress colour on the active taskbar button (XP sources): the
-// button's colour, Codex its own lilac.
-static uint16_t slideAccent(const char* name, XPCore::Btn b) {
-    if (!strcmp(name, "Codex")) return Theme::LILAC;
-    switch (b) {
-        case XPCore::BTN_PHOTO:   return Theme::MINT;
-        case XPCore::BTN_WEATHER: return Theme::SKY;
-        case XPCore::BTN_CLOCK:   return Theme::AMBER;
-        default:                  return Theme::CORAL;
-    }
-}
-
-static bool rotating() {
-    if (!g_settings.autoRotate || g_nightFace) return false;
-    // Photo alone in the rotation still steps through the photos.
-    return g_activeCount > 1
-        || (g_activeCount == 1 && Photos::count() > 1 && !strcmp(kChannels[g_activeIdx[0]].name, "Photo"));
+// The device never rotates channels (P-2026-11-26.14). A Photo window still
+// steps through its photos, like XP's picture viewer slideshow.
+static bool photoSlideshow() {
+    return !g_nightFace && g_activeCount && Photos::count() > 1
+        && !strcmp(kChannels[g_activeIdx[g_activePtr]].name, "Photo");
 }
 
 // A new slide starts now (a paused rotation stays paused, at its start).
@@ -238,22 +254,19 @@ static void markSlide(uint32_t now) {
 
 static uint32_t slideMs() { return (uint32_t)g_settings.channelSec * 1000UL; }
 
-// What the taskbar shows now (P-2026-11-26.8): enabled skills' buttons, the
-// active channel's pressed, the Claude button orange on a card that needs
-// the user, the waiting badge, slide progress (none when not rotating, on a
-// Photo screen with nothing to show, or on a held card's orange button).
-static XPCore::BarState barState(uint32_t now) {
+// What the taskbar shows now (P-2026-11-26.14): one button per open window,
+// the top one pressed while it is on screen, the Claude window's button
+// orange on a card that needs the user, the waiting badge on it.
+static XPCore::BarState barState(uint32_t) {
     XPCore::BarState s;
-    s.mask  = XPCore::buttonMask(g_settings.skillsOn.c_str());
     s.badge = (int8_t)XPCore::badgeGlyph(waitingNow());
-    if (g_activeCount == 0) return s;
-    const char* name = kChannels[g_activeIdx[g_activePtr]].name;
-    s.active = XPCore::buttonFor(name);
-    s.accent = slideAccent(name, (XPCore::Btn)s.active);
-    s.flash  = !strcmp(name, "Attention") && chAttentionNeedsYou();
-    const bool photoEmpty = !strcmp(name, "Photo") && chPhotoEmpty();
-    if (rotating() && !photoEmpty)
-        s.progress = (uint8_t)XPCore::progressLen(Control::elapsed(g_rot, now, g_lastSlide), slideMs());
+    int8_t open[XPCore::PROG_COUNT];
+    int n = 0;
+    for (int i = 0; i < g_windows.n; i++)
+        if (progInstalled(g_windows.open[i])) open[n++] = g_windows.open[i];
+    const char* name = g_activeCount ? kChannels[g_activeIdx[g_activePtr]].name : nullptr;
+    XPCore::fillBar(s, open, n, g_windows.top, XPCore::progOf(name));
+    s.flash = name && !strcmp(name, "Attention") && chAttentionNeedsYou();
     return s;
 }
 
@@ -274,6 +287,11 @@ static void drawActive() {
     // Taskbar after the channel (main.cpp owns y 214..239); none on Night.
     if (XPCore::buttonFor(name) == XPCore::BTN_NO_BAR) Taskbar::hide();
     else Taskbar::draw(barState(millis()), g_settings.clock24h);
+    // A context menu stays over the screen it was opened on (not on Night / cards).
+    if (g_menu.kind != XPCore::MENU_NONE) {
+        if (XPCore::buttonFor(name) == XPCore::BTN_NO_BAR || !strcmp(name, "Attention")) g_menu = Control::Menu();
+        else XPMenu::draw(g_menu);
+    }
 }
 
 // Recompute, and repaint only when what should be on screen changed.
@@ -288,12 +306,17 @@ static void refreshScreen(bool force) {
     }
 }
 
-// Manual switching (web /api/channel, MCP).
+// Manual switching (web /api/channel, MCP): closes a context menu; a
+// program comes to the top of the open windows (the app sends the full list
+// right after; this covers a channel opened without the app).
 bool mainShowChannel(const char* name) {
     recomputeActive();
     for (int i = 0; i < g_activeCount; i++) {
         if (!strcasecmp(kChannels[g_activeIdx[i]].name, name)) {
             g_activePtr = i;
+            g_menu = Control::Menu();
+            g_wantHome = false;
+            Control::adopt(g_windows, XPCore::progOf(kChannels[g_activeIdx[i]].name));
             drawActive();
             markSlide(millis());
             return true;
@@ -334,15 +357,33 @@ void mainSetScreenOn(bool on) {
     applyBrightness();
 }
 
-// The active channel's slide: total and what is left, as the taskbar
-// progress counts it. 0 / 0 when nothing rotates (one channel, autoRotate
-// off, night face, a card holding the screen).
-void mainSlideTiming(uint32_t& totalMs, uint32_t& leftMs) {
-    totalMs = leftMs = 0;
-    if (g_apMode || g_activeCount == 0 || !rotating()) return;
-    if (!strcmp(kChannels[g_activeIdx[g_activePtr]].name, "Attention")) return;
-    totalMs = slideMs();
-    leftMs  = Control::slideLeft(Control::elapsed(g_rot, millis(), g_lastSlide), totalMs);
+// The device does not rotate (P-2026-11-26.14): no slide to report.
+void mainSlideTiming(uint32_t& totalMs, uint32_t& leftMs) { totalMs = leftMs = 0; }
+
+// The app's open windows (POST /api/windows). The selected desktop icon
+// changing on the desktop repaints it; the taskbar catches up by itself.
+void mainSetWindows(const Control::Windows& w) {
+    const bool selChanged = w.sel != g_windows.sel;
+    g_windows = w;
+    if (selChanged && g_activeCount && !strcmp(kChannels[g_activeIdx[g_activePtr]].name, "Home")) drawActive();
+}
+
+// A context menu (POST /api/menu): drawn over the screen; closing it repaints
+// what was under it (the channel's draw()). Not over Night / cards / setup.
+bool mainSetMenu(const Control::Menu& m) {
+    if (g_apMode || !g_activeCount) return false;
+    const char* name = kChannels[g_activeIdx[g_activePtr]].name;
+    if (m.kind != XPCore::MENU_NONE
+        && (XPCore::buttonFor(name) == XPCore::BTN_NO_BAR || !strcmp(name, "Attention"))) return false;
+    const bool wasOpen = g_menu.kind != XPCore::MENU_NONE;
+    g_menu = m;
+    if (m.kind != XPCore::MENU_NONE) {
+        if (wasOpen) drawActive();        // moved: repaint under the old one first
+        else XPMenu::draw(g_menu);
+    } else if (wasOpen) {
+        drawActive();
+    }
+    return true;
 }
 
 // A new / deleted wallpaper: repaint the desktop if it is on screen.
@@ -794,18 +835,19 @@ void loop() {
         noticesTick();
     }
 
-    // Channel auto-rotate — instant cut (no transition animation).
-    const bool holding = attention && g_activeCount
-                      && !strcmp(kChannels[g_activeIdx[g_activePtr]].name, "Attention");
-    // Photo alone in the rotation still steps through the photos (a frame of one channel).
-    const bool photoSolo = g_activeCount == 1 && Photos::count() > 1
-                        && !strcmp(kChannels[g_activeIdx[0]].name, "Photo");
-    if (!g_apMode && g_settings.autoRotate && !g_nightFace && !holding && !g_rot.paused
-        && (g_activeCount > 1 || photoSolo) && now - g_lastSlide >= slideMs()) {
+    // No channel rotation (P-2026-11-26.14). Boot lands on the desktop as soon
+    // as it can show (it needs the clock); a Photo window steps its photos.
+    if (!g_apMode && g_wantHome && g_activeCount
+        && strcmp(kChannels[g_activeIdx[g_activePtr]].name, "Attention")) {
+        for (int i = 0; i < g_activeCount; i++)
+            if (!strcmp(kChannels[g_activeIdx[i]].name, "Home")) {
+                g_wantHome = false;
+                if (i != g_activePtr) { g_activePtr = i; drawActive(); markSlide(now); }
+                break;
+            }
+    }
+    if (!g_apMode && photoSlideshow() && g_menu.kind == XPCore::MENU_NONE && now - g_lastSlide >= slideMs()) {
         markSlide(now);
-        // Pick up any settings toggles before deciding what's next.
-        recomputeActive();
-        if (g_activeCount > 0) g_activePtr = (g_activePtr + 1) % g_activeCount;
         drawActive();
     }
 
@@ -817,11 +859,12 @@ void loop() {
     if (!g_apMode && g_activeCount > 0 && now - lastTick >= 200) {
         lastTick = now;
         auto tickFn = kChannels[g_activeIdx[g_activePtr]].tick;
-        if (tickFn) tickFn(makeCtx());
+        // A context menu is over the window: nothing may paint under / over it.
+        if (tickFn && g_menu.kind == XPCore::MENU_NONE) tickFn(makeCtx());
     }
 
-    // Taskbar ~4 Hz: repaints only a button whose look / badge / slide
-    // progress changed, and the tray clock once a minute (no-op on Night).
+    // Taskbar ~4 Hz: repaints only a button whose window / look / badge
+    // changed, and the tray clock once a minute (no-op on Night).
     static uint32_t lastBar = 0;
     if (!g_apMode && now - lastBar >= 250) {
         lastBar = now;

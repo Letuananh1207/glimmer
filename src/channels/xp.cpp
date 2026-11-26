@@ -93,9 +93,10 @@ void captionButton(int x, uint16_t fill, char kind) {
     tft.fillRect(x + 1, y + 1, 14, 14, fill);
     switch (kind) {
         case '_': tft.fillRect(x + 4, y + 10, 6, 2, WHITE); break;
-        case 'o':   // maximise: 8×8 box with a 2-px top
-            tft.drawRect(x + 4, y + 3, 8, 8, WHITE);
-            tft.drawFastHLine(x + 4, y + 4, 8, WHITE);
+        case 'o':   // maximise, off (P-2026-11-26.14): windows are full screen and
+                    // never resize — XP greys the button: 8×8 box, 2-px top, xpCaptionOff
+            tft.drawRect(x + 4, y + 3, 8, 8, CAPTION_OFF);
+            tft.drawFastHLine(x + 4, y + 4, 8, CAPTION_OFF);
             break;
         default:    // close: X of 2×1 steps, 7 rows
             for (int r = 0; r < 7; r++) {

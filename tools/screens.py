@@ -58,7 +58,8 @@ X = {k: hx(v) for k, v in dict(
     AMBER="C98A00", WELCOME_SUB="C9D6F7", GROUP="D0D0BF", ICON_ERROR="D8341E", ROW_HI="DCE6F8",
     CLOSE="E0523C", ROW_LINE="E4E4E4", BODY="ECE9D8", FLASH="F0A030", WELCOME_ORANGE="F28F2E",
     ICON_WARN="F2C200", USER_PIC="F2C27A", FLAG_RED="F35325", FLAG_YELLOW="FFBA08", INFO_BAR="FFFFE1",
-    WHITE="FFFFFF", BLACK="000000").items()}
+    WHITE="FFFFFF", BLACK="000000",
+    SELECT_ICON="98B4E2", SELECT_CLAWD="85719E", CAPTION_OFF="7FA4F0", MENU_BORDER="ACA899").items()}
 globals().update({f"XP_{k}": v for k, v in X.items()})
 
 # main.cpp slideAccent — slide-progress colour on the active taskbar button.
@@ -266,9 +267,9 @@ def caption_button(sc, x, fill, kind):
     sc.rect(x + 1, y + 1, 14, 14, fill)
     if kind == "_":
         sc.rect(x + 4, y + 10, 6, 2, X["WHITE"])
-    elif kind == "o":
-        sc.outline(x + 4, y + 3, 8, 8, X["WHITE"])
-        sc.hline(x + 4, y + 4, 8, X["WHITE"])
+    elif kind == "o":   # □ off: windows never resize (P-2026-11-26.14, xpCaptionOff)
+        sc.outline(x + 4, y + 3, 8, 8, X["CAPTION_OFF"])
+        sc.hline(x + 4, y + 4, 8, X["CAPTION_OFF"])
     else:
         for r in range(7):
             sc.rect(x + 4 + r, y + 4 + r, 2, 1, X["WHITE"])
@@ -484,9 +485,18 @@ def task_bands(sc, x, w, r0, r1):
             sc.rect(x, 214 + a, w, z - a + 1, X[c])
 
 
-def taskbar(sc, *, active="claude", mask=BUTTONS, flash=False, badge=1, progress=0.4,
-            accent=CORAL, clock="14:32"):
-    """Taskbar::draw. active = button name or None; progress = slide fraction."""
+# main.cpp barState / XPCore::fillBar (P-2026-11-26.14): one button per open window.
+PROG_ICON = {"Photo": "photo", "Weather": "weather", "Forecast": "weather", "Clock": "clock", "Info": "info"}
+_BTN_PROG = {"claude": "Claude", "photo": "Photo", "weather": "Weather", "clock": "Clock"}
+
+
+def taskbar(sc, *, active="claude", windows=None, top=None, flash=False, badge=1, clock="14:32", **_old):
+    """Taskbar::draw. windows = open programs in opening order (last 4 shown), top = the one on top
+    (pressed while it shows). Legacy callers pass active = the button of the only open window."""
+    if windows is None:
+        windows = [_BTN_PROG[active]] if active else []
+        top = windows[0] if windows else None
+    windows = windows[-4:]
     task_bands(sc, 0, 196, 0, 25)
     for r in range(26):                                   # start button
         edge = 67 - START_INSET[r]
@@ -496,25 +506,21 @@ def taskbar(sc, *, active="claude", mask=BUTTONS, flash=False, badge=1, progress
     draw_flag(sc, 7, 221, 1)
     sc.bits(START_BITS, 41, 26, 222, X["START_SHADOW"])
     sc.bits(START_BITS, 41, 25, 221, X["WHITE"])
-    slot = 0
-    for b in BUTTONS:
-        if b not in mask:
-            continue
+    for slot, prog in enumerate(windows):
         x = 71 + 30 * slot
-        slot += 1
-        look = "flash" if b == "claude" and flash else "pressed" if b == active else "normal"
+        claude = prog == "Claude"
+        look = "flash" if claude and flash else "pressed" if prog == top else "normal"
         edge, fill = {"flash": ("FLASH_EDGE", "FLASH"), "pressed": ("BTN_PRESSED_EDGE", "BTN_PRESSED"),
                       "normal": ("BTN_EDGE", "BTN")}[look]
         sc.rect(x, 217, 28, 20, X[edge])
         sc.rect(x + 1, 218, 26, 18, X[fill])
-        if b == "claude":
+        icon = PROG_ICON.get(prog, "clawd")
+        if icon == "clawd":
             draw_icon(sc, "clawd", x + 5, 222, 1, X["WHITE"] if look == "flash" else CLAWD_ORANGE)
         else:
-            w, h, _ = ICONS[b]
-            draw_icon(sc, b, x + 14 - w // 2, 227 - h // 2, 1, X["WHITE"])
-        if look == "pressed" and progress:
-            sc.rect(x + 1, 234, int(26 * progress), 2, accent)
-        if b == "claude" and not flash and badge > 0:
+            w, h, _ = ICONS[icon]
+            draw_icon(sc, icon, x + 14 - w // 2, 227 - h // 2, 1, X["WHITE"])
+        if claude and not flash and badge > 0:
             sc.rect(x + 19, 215, 7, 9, T_AMBER)
             sc.rect(x + 18, 216, 9, 7, T_AMBER)
             for r, row in enumerate(DIGITS[min(badge, 10)]):
@@ -525,6 +531,49 @@ def taskbar(sc, *, active="claude", mask=BUTTONS, flash=False, badge=1, progress
     sc.vline(196, 214, 26, X["TRAY_EDGE"])
     sc.hline(197, 214, 43, X["TRAY_HI"])
     sc.text("JBMono-11", clock, 218, 221, X["WHITE"], "TC")
+
+
+# ── Context menus (channels/xp_menu.cpp, P-2026-11-26.14 XP-Menu) ──
+MENU_DESK = [("Sắp xếp biểu tượng", False, True), ("Làm mới", False, False), None, ("Dán", True, False),
+             ("Dán lối tắt", True, False), None, ("Mới", True, True), None, ("Thuộc tính", False, False)]
+MENU_GLYPH = {
+    "restore": [(7, 5, 5, 2), (11, 7, 1, 3), (10, 9, 1, 1), (5, 7, 5, 2), (5, 9, 1, 3), (9, 9, 1, 3), (5, 11, 5, 1)],
+    "min": [(6, 10, 5, 2)],
+    "max": [(5, 5, 7, 2), (5, 7, 1, 5), (11, 7, 1, 5), (5, 11, 7, 1)],
+    "close": [(5, 5, 2, 1), (10, 5, 2, 1), (6, 6, 2, 1), (9, 6, 2, 1), (7, 7, 3, 1), (7, 8, 3, 1), (7, 9, 3, 1),
+              (6, 10, 2, 1), (9, 10, 2, 1), (5, 11, 2, 1), (10, 11, 2, 1)],
+}
+
+
+def menu(sc, kind, x, y, minimized=False):
+    """XPMenu::draw: kind 'desktop' (166×127) or 'window' (128×113), clamped inside y ≤ 213."""
+    w, h = (166, 127) if kind == "desktop" else (128, 113)
+    x, y = max(0, min(x, 240 - w)), max(0, min(y, 214 - h))
+    sc.rect(x, y, w, h, X["MENU_BORDER"])
+    sc.rect(x + 1, y + 1, w - 2, h - 2, X["WHITE"])
+    rows = MENU_DESK if kind == "desktop" else [
+        ("Khôi phục", not minimized, False, "restore"), ("Di chuyển", True, False, None),
+        ("Kích thước", True, False, None), ("Thu nhỏ", minimized, False, "min"), ("Phóng to", True, False, "max"),
+        None, ("Đóng", False, False, "close")]
+    iy = y + 2
+    for r in rows:
+        if r is None:
+            sc.hline(x + 2, iy + 3, w - 4, X["MENU_BORDER"])
+            iy += 7
+            continue
+        label, dim, arrow = r[0], r[1], r[2]
+        c = X["MENU_BORDER"] if dim else X["BLACK"]
+        bold = label == "Đóng"
+        sc.text("JBMono-12B" if bold else "JBMono-11", label, x + 17, iy + (1 if bold else 2), c)
+        if arrow:
+            for k in range(4):
+                sc.vline(x + w - 10 + k, iy + 5 + k, 7 - 2 * k, c)
+        if len(r) > 3 and r[3]:
+            for gx, gy, gw, gh in MENU_GLYPH[r[3]]:
+                sc.rect(x + gx, iy + gy, gw, gh, c)
+        iy += 17
+    if kind == "window":
+        sc.text("JBMono-11", "Alt+F4", x + w - 17, y + h - 17, X["BLACK"], "TR")
 
 
 # ── System screens (src/core/display.cpp) ───────────────────────────────────
@@ -826,21 +875,50 @@ DESK_PROMPT = [0x20, 0x10, 0x27]
 DESK_TRASH = [0x07F8, 0x0FFC, 0x1FFE, 0x0AA8, 0x0AA8, 0x0AA8, 0x0AA8, 0x0AA8, 0x0AA8, 0x07FC]
 
 
+# XPCore::deskIcons (P-2026-11-26.14 XP-Desk): column 0 Claude, Codex, Ảnh, trash; column 1 Thời tiết, Đồng hồ.
+def desk_icons(skills):
+    col0 = (["Claude", "Codex"] if "agent" in skills else []) + (["Photo"] if "photo" in skills else []) + [None]
+    col1 = (["Weather"] if "weather" in skills else []) + (["Clock"] if "clock" in skills else [])
+    return [(p, 40, 8 + 48 * i) for i, p in enumerate(col0)] + [(p, 120, 8 + 48 * i) for i, p in enumerate(col1)]
+
+
 def desktop(sc, *, cl="Claude 38%", cx="Codex 71%", line1=f"29° {DOT} Ít mây", line2="cảm giác 33°",
-            balloon=True, badge=1):
+            balloon=True, badge=1, skills=("agent", "photo", "weather", "clock"), sel=None,
+            windows=(), top=None):
     sc.img.paste(_desk_wallpaper(), (0, 0))
-    draw_icon(sc, "clawd", 22, 9, 2, CLAWD_ORANGE)
-    sc.bits(DESK_TERM, 16, 24, 56, X["WHITE"], 2)
-    sc.rect(26, 62, 28, 12, X["BLACK"])
-    sc.bits(DESK_PROMPT, 6, 28, 64, X["BAR"], 2)
-    draw_icon(sc, "photo", 24, 104, 2, X["WHITE"])
-    sc.bits(DESK_TRASH, 14, 26, 152, hx("DDE6EE"), 2)
-    for i, t in enumerate((cl, cx, "Ảnh", "Thùng rác")):
-        t = fit(sc, "JBMono-11", t, 80)
-        y = 8 + 48 * i + 24
-        sc.text("JBMono-11", t, 41, y + 1, X["BLACK"], "TC")
-        sc.text("JBMono-11", t, 40, y, X["WHITE"], "TC")
-    if balloon:
+    labels = {"Claude": cl, "Codex": cx, "Photo": "Ảnh", "Weather": "Thời tiết", "Clock": "Đồng hồ", None: "Thùng rác"}
+    for prog, x, y in desk_icons(skills):
+        selected = sel is not None and prog == sel
+        white = X["SELECT_ICON"] if selected else X["WHITE"]
+        if prog == "Claude":
+            draw_icon(sc, "clawd", x - 18, y + 1, 2, X["SELECT_CLAWD"] if selected else CLAWD_ORANGE)
+        elif prog == "Codex":
+            sc.bits(DESK_TERM, 16, x - 16, y, white, 2)
+            sc.rect(x - 14, y + 6, 28, 12, X["BLACK"])
+            sc.bits(DESK_PROMPT, 6, x - 12, y + 8, X["BAR"], 2)
+        elif prog == "Photo":
+            draw_icon(sc, "photo", x - 16, y, 2, white)
+        elif prog in ("Weather", "Clock"):
+            draw_icon(sc, prog.lower(), x - 16, y - 6, 2, white)
+        else:
+            sc.bits(DESK_TRASH, 14, x - 14, y, X["SELECT_ICON"] if selected else hx("DDE6EE"), 2)
+        t = fit(sc, "JBMono-11", labels[prog], 80)
+        ly = y + 24
+        if selected:
+            tw = sc.width("JBMono-11", t)
+            bx, bw = x - tw // 2 - 1, tw + 2
+            sc.rect(bx, ly, bw, 13, X["SELECT"])
+            for k in range(0, bw + 2, 2):
+                sc.pixel(bx - 1 + k, ly - 1, X["WHITE"])
+                sc.pixel(bx - 1 + k, ly + 13, X["WHITE"])
+            for k in range(0, 15, 2):
+                sc.pixel(bx - 1, ly - 1 + k, X["WHITE"])
+                sc.pixel(bx + bw, ly - 1 + k, X["WHITE"])
+            sc.text("JBMono-11", t, x, ly, X["WHITE"], "TC")
+        else:
+            sc.text("JBMono-11", t, x + 1, ly + 1, X["BLACK"], "TC")
+            sc.text("JBMono-11", t, x, ly, X["WHITE"], "TC")
+    if balloon and "weather" in skills:
         sc.rect(100, 150, 136, 50, X["BLACK"])
         sc.rect(101, 151, 134, 48, X["INFO_BAR"])
         for k in range(7):
@@ -853,8 +931,8 @@ def desktop(sc, *, cl="Claude 38%", cx="Codex 71%", line1=f"29° {DOT} Ít mây"
         sc.text("JBMono-11", fit(sc, "JBMono-11", line1, 128), 106, 172, X["BLACK"] if line2 else X["DIM"])
         if line2:
             sc.text("JBMono-11", fit(sc, "JBMono-11", line2, 128), 106, 185, X["LABEL"])
-    # The desktop presses no button (XPCore::buttonFor("Home") = BTN_NONE): no slide progress.
-    taskbar(sc, active=None, badge=badge)
+    # The desktop presses no button: open windows are raised (P-2026-11-26.14).
+    taskbar(sc, windows=list(windows), top=None, badge=badge)
 
 
 # ── AI hôm nay (ch_aidash.cpp) ──
@@ -1213,6 +1291,19 @@ SCREENS_A = [
 
 SCREENS_B = [
     ("Desktop", "XP-Desktop · nền dự phòng, không nút nào lõm", desktop, "XPDesktop"),
+    ("Desktop · chỉ Agent", "XP-Desk-Agent · chưa mở cửa sổ nào",
+     lambda s: desktop(s, skills=("agent",)), "XPDeskAgent"),
+    ("Desktop · Claude thu nhỏ", "XP-Desk-All · đủ 4 skill, nút Claude nổi",
+     lambda s: desktop(s, windows=["Claude"]), "XPDeskAll"),
+    ("Desktop · vừa cài Đồng hồ", "XP-Desk-Selected · Đồng hồ đang chọn",
+     lambda s: desktop(s, sel="Clock"), "XPDeskSelected"),
+    ("Cửa sổ mở", "XP-Win-Open · Claude trên cùng, 3 cửa sổ",
+     lambda s: (claude_xp(s), taskbar(s, windows=["Claude", "Weather", "Clock"], top="Claude")), "XPWinOpen"),
+    ("Menu desktop", "XP-Menu-Desktop · giữ chỗ trống",
+     lambda s: (desktop(s, windows=["Claude"]), menu(s, "desktop", 60, 30)), "XPMenuDesktop"),
+    ("Menu cửa sổ", "XP-Menu-Window · giữ nút Claude",
+     lambda s: (claude_xp(s), taskbar(s, windows=["Claude", "Weather", "Clock"], top="Claude"),
+                menu(s, "window", 71, 213 - 113)), "XPMenuWindow"),
     ("Desktop · chưa có số / thời tiết", "XP-Desktop · tên trần, bong bóng chưa có thời tiết",
      lambda s: desktop(s, cl="Claude", cx="Codex", line1="chưa có thời tiết", line2=""), None),
     ("AI hôm nay", "XP-AI", lambda s: aidash(s), "XPAI"),

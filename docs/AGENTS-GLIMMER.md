@@ -103,7 +103,9 @@ Fonts are ASCII plus `°` and `·` — other characters are dropped.
 | list | `GET /push` → `{"cards":[…]}` (with `age_s`, `expires_in_s`) | `list_cards` |
 | device state | `GET /api/state` | `get_state` |
 | switch screen | `POST /api/channel` `{"name":"Claude"}` / `{"action":"next"}` / `{"action":"prev"}` → `{"ok","active","paused"}` | `show_channel` / `next_channel` |
-| pause rotation | `POST /api/channel` `{"action":"pause"}` / `{"action":"resume"}` → `{"ok","active","paused"}` — temporary (RAM only, gone after a reboot; the `autoRotate` setting is untouched); next / prev / show still work and keep it paused; cards still interrupt | — |
+| pause rotation | `POST /api/channel` `{"action":"pause"}` / `{"action":"resume"}` → `{"ok","active","paused"}` — still answered, but the device no longer rotates (panel P-2026-11-26.14): it shows what was opened until something else is | — |
+| open windows | `POST /api/windows` `{"open":[…],"top":…,"min":[…],"sel":…}` → `{"ok"}` — the app's open windows (taskbar buttons), RAM only; `/api/state` `windows` | — |
+| context menu | `POST /api/menu` `{"kind":"desktop"\|"window"\|"none","x","y","minimized"}` → `{"ok"}` / 409 — draws or closes an XP right-click menu; the caller picks items and sends the command | — |
 | screen off / on | `POST /api/screen` `{"on":false}` / `{"on":true}` → `{"ok","screen_on"}` — backlight now, whatever the night window says (RAM only); an urgent / approval / question card (or a user's error card) still lights it while it holds the screen | — |
 | desktop wallpaper | `GET /api/wallpaper` → `{"set","size","w":240,"h":214,"max_bytes","free","reserve"}`; `POST /api/wallpaper` multipart field `wallpaper` (baseline JPEG, exactly 240×214, ≤ 40 KB) → `{"ok","size"}` or `{"error"}`; `DELETE /api/wallpaper` → `{"ok"}` / 404 | — |
 | photos (skill `photo`) | `GET /api/photos` → `{"photos":[{"name","size"}],"free","total","max_count","max_bytes","reserve","side"}`; `POST /api/photos` multipart field `photo` (baseline JPEG, exactly 188×188, ≤ 40 KB) → `{"ok","name","count"}` or `{"error"}`; `DELETE /api/photos?name=p3.jpg` | — |
