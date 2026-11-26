@@ -567,7 +567,7 @@ def splash(sc, step=3):
             sc.rect(x, y, 6, 5, X["BOOT_BLOCK"])
             sc.hline(x, y, 6, X["BOOT_BLOCK_HI"])
             sc.hline(x, y + 4, 6, X["BOOT_BLOCK_LO"])
-    clawd(sc, 212, 224, 1, X["WHITE"], bg=BG)
+    draw_c_bits(sc, c_bitmap("kCornerBits"), 69, 8, 163, 226, X["WHITE"])   # "Clawdsoft" (P-2026-11-26.10)
 
 
 def welcome_chrome(sc):
