@@ -246,7 +246,22 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
 - Gửi: thu nhỏ vùng cắt về 188 × 188, JPEG **baseline**, ≤ 40 KB — quá thì giảm chất lượng dần, chỉ báo `tooBig` khi đã hết bậc.
   Gửi xong app giữ bản sao (làm hình thu nhỏ ở tab Ảnh).
 
-## 8. Điều khiển — `ControlScreen` (Control.png, ControlTapMin.png, ControlMinimized.png, ControlInstalled.png, ControlTapIcon.png, ControlTapClose.png, ControlSending.png, ControlStart.png, ControlAllPrograms.png, ControlFailed.png, ControlCard.png, ControlScreenOff.png, ControlNight.png, ControlBrightness.png, ControlOldFw.png, ControlSetup.png, ControlOffline.png)
+## 8. Điều khiển — `ControlScreen` (Control.png, ControlOpened.png, ControlTwoOpen.png, ControlMinimized.png, ControlClosed.png, ControlInstalled.png, ControlStart.png, ControlAllPrograms.png, ControlFailed.png, ControlCard.png, ControlScreenOff.png, ControlNight.png, ControlBrightness.png, ControlOldFw.png, ControlSetup.png, ControlOffline.png)
+
+> **2026-11-26.7 — Thanh tác vụ theo cửa sổ đang mở, bỏ vòng chạm và chữ trạng thái.** Prop `state`: `normal`, `opened`, `twoOpen`, `minimized`, `closed`, `installed`, `start`, `allPrograms`, `failed`, `card`, `screenOff`, `night`, `brightness`, `oldFw`, `setup`, `offline`
+> (bỏ `tapMin`, `tapIcon`, `tapClose`, `sending`; thêm `opened`, `twoOpen`, `closed`; `normal` nay là desktop lúc mới vào).
+> 844, trừ `card` / `oldFw` / `setup` / `offline` 960. Ảnh 16 `Control*.png`.
+> - **Bỏ `TapRipple` và `StatusChip`** và dòng chữ dưới ô màn (`controlOpenOnDevice`, `controlMinimizedNote`…): màn đổi ngay là phản
+>   hồi. Dòng dưới ô màn chỉ còn ở `screenOff` / `night`. Lỗi vẫn là `CommandSnackbar`.
+> - **Thanh tác vụ trên ô màn** (y 214–239, giữa start và khay x 69–195) = **cửa sổ đang mở**, theo thứ tự mở: nút 28 × 20 tại
+>   x 71 + 30·i, y 217 (ngoài 1 px + trong 26 × 18), icon dock giữa nút (Claude màu `clawd`, còn lại trắng). Cửa sổ trên cùng:
+>   lõm (ngoài #163E91, trong #1E4FB5); còn lại / thu nhỏ: nổi (ngoài #1A50C8, trong #3C81F3). Huy hiệu vàng 9 × 9 trên nút Claude
+>   khi có agent chờ. **Không vạch tiến độ.** Nền phần trống giữ dải màu thanh tác vụ XP.
+>   - `normal`: mới vào → desktop, thanh trống. `opened`: mở Claude → [Claude lõm]. `twoOpen`: mở thêm Thời tiết →
+>     [Claude][Thời tiết lõm]. `minimized`: `_` trên Claude → desktop, [Claude nổi]. `closed`: `×` trên Claude khi đang có Thời
+>     tiết → cửa sổ Thời tiết, [Thời tiết lõm]. Tắt cửa sổ cuối → desktop, thanh trống. `installed`: desktop, thanh trống.
+> - Ô màn hiện bằng lớp vẽ chồng lên file XP của `design/panel` (thanh tác vụ panel đang cố định 4 nút skill) — màn thiết bị thật
+>   phải đổi theo (xem CHANGELOG).
 
 > **2026-11-26.6 — Màn thiết bị chạm được, mô hình Windows XP.** App là "máy tính" (xử lý, nhớ cửa sổ đang mở, chương trình đã
 > cài), thiết bị là màn hình. **Không tự xoay, không có nút kênh trước / sau / dừng xoay, không có `JumpTabBar`, không thanh

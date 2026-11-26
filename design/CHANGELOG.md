@@ -5,6 +5,26 @@ widget và việc cần làm — không ghi đường dẫn file hay cách code.
 
 ---
 
+## 2026-11-26.7 — Thanh tác vụ theo cửa sổ đang mở, bỏ vòng chạm và chữ trạng thái
+
+- **Điều khiển · `ControlScreen` / `TouchMirror`** (`source/Control.dc.html`, `screen_specs.md` §8; ảnh 16 `Control*.png`, mới
+  `ControlOpened.png`, `ControlTwoOpen.png`, `ControlClosed.png`; bỏ `ControlTapMin.png`, `ControlTapIcon.png`, `ControlTapClose.png`,
+  `ControlSending.png`):
+  - Bỏ vòng tròn chỗ chạm (`TapRipple`), chip "Đang mở… / Thu nhỏ… / Đang tắt…" (`StatusChip`) và dòng chữ dưới ô màn; màn đổi
+    ngay là phản hồi, chỉ báo khi thiết bị không nhận lệnh.
+  - Thanh tác vụ trên màn chỉ có **cửa sổ đang mở**: mới vào trống; mở app → thêm nút (lõm = đang ở trên); `_` → nút nổi, về
+    desktop; `×` → bỏ nút, hiện cửa sổ trước đó; hết → desktop, thanh trống. Không vạch tiến độ.
+- **Token:** bỏ `tapRing`, `tapRipple`. **Chuỗi:** 12 khoá chip / ghi chú đánh dấu không dùng; `controlOldFwBody` đổi chữ.
+- Đổi luật (phía code chốt): R-DK-7 thêm "mới mở app → không cửa sổ nào, thanh tác vụ trống"; R-DK-8 thêm "thanh tác vụ = đúng
+  danh sách cửa sổ đang mở, theo thứ tự mở".
+- Cần firmware: thanh tác vụ vẽ theo danh sách cửa sổ đang mở (không còn một nút cố định cho mỗi skill), nút lõm = cửa sổ trên
+  cùng, nút nổi = thu nhỏ / phía sau; khởi động xong ở desktop với thanh trống; bỏ vạch tiến độ slide.
+- Cần thiết kế màn thiết bị (`/panel-design`): thanh tác vụ theo cửa sổ đang mở (trống, 1, nhiều nút; lõm / nổi), desktop lúc mới bật.
+
+**Việc cần làm trong code:**
+- `ControlScreen`: bỏ vòng chạm, chip trạng thái, dòng chữ dưới ô màn (trừ màn tắt / đêm).
+- `TouchMirror`: vẽ thanh tác vụ từ danh sách cửa sổ app đang giữ (thứ tự mở, cửa sổ trên cùng, thu nhỏ); mới mở app = desktop, thanh trống.
+
 ## 2026-11-26.6 — Màn thiết bị chạm được như Windows XP, không tự xoay, desktop theo skill
 
 - **Điều khiển · `ControlScreen`** (`source/Control.dc.html`, `screen_specs.md` §8; ảnh 17 `Control*.png`, mới `ControlTapMin.png`,

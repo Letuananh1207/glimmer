@@ -1424,7 +1424,7 @@
   },
   "controlSending": "Đang gửi…",
   "@controlSending": {
-    "description": "Chip trên ô màn khi lệnh đang gửi"
+    "description": "Không dùng từ 2026-11-26.7. Chip trên ô màn khi lệnh đang gửi"
   },
   "controlFailed": "Thiết bị không nhận lệnh \"{command}\".",
   "@controlFailed": {
@@ -1487,7 +1487,7 @@
   "@controlOldFwTitle": {
     "description": "Thanh báo firmware cũ"
   },
-  "controlOldFwBody": "Thiết bị đang chạy {version}: chạm trên màn chưa dùng được, chỉ đổi app qua Start.",
+  "controlOldFwBody": "Thiết bị đang chạy {version}: chạm trên màn chưa dùng được, chỉ mở app qua Start.",
   "@controlOldFwBody": {
     "description": "Thanh báo firmware cũ",
     "placeholders": {
@@ -1546,19 +1546,19 @@
   },
   "controlOpenOnDevice": "· đang mở trên thiết bị",
   "@controlOpenOnDevice": {
-    "description": "Dòng dưới ô màn"
+    "description": "Không dùng từ 2026-11-26.7. Dòng dưới ô màn"
   },
   "controlJustOpened": "· vừa chạm trên thanh tác vụ",
   "@controlJustOpened": {
-    "description": "Dòng dưới ô màn sau khi chạm nút thanh tác vụ"
+    "description": "Không dùng từ 2026-11-26.7. Dòng dưới ô màn sau khi chạm nút thanh tác vụ"
   },
   "controlDesktop": "Desktop",
   "@controlDesktop": {
-    "description": "Tên màn chính trong dòng dưới ô màn"
+    "description": "Không dùng từ 2026-11-26.7. Tên màn chính trong dòng dưới ô màn"
   },
   "controlMinimizedNote": "· {app} đã thu nhỏ",
   "@controlMinimizedNote": {
-    "description": "Dòng dưới ô màn khi đang ở desktop sau thu nhỏ",
+    "description": "Không dùng từ 2026-11-26.7. Dòng dưới ô màn khi đang ở desktop sau thu nhỏ",
     "placeholders": {
       "app": {
         "type": "String"
@@ -1567,7 +1567,7 @@
   },
   "controlInstalledNote": "· {skill} vừa cài",
   "@controlInstalledNote": {
-    "description": "Dòng dưới ô màn khi vừa cài skill",
+    "description": "Không dùng từ 2026-11-26.7. Dòng dưới ô màn khi vừa cài skill",
     "placeholders": {
       "skill": {
         "type": "String"
@@ -1576,15 +1576,15 @@
   },
   "controlTapIconNote": "· chạm biểu tượng để mở",
   "@controlTapIconNote": {
-    "description": "Dòng dưới ô màn ở desktop"
+    "description": "Không dùng từ 2026-11-26.7. Dòng dưới ô màn ở desktop"
   },
   "controlMinimizing": "Thu nhỏ…",
   "@controlMinimizing": {
-    "description": "Chip trên ô màn khi vừa chạm _"
+    "description": "Không dùng từ 2026-11-26.7. Chip trên ô màn khi vừa chạm _"
   },
   "controlClosing": "Đang tắt {app}…",
   "@controlClosing": {
-    "description": "Chip khi vừa chạm ×",
+    "description": "Không dùng từ 2026-11-26.7. Chip khi vừa chạm ×",
     "placeholders": {
       "app": {
         "type": "String"
@@ -1593,11 +1593,11 @@
   },
   "controlOpening": "Đang mở…",
   "@controlOpening": {
-    "description": "Chip khi vừa chạm nút thanh tác vụ"
+    "description": "Không dùng từ 2026-11-26.7. Chip khi vừa chạm nút thanh tác vụ"
   },
   "controlOpeningApp": "Đang mở {app}…",
   "@controlOpeningApp": {
-    "description": "Chip khi vừa chạm biểu tượng desktop",
+    "description": "Không dùng từ 2026-11-26.7. Chip khi vừa chạm biểu tượng desktop",
     "placeholders": {
       "app": {
         "type": "String"
@@ -1606,7 +1606,7 @@
   },
   "controlInstalled": "Đã cài {skill}",
   "@controlInstalled": {
-    "description": "Chip (dấu tích mint) khi vừa cài skill",
+    "description": "Không dùng từ 2026-11-26.7. Chip (dấu tích mint) khi vừa cài skill",
     "placeholders": {
       "skill": {
         "type": "String"

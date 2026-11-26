@@ -153,10 +153,6 @@
     "xpSelect": {
       "value": "#316AC5",
       "use": "Nền nhãn biểu tượng desktop đang chọn (XP)"
-    },
-    "tapRing": {
-      "value": "rgba(255, 210, 63, 0.55)",
-      "use": "Viền ngoài vòng chạm trên ô màn"
     }
   },
   "font": {
@@ -286,8 +282,7 @@
     "deviceShell": 376,
     "deviceScreen": 360,
     "deviceScale": 1.5,
-    "roundButton": 56,
-    "tapRipple": 44
+    "roundButton": 56
   },
   "radius": {
     "card": 14,

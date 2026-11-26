@@ -41,9 +41,9 @@
 | `RoundToggle` | **2026-11-26.5:** nút tròn 56 + nhãn; bật = tint + viền màu nhấn. §8. |
 | `HoldCardPanel` | **2026-11-26.5:** thẻ amber "thẻ agent đang chiếm màn" + nút "Bỏ thẻ khỏi màn"; không duyệt hộ. §8. |
 | `CommandSnackbar` | **2026-11-26.5:** thanh báo nổi trên thanh dưới khi thiết bị không nhận lệnh, có Thử lại. §8. |
-| `TouchMirror` | **2026-11-26.6:** ô màn thiết bị 360 dp (240 px × 1.5) chạm được như chuột: nút cửa sổ, thanh tác vụ, start, biểu tượng desktop; giữ = chuột phải; vùng trúng nới 44. `screen_specs.md` §8. |
-| `TapRipple` | **2026-11-26.6:** vòng 44 tại điểm chạm, viền trắng + viền ngoài `tapRing`. §8. |
-| `StatusChip` | **2026-11-26.6:** chip 28 trên góc trái vỏ máy: vòng xoay / dấu tích + chữ trạng thái lệnh. §8. |
+| `TouchMirror` | **2026-11-26.7:** thanh tác vụ trên ô màn = cửa sổ đang mở (lõm = trên cùng, nổi = thu nhỏ / phía sau), mới vào trống; không vòng chạm, không chip. **2026-11-26.6:** ô màn thiết bị 360 dp (240 px × 1.5) chạm được như chuột: nút cửa sổ, thanh tác vụ, start, biểu tượng desktop; giữ = chuột phải; vùng trúng nới 44. `screen_specs.md` §8. |
+| `TapRipple` | **2026-11-26.7: bỏ.** **2026-11-26.6:** vòng 44 tại điểm chạm, viền trắng + viền ngoài `tapRing`. §8. |
+| `StatusChip` | **2026-11-26.7: bỏ.** **2026-11-26.6:** chip 28 trên góc trái vỏ máy: vòng xoay / dấu tích + chữ trạng thái lệnh. §8. |
 | `TouchLegend` | **2026-11-26.6:** thẻ "Chạm màn như dùng chuột", 6 ký hiệu 2 cột. §8. |
 | `DesktopIcon` | **2026-11-26.6:** biểu tượng skill trên desktop (icon dock trắng ×1.6 + nhãn bóng đen); chọn = nhãn nền `xpSelect` + viền chấm. §8. |
 | `StartMenuSheet` | **2026-11-26.6:** Start menu kiểu XP trong bảng dưới: đầu Clawd, 2 cột (ghim / hệ thống), Tất cả chương trình, Tắt màn · Khởi động lại. §8. |
