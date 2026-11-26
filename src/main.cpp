@@ -31,7 +31,8 @@
 #include "chrome.h"
 #include "attention.h"
 #include "skill_core.h"
-#include "dock.h"
+#include "xp.h"
+#include "taskbar.h"
 #include "photos.h"
 
 // ── Channel registry — declared in their own .cpp files ─────────────────────
@@ -62,6 +63,7 @@ extern void chForecastTick   (const ChannelCtx&);
 extern void chTrendTick      (const ChannelCtx&);
 extern void chInfoTick       (const ChannelCtx&);
 extern void chNightTick      (const ChannelCtx&);
+extern bool chAttentionNeedsYou();
 
 static const Channel kChannels[] = {
     //  name        enabled              draw                  tick           skill (nullptr = system)
@@ -191,28 +193,68 @@ static void recomputeActive() {
         if (!strcmp(kChannels[g_activeIdx[i]].name, cur)) { g_activePtr = i; break; }
 }
 
-// Agents waiting on the user (approval / question) — the dock's Claude badge.
+// Agents waiting on the user (approval / question) — the badge on the
+// taskbar's Claude button.
 static int waitingNow() {
     return Attention::countWaiting(AttentionQueue::get(), AttentionQueue::now());
 }
 
+// Slide-progress colour on the active taskbar button (XP sources): the
+// button's colour, Codex its own lilac.
+static uint16_t slideAccent(const char* name, XPCore::Btn b) {
+    if (!strcmp(name, "Codex")) return Theme::LILAC;
+    switch (b) {
+        case XPCore::BTN_PHOTO:   return Theme::MINT;
+        case XPCore::BTN_WEATHER: return Theme::SKY;
+        case XPCore::BTN_CLOCK:   return Theme::AMBER;
+        default:                  return Theme::CORAL;
+    }
+}
+
+static bool rotating() {
+    if (!g_settings.autoRotate || g_nightFace) return false;
+    // Photo alone in the rotation still steps through the photos.
+    return g_activeCount > 1
+        || (g_activeCount == 1 && Photos::count() > 1 && !strcmp(kChannels[g_activeIdx[0]].name, "Photo"));
+}
+
+// What the taskbar shows now (P-2026-11-26.8): enabled skills' buttons, the
+// active channel's pressed, the Claude button orange on a card that needs
+// the user, the waiting badge, slide progress (none when not rotating, on a
+// Photo screen with nothing to show, or on a held card's orange button).
+static XPCore::BarState barState(uint32_t now) {
+    XPCore::BarState s;
+    s.mask  = XPCore::buttonMask(g_settings.skillsOn.c_str());
+    s.badge = (int8_t)XPCore::badgeGlyph(waitingNow());
+    if (g_activeCount == 0) return s;
+    const char* name = kChannels[g_activeIdx[g_activePtr]].name;
+    s.active = XPCore::buttonFor(name);
+    s.accent = slideAccent(name, (XPCore::Btn)s.active);
+    s.flash  = !strcmp(name, "Attention") && chAttentionNeedsYou();
+    const bool photoEmpty = !strcmp(name, "Photo") && chPhotoEmpty();
+    if (rotating() && !photoEmpty)
+        s.progress = (uint8_t)XPCore::progressLen(now - g_lastSlide,
+                                                  (uint32_t)g_settings.channelSec * 1000UL);
+    return s;
+}
+
 static void drawActive() {
     if (g_activeCount == 0) {
-        Display::drawError("CHƯA CÓ KÊNH", "bật kênh trên trang web");
+        XP::drawNoChannels();                               // XP-NoChannels
+        Taskbar::draw(barState(millis()), g_settings.clock24h);
         return;
     }
     // Re-arm splash/connecting/OTA partial-redraw state in case we re-enter
     // a system screen later (e.g., WiFi reconnect drops to drawConnecting).
     Display::resetSystemScreens();
-    // Quiet cut: the channel's draw() clears + paints in ~80 ms.
+    // Quiet cut: the channel's draw() paints its window in ~80 ms.
     ChannelCtx ctx = makeCtx();
     const char* name = kChannels[g_activeIdx[g_activePtr]].name;
+    XP::setDefaultIcon(XPCore::iconFor(name));   // for the legacy Display::statusBar
     kChannels[g_activeIdx[g_activePtr]].draw(ctx);
-    // Dock after the channel: draw() clears the screen, the dock sits on top.
-    Dock::Tab tab = Dock::tabFor(name);
-    if (tab == Dock::TAB_NO_DOCK) Dock::hide();
-    else Dock::draw(Dock::tabMask(g_settings.skillsOn.c_str()), tab,
-                    Theme::channelColor(name), waitingNow());
+    // Taskbar after the channel (main.cpp owns y 214..239); none on Night.
+    if (XPCore::buttonFor(name) == XPCore::BTN_NO_BAR) Taskbar::hide();
+    else Taskbar::draw(barState(millis()), g_settings.clock24h);
 }
 
 // Recompute, and repaint only when what should be on screen changed.
@@ -225,47 +267,6 @@ static void refreshScreen(bool force) {
         drawActive();
         g_lastSlide = millis();
     }
-}
-
-// 2-px strip at y=230.
-//   It fills in the channel's colour as the slide window elapses (empty when
-//   auto-rotate is off). An agent waiting on the user shows as the dock's
-//   Claude badge (P-2026-11-25.3); only screens without a dock — the attention
-//   card and the night face — still turn the strip solid (approval → amber,
-//   question → sky) so "something is waiting" stays visible there. Otherwise
-//   the strip is hidden on those two.
-static void drawIndicator(uint32_t now) {
-    using namespace Layout;
-    if (g_apMode || g_activeCount == 0) return;
-    const Attention::Queue& aq = AttentionQueue::get();
-    const char* name = kChannels[g_activeIdx[g_activePtr]].name;
-    const bool docked = Dock::tabFor(name) != Dock::TAB_NO_DOCK;
-    // Agents waiting: the dock badge when the dock has a Claude tab, else the strip.
-    if (!Dock::showsBadge() && Attention::countWaiting(aq, AttentionQueue::now()) > 0) {
-        uint16_t c = Attention::countKind(aq, Attention::K_APPROVAL) ? Theme::AMBER : Theme::SKY;
-        tft.fillRect(0, INDICATOR_Y, SCREEN_W, INDICATOR_H, c);
-        return;
-    }
-    if (g_nightFace || !docked) {
-        tft.fillRect(0, INDICATOR_Y, SCREEN_W, INDICATOR_H, Theme::BG);
-        return;
-    }
-    // Photo with nothing to show: solid MUTED, the slide has no progress to tell.
-    if (!strcmp(name, "Photo") && chPhotoEmpty()) {
-        tft.fillRect(0, INDICATOR_Y, SCREEN_W, INDICATOR_H, Theme::MUTED);
-        return;
-    }
-    if (g_activeCount <= 1) return;
-
-    int w = 0;
-    if (g_settings.autoRotate) {
-        uint32_t slideMs = (uint32_t)g_settings.channelSec * 1000UL;
-        uint32_t elapsed = now - g_lastSlide;
-        if (elapsed > slideMs) elapsed = slideMs;
-        w = (int)((uint64_t)SCREEN_W * elapsed / slideMs);
-    }
-    tft.fillRect(0, INDICATOR_Y, SCREEN_W, INDICATOR_H, Theme::PANEL);
-    if (w > 0) tft.fillRect(0, INDICATOR_Y, w, INDICATOR_H, Theme::channelColor(name));
 }
 
 // Manual switching (web /api/channel, MCP).
@@ -591,10 +592,10 @@ void setup() {
     Serial.println(F("\n=== glimmer v" FW_VERSION " ==="));
 
     Display::begin();
+    Storage::begin();          // mount LittleFS first: the boot logo's fonts live there
     Display::drawSplash("đang khởi động...");
-    delay(400);
+    Display::splashWait(400);
 
-    Storage::begin();
     g_settings = Storage::load();
     Display::setBrightness(g_settings.brightness);
     Display::setInvert(g_settings.invertDisplay);
@@ -604,25 +605,19 @@ void setup() {
     Photos::begin();
     Api::refreshCred(g_settings, g_claude, g_codex);
 
-    Display::drawSplash("đang kết nối Wi-Fi");
+    Display::splashStep(millis() / 200);
     if (!tryConnect()) {
         startAPMode();
     } else {
-        Display::drawSplash("đang đồng bộ giờ");
+        // Theo XP thật the welcome screen stays up while the session loads
+        // (time sync, first fetches) — no boot screen in between.
+        Display::drawConnecting(g_settings.wifiSSID.c_str(), 0);
         onStaUp();
     }
 
     Web::begin(g_settings);
 
     if (!g_apMode) {
-        // Personalized greeting splash
-        if (!g_settings.userName.isEmpty()) {
-            char greet[40];
-            snprintf(greet, sizeof(greet), "Xin chào, %s", g_settings.userName.c_str());
-            Utf8::trimPartial(greet);
-            Display::drawSplash(greet);
-            delay(900);
-        }
         applyBrightness();
         refreshScreen(true);
     }
@@ -761,14 +756,14 @@ void loop() {
         lastTick = now;
         auto tickFn = kChannels[g_activeIdx[g_activePtr]].tick;
         if (tickFn) tickFn(makeCtx());
-        Dock::tick(waitingNow());   // no-op without a dock on screen
     }
 
-    // Indicator strip refreshes ~4 Hz (touches only y=230..231)
-    static uint32_t lastInd = 0;
-    if (!g_apMode && now - lastInd >= 250) {
-        lastInd = now;
-        drawIndicator(now);
+    // Taskbar ~4 Hz: repaints only a button whose look / badge / slide
+    // progress changed, and the tray clock once a minute (no-op on Night).
+    static uint32_t lastBar = 0;
+    if (!g_apMode && now - lastBar >= 250) {
+        lastBar = now;
+        Taskbar::update(barState(now), g_settings.clock24h);
     }
 
     delay(10);

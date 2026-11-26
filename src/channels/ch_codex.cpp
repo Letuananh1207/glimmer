@@ -1,22 +1,40 @@
-// Codex — Claude-style hero layout (mirrors ch_claude.cpp with LILAC accent).
-// Bottom: 24-h strip of the weekly allowance (hourly, from the usage history
-// ring) with the weekly PACE on its label row.
-// Dock layout (P-2026-11-25.3): content in x 40..228 (Layout::CONTENT_*);
-// main.cpp paints the dock at x 2..31 — no band here starts left of x 40.
+// Codex — XP window (P-2026-11-26.8/.9, screen_specs §17 XP-Codex-*).
+//
+//   title     "Codex" (+ " · <model label>" / " · cũ 18P" / " · khóa lỗi")
+//   y 28      hero label from the window length ("Hạn mức tuần")  JBMono-11 LABEL
+//   y 40      hero "41" VT323-86 + "%" VT323-44 at (10+w+2, 70)  xpLilac / usage colour
+//   y 28..54  limit credits "tín dụng" + "$4.20" TR 229 (only when the account has some)
+//   y 68/84   "đặt lại sau" TR (229,68) muted + countdown TR (229,84) JBMono-12B RED
+//   y 102     XP progress 220×14 (blocks 1 px from the field edge)
+//   y 128     groupbox (10,128,220,30) secondary window: tag/"Đã dùng" TL (18,137),
+//             "12% · 2G 14P" TR (222,137)
+//   y 170     groupbox (10,170,220,24) "Đặt lại tuần": reset credits TL (18,177),
+//             weekly pace TR (222,177) ("~70% khi đặt lại" / "hết sau 6G")
+//   y 198     credential info strip when the token is bad but data is shown
+// The pre-XP 24-h spark strip is gone (not in the design).
 
 #include "channel.h"
 #include "chrome.h"
 #include "display.h"
 #include "history.h"
+#include "timeutil.h"
 #include "theme.h"
 #include "config.h"
 #include "layout.h"
+#include "utf8.h"
+#include "xp.h"
 #include <math.h>
 #include <time.h>
 
-static constexpr int kL = Layout::CONTENT_LEFT;    // 40
-static constexpr int kR = Layout::CONTENT_RIGHT;   // 228
-static constexpr int kW = Layout::CONTENT_W;       // 188
+using namespace Theme::XP;
+
+static constexpr int kL = Layout::XP_LEFT;    // 10
+static constexpr int kR = Layout::XP_RIGHT;   // 229
+static constexpr int kHeroY = 40, kPctY = 70, kBarY = 102;
+static constexpr int kHeroClearR = 150;       // hero clears x 10..149; right column x 150..229
+static constexpr int kSecY = 128, kSecH = 30;
+static constexpr int kRstY = 170, kRstH = 24;
+static constexpr int kStripY = 198;
 
 // ── tick cache (position-based) ──
 static float s_heroPct = -2.f;
@@ -25,243 +43,231 @@ static float s_credits = -2.f;
 static bool  s_stale   = false;
 static char  s_rightLine[16] = "";
 static char  s_secSub[40] = "";
-static char  s_pace[40]      = "";
+static char  s_pace[40]   = "";
 static char  s_resets[40] = "";
 static Cred  s_cred = Cred::NOT_SET;
-static uint32_t s_sparkHour = 0;
-static float s_sparkPct = -2.f;     // primaryPct the strip's current bar shows
 static MetaSlot s_meta;
-static int   s_loadDot = -1;
+static bool  s_loading = false;
+static uint32_t s_loadStep = 0;
 
 static MetaSlot metaFor(const ChannelCtx& ctx) {
-    return usageMeta(*ctx.settings, ctx.codex->lastOk, VendorStatus::OPENAI,
-                     ctx.settings->codexModelLabel.c_str(), ctx.codex->cred, ctx.codex->jwtExp);
+    return xpUsageMeta(*ctx.settings, ctx.codex->lastOk, VendorStatus::OPENAI,
+                       ctx.settings->codexModelLabel.c_str(), ctx.codex->cred, ctx.codex->jwtExp);
 }
 
 bool chCodexEnabled(const ChannelCtx& ctx) {
     return ctx.settings && ctx.settings->showCodex && !ctx.settings->codexToken.isEmpty();
 }
 
-// Human label for a rate-limit window from its length in seconds.
+// Label for a rate-limit window from its length in seconds.
 static void windowLabel(long sec, char* buf, size_t n) {
-    if      (sec >= 6L * 24 * 3600 - 3600) snprintf_P(buf, n, PSTR("TUẦN"));
-    else if (sec >= 20L * 3600)            snprintf_P(buf, n, PSTR("NGÀY"));
-    else if (sec >= 3600)                  snprintf_P(buf, n, PSTR("%ldH"), sec / 3600);
-    else if (sec > 0)                      snprintf_P(buf, n, PSTR("%ldM"), sec / 60);
-    else                                   buf[0] = '\0';
+    if      (sec >= 6L * 24 * 3600 - 3600) snprintf_P(buf, n, PSTR("Hạn mức tuần"));
+    else if (sec >= 20L * 3600)            snprintf_P(buf, n, PSTR("Hạn mức ngày"));
+    else if (sec >= 3600)                  snprintf_P(buf, n, PSTR("Phiên %ld giờ"), sec / 3600);
+    else if (sec > 0)                      snprintf_P(buf, n, PSTR("Phiên %ld phút"), sec / 60);
+    else                                   snprintf_P(buf, n, PSTR("Hạn mức"));
 }
 
-// Label for the secondary row: a per-model tag (e.g. "SPARK") if present,
-// otherwise the window length.
-static void secondaryLabel(const CodexData& d, long winSec, char* buf, size_t n) {
-    if (d.secondaryTag[0]) { strncpy(buf, d.secondaryTag, n - 1); buf[n - 1] = '\0'; }
-    else                     windowLabel(winSec, buf, n);
-}
+static uint16_t heroColor(float pct, bool dim) { return dim ? DIM : xpUsageColor(pct, LILAC); }
 
-static void paintRightStack(const CodexData& d, time_t heroReset) {
-    // y 26..49 = VT323-32 ink; stops above the hero digits (ink from y 53).
-    tft.fillRect(SCREEN_W - 110, 26, 100, 24, Theme::BG);
-    if (d.creditsRemain >= 0) {
-        char credits[16]; snprintf_P(credits, sizeof(credits), PSTR("$%.2f"), d.creditsRemain);
-        Display::useFont("VT323-32");
-        tft.setTextDatum(TR_DATUM);
-        tft.setTextColor(Theme::SKY, Theme::BG);
-        tft.drawString(credits, kR, 26);
-        strncpy(s_rightLine, credits, sizeof(s_rightLine) - 1);
-    } else if (heroReset > 0) {
-        String r = Api::formatCountdown(heroReset);
-        Display::useFont("VT323-32");
-        tft.setTextDatum(TR_DATUM);
-        tft.setTextColor(Theme::LILAC, Theme::BG);
-        tft.drawString(r, kR, 26);
-        strncpy(s_rightLine, r.c_str(), sizeof(s_rightLine) - 1);
-    } else {
-        s_rightLine[0] = 0;
-    }
-}
-
-static void paintPrimaryHero(float pct, bool stale) {
-    char pctBuf[8];
-    if (pct < 0) snprintf_P(pctBuf, sizeof(pctBuf), PSTR("--"));
-    else         snprintf_P(pctBuf, sizeof(pctBuf), PSTR("%.0f"), Api::shownPct(pct));
-    // x 40..163 — wide enough for "100%" (ends at 162).
-    tft.fillRect(kL, 46, 124, 76, Theme::BG);
-
-    // Stale data stays visible but dimmed — it is not a live reading.
-    uint16_t uc = stale ? Theme::MUTED : Display::usageColor(pct);
-    Display::useFont("VT323-86");
-    tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(uc, Theme::BG);
-    tft.drawString(pctBuf, kL, 46);
-    int heroW = tft.textWidth(pctBuf);
-    int heroH = tft.fontHeight();
-
-    Display::useFont("VT323-44");
-    tft.setTextColor(uc, Theme::BG);
-    int pctY = 46 + (heroH - tft.fontHeight()) - 4;
-    tft.drawString("%", kL + heroW + 2, pctY);
-
-    Display::pixelBar(kL, 128, kW, 8,
-                     pct < 0 ? 0 : Api::shownPct(pct), uc);
-}
-
-static void paintSecondary(float pct, time_t secReset, const char* label) {
-    tft.fillRect(kL, 150, SCREEN_W - kL, 20, Theme::BG);
-
-    Display::useFont("JBMono-11");
-    tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString(label, kL, 150);
-
-    String right;
-    if (secReset > 0) right = Api::formatCountdown(secReset);
-    else if (pct >= 0) right = String((int)(Api::shownPct(pct) + 0.5f)) + "%";
-    else               right = "--";
-    tft.setTextDatum(TR_DATUM);
-    tft.setTextColor(Theme::INK_DIM, Theme::BG);
-    tft.drawString(right, kR, 150);
-    strncpy(s_secSub, right.c_str(), sizeof(s_secSub) - 1);
-
-    uint16_t uc = Display::usageColor(pct);
-    Display::pixelBar(kL, 164, kW, 4,
-                     pct < 0 ? 0 : Api::shownPct(pct), uc);
-}
-
-static void paceFor(const CodexData& d, char* buf, size_t n) {
-    History::Pace p = History::pace(UsageHistory::ring(), History::CODEX_WEEK,
-                                    d.primaryPct, time(nullptr), d.primaryReset);
-    History::paceText(p, buf, n);
-}
-
-// Bottom region y 174..219, in rows of 14 px:
-//   [credential banner]   when the token is expired/rejected/blocked
-//   24H + weekly pace     always
-//   RESETS · 2 LEFT …     when the account has limit-reset credits (and no banner)
-// then one bar per hour (oldest left, current hour right, in LILAC) = % of
-// the weekly allowance remaining at that hour, filling what is left.
-static void paintSparkBar(const CodexData& d, const char* pace) {
-    const int sx = kL, sw = kW, bottom = 219;
-    const int barW = sw / 24;                // 7: bars 6 px, step 7, x 40..206
-    tft.fillRect(kL, 174, SCREEN_W - kL, 46, Theme::BG);
-
-    int y = 174;
-    if (CredState::bad(d.cred)) { Chrome::credBanner(y, false, d.cred); y += 14; }
-
-    Display::useFont("JBMono-11");
-    tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString("24H", sx, y);
-    if (pace[0]) {
-        tft.setTextDatum(TR_DATUM);
-        tft.setTextColor(strncmp(pace, "HẾT", strlen("HẾT")) == 0 ? Theme::CORAL : Theme::INK_DIM, Theme::BG);
-        tft.drawString(pace, kR, y);
-    }
-    y += 14;
-    strncpy(s_pace, pace, sizeof(s_pace) - 1);
-
-    char resets[40]; Chrome::resetsText(d.resets, resets, sizeof(resets));
-    if (resets[0] && !CredState::bad(d.cred)) {
-        tft.setTextDatum(TL_DATUM);
-        tft.setTextColor(Theme::MINT, Theme::BG);
-        tft.drawString("ĐẶT LẠI", sx, y);
-        tft.setTextDatum(TR_DATUM);
-        tft.setTextColor(Theme::INK_DIM, Theme::BG);
-        tft.drawString(resets, kR, y);
-        y += 14;
-    }
-    strncpy(s_resets, resets, sizeof(s_resets) - 1);
-    s_cred = d.cred;
-
-    const int sh = bottom - y;
-    uint32_t hourNow = (uint32_t)(time(nullptr) / 3600);
-    const History::Ring& r = UsageHistory::ring();
-    for (int i = 0; i < 24; i++) {
-        int bx = sx + i * barW;
-        int8_t v = History::at(r, hourNow - 23 + i, History::CODEX_WEEK);
-        if (v < 0) {
-            tft.drawFastHLine(bx, bottom, barW - 1, Theme::LINE);
-            continue;
-        }
-        int bh = (v * sh) / 100;
-        if (bh < 1) bh = 1;
-        uint16_t c = (i == 23) ? Theme::LILAC : Theme::INK_DIM;
-        tft.fillRect(bx, bottom + 1 - bh, barW - 1, bh, c);
-    }
-    s_sparkHour = hourNow;
-}
-
-void chCodexDraw(const ChannelCtx& ctx) {
-    Display::clear();
-    s_meta = metaFor(ctx);
-    Display::statusBar("Codex", s_meta.text, Theme::LILAC, s_meta.color);
-
+struct Windows {
+    float heroPct, secPct; time_t heroRst, secRst; long heroWin, secWin;
+};
+static Windows windowsFor(const ChannelCtx& ctx) {
     const CodexData& d = *ctx.codex;
-    // Nothing to show yet and something is wrong: the credential/offline card.
-    if (!d.valid && (CredState::bad(d.cred) || d.err[0])) {
-        Chrome::credCard(false, d.cred, d.jwtExp, d.err);
-        s_heroPct = -2.f; s_secPct = -2.f; s_credits = -2.f;
-        s_rightLine[0] = 0;
-        return;
-    }
-    if (!d.valid) {
-        Display::useFont("JBMono-16B");
-        tft.setTextDatum(MC_DATUM);
-        tft.setTextColor(Theme::MUTED, Theme::BG);
-        tft.drawString("Đang tải", Layout::CONTENT_MID, 100);
-        Display::loadingDots(Layout::CONTENT_MID - 21, 128, 0, Theme::LILAC);
-        s_loadDot = 0;
-        return;
-    }
-
-    // The weekly window is the primary now that Codex dropped the 5-hour cap.
     // Only swap hero/secondary when there are two *real* rate-limit windows; a
     // per-model additional limit (secondaryTag set) never takes the hero slot.
     const bool realSecondary = d.secondaryPct >= 0 && d.secondaryTag[0] == '\0';
-    const bool swapped = realSecondary && ctx.settings->codexWeeklyHero;
-    const float heroPct  = swapped ? d.secondaryPct    : d.primaryPct;
-    const float secPct   = swapped ? d.primaryPct      : d.secondaryPct;
-    const time_t heroRst = swapped ? d.secondaryReset  : d.primaryReset;
-    const time_t secRst  = swapped ? d.primaryReset    : d.secondaryReset;
-    const long  heroWin  = swapped ? d.secondaryWinSec : d.primaryWinSec;
-    const long  secWin   = swapped ? d.primaryWinSec   : d.secondaryWinSec;
+    const bool sw = realSecondary && ctx.settings->codexWeeklyHero;
+    return { sw ? d.secondaryPct : d.primaryPct,   sw ? d.primaryPct : d.secondaryPct,
+             sw ? d.secondaryReset : d.primaryReset, sw ? d.primaryReset : d.secondaryReset,
+             sw ? d.secondaryWinSec : d.primaryWinSec, sw ? d.primaryWinSec : d.secondaryWinSec };
+}
 
-    char heroLbl[12]; windowLabel(heroWin, heroLbl, sizeof(heroLbl));
+// Right column x 150..229, y 28..101: credits (when any) + "đặt lại sau" + countdown.
+static void paintRightColumn(const CodexData& d, time_t heroReset) {
+    tft.fillRect(kHeroClearR, 28, kR + 1 - kHeroClearR, kBarY - 28, BODY);
+    if (d.creditsRemain >= 0) {
+        char credits[16]; snprintf_P(credits, sizeof(credits), PSTR("$%.2f"), d.creditsRemain);
+        Display::useFont("JBMono-11");
+        tft.setTextDatum(TR_DATUM);
+        tft.setTextColor(MUTED, BODY);
+        tft.drawString("tín dụng", kR, 28);
+        Display::useFont("JBMono-12B");
+        tft.setTextColor(s_stale ? DIM : BLACK, BODY);
+        tft.drawString(credits, kR, 42);
+    }
+    String r = heroReset > 0 ? Api::formatCountdown(heroReset) : String("--");
+    Display::useFont("JBMono-11");
+    tft.setTextDatum(TR_DATUM);
+    tft.setTextColor(MUTED, BODY);
+    tft.drawString("đặt lại sau", kR, 68);
     Display::useFont("JBMono-12B");
+    tft.setTextColor(s_stale ? DIM : RED, BODY);
+    tft.drawString(r, kR, 84);
+    Utf8::copy(s_rightLine, sizeof(s_rightLine), r.c_str());
+}
+
+static void paintHero(float pct) {
+    char pctBuf[8];
+    if (pct < 0) snprintf_P(pctBuf, sizeof(pctBuf), PSTR("--"));
+    else         snprintf_P(pctBuf, sizeof(pctBuf), PSTR("%.0f"), Api::shownPct(pct));
+    tft.fillRect(kL, kHeroY, kHeroClearR - kL, kBarY - kHeroY, BODY);   // x 10..149, y 40..101
+
+    const uint16_t uc = heroColor(pct, s_stale);
+    Display::useFont("VT323-86");
     tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString(heroLbl, kL, 32);
+    tft.setTextColor(uc, BODY);
+    tft.drawString(pctBuf, kL, kHeroY);
+    const int heroW = tft.textWidth(pctBuf);
+    Display::useFont("VT323-44");
+    tft.setTextColor(uc, BODY);
+    tft.drawString("%", kL + heroW + 2, kPctY);           // "100%" ends at x 132
 
-    s_stale = dimData(*ctx.settings, d.lastOk, d.cred);
-    paintRightStack(d, heroRst);
-    paintPrimaryHero(heroPct, s_stale);
+    XP::progress(kL, kBarY, kR + 1 - kL, 14, pct < 0 ? 0 : Api::shownPct(pct), uc, 1);
+}
 
-    Display::dotsDivider(kL, 146, kW);
+// Secondary text: "12% · 2G 14P", "12%", the countdown alone, or "--".
+static void secText(float pct, time_t reset, char* buf, size_t n) {
+    if (pct >= 0 && reset > 0)
+        snprintf_P(buf, n, PSTR("%d%% \xC2\xB7 %s"), (int)(Api::shownPct(pct) + 0.5f),
+                   Api::formatCountdown(reset).c_str());
+    else if (pct >= 0) snprintf_P(buf, n, PSTR("%d%%"), (int)(Api::shownPct(pct) + 0.5f));
+    else if (reset > 0) Utf8::copy(buf, n, Api::formatCountdown(reset).c_str());
+    else snprintf_P(buf, n, PSTR("--"));
+}
 
-    char secLbl[16]; secondaryLabel(d, secWin, secLbl, sizeof(secLbl));
-    paintSecondary(secPct, secRst, secLbl);
+// Groupbox interior: left TL (18,137) — the per-model tag ("Spark") or
+// "Đã dùng"; right TR (222,137). No secondary window at all: "Không có".
+static void paintSecondary(const CodexData& d, float pct, time_t reset) {
+    tft.fillRect(kL + 2, 135, kR - kL - 3, 15, BODY);       // y 135..149, inside the box
+    Display::useFont("JBMono-11");
+    char right[40]; secText(pct, reset, right, sizeof(right));
+    Utf8::copy(s_secSub, sizeof(s_secSub), right);
+    if (pct < 0 && reset <= 0 && !d.secondaryTag[0]) {
+        tft.setTextDatum(TL_DATUM);
+        tft.setTextColor(MUTED, BODY);
+        tft.drawString("Không có", 18, 137);
+        return;
+    }
+    tft.setTextDatum(TR_DATUM);
+    tft.setTextColor(s_stale ? DIM : BLACK, BODY);
+    tft.drawString(right, 222, 137);
+    const int room = 222 - tft.textWidth(right) - 8 - 18;
 
-    Display::dotsDivider(kL, 170, kW);
+    char left[24];
+    if (d.secondaryTag[0]) { Utf8::copy(left, sizeof(left), d.secondaryTag); Utf8::sentence(left); }
+    else                   snprintf_P(left, sizeof(left), PSTR("Đã dùng"));
+    XP::fitText(left, room);
+    tft.setTextDatum(TL_DATUM);
+    tft.setTextColor(BLACK, BODY);                 // a label: stays black when stale (XP-Codex-Stale)
+    tft.drawString(left, 18, 137);
+}
 
-    char pace[40]; paceFor(d, pace, sizeof(pace));
-    paintSparkBar(d, pace);
-    s_sparkPct = d.primaryPct;
+// Weekly pace, lower case (history_core's paceText is the pre-XP upper case).
+static uint16_t paceFor(const CodexData& d, char* buf, size_t n) {
+    if (n) buf[0] = '\0';
+    History::Pace p = History::pace(UsageHistory::ring(), History::CODEX_WEEK,
+                                    d.primaryPct, time(nullptr), d.primaryReset);
+    if (p.kind == History::Pace::EMPTY) {
+        char t[8]; TimeUtil::shortDuration(p.sec, t, sizeof(t));
+        snprintf_P(buf, n, PSTR("hết sau %s"), t);
+        return RED;
+    }
+    if (p.kind == History::Pace::AT_RESET) snprintf_P(buf, n, PSTR("~%d%% khi đặt lại"), p.pct);
+    return MUTED;
+}
 
-    // Seed cache
-    s_heroPct = (heroPct < 0) ? -2.f : heroPct;
-    s_secPct  = (secPct  < 0) ? -2.f : secPct;
+// "Đặt lại tuần" interior: credits left TL (18,177), pace TR (222,177).
+static void paintResets(const CodexData& d) {
+    tft.fillRect(kL + 2, 176, kR - kL - 3, 16, BODY);       // y 176..191, inside the box
+    char pace[40]; uint16_t pc = paceFor(d, pace, sizeof(pace));
+    char resets[40]; Chrome::resetsText(d.resets, resets, sizeof(resets));
+    Utf8::copy(s_pace, sizeof(s_pace), pace);
+    Utf8::copy(s_resets, sizeof(s_resets), resets);
+
+    Display::useFont("JBMono-11");
+    int room = 222 - 18;
+    if (pace[0]) {
+        tft.setTextDatum(TR_DATUM);
+        tft.setTextColor(pc, BODY);
+        tft.drawString(pace, 222, 177);
+        room = 222 - tft.textWidth(pace) - 8 - 18;
+    }
+    // Too wide beside the pace: "còn 2 · đến 12/10" → "còn 2".
+    if (resets[0] && tft.textWidth(resets) > room) {
+        char* cut = strstr(resets, " \xC2\xB7 ");
+        if (cut) *cut = '\0';
+    }
+    const bool none = !resets[0];
+    if (none) snprintf_P(resets, sizeof(resets), PSTR("Chưa có lượt"));
+    XP::fitText(resets, room);
+    tft.setTextDatum(TL_DATUM);
+    tft.setTextColor(none ? MUTED : BLACK, BODY);
+    tft.drawString(resets, 18, 177);
+}
+
+// Token bad but data shown: the yellow strip under the groups (y 198..211).
+static void paintStrip(const CodexData& d) {
+    tft.fillRect(Layout::XP_BODY_X, kStripY - 2, Layout::XP_BODY_W, Layout::XP_BOTTOM - kStripY + 2, BODY);
+    if (CredState::bad(d.cred)) Chrome::credBanner(kL, kStripY, kR + 1 - kL, false, d.cred);
+    s_cred = d.cred;
+}
+
+void chCodexDraw(const ChannelCtx& ctx) {
+    XP::window("Codex", XPCore::ICON_CLAWD, false);
+    s_meta = metaFor(ctx);
+    XP::titleMeta(s_meta.text);
+    s_heroPct = -2.f; s_secPct = -2.f; s_credits = -2.f;
+    s_rightLine[0] = 0; s_secSub[0] = 0;
+    s_loading = false;
+
+    const CodexData& d = *ctx.codex;
+    // Nothing to show yet and something is wrong: the XP message box.
+    if (!d.valid && (CredState::bad(d.cred) || d.err[0])) {
+        Chrome::credCard(false, d.cred, d.jwtExp, d.err);
+        return;
+    }
+    if (!d.valid) {
+        XP::loading("Đang tải...");
+        s_loading = true;
+        s_loadStep = ctx.now_ms / 200;
+        XP::loadingStep(s_loadStep);
+        return;
+    }
+
+    const Windows w = windowsFor(ctx);
+    s_stale = Api::isStale(d.lastOk, *ctx.settings);
+
+    char heroLbl[24]; windowLabel(w.heroWin, heroLbl, sizeof(heroLbl));
+    Display::useFont("JBMono-11");
+    tft.setTextDatum(TL_DATUM);
+    tft.setTextColor(LABEL, BODY);
+    tft.drawString(heroLbl, kL, 28);
+
+    paintHero(w.heroPct);
+    paintRightColumn(d, w.heroRst);
+
+    char secLbl[24]; windowLabel(w.secWin, secLbl, sizeof(secLbl));
+    XP::groupBox(kL, kSecY, kR + 1 - kL, kSecH, secLbl);
+    paintSecondary(d, w.secPct, w.secRst);
+
+    XP::groupBox(kL, kRstY, kR + 1 - kL, kRstH, "Đặt lại tuần");
+    paintResets(d);
+    paintStrip(d);
+
+    s_heroPct = (w.heroPct < 0) ? -2.f : w.heroPct;
+    s_secPct  = (w.secPct  < 0) ? -2.f : w.secPct;
     s_credits = d.creditsRemain;
 }
 
 void chCodexTick(const ChannelCtx& ctx) {
     if (!ctx.codex) return;
     const CodexData& d = *ctx.codex;
-    if (!d.valid && (CredState::bad(d.cred) || d.err[0])) return;   // static card
-    if (!d.valid) {                       // loading — sweep the chase dots
-        int lit = (ctx.now_ms / 150) % 5;
-        if (lit != s_loadDot) {
-            Display::loadingDots(Layout::CONTENT_MID - 21, 128, lit, Theme::LILAC);
-            s_loadDot = lit;
-        }
+    if (!d.valid && (CredState::bad(d.cred) || d.err[0])) return;   // static message box
+    if (!d.valid) {                       // loading — advance the marquee
+        uint32_t step = ctx.now_ms / 200;
+        if (s_loading && step != s_loadStep) { XP::loadingStep(step); s_loadStep = step; }
         return;
     }
 
@@ -272,64 +278,43 @@ void chCodexTick(const ChannelCtx& ctx) {
     static int s_cdMin = -1;
     const bool minTick = (tm.tm_min != s_cdMin);
 
-    const bool realSecondary = d.secondaryPct >= 0 && d.secondaryTag[0] == '\0';
-    const bool swapped = realSecondary && ctx.settings->codexWeeklyHero;
-    const float heroPct  = swapped ? d.secondaryPct    : d.primaryPct;
-    const float secPct   = swapped ? d.primaryPct      : d.secondaryPct;
-    const time_t heroRst = swapped ? d.secondaryReset  : d.primaryReset;
-    const time_t secRst  = swapped ? d.primaryReset    : d.secondaryReset;
-    const long  secWin   = swapped ? d.primaryWinSec   : d.secondaryWinSec;
+    const Windows w = windowsFor(ctx);
+    const bool stale = Api::isStale(d.lastOk, *ctx.settings);
+    const bool dimChanged = stale != s_stale;
+    s_stale = stale;
 
-    // Right stack — repaint when credits change OR countdown text changes
-    bool rightDirty = false;
-    if (d.creditsRemain >= 0) {
-        if (fabsf(d.creditsRemain - s_credits) > 0.005f) rightDirty = true;
-    } else if (minTick && heroRst > 0) {
-        String r = Api::formatCountdown(heroRst);
+    if (minTick || dimChanged) {
+        MetaSlot m = metaFor(ctx);
+        if (m != s_meta) { XP::titleMeta(m.text); s_meta = m; }
+    }
+
+    float p = (w.heroPct < 0) ? -2.f : w.heroPct;
+    if (fabsf(p - s_heroPct) > 0.4f || dimChanged) {
+        paintHero(w.heroPct);
+        s_heroPct = p;
+    }
+
+    bool rightDirty = dimChanged || fabsf(d.creditsRemain - s_credits) > 0.005f;
+    if (!rightDirty && minTick) {
+        String r = w.heroRst > 0 ? Api::formatCountdown(w.heroRst) : String("--");
         if (strcmp(r.c_str(), s_rightLine) != 0) rightDirty = true;
     }
-    bool heroDirty = false;
+    if (rightDirty) { paintRightColumn(d, w.heroRst); s_credits = d.creditsRemain; }
 
+    float sp = (w.secPct < 0) ? -2.f : w.secPct;
+    bool secDirty = fabsf(sp - s_secPct) > 0.4f || dimChanged;
+    if (!secDirty && minTick) {
+        char fresh[40]; secText(w.secPct, w.secRst, fresh, sizeof(fresh));
+        if (strcmp(fresh, s_secSub) != 0) secDirty = true;
+    }
+    if (secDirty) { paintSecondary(d, w.secPct, w.secRst); s_secPct = sp; }
+
+    // Pace and credits move with each fetch; their texts at minute ticks.
     if (minTick) {
-        MetaSlot m = metaFor(ctx);
-        if (m != s_meta) { Display::statusMeta(m.text, Theme::LILAC, m.color); s_meta = m; }
-    }
-
-    float p = (heroPct < 0) ? -2.f : heroPct;
-    bool stale = dimData(*ctx.settings, d.lastOk, d.cred);
-    if (fabsf(p - s_heroPct) > 0.4f || stale != s_stale) {
-        paintPrimaryHero(heroPct, stale);
-        s_heroPct = p;
-        s_stale = stale;
-        heroDirty = true;
-    }
-    // The hero clear (x 40..163 from y 46) can nick the foot of a wide credits
-    // line ("$123.45" starts at x 137), so the stack repaints after the hero.
-    if (rightDirty || heroDirty) { paintRightStack(d, heroRst); s_credits = d.creditsRemain; }
-
-    // Secondary — repaint on pct change or countdown text change
-    float sp = (secPct < 0) ? -2.f : secPct;
-    bool secDirty = fabsf(sp - s_secPct) > 0.4f;
-    if (!secDirty && minTick && secRst > 0) {
-        String fresh = Api::formatCountdown(secRst);
-        if (strcmp(fresh.c_str(), s_secSub) != 0) secDirty = true;
-    }
-    if (secDirty) {
-        char secLbl[16]; secondaryLabel(d, secWin, secLbl, sizeof(secLbl));
-        paintSecondary(secPct, secRst, secLbl);
-        s_secPct = sp;
-    }
-
-    // The strip shifts every hour; pace and resets move with each fetch.
-    if (minTick || (uint32_t)(t / 3600) != s_sparkHour || d.cred != s_cred) {
         char pace[40]; paceFor(d, pace, sizeof(pace));
         char resets[40]; Chrome::resetsText(d.resets, resets, sizeof(resets));
-        if ((uint32_t)(t / 3600) != s_sparkHour || strcmp(pace, s_pace) != 0
-            || strcmp(resets, s_resets) != 0 || d.cred != s_cred
-            || fabsf(d.primaryPct - s_sparkPct) > 0.4f) {
-            paintSparkBar(d, pace);
-            s_sparkPct = d.primaryPct;
-        }
+        if (strcmp(pace, s_pace) != 0 || strcmp(resets, s_resets) != 0) paintResets(d);
     }
+    if (d.cred != s_cred) paintStrip(d);
     s_cdMin = tm.tm_min;
 }

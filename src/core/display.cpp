@@ -1,5 +1,8 @@
 #include "display.h"
+#include "xp.h"
 #include "theme.h"
+#include "utf8.h"
+#include "xp_core.h"
 #include <LittleFS.h>
 TFT_eSPI tft = TFT_eSPI();
 
@@ -269,145 +272,209 @@ uint16_t Display::usageColor(float pct) {
     return Theme::MINT;
 }
 
-// ── Boot/splash scenes (partial-redraw — chrome painted once per session) ───
+// ── System screens (P-2026-11-26.9, screen_specs §17, token themeXP.boot /
+// themeXP.welcome) — drawn after real XP: boot, welcome, log-on, "updating".
+// No information lines (version, network name, attempt, %): the web page has
+// them. Partial-redraw: each screen paints its chrome once (s_sysScreen);
+// only the boot box animates. resetSystemScreens() re-arms all of them.
 
-// Session-level state shared across system screens (splash / connecting / OTA).
-// resetSystemScreens() clears all of them so the next system screen paints
-// from scratch.
-static bool s_splashChrome     = false;
-static char s_splashLine[48]   = "";
-static char s_connectSsid[40]  = "";
-static int  s_connectAttemptMin = -1;
-static int  s_connectLitDot    = -1;
-static int  s_otaChrome        = false;
-static int  s_otaLastPct       = -1;
+// Italic words: 1-bit bitmaps generated from JBMono (slant 1 px / 3 rows),
+// taken from design/panel/source/XP-{Connecting,SetupMode,OtaProgress}.
+// kWelcomeBits: 71×12 at (70, 106), 9 bytes/row
+static const uint8_t kWelcomeBits[108] PROGMEM = {
+    0x00, 0x00, 0x00, 0x7C, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0xF8, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x0C, 0xC8, 0x78, 0x18, 0x07, 0x81, 0xE1, 0x6C, 0x1E,
+    0x19, 0x91, 0xF8, 0x30, 0x1F, 0x87, 0xE3, 0xFC, 0x7E,
+    0x09, 0xB3, 0x18, 0x30, 0x31, 0xCC, 0x63, 0x6C, 0xC6,
+    0x0B, 0xB3, 0xF8, 0x30, 0x30, 0x0C, 0x63, 0x6C, 0xFE,
+    0x15, 0x67, 0xF0, 0x60, 0x60, 0x18, 0xC6, 0xD9, 0xFC,
+    0x1D, 0xC6, 0x00, 0x60, 0x60, 0x18, 0xC6, 0xD9, 0x80,
+    0x1C, 0xC6, 0x30, 0x60, 0x63, 0x98, 0xC6, 0xD9, 0x8C,
+    0x39, 0x87, 0xE0, 0x7C, 0x7E, 0x1F, 0x8D, 0xB1, 0xF8,
+    0x19, 0x83, 0xC0, 0x7C, 0x3C, 0x0F, 0x0D, 0xB0, 0xF0,
+};
+// kWindowBits: 63×12 at (12, 102), 8 bytes/row
+static const uint8_t kWindowBits[96] PROGMEM = {
+    0x06, 0x64, 0x18, 0x00, 0x00, 0x60, 0x00, 0x00,
+    0x0C, 0xC8, 0x30, 0x00, 0x00, 0xC0, 0x00, 0x00,
+    0x0C, 0xC8, 0x00, 0x00, 0x00, 0xC0, 0x00, 0x00,
+    0x04, 0xD8, 0xF0, 0x6E, 0x0F, 0xC1, 0xE3, 0x32,
+    0x0B, 0xB1, 0xE0, 0xFE, 0x1F, 0x87, 0xE6, 0x64,
+    0x0A, 0xB0, 0x60, 0xC6, 0x31, 0x8C, 0x62, 0x6C,
+    0x0A, 0xB0, 0x60, 0xC6, 0x31, 0x8C, 0x62, 0xEC,
+    0x1D, 0xE0, 0xC1, 0x8C, 0x63, 0x18, 0xC5, 0x58,
+    0x1C, 0xC0, 0xC1, 0x8C, 0x63, 0x18, 0xC7, 0x70,
+    0x1C, 0xC0, 0xC1, 0x8C, 0x63, 0x18, 0xC7, 0x30,
+    0x39, 0x8F, 0xF3, 0x18, 0x7E, 0x1F, 0x8E, 0x60,
+    0x39, 0x8F, 0xF3, 0x18, 0x7E, 0x0F, 0x06, 0x60,
+};
+// kUpdatingBits: 158×17 at (20, 96), 20 bytes/row
+static const uint8_t kUpdatingBits[340] PROGMEM = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x80, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x30, 0x03, 0xC0, 0xC0, 0x00, 0x00, 0x00,
+    0x00, 0xFC, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x33, 0x00, 0x00, 0x00, 0x00, 0x60, 0x0C, 0xC1, 0x80, 0x00, 0x00, 0x00,
+    0x00, 0xFC, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x60, 0x00, 0x01, 0x80, 0x00, 0x00, 0x00,
+    0x00, 0x30, 0x78, 0x6E, 0x0F, 0xC0, 0x00, 0x78, 0x1E, 0x1B, 0x80, 0x01, 0xB8, 0x6E, 0x07, 0x87, 0xF8, 0x00, 0x00, 0x00,
+    0x07, 0xE1, 0xF8, 0xFE, 0x1F, 0x80, 0x01, 0xF8, 0x7E, 0x3F, 0x80, 0x03, 0xF8, 0xFE, 0x1F, 0x8F, 0xF0, 0x00, 0x00, 0x00,
+    0x07, 0xE3, 0x18, 0xC6, 0x31, 0x80, 0x03, 0x1C, 0xC6, 0x31, 0x80, 0x03, 0x18, 0xC6, 0x31, 0x83, 0x00, 0x00, 0x00, 0x00,
+    0x0C, 0x60, 0xF8, 0xC6, 0x31, 0x80, 0x03, 0x00, 0x3E, 0x31, 0x80, 0x03, 0x18, 0xC6, 0x0F, 0x83, 0x00, 0x00, 0x00, 0x00,
+    0x18, 0xC7, 0xF1, 0x8C, 0x63, 0x00, 0x06, 0x01, 0xFC, 0x63, 0x00, 0x06, 0x31, 0x8C, 0x7F, 0x06, 0x00, 0x00, 0x00, 0x00,
+    0x18, 0xC6, 0x31, 0x8C, 0x63, 0x00, 0x06, 0x01, 0x8C, 0x63, 0x00, 0x06, 0x31, 0x8C, 0x63, 0x06, 0x00, 0x00, 0x00, 0x00,
+    0x18, 0xC6, 0x31, 0x8C, 0x73, 0x00, 0x06, 0x39, 0x8C, 0x63, 0x00, 0x06, 0x31, 0x8C, 0x63, 0x06, 0x00, 0xC0, 0x30, 0x0C,
+    0x1F, 0x8F, 0xE3, 0x18, 0x7E, 0x00, 0x07, 0xE3, 0xF8, 0xFE, 0x00, 0x0C, 0x63, 0x18, 0xFE, 0x0F, 0x83, 0x80, 0xE0, 0x38,
+    0x1F, 0x87, 0xE3, 0x18, 0x36, 0x00, 0x03, 0xC1, 0xF8, 0xDC, 0x00, 0x0C, 0x63, 0x18, 0x7E, 0x07, 0x81, 0x80, 0x60, 0x18,
+    0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0xFC, 0x00, 0x00, 0x00, 0x01, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0xF8, 0x00, 0x00, 0x00, 0xC1, 0x80, 0x00, 0x00, 0x00, 0x00, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00,
+};
+
+enum SysScreen : uint8_t { SYS_NONE, SYS_SPLASH, SYS_WELCOME, SYS_SETUP, SYS_OTA };
+static SysScreen s_sysScreen = SYS_NONE;
+static int s_bootStep = -1;
 
 void Display::resetSystemScreens() {
-    s_splashChrome      = false;
-    s_splashLine[0]     = 0;
-    s_connectSsid[0]    = 0;
-    s_connectAttemptMin = -1;
-    s_connectLitDot     = -1;
-    s_otaChrome         = false;
-    s_otaLastPct        = -1;
+    s_sysScreen = SYS_NONE;
+    s_bootStep = -1;
 }
 
-void Display::drawSplash(const char* line) {
-    if (!s_splashChrome) {
+// Text on a flat system-screen background.
+static void sysText(const char* font, const char* s, int x, int y, uint16_t fg, uint16_t bg,
+                    uint8_t datum = TL_DATUM) {
+    Display::useFont(font);
+    tft.setTextDatum(datum);
+    tft.setTextColor(fg, bg);
+    tft.drawString(s, x, y);
+}
+
+// Boot box (XP-Splash): 56×11 at (92, 152), xpBootGrey border with cut
+// corners; 3 blue blocks 6×5 on 6 lanes from x 96, 8 apart (XPCore::bootLit).
+static constexpr int kBootX = 92, kBootY = 152;
+static void paintBootBlocks(uint32_t step) {
+    using namespace Theme::XP;
+    tft.fillRect(kBootX + 1, kBootY + 1, 54, 9, Theme::BG);
+    for (int i = 0; i < XPCore::kBootLanes; i++) {
+        if (!XPCore::bootLit(step, i)) continue;
+        const int x = kBootX + 4 + 8 * i, y = kBootY + 3;
+        tft.fillRect(x, y, 6, 5, BOOT_BLOCK);
+        tft.drawFastHLine(x, y, 6, BOOT_BLOCK_HI);
+        tft.drawFastHLine(x, y + 4, 6, BOOT_BLOCK_LO);
+    }
+}
+
+void Display::drawSplash(const char*) {
+    using namespace Theme::XP;
+    if (s_sysScreen != SYS_SPLASH) {
         clear();
-        // glimmer spark logo, centered
-        drawLogo(SCREEN_W/2 - 8, 68, Theme::AMBER);
-        // Wordmark
+        // Wordmark centred as a block: x0 = (240 − (w(Window) + 16)) / 2.
         useFont("JBMono-16B");
-        tft.setTextDatum(MC_DATUM);
-        tft.setTextColor(Theme::INK, Theme::BG);
-        tft.drawString("GLIMMER", SCREEN_W/2, 104);
-        // 5 loading dots
-        int dotX = SCREEN_W/2 - 18;
-        for (int i = 0; i < 5; i++) {
-            uint16_t c = (i < 3) ? Theme::CORAL : Theme::LINE;
-            tft.fillRect(dotX + i * 9, 130, 6, 6, c);
-        }
-        // Version (static)
-        useFont("JBMono-11");
-        tft.setTextColor(Theme::MUTED, Theme::BG);
-        tft.drawString("v" FW_VERSION, SCREEN_W/2, 200);
-        s_splashChrome = true;
-        s_splashLine[0] = 0;
+        const int w = tft.textWidth("Window");
+        const int x0 = (SCREEN_W - (w + 16)) / 2;
+        XP::drawFlag(x0 + w - 26, 50, 3);
+        sysText("JBMono-11", "Clawdsoft", x0, 89, WHITE, Theme::BG);
+        sysText("JBMono-16B", "Window", x0, 103, WHITE, Theme::BG);
+        sysText("JBMono-11", "xp", x0 + w + 2, 104, WELCOME_ORANGE, Theme::BG);
+        sysText("JBMono-11", "Professional", x0 + 2, 122, WELCOME_ORANGE, Theme::BG);
+        tft.drawRect(kBootX, kBootY, 56, 11, BOOT_GREY);
+        tft.drawPixel(kBootX, kBootY, Theme::BG);
+        tft.drawPixel(kBootX + 55, kBootY, Theme::BG);
+        tft.drawPixel(kBootX, kBootY + 10, Theme::BG);
+        tft.drawPixel(kBootX + 55, kBootY + 10, Theme::BG);
+        drawClawd(212, 224, 1, WHITE, CLAWD_OPEN, false, Theme::BG);
+        s_sysScreen = SYS_SPLASH;
+        s_bootStep = -1;
     }
-    if (strcmp(line, s_splashLine) != 0) {
-        // Repaint only the status-line band (y=148..170)
-        tft.fillRect(0, 148, SCREEN_W, 18, Theme::BG);
-        useFont("JBMono-11");
-        tft.setTextDatum(MC_DATUM);
-        tft.setTextColor(Theme::MUTED, Theme::BG);
-        tft.drawString(line, SCREEN_W/2, 156);
-        strncpy(s_splashLine, line, sizeof(s_splashLine) - 1);
+    splashStep(millis() / 200);
+}
+
+void Display::splashStep(uint32_t step) {
+    if (s_sysScreen != SYS_SPLASH || (int)step == s_bootStep) return;
+    paintBootBlocks(step);
+    s_bootStep = (int)step;
+}
+
+void Display::splashWait(uint32_t ms) {
+    const uint32_t t0 = millis();
+    while (millis() - t0 < ms) {
+        splashStep(millis() / 200);
+        delay(20);
     }
 }
 
+// Welcome background (XP-Connecting / -SetupMode / -OtaProgress): xpWelcome,
+// dark bands y 0–29 and 206–239, light line y 30, orange edge y 205–206
+// fading to the sides.
+static void welcomeChrome() {
+    using namespace Theme::XP;
+    tft.fillRect(0, 31, SCREEN_W, 174, WELCOME);
+    tft.fillRect(0, 0, SCREEN_W, 30, WELCOME_BAND);
+    tft.drawFastHLine(0, 30, SCREEN_W, WELCOME_LINE);
+    tft.fillRect(0, 207, SCREEN_W, 33, WELCOME_BAND);
+    static const struct { uint8_t x, w; uint16_t c; } kEdge[] = {
+        {0, 40, BAND_EDGE}, {40, 40, BAND_EDGE_WARM}, {80, 80, WELCOME_ORANGE},
+        {160, 40, BAND_EDGE_WARM}, {200, 40, BAND_EDGE},
+    };
+    for (const auto& e : kEdge) tft.fillRect(e.x, 205, e.w, 2, e.c);
+}
+
+// Italic word with its shadow (+1, +1).
+static void italic(const uint8_t* bits, int w, int h, int x, int y) {
+    XP::drawBits(bits, w, h, x + 1, y + 1, Theme::XP::WELCOME_SHADOW);
+    XP::drawBits(bits, w, h, x, y, Theme::XP::WHITE);
+}
+
+// Log-on screen (XP-SetupMode): flag + "Window xp" + hint on the left, the
+// selected "user" tile (= the setup network) on the right, power button.
 void Display::drawSetupMode(const char* ap, const char* ip) {
-    clear();
-    // Status bar: title "glimmer" + right meta "SETUP"
-    statusBar("glimmer", "CÀI ĐẶT", Theme::CORAL);
-    // Spark logo above the call-to-action
-    drawLogo(SCREEN_W/2 - 8, 26, Theme::AMBER);
-
-    Display::useFont("JBMono-12B");
-    tft.setTextDatum(MC_DATUM);
-    tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString("KẾT NỐI WI-FI", SCREEN_W/2, 44);
-
-    Display::useFont("JBMono-16B");
-    tft.setTextColor(Theme::INK, Theme::BG);
-    tft.drawString(ap, SCREEN_W/2, 68);
-
-    Display::dotsDivider(10, 96, SCREEN_W - 20);
-
-    Display::useFont("JBMono-12B");
-    tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString("RỒI MỞ", SCREEN_W/2, 116);
-
-    Display::useFont("JBMono-16B");
-    tft.setTextColor(Theme::SKY, Theme::BG);
-    String url = String("http://") + ip;
-    tft.drawString(url.c_str(), SCREEN_W/2, 140);
-
-    // 5-dot heartbeat row (replaces mascot)
-    int dotX = SCREEN_W/2 - 18;
-    for (int i = 0; i < 5; i++) {
-        uint16_t c = (i < 3) ? Theme::CORAL : Theme::LINE;
-        tft.fillRect(dotX + i * 9, 176, 6, 6, c);
+    using namespace Theme::XP;
+    resetSystemScreens();
+    welcomeChrome();
+    XP::drawFlag(70, 74, 2);
+    italic(kWindowBits, 63, 12, 12, 102);
+    sysText("JBMono-11", "xp", 81, 103, WELCOME_ORANGE, WELCOME);
+    sysText("JBMono-11", "Để bắt đầu,", 14, 126, WHITE, WELCOME);
+    sysText("JBMono-11", "kết nối Wi-Fi", 14, 140, WHITE, WELCOME);
+    tft.drawFastVLine(116, 40, 30, DIVIDER_FADE);
+    tft.drawFastVLine(116, 70, 100, DIVIDER);
+    tft.drawFastVLine(116, 170, 30, DIVIDER_FADE);
+    tft.fillRect(124, 86, 112, 50, USER_SEL);
+    tft.drawFastHLine(124, 86, 112, USER_SEL_HI);
+    tft.fillRect(130, 92, 24, 24, WHITE);
+    tft.fillRect(132, 94, 20, 20, USER_PIC);
+    drawClawd(133, 99, 1, CLAWD_ORANGE, CLAWD_OPEN, false, USER_PIC);
+    // Theo XP thật a long user name wraps under itself: "glimmer-" / "setup".
+    char l1[24], l2[24];
+    const char* dash = strchr(ap, '-');
+    if (dash && dash[1]) {
+        size_t n = (size_t)(dash - ap) + 1;
+        if (n >= sizeof(l1)) n = sizeof(l1) - 1;
+        memcpy(l1, ap, n); l1[n] = '\0';
+        Utf8::copy(l2, sizeof(l2), dash + 1);
+    } else {
+        Utf8::copy(l1, sizeof(l1), ap); l2[0] = '\0';
     }
-
-    Display::useFont("JBMono-11");
-    tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString("v" FW_VERSION, SCREEN_W/2, 204);
+    sysText("JBMono-12B", l1, 158, 92, WHITE, USER_SEL);
+    if (l2[0]) sysText("JBMono-12B", l2, 158, 106, WHITE, USER_SEL);
+    sysText("JBMono-11", ip, 158, 121, WELCOME_SUB, USER_SEL);
+    tft.fillRect(8, 218, 14, 14, WHITE);
+    tft.fillRect(9, 219, 12, 12, CLOSE);
+    tft.fillRect(14, 221, 2, 5, WHITE);
+    tft.fillRect(11, 223, 1, 5, WHITE);
+    tft.fillRect(18, 223, 1, 5, WHITE);
+    tft.fillRect(12, 228, 6, 1, WHITE);
+    sysText("JBMono-11", "Cài đặt Wi-Fi", 28, 219, WHITE, WELCOME_BAND);
+    s_sysScreen = SYS_SETUP;
 }
 
-void Display::drawConnecting(const char* ssid, int attempt) {
-    // Chrome painted once per SSID; dots + attempt counter partial-redraw.
-    if (strcmp(ssid, s_connectSsid) != 0) {
-        clear();
-        drawLogo(SCREEN_W/2 - 8, 40, Theme::AMBER);
-        useFont("JBMono-16B");
-        tft.setTextDatum(MC_DATUM);
-        tft.setTextColor(Theme::INK, Theme::BG);
-        tft.drawString("GLIMMER", SCREEN_W/2, 68);
-        useFont("JBMono-12B");
-        tft.setTextColor(Theme::MUTED, Theme::BG);
-        tft.drawString("Đang kết nối Wi-Fi", SCREEN_W/2, 100);
-        useFont("JBMono-11");
-        tft.setTextColor(Theme::INK, Theme::BG);
-        tft.drawString(ssid, SCREEN_W/2, 124);
-        tft.setTextColor(Theme::MUTED, Theme::BG);
-        tft.drawString("v" FW_VERSION, SCREEN_W/2, 216);
-        strncpy(s_connectSsid, ssid, sizeof(s_connectSsid) - 1);
-        s_connectAttemptMin = -1;
-        s_connectLitDot = -1;
-    }
-
-    // 5-dot loader
-    int dotX = SCREEN_W/2 - 16;
-    int lit = attempt % 5;
-    if (lit != s_connectLitDot) {
-        if (s_connectLitDot >= 0)
-            tft.fillRect(dotX + s_connectLitDot * 9, 160, 6, 6, Theme::LINE);
-        tft.fillRect(dotX + lit * 9, 160, 6, 6, Theme::CORAL);
-        s_connectLitDot = lit;
-    }
-
-    // "attempt N" updates every ~60 s
-    int attemptMin = (attempt / 120) + 1;
-    if (attemptMin != s_connectAttemptMin) {
-        tft.fillRect(0, 184, SCREEN_W, 16, Theme::BG);
-        useFont("JBMono-11");
-        tft.setTextDatum(MC_DATUM);
-        tft.setTextColor(Theme::MUTED, Theme::BG);
-        char msg[24]; snprintf(msg, sizeof(msg), "lần thử %d", attemptMin);
-        tft.drawString(msg, SCREEN_W/2, 192);
-        s_connectAttemptMin = attemptMin;
-    }
+// Welcome (XP-Connecting): only the italic "welcome" — ssid / attempt are
+// no longer shown (P-2026-11-26.9); painted once, later calls are no-ops.
+void Display::drawConnecting(const char*, int) {
+    if (s_sysScreen == SYS_WELCOME) return;
+    welcomeChrome();
+    italic(kWelcomeBits, 71, 12, 70, 106);
+    s_sysScreen = SYS_WELCOME;
 }
 
 void Display::drawError(const char* title, const char* msg) {
@@ -422,82 +489,33 @@ void Display::drawError(const char* title, const char* msg) {
     tft.drawString(msg, SCREEN_W/2, 135);
 }
 
-void Display::drawOtaProgress(uint8_t pct) {
-    if (!s_otaChrome) {
-        clear();
-        drawLogo(SCREEN_W/2 - 8, 30, Theme::AMBER);
-        useFont("JBMono-16B");
-        tft.setTextDatum(MC_DATUM);
-        tft.setTextColor(Theme::INK, Theme::BG);
-        tft.drawString("GLIMMER", SCREEN_W/2, 58);
-        useFont("JBMono-12B");
-        tft.setTextColor(Theme::CORAL, Theme::BG);
-        tft.drawString("ĐANG CẬP NHẬT", SCREEN_W/2, 82);
-
-        useFont("JBMono-11");
-        tft.setTextColor(Theme::MUTED, Theme::BG);
-        tft.drawString("đừng rút điện", SCREEN_W/2, 178);
-        tft.drawString("v" FW_VERSION, SCREEN_W/2, 200);
-
-        s_otaChrome = true;
-        s_otaLastPct = -1;
-    }
-    if ((int)pct == s_otaLastPct) return;
-
-    char buf[6]; snprintf(buf, sizeof(buf), "%u%%", (unsigned)pct);
-    tft.fillRect(SCREEN_W/2 - 32, 100, 64, 32, Theme::BG);
-    useFont("VT323-44");
-    tft.setTextDatum(MC_DATUM);
-    tft.setTextColor(Theme::CORAL, Theme::BG);
-    tft.drawString(buf, SCREEN_W/2, 110);
-
-    int barX = 12, barY = 148, barW = SCREEN_W - 24, barH = 12;
-    tft.drawRect(barX, barY, barW, barH, Theme::LINE);
-    int fillW = ((barW - 2) * pct) / 100;
-    tft.fillRect(barX + 1, barY + 1, fillW, barH - 2, Theme::CORAL);
-    if (fillW < barW - 2)
-        tft.fillRect(barX + 1 + fillW, barY + 1, (barW - 2) - fillW, barH - 2, Theme::PANEL);
-
-    s_otaLastPct = pct;
+// Updating (XP-OtaProgress): italic "đang cập nhật..." + one warning line,
+// no bar or % (P-2026-11-26.9) — painted once per flash.
+void Display::drawOtaProgress(uint8_t) {
+    if (s_sysScreen == SYS_OTA) return;
+    welcomeChrome();
+    italic(kUpdatingBits, 158, 17, 20, 96);
+    sysText("JBMono-11", "Đừng tắt hay rút điện máy.", SCREEN_W / 2, 130,
+            Theme::XP::WHITE, Theme::XP::WELCOME, TC_DATUM);
+    s_sysScreen = SYS_OTA;
 }
 
 // ── Design-system primitives (v0.8) ─────────────────────────────────────────
 
+// Legacy status bar → XP title bar (P-2026-11-26.8). Kept so channels not
+// yet rewritten against XP:: (xp.h) still build: the title bar shows
+// "<title> · <meta>" with XP::defaultIcon() (set by main.cpp per channel);
+// accent / meta colours are ignored (XP title text is always white).
+// Phase 2 replaces these calls with XP::window / XP::titleMeta.
 void Display::statusBar(const char* title,
-                        const char* rightMeta, uint16_t accent, uint16_t metaColor) {
-    using namespace Layout;
-    tft.fillRect(0, STATUS_TOP, SCREEN_W, STATUS_BOTTOM, Theme::BG);
-
-    // Center title — JBMono-12B (design spec: .status .title { font-size: 12px })
-    Display::useFont("JBMono-12B");
-    tft.setTextDatum(MC_DATUM);
-    tft.setTextColor(Theme::INK, Theme::BG);
-    tft.drawString(title, SCREEN_W / 2, STATUS_BOTTOM / 2);
-
-    // Right meta — JBMono-11 (design spec uses mono 9; 11 is closest VLW available)
-    if (rightMeta && *rightMeta) {
-        Display::useFont("JBMono-11");
-        tft.setTextDatum(MR_DATUM);
-        tft.setTextColor(metaColor, Theme::BG);
-        tft.drawString(rightMeta, SCREEN_W - 4, STATUS_BOTTOM / 2);
-    }
-
-    // 1-px accent under-line at y=22
-    tft.drawFastHLine(0, STATUS_BOTTOM, SCREEN_W, accent);
+                        const char* rightMeta, uint16_t, uint16_t) {
+    XP::titleBar(title, XP::defaultIcon());
+    if (rightMeta && *rightMeta) XP::titleMeta(rightMeta);
 }
 
-// Right-meta slot = the 76 px right of the centred title.
-void Display::statusMeta(const char* rightMeta, uint16_t accent, uint16_t metaColor) {
-    using namespace Layout;
-    const int x = SCREEN_W - 76;
-    tft.fillRect(x, STATUS_TOP, 76, STATUS_BOTTOM, Theme::BG);
-    if (rightMeta && *rightMeta) {
-        Display::useFont("JBMono-11");
-        tft.setTextDatum(MR_DATUM);
-        tft.setTextColor(metaColor, Theme::BG);
-        tft.drawString(rightMeta, SCREEN_W - 4, STATUS_BOTTOM / 2);
-    }
-    tft.drawFastHLine(x, STATUS_BOTTOM, 76, accent);
+// Legacy meta repaint → XP::titleMeta (title slot only, tick-safe).
+void Display::statusMeta(const char* rightMeta, uint16_t, uint16_t) {
+    XP::titleMeta(rightMeta);
 }
 
 void Display::pixelBar(int x, int y, int w, int h, float pct, uint16_t color) {

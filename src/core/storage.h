@@ -57,7 +57,7 @@ struct Settings {
     // Push API auth (also used for MCP)
     String   apiToken;                // bearer token for /push and /mcp
 
-    // Enabled skills = dock tabs, comma-separated in Skill::kAll order (skill_core.h); at least one.
+    // Enabled skills = taskbar buttons, comma-separated in Skill::kAll order (skill_core.h); at least one.
     String   skillsOn       = "agent,weather,clock";
 };
 

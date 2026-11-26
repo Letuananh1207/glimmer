@@ -23,7 +23,7 @@ hooks) → read [`docs/AGENTS-GLIMMER.md`](docs/AGENTS-GLIMMER.md), not this.
 platformio.ini            envs: nodemcuv2 (firmware), native (host tests); FW_VERSION
 src/
   main.cpp                kChannels[] registry, rotation, fetch scheduler, attention
-                          interrupts, indicator strip, Wi-Fi recovery, device notices
+                          interrupts, XP taskbar, Wi-Fi recovery, device notices
   core/                   display, storage (Settings ↔ /config.json), web (HTTP API,
                           /push, /hook, /mcp, /update), theme, layout, config
   data/
@@ -44,6 +44,8 @@ src/
                           weather, forecast, clock, info, night, setup,
                           attention (Attention card + Agents list)
     chrome.{h,cpp}        shared usage chrome: credCard/credBanner/credLine, usageMeta
+    xp.{h,cpp}            XP window chrome + components (title bar, status bar, progress…)
+    taskbar.{h,cpp}       XP taskbar y 214–239, painted by main.cpp (logic: data/xp_core.h)
   ui/
     night_core.h          night window + backlight logic                       (pure)
     clockfmt.h            12/24 h formatting shared by clock faces

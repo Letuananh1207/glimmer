@@ -1,9 +1,10 @@
 // Night face — shown alone (no rotation) during the night window when the
-// night mode is "clock" or "dark". Low-contrast time + date, nothing else, so
-// a desk display at night reads the time without lighting the room.
+// night mode is "clock" or "dark". Design P-2026-11-26.8 §17 XP-Night: no
+// window and no taskbar — black screen, dark-grey (#4D4D4D) text only, so a
+// desk display at night reads the time without lighting the room.
 //
-//   y=64..150  VT323-86 HH:MM, digits INK_DIM, colon MUTED
-//   y=172      date (+ SA/CH in 12-hour mode), MUTED
+//   y 70   VT323-86 HH:MM, TC (120, 70)
+//   y 150  date "Thứ Tư 25/11" JBMono-11, TC (120, 150) (+ "SA"/"CH" in 12-hour mode)
 
 #include "channel.h"
 #include "display.h"
@@ -14,7 +15,11 @@
 
 extern bool mainNightFace();
 
-static constexpr int kClockY = 64;
+static constexpr uint16_t kInk = Theme::XP::LABEL;   // #4D4D4D
+static constexpr uint16_t kBg  = Theme::XP::BLACK;
+static constexpr int kClockY = 70, kDateY = 150;
+// VT323-86 digits: ink y+7 .. y+55.
+static constexpr int kInkY = kClockY + 7, kInkH = 49;
 static int s_hh = -1, s_mm = -1, s_day = -1;
 
 bool chNightEnabled(const ChannelCtx&) {
@@ -34,35 +39,33 @@ static void paintTime(int hh, int mm, bool h24, bool hoursToo) {
     int hhX, colonX, mmX, dw;
     geom(hhX, colonX, mmX, dw);
     tft.setTextDatum(TL_DATUM);
+    tft.setTextColor(kInk, kBg);
     char b[4];
     if (hoursToo) {
-        tft.fillRect(hhX, kClockY, dw * 2, 86, Theme::BG);
+        tft.fillRect(hhX, kInkY, dw * 2, kInkH, kBg);
         ClockFmt::hourField(hh, h24, b, sizeof(b));
-        tft.setTextColor(Theme::INK_DIM, Theme::BG);
         tft.drawString(b, hhX, kClockY);
-        tft.setTextColor(Theme::MUTED, Theme::BG);
         tft.drawString(":", colonX, kClockY);
     }
-    tft.fillRect(mmX, kClockY, dw * 2, 86, Theme::BG);
+    tft.fillRect(mmX, kInkY, dw * 2, kInkH, kBg);
     snprintf(b, sizeof(b), "%02d", mm);
-    tft.setTextColor(Theme::INK_DIM, Theme::BG);
     tft.drawString(b, mmX, kClockY);
 }
 
 static void paintDate(const struct tm& tmv, bool h24) {
     char date[40];
-    ClockFmt::date(tmv, " ", date, sizeof(date));
+    ClockFmt::dateTitle(tmv, " ", date, sizeof(date));
     if (!h24) { strncat(date, "  ", sizeof(date) - strlen(date) - 1);
                 strncat(date, ClockFmt::ampm(tmv.tm_hour), sizeof(date) - strlen(date) - 1); }
-    tft.fillRect(0, 164, SCREEN_W, 18, Theme::BG);
+    tft.fillRect(0, kDateY - 1, SCREEN_W, 15, kBg);   // y 149..163
     Display::useFont("JBMono-11");
     tft.setTextDatum(TC_DATUM);
-    tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString(date, SCREEN_W / 2, 168);
+    tft.setTextColor(kInk, kBg);
+    tft.drawString(date, SCREEN_W / 2, kDateY);
 }
 
 void chNightDraw(const ChannelCtx& ctx) {
-    Display::clear();
+    tft.fillScreen(kBg);              // no window, no taskbar
     time_t now = time(nullptr);
     struct tm tmv; localtime_r(&now, &tmv);
     const bool h24 = ctx.settings->clock24h;

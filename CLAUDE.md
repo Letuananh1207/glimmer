@@ -136,29 +136,36 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
   `skillsOn` array in `/api/settings`, `skills_on` + `skills` (+ legacy
   `skill` = first on) in `/api/state`. Channels of enabled skills rotate, plus
   `skill = nullptr` system channels (Attention, Night, Info). Weather +
-  Forecast = `weather`, Clock = `clock`, Photo = `photo`. New pack = id in `Skill::kAll` + dock
-  tab + tag its channels. App rules `R-SK-*`.
+  Forecast = `weather`, Clock = `clock`, Photo = `photo`. New pack = id in `Skill::kAll` +
+  taskbar button (`XPCore`) + tag its channels. App rules `R-SK-*`.
 - `draw(ctx)` — full repaint on activation, may `Display::clear()`.
 - `tick(ctx)` — 5 Hz while active. **Never** `Display::clear()` /
   `tft.fillScreen()`. File-static caches with sentinels (`-1`, `-2.f`) +
   per-region `paintX()` helpers that clear only their band; `draw()` seeds the
   cache. References: `ch_clock.cpp`, `ch_home.cpp`.
 - **No animated transitions** — rotation is an instant cut.
-- **Dock** (`src/channels/dock.{h,cpp}`, `dock_core.h`; P-2026-11-25.3): frame
-  at (2,34), one tab per enabled skill (36 px each + 6; all 4 = 150 tall):
-  Claude / Ảnh / Thời tiết / Đồng hồ (Tin nhắn waits for its pack). Painted by `main.cpp` after `draw()`, never by a channel; badge
-  on the Claude tab = agents waiting (`countWaiting`), repainted on change.
-  Tab: agent channels → Claude, Weather/Forecast → Thời tiết, Clock → Đồng
-  hồ, Photo → Ảnh, Info → none; Attention + Night have no dock. Docked channels keep
-  content — and every `tick()` clear band — in x 40..228
-  (`Layout::CONTENT_LEFT/RIGHT`), never x < 36 in y 34..183.
-- Indicator strip (y=230, 2 px): slide progress in the channel colour. An
-  agent waiting = the dock badge; screens without the dock's Claude tab
-  (Attention card, night face, agent skill off) still turn the strip solid
-  amber (approval) / sky (question).
-- System screens (`drawSplash`, `drawConnecting`, `drawOtaProgress`) follow the
-  same discipline; call `Display::resetSystemScreens()` from non-system entry
-  points so the next one repaints its chrome.
+- **XP look** (P-2026-11-26.8/.9, `screen_specs.md` §17): every channel but
+  Night is an XP window — `XP::window(title, icon, status)` (`xp.{h,cpp}`):
+  title bar y 0–21, frame, body `Theme::XP::BODY` x 2–237 y 22–213 (content
+  x 10–229, `Layout::XP_*`), optional status bar y 196–213. Components:
+  `XP::progress` (9 blocks, pixelBar rule), `groupBox`, `field`, `dialog`,
+  `loading`/`loadingStep`, `infoStrip`, `titleMeta` (`· cũ 14P`). `tick()`
+  clear bands fill `XP::BODY`, never `BG`. Night + system screens stay black.
+- **Taskbar** y 214–239 (`taskbar.{h,cpp}`, pure `xp_core.h`): painted by
+  `main.cpp` after `draw()`, never by a channel; `Taskbar::update` ~4 Hz
+  repaints only a changed button + the tray clock per minute. Start button,
+  one 28-px button per enabled skill (packed from x 71), the active
+  channel's pressed with 2-px slide progress at its bottom, AMBER badge on
+  Claude = agents waiting; on a card that needs the user (approval /
+  question / error) the Claude button is lit orange instead. Info presses
+  none; Night has no taskbar (no waiting signal there). The dock and the
+  y 230 strip are gone.
+- System screens (`display.cpp`, after real XP, P-2026-11-26.9): boot
+  (black, flag, logo, 3-block box — `splashStep(ms/200)` / `splashWait`
+  repaint only the box), welcome = connecting, log-on = setup AP, "đang cập
+  nhật..." = OTA. No info lines: the ssid / attempt / pct / line arguments
+  are ignored. Each paints its chrome once; call
+  `Display::resetSystemScreens()` from non-system entry points.
 
 ## Photos (skill `photo`, `src/data/photos.{h,cpp}`, `photos_core.h`)
 
@@ -225,7 +232,7 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
   Agents list channel (approval cards still interrupt).
 - On the night face only these cards show (and wake a dark panel): `urgent`,
   a user's error card (agent `other`, not `sys:*`), and approvals/questions if
-  `agentNightShow`. Others only light the strip (unseen in dark mode).
+  `agentNightShow`. Others wait (no taskbar on the night face).
 
 ## Attention queue (agents, push, device notices)
 
@@ -297,5 +304,5 @@ app: drawn on the canvas https://claude.ai/artifact/Kkt5gUfTSSTjxKBZ6mPuZA by
 `.panel_design_sync.json`); tickets in `docs/phieu_panel/`. Don't hand-edit
 `design/panel/`. The old `/tmp/smalltv-design` archive is gone; until the first
 redraw is chốt, the code is the reference — `tools/screens.py` renders it with
-the real fonts. Tokens live in `src/core/theme.h` (RGB565) and
+the real fonts (`--compare` puts each `design/panel/screens/@2x/XP*.png` beside it). Tokens live in `src/core/theme.h` (RGB565) and
 `data/fonts/*.vlw` (design-spec pixel sizes).

@@ -1,15 +1,11 @@
-// Clock — design P-2026-11-25.4 §12 on the dock layout of P-2026-11-25.3
-// §15 "Clock-Dock", with partial-redraw tick(). The dock (x 2..31, y 34..183)
-// is painted by main.cpp; everything here is centred on x 134 and every
-// clear band stays in x 40..228.
+// Clock — XP window, design P-2026-11-26.8 §17 XP-Clock, partial-redraw tick().
 //
-//   y=0..22   status bar "Đồng hồ" · meta "tuần 48"
-//   y=32      "THỨ TƯ · 25/11" JBMono-11 MUTED, TC (134, 32)
-//   y=50..135 huge VT323-86 HH:MM centred (HH x 49, ":" 117, MM 151 — ink
-//             ends x 215), ":" CORAL between; 12-hour mode: "SA"/"CH" 12B
-//             AMBER at (215, 99), ink x 216..228, right of the minutes
-//   y=148     "chào buổi chiều, bạn" JBMono-13 MC (134, 148), ≤ 188 px
-//   y=178     24-dot day-progress strip x 52..216
+//   y 30       "Thứ Tư · 25/11" JBMono-12B black, TC (120, 30)
+//   y 52..137  white field (20, 52) 200×86; VT323-86 "14:32" TC (120, 60)
+//              black — 12-hour mode: " 2:32" + "CH" JBMono-12B on the
+//              digits' baseline, the group re-centred inside the field
+//   y 152      greeting JBMono-13 xpGroupLabel, TC (120, 152), ≤ 219 px
+//   y 196..213 status bar: "Tuần 48" | "GMT+7"
 
 #include "channel.h"
 #include "display.h"
@@ -18,23 +14,22 @@
 #include "clockfmt.h"
 #include "layout.h"
 #include "utf8.h"
+#include "xp.h"
 #include <time.h>
+
+namespace C = Theme::XP;
 
 static int  s_lastHH = -1, s_lastMM = -1;
 static char s_lastDate[32]  = "";
 static char s_lastGreet[64] = "";
-static int  s_lastDayHour = -1;
 
-static constexpr int CLOCK_Y  = 50;
-static constexpr int CLOCK_H  = 86;
+static constexpr int kFieldX = 20, kFieldY = 52, kFieldW = 200, kFieldH = 86;
+static constexpr int CLOCK_Y  = 60;
 static const char*   CLOCK_FN = "VT323-86";
-static constexpr int kL   = Layout::CONTENT_LEFT;     // 40
-static constexpr int kMid = Layout::CONTENT_MID;      // 134
-static constexpr int kW   = Layout::CONTENT_W + 1;    // x 40..228 inclusive
-// VT323-86 digits: advance 34, ink ends ≤ 31 px into the cell ("4": dx 3 + w 28),
-// so the minutes' clear band stops at x 215 and "SA"/"CH" owns x 216..228.
-static constexpr int kDigitInk = 31;
-static constexpr int kAmPmX = 215, kAmPmY = CLOCK_Y + 49;   // 99
+// VT323-86: ascent 56, digits 49 high from y+7 → ink y 67..115, baseline 116.
+static constexpr int kInkY = CLOCK_Y + 7, kInkH = 49, kBaseline = CLOCK_Y + 56;
+static constexpr int kAmPmGap = 2;
+static constexpr int kMid = Layout::XP_MID;
 
 static char s_greetBuf[64];
 static const char* greetingFor(int hour, const char* name) {
@@ -50,103 +45,98 @@ static const char* greetingFor(int hour, const char* name) {
     return s_greetBuf;
 }
 
-static void clockGeom(int& hhX, int& colonX, int& mmX, int& digitW, int& colonW) {
+// HH:MM geometry; in 12-hour mode the time + gap + "CH" is centred as a group.
+static void clockGeom(bool h24, int& hhX, int& colonX, int& mmX, int& digitW, int& ampmX) {
+    Display::useFont("JBMono-12B");
+    int apW = h24 ? 0 : tft.textWidth("CH") + kAmPmGap;
     Display::useFont(CLOCK_FN);
-    digitW = tft.textWidth("0");          // monospace digit
-    colonW = tft.textWidth(":");
-    int total = digitW * 4 + colonW;
-    hhX = kMid - total / 2;               // 49
+    digitW = tft.textWidth("0");          // monospace digit (34)
+    int colonW = tft.textWidth(":");
+    int total = digitW * 4 + colonW;      // 170
+    hhX = kMid - (total + apW) / 2;
     colonX = hhX + digitW * 2;
     mmX = colonX + colonW;
+    ampmX = mmX + digitW * 2 + kAmPmGap;
+}
+
+static void paintDigits(int x, int w, const char* s) {
+    tft.fillRect(x, kInkY, w, kInkH, C::WHITE);
+    Display::useFont(CLOCK_FN);
+    tft.setTextDatum(TL_DATUM);
+    tft.setTextColor(C::BLACK, C::WHITE);
+    tft.drawString(s, x, CLOCK_Y);
 }
 
 static void paintHH(int h, bool h24) {
     char buf[4]; ClockFmt::hourField(h, h24, buf, sizeof(buf));
-    int hhX, colonX, mmX, dw, cw;
-    clockGeom(hhX, colonX, mmX, dw, cw);
-    tft.fillRect(hhX, CLOCK_Y, dw * 2, CLOCK_H, Theme::BG);
-    Display::useFont(CLOCK_FN);
-    tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(Theme::INK, Theme::BG);
-    tft.drawString(buf, hhX, CLOCK_Y);
+    int hhX, colonX, mmX, dw, apX;
+    clockGeom(h24, hhX, colonX, mmX, dw, apX);
+    paintDigits(hhX, dw * 2, buf);
 }
 
-static void paintMM(int m) {
+static void paintMM(int m, bool h24) {
     char buf[4]; snprintf(buf, sizeof(buf), "%02d", m);
-    int hhX, colonX, mmX, dw, cw;
-    clockGeom(hhX, colonX, mmX, dw, cw);
-    tft.fillRect(mmX, CLOCK_Y, dw + kDigitInk, CLOCK_H, Theme::BG);   // x 151..215
-    Display::useFont(CLOCK_FN);
-    tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(Theme::INK, Theme::BG);
-    tft.drawString(buf, mmX, CLOCK_Y);
+    int hhX, colonX, mmX, dw, apX;
+    clockGeom(h24, hhX, colonX, mmX, dw, apX);
+    paintDigits(mmX, dw * 2, buf);
 }
 
-static void paintColon() {
-    int hhX, colonX, mmX, dw, cw;
-    clockGeom(hhX, colonX, mmX, dw, cw);
+static void paintColon(bool h24) {
+    int hhX, colonX, mmX, dw, apX;
+    clockGeom(h24, hhX, colonX, mmX, dw, apX);
     Display::useFont(CLOCK_FN);
     tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(Theme::CORAL, Theme::BG);
+    tft.setTextColor(C::BLACK, C::WHITE);
     tft.drawString(":", colonX, CLOCK_Y);
 }
 
-static void paintDateRow(const char* date) {
-    tft.fillRect(kL, 30, kW, 14, Theme::BG);   // y 30 covers an accented capital (1 px above y 32)
-    Display::useFont("JBMono-11");
-    tft.setTextDatum(TC_DATUM);
-    tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString(date, kMid, 32);
-}
-
-// "SA" / "CH" right of the minutes in 12-hour mode. Own band x 216..228
-// (the glyphs' ink: S/C start 1 px in, "A" ends at x 228); the minutes'
-// ink ends at x 215 at the latest.
+// "SA" / "CH" after the minutes, on the digits' baseline (12-hour mode).
 static void paintAmPm(int hour, bool h24) {
-    tft.fillRect(kAmPmX + 1, kAmPmY, Layout::CONTENT_RIGHT - kAmPmX, 16, Theme::BG);
     if (h24) return;
+    int hhX, colonX, mmX, dw, apX;
+    clockGeom(h24, hhX, colonX, mmX, dw, apX);
     Display::useFont("JBMono-12B");
+    const int top = kBaseline - 13;       // JBMono-12B ascent 13
+    tft.fillRect(apX, top, kFieldX + kFieldW - 1 - apX, 16, C::WHITE);
     tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(Theme::AMBER, Theme::BG);
-    tft.drawString(ClockFmt::ampm(hour), kAmPmX, kAmPmY);
+    tft.setTextColor(C::BLACK, C::WHITE);
+    tft.drawString(ClockFmt::ampm(hour), apX, top);
 }
 
-static void weekMeta(const struct tm& tmv, char* buf, size_t n) {
+static void paintDateRow(const char* date) {
+    tft.fillRect(Layout::XP_LEFT, 29, Layout::XP_RIGHT + 1 - Layout::XP_LEFT, 17, C::BODY);   // y 29..45
+    Display::useFont("JBMono-12B");
+    tft.setTextDatum(TC_DATUM);
+    tft.setTextColor(C::BLACK, C::BODY);
+    tft.drawString(date, kMid, 30);
+}
+
+static void statusText(const struct tm& tmv, const Settings& s) {
     char iso[8]; strftime(iso, sizeof(iso), "%V", &tmv);
-    snprintf(buf, n, "tuần %s", iso);
+    char week[16]; snprintf(week, sizeof(week), "Tuần %d", atoi(iso));
+    char gmt[16];  ClockFmt::gmtLabel(s.tzMinutes, gmt, sizeof(gmt));
+    XP::statusBar(week, gmt);
 }
 
-// A long user name would run into the dock: cut whole characters + "..."
-// until it fits x 40..228.
+// JBMono-13 accented capitals reach 4 px above y; band y 148..169. A long
+// user name is cut on whole characters + "..." to fit x 10..229.
 static void paintGreeting(const char* msg) {
-    tft.fillRect(kL, 138, kW, 22, Theme::BG);
+    const int maxW = Layout::XP_RIGHT + 1 - Layout::XP_LEFT;
+    tft.fillRect(Layout::XP_LEFT, 148, maxW, 22, C::BODY);
     Display::useFont("JBMono-13");
     char b[72]; Utf8::copy(b, sizeof(b), msg);
-    if (tft.textWidth(b) > Layout::CONTENT_W) {
+    if (tft.textWidth(b) > maxW) {
         size_t n = strlen(b);
         while (n > 1) {
             n = Utf8::prevChar(b, n);
             b[n] = '\0';
-            char t[72]; snprintf(t, sizeof(t), "%s...", b);
-            if (tft.textWidth(t) <= Layout::CONTENT_W) { snprintf(b, sizeof(b), "%s", t); break; }
+            char t[76]; snprintf(t, sizeof(t), "%s...", b);
+            if (tft.textWidth(t) <= maxW) { Utf8::copy(b, sizeof(b), t); break; }
         }
     }
-    tft.setTextDatum(MC_DATUM);
-    tft.setTextColor(Theme::INK_DIM, Theme::BG);
-    tft.drawString(b, kMid, 148);
-}
-
-static void paintDayStrip(int hour) {
-    int dotW = 4, gap = 3;
-    int stripW = 24 * dotW + 23 * gap;
-    int sx = kMid - stripW / 2;           // 52
-    tft.fillRect(sx, 178, stripW, 4, Theme::BG);
-    for (int i = 0; i < 24; i++) {
-        uint16_t c = (i < hour)         ? Theme::AMBER
-                    : (i == hour)        ? Theme::INK
-                                         : Theme::LINE;
-        tft.fillRect(sx + i * (dotW + gap), 178, dotW, 4, c);
-    }
+    tft.setTextDatum(TC_DATUM);
+    tft.setTextColor(C::GROUP_LABEL, C::BODY);
+    tft.drawString(b, kMid, 152);
 }
 
 bool chClockEnabled(const ChannelCtx& ctx) {
@@ -155,69 +145,62 @@ bool chClockEnabled(const ChannelCtx& ctx) {
 }
 
 void chClockDraw(const ChannelCtx& ctx) {
-    Display::clear();
     time_t now = time(nullptr);
     struct tm tmv;
     localtime_r(&now, &tmv);
+    const bool h24 = ctx.settings->clock24h;
 
-    char week[16]; weekMeta(tmv, week, sizeof(week));
-    Display::statusBar("Đồng hồ", week, Theme::AMBER);
+    XP::window("Đồng hồ", XPCore::ICON_CLOCK, true);
+    statusText(tmv, *ctx.settings);
 
     char date[32];
-    ClockFmt::date(tmv, " · ", date, sizeof(date));
-    const bool h24 = ctx.settings->clock24h;
+    ClockFmt::dateTitle(tmv, " · ", date, sizeof(date));
     paintDateRow(date);
-    strncpy(s_lastDate, date, sizeof(s_lastDate) - 1);
+    Utf8::copy(s_lastDate, sizeof(s_lastDate), date);
 
+    XP::field(kFieldX, kFieldY, kFieldW, kFieldH);
     paintHH(tmv.tm_hour, h24);
-    paintColon();
-    paintMM(tmv.tm_min);
+    paintColon(h24);
+    paintMM(tmv.tm_min, h24);
     paintAmPm(tmv.tm_hour, h24);
     s_lastHH = tmv.tm_hour;
     s_lastMM = tmv.tm_min;
-    s_lastDayHour = tmv.tm_hour;
 
     const char* uname = ctx.settings ? ctx.settings->userName.c_str() : "";
     const char* g = greetingFor(tmv.tm_hour, uname);
     paintGreeting(g);
-    strncpy(s_lastGreet, g, sizeof(s_lastGreet) - 1);
+    Utf8::copy(s_lastGreet, sizeof(s_lastGreet), g);
 
-    paintDayStrip(tmv.tm_hour);
-
-    // End with VT323-86 loaded so tick() doesn't need to switch
-    Display::useFont(CLOCK_FN);
+    Display::useFont(CLOCK_FN);   // tick() mostly repaints digits
 }
 
 void chClockTick(const ChannelCtx& ctx) {
     time_t now = time(nullptr);
     struct tm tmv;
     localtime_r(&now, &tmv);
+    const bool h24 = ctx.settings->clock24h;
 
     if (tmv.tm_min != s_lastMM) {
-        paintMM(tmv.tm_min);
+        paintMM(tmv.tm_min, h24);
         s_lastMM = tmv.tm_min;
     }
     if (tmv.tm_hour != s_lastHH) {
-        const bool h24 = ctx.settings->clock24h;
         paintHH(tmv.tm_hour, h24);
         s_lastHH = tmv.tm_hour;
 
         char date[32];
-        ClockFmt::date(tmv, " · ", date, sizeof(date));
+        ClockFmt::dateTitle(tmv, " · ", date, sizeof(date));
         if (strcmp(date, s_lastDate) != 0) {
             paintDateRow(date);
-            strncpy(s_lastDate, date, sizeof(s_lastDate) - 1);
-            char week[16]; weekMeta(tmv, week, sizeof(week));
-            Display::statusMeta(week, Theme::AMBER);
+            Utf8::copy(s_lastDate, sizeof(s_lastDate), date);
+            statusText(tmv, *ctx.settings);          // the ISO week turns on Monday
         }
-        paintAmPm(tmv.tm_hour, h24);            // flips at noon / midnight
+        paintAmPm(tmv.tm_hour, h24);                 // flips at noon / midnight
         const char* uname = ctx.settings ? ctx.settings->userName.c_str() : "";
         const char* g = greetingFor(tmv.tm_hour, uname);
         if (strcmp(g, s_lastGreet) != 0) {
             paintGreeting(g);
-            strncpy(s_lastGreet, g, sizeof(s_lastGreet) - 1);
+            Utf8::copy(s_lastGreet, sizeof(s_lastGreet), g);
         }
-        paintDayStrip(tmv.tm_hour);
-        s_lastDayHour = tmv.tm_hour;
     }
 }

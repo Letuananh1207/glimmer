@@ -1,31 +1,35 @@
-// Claude — design-true layout from ClaudeUsageScreen (screens.jsx:199-234).
+// Claude — XP window (P-2026-11-26.8/.9, screen_specs §17 XP-Claude-*).
 //
-// Fonts (regenerated via tools/genfonts.py at exact em-px sizes):
-//   - "PHIÊN 5 GIỜ" / "TUẦN" / labels / sub-data : JBMono-11   (~13 px)
-//   - countdown "3h 2m" (right, just above the bar)    : JBMono-12B  (~12 px)
-//   - Clawd mascot top-right, mood from project board : Display::drawClawd
-//   - hero "%" digits                                 : VT323-86   (~70 px)
-//   - inline "%" suffix on hero                       : VT323-44   (~36 px)
+//   title     "Claude" (+ " · cũ 14P" / " · khóa lỗi" …)       XP::titleMeta
+//   y 28      hero label "Hạn mức tuần" / "Phiên 5 giờ"         JBMono-11 LABEL
+//   y 40      hero "38" VT323-86 + "%" VT323-44 at (10+w+2, 70) usage colour
+//   y 36      Clawd 72×40 at x 156 (asleep: y 52 + animated Zz) — mood from the board
+//   y 84      time to reset TR (229) — TR (150) while Clawd sleeps  JBMono-12B RED
+//   y 102     XP progress 220×14
+//   y 128     groupbox (10,128,220,34) other window: "12% · 2G 14P" TR (224,135) + bar 208×7
+//   y 166     white field (10,166,220,44): the project board, 3 rows of 13 px
+//             (credential info strip + 2 rows when the key is bad)
+// No status bar: the field runs to y 209. Every band below is in the body
+// (x 2..237, y 22..213) and cleared with XP::BODY / WHITE, never black.
 //
-// Dock layout (P-2026-11-25.3): content in x 40..228 (Layout::CONTENT_*);
-// main.cpp paints the dock at x 2..31 — no band here starts left of x 40.
-//
-//   y=176..218  bottom rows: the project board (what each agent project is
-//               doing: Cần duyệt / Chờ bạn / Lỗi / Đang chạy / Xong). Resets,
-//               per-model windows and the weekly pace are not shown here.
+// States: loading (XP::loading marquee), no data + bad key / offline / upstream
+// error (Chrome::credCard message box), stale (title meta, values xpDim),
+// key bad with data (info strip in the field), no project / all done (Clawd asleep).
 
 #include "channel.h"
 #include "chrome.h"
 #include "display.h"
-#include "history.h"
 #include "theme.h"
 #include "config.h"
 #include "layout.h"
 #include "attention.h"
 #include "timeutil.h"
 #include "utf8.h"
+#include "xp.h"
 #include <math.h>
 #include <time.h>
+
+using namespace Theme::XP;
 
 // ── tick() state cache (position-based, not source-based) ──
 static float  s_heroPct  = -2.f;
@@ -35,40 +39,45 @@ static char   s_heroReset[16] = "";
 static char   s_secSub[40]    = "";
 static Cred   s_cred          = Cred::NOT_SET;
 static MetaSlot s_meta;
-static int    s_loadDot = -1;
+static bool   s_loading = false;
+static uint32_t s_loadStep = 0;
+static int8_t s_asleep = -1;          // Clawd layout on screen: -1 unknown, 0 awake, 1 asleep
 
 bool chClaudeEnabled(const ChannelCtx& ctx) {
     return ctx.settings && ctx.settings->showClaude && !ctx.settings->claudeKey.isEmpty();
 }
 
-// Right meta carries only badges (CŨ / KHÓA LỖI / SỰ CỐ…); the per-model
-// label ("FABLE") was dropped — the model rows below already name it.
 static MetaSlot metaFor(const ChannelCtx& ctx) {
-    return usageMeta(*ctx.settings, ctx.claude->lastOk, VendorStatus::CLAUDE,
-                     "", ctx.claude->cred, 0);   // no model tag: badges only
+    return xpUsageMeta(*ctx.settings, ctx.claude->lastOk, VendorStatus::CLAUDE,
+                       "", ctx.claude->cred, 0);
 }
 
-// ── Region paint helpers (also called from draw()) ──
-
-// Right column, beside the hero %:
-//   y 58..98   Clawd 72×40 — mood follows the project board (tick); centred
-//              on the hero digits' ink (y 53..102, VT323-86 drawn at y 46)
-//   y 112      4d / 3h 14m   JBMono-12B      time left, right above the bar (tick)
-// The hero repaint clears only x < kHeroRight, so this column is never wiped.
-static constexpr int kL = Layout::CONTENT_LEFT;    // 40
-static constexpr int kR = Layout::CONTENT_RIGHT;   // 228
-static constexpr int kW = Layout::CONTENT_W;       // 188
-static constexpr int kHeroRight = 150;      // "38%" ends at 128; "100" at 142 (no "%")
-static constexpr int kResetY    = 112;      // bottom 126; the bar starts at 128
-static constexpr int kClawdS = 4;                              // 18×10 cells → 72×40
-static constexpr int kClawdX = kR - 18 * kClawdS;              // 156
-static constexpr int kClawdY = 58;
+// ── Geometry (XP-Claude-A source) ──
+static constexpr int kL = Layout::XP_LEFT;          // 10
+static constexpr int kR = Layout::XP_RIGHT;         // 229
+static constexpr int kHeroY = 40, kPctY = 70;
+static constexpr int kHeroClearR = 155;             // hero clears x 10..154 (Clawd from 156)
+static constexpr int kBarY = 102;
+static constexpr int kResetY = 84;
+static constexpr int kResetXAwake = kR, kResetXAsleep = 150;
+static constexpr int kClawdS = 4;                   // 18×10 cells → 72×40
+static constexpr int kClawdX = 156;
+static constexpr int kClawdYAwake = 36, kClawdYAsleep = 52;
+static constexpr int kGroupY = 128, kGroupH = 34;
+static constexpr int kFieldY = 166, kFieldH = 44;
+static constexpr int kRowH = 13;
 static uint8_t s_clawdFrame = 0xFF;
+
+static uint16_t heroColor(float pct, bool dim) { return dim ? DIM : xpUsageColor(pct, GREEN); }
+// Bars are the lighter xpBar while healthy (XP-Claude-A), else the text colour.
+static uint16_t barColor(float pct, bool dim) {
+    uint16_t c = heroColor(pct, dim);
+    return c == GREEN ? BAR : c;
+}
 
 // Clawd's mood from the project board: alarmed for an approval, sad for an
 // error, walking while something runs, asleep (sleep eyes + "Zz", no blink)
-// when everything is done or nothing is on the board (P-2026-11-25.5). Blinks
-// every 4 s while awake.
+// when everything is done or nothing is on the board. Blinks every 4 s awake.
 static uint8_t clawdFrame() {
     const Projects::Board& b = AttentionQueue::projects();
     int ord[Projects::kMax];
@@ -88,11 +97,17 @@ static uint8_t clawdFrame() {
     }
     return eyes | (walk ? 0x10 : 0);
 }
+static bool frameAsleep(uint8_t f) { return (f & 0x0F) == Display::CLAWD_SLEEP; }
 
-// Animated "Zz" over a sleeping Clawd (design P-2026-11-25.6, token
-// component.clawd.sleepMark): one z drifting up and growing, 12 frames × 400 ms
-// then a 1.2 s pause (6 s cycle). Each frame repaints only 196..225 × 24..57.
-static constexpr int kZzX = 196, kZzY = 24, kZzW = 30, kZzH = 34;
+// ── Animated "Zz" over a sleeping Clawd (§6 table, token component.clawd.
+// sleepMark), every frame moved with Clawd to y 52 (§17 "Clawd ngủ"): frame
+// 6 lands at (196, 32), i.e. the §6 frames shifted (−6, −6) as drawn in
+// XP-Claude-NoProject/-Done. One z drifts up and grows, 12 frames × 400 ms
+// then a 1.2 s pause (6 s cycle). Each frame repaints only its box, which
+// stops at the title bar: cells above y 22 are not drawn.
+static constexpr int kZzDX = -6, kZzDY = -6;
+static constexpr int kZzX = 196 + kZzDX, kZzY = Layout::XP_BODY_Y;   // box x 190..219, y 22..51
+static constexpr int kZzW = 30, kZzH = kClawdYAsleep - Layout::XP_BODY_Y;
 static constexpr uint32_t kZzFrameMs = 400, kZzCycleMs = 6000;
 static constexpr int kZzFrames = 12;
 
@@ -107,9 +122,11 @@ static uint32_t s_zzT0    = 0;    // millis() of frame 0
 static int8_t   s_zzShown = -1;   // frame on screen; kZzFrames = pause (blank); -1 = none
 
 static void drawGlyph(const uint8_t* rows, int n, int x, int y, uint16_t color) {
-    for (int j = 0; j < n; j++)
+    for (int j = 0; j < n; j++) {
+        if (y + j * 2 < kZzY) continue;                      // never into the title bar
         for (int i = 0; i < n; i++)
             if (rows[j] & (1 << (n - 1 - i))) tft.fillRect(x + i * 2, y + j * 2, 2, 2, color);
+    }
 }
 
 // k < kZzFrames: that frame; kZzFrames: blank (pause); -1: blank, Zz off.
@@ -117,17 +134,17 @@ static void paintZzFrame(int k) {
     static const uint8_t kz3[3] = {0x07, 0x02, 0x07};
     static const uint8_t kz4[4] = {0x0F, 0x02, 0x04, 0x0F};
     static const uint8_t kZ5[5] = {0x1F, 0x02, 0x04, 0x08, 0x1F};
-    tft.fillRect(kZzX, kZzY, kZzW, kZzH, Theme::BG);
+    tft.fillRect(kZzX, kZzY, kZzW, kZzH, BODY);
     if (k >= 0 && k < kZzFrames) {
         ZzFrame f;
         memcpy_P(&f, &kZz[k], sizeof(f));
         const uint8_t* rows = f.glyph == 0 ? kz3 : f.glyph == 1 ? kz4 : kZ5;
-        drawGlyph(rows, 3 + f.glyph, f.x, f.y, f.faint ? Theme::LINE : Theme::MUTED);
+        // Fading frames (LINE on the dark theme) are xpDim on the beige body.
+        drawGlyph(rows, 3 + f.glyph, f.x + kZzDX, f.y + kZzDY, f.faint ? DIM : MUTED);
     }
     s_zzShown = (int8_t)k;
 }
 
-// Advance the Zz while asleep (called every tick); no-op between frames.
 static void tickZz() {
     if (s_zzShown < 0) return;
     int k = (int)((millis() - s_zzT0) % kZzCycleMs / kZzFrameMs);
@@ -135,88 +152,94 @@ static void tickZz() {
     if (k != s_zzShown) paintZzFrame(k);
 }
 
-static void paintClawd(bool force = false) {
-    uint8_t f = clawdFrame();
-    if (!force && f == s_clawdFrame) return;
-    const bool asleep    = (f & 0x0F) == Display::CLAWD_SLEEP;
-    const bool wasAsleep = s_clawdFrame != 0xFF && (s_clawdFrame & 0x0F) == Display::CLAWD_SLEEP;
-    Display::drawClawd(kClawdX, kClawdY, kClawdS, Display::CLAWD_ORANGE, f & 0x0F, f & 0x10);
-    if (asleep && (!wasAsleep || force)) { s_zzT0 = millis(); paintZzFrame(0); }
-    else if (!asleep && (wasAsleep || force)) paintZzFrame(-1);
-    s_clawdFrame = f;
-}
+// ── Region paint helpers (also called from draw()) ──
 
-static void paintRightColumn() {
-    tft.fillRect(kHeroRight, 26, SCREEN_W - kHeroRight, kResetY - 27, Theme::BG);
-    paintClawd(true);
-}
+static bool s_dim = false;                 // values painted dimmed (stale)
 
-static void paintSessReset(time_t resetEpoch) {
+static void paintReset(time_t resetEpoch) {
     String s = (resetEpoch > 0) ? Api::formatCountdown(resetEpoch) : String("--");
-    tft.fillRect(kHeroRight, kResetY - 1, SCREEN_W - kHeroRight - 8, 17, Theme::BG);
+    const bool asleep = s_asleep == 1;
+    // Awake: x 156..229 under Clawd (y 76..101). Asleep: left of Clawd, inside
+    // the hero band (x 100..154) — only the countdown's own box.
+    if (asleep) tft.fillRect(100, kResetY - 1, kHeroClearR - 100, 17, BODY);
+    else        tft.fillRect(kClawdX, kClawdYAwake + 40, kR + 1 - kClawdX, kBarY - kClawdYAwake - 40, BODY);
     Display::useFont("JBMono-12B");
     tft.setTextDatum(TR_DATUM);
-    tft.setTextColor(Theme::CORAL, Theme::BG);
-    tft.drawString(s, kR, kResetY);
-    strncpy(s_heroReset, s.c_str(), sizeof(s_heroReset) - 1);
+    tft.setTextColor(s_dim ? DIM : RED, BODY);
+    tft.drawString(s, asleep ? kResetXAsleep : kResetXAwake, kResetY);
+    Utf8::copy(s_heroReset, sizeof(s_heroReset), s.c_str());
 }
 
-static void paintSessHero(float pct, bool stale) {
+static void paintHero(float pct) {
     char pctBuf[8];
     if (pct < 0) snprintf_P(pctBuf, sizeof(pctBuf), PSTR("--"));
     else         snprintf_P(pctBuf, sizeof(pctBuf), PSTR("%.0f"), Api::shownPct(pct));
-    // Clear the hero band + suffix (left of the right column only)
-    tft.fillRect(kL, 46, kHeroRight - kL, 76, Theme::BG);
+    tft.fillRect(kL, kHeroY, kHeroClearR - kL, kBarY - kHeroY, BODY);   // x 10..154, y 40..101
 
-    // Stale data stays visible but dimmed — it is not a live reading.
-    uint16_t uc = stale ? Theme::MUTED : Display::usageColor(pct);
+    const uint16_t uc = heroColor(pct, s_dim);
     Display::useFont("VT323-86");
     tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(uc, Theme::BG);
-    tft.drawString(pctBuf, kL, 46);
-    int heroW = tft.textWidth(pctBuf);
-    int heroH = tft.fontHeight();
-
-    // "100" fills the column up to x 142; its "%" would run into Clawd (x 156).
-    if (strlen(pctBuf) < 3) {
+    tft.setTextColor(uc, BODY);
+    tft.drawString(pctBuf, kL, kHeroY);
+    const int heroW = tft.textWidth(pctBuf);
+    // "100" ends at x 112; its "%" would meet the sleeping-Clawd countdown.
+    if (strlen(pctBuf) < 3 || s_asleep != 1) {
         Display::useFont("VT323-44");
-        tft.setTextColor(uc, Theme::BG);
-        int pctY = 46 + (heroH - tft.fontHeight()) - 4;
-        tft.drawString("%", kL + heroW + 2, pctY);
+        tft.setTextColor(uc, BODY);
+        tft.drawString("%", kL + heroW + 2, kPctY);
     }
-
-    Display::pixelBar(kL, 128, kW, 8,
-                     pct < 0 ? 0 : Api::shownPct(pct), uc);
+    XP::progress(kL, kBarY, kR + 1 - kL, 14, pct < 0 ? 0 : Api::shownPct(pct), barColor(pct, s_dim), 2);
 }
 
-static void paintWeeklyCompact(const char* label, float pct, time_t weekReset) {
-    tft.fillRect(kL, 150, SCREEN_W - kL, 20, Theme::BG);
+static void paintClawd(bool force = false) {
+    uint8_t f = clawdFrame();
+    if (!force && f == s_clawdFrame) return;
+    const bool asleep = frameAsleep(f);
+    Display::drawClawd(kClawdX, asleep ? kClawdYAsleep : kClawdYAwake, kClawdS,
+                       Display::CLAWD_ORANGE, f & 0x0F, f & 0x10, BODY);
+    if (asleep && (s_zzShown < 0 || force)) { s_zzT0 = millis(); paintZzFrame(0); }
+    s_clawdFrame = f;
+}
+
+// Clawd awake ↔ asleep moves Clawd (y 36 ↔ 52), the countdown (x 229 ↔ 150)
+// and the Zz: clear the right column, then repaint the hero (its band holds
+// the sleeping countdown), Clawd and the countdown.
+static void paintRightColumn(float heroPct, time_t heroRst, bool asleep) {
+    tft.fillRect(kHeroClearR, Layout::XP_BODY_Y, kR + 1 - kHeroClearR, kBarY - Layout::XP_BODY_Y, BODY);
+    s_zzShown = -1;
+    s_asleep = asleep ? 1 : 0;
+    paintHero(heroPct);
+    paintClawd(true);
+    paintReset(heroRst);
+}
+
+// Group "Phiên 5 giờ" / "Hạn mức tuần": "12% · 2G 14P" TR (224,135) + bar (16,151,208,7).
+static void secText(float pct, time_t reset, char* buf, size_t n) {
+    if (pct < 0) { snprintf_P(buf, n, PSTR("--")); return; }
+    if (reset > 0)
+        snprintf_P(buf, n, PSTR("%d%% \xC2\xB7 %s"), (int)(Api::shownPct(pct) + 0.5f),
+                   Api::formatCountdown(reset).c_str());
+    else
+        snprintf_P(buf, n, PSTR("%d%%"), (int)(Api::shownPct(pct) + 0.5f));
+}
+
+static void paintSecondary(float pct, time_t reset) {
+    char s[40]; secText(pct, reset, s, sizeof(s));
+    tft.fillRect(kL + 2, 135, 216, 14, BODY);           // inside the groupbox, y 135..148
     Display::useFont("JBMono-11");
-    tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString(label, kL, 150);
-
-    String s;
-    if (pct < 0) s = "--";
-    else {
-        s = String((int)(Api::shownPct(pct) + 0.5f)) + "%";
-        if (weekReset > 0) s += " \xC2\xB7 " + Api::formatCountdown(weekReset);
-    }
     tft.setTextDatum(TR_DATUM);
-    tft.setTextColor(Theme::INK_DIM, Theme::BG);
-    tft.drawString(s, kR, 150);
-    strncpy(s_secSub, s.c_str(), sizeof(s_secSub) - 1);
-
-    uint16_t uc = Display::usageColor(pct);
-    Display::pixelBar(kL, 164, kW, 4, pct < 0 ? 0 : Api::shownPct(pct), uc);
+    tft.setTextColor(s_dim ? DIM : BLACK, BODY);
+    tft.drawString(s, 224, 135);
+    Utf8::copy(s_secSub, sizeof(s_secSub), s);
+    XP::progress(16, 151, 208, 7, pct < 0 ? 0 : Api::shownPct(pct), barColor(pct, s_dim));
 }
 
-// ── Project board rows ──
+// ── Project board rows (white field) ──
 //
 //   ■ glimmer Cần duyệt · Bash      2P     square + status in the state colour
-//   ■ api     Xong                  14P
-// The " · detail" part is dropped when it doesn't fit (the dock layout is
-// 188 px wide): "Cần duyệt" rather than "Cần duyệt · Ba".
+// Square 5×5 at (14, y+4), name TL (23, y) black, status 7 px after the
+// name, age TR (225, y) muted. The " · detail" part is dropped when it
+// doesn't fit; stale data dims square, name and status (XP-Claude-Stale).
 
 static const char* stateLabel(Projects::State s) {
     switch (s) {
@@ -230,57 +253,53 @@ static const char* stateLabel(Projects::State s) {
 
 static uint16_t stateColor(Projects::State s) {
     switch (s) {
-        case Projects::P_APPROVAL: return Theme::AMBER;
-        case Projects::P_INPUT:    return Theme::SKY;
-        case Projects::P_ERROR:    return Theme::CORAL;
-        case Projects::P_WORKING:  return Theme::LILAC;
-        default:                   return Theme::MINT;
+        case Projects::P_APPROVAL: return AMBER;
+        case Projects::P_INPUT:    return SKY;
+        case Projects::P_ERROR:    return RED;
+        case Projects::P_WORKING:  return LILAC;
+        default:                   return GREEN;
     }
 }
 
-// Cut whole UTF-8 characters until s fits maxW (current font).
-static void fitTo(char* s, int maxW) {
-    size_t n = strlen(s);
-    while (n > 1 && tft.textWidth(s) > maxW) { n = Utf8::prevChar(s, n); s[n] = '\0'; }
-}
-
 static void paintProjectRow(const Projects::Entry& x, int y, uint32_t now) {
-    const uint16_t sc = stateColor(x.state);
-    tft.fillRect(kL, y + 4, 5, 5, sc);
+    const uint16_t sc = s_dim ? DIM : stateColor(x.state);
+    tft.fillRect(14, y + 4, 5, 5, sc);
 
     char age[8]; TimeUtil::shortDuration((long)(now - x.since), age, sizeof(age));
     tft.setTextDatum(TR_DATUM);
-    tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString(age, kR, y);
-    const int right = kR - tft.textWidth(age) - 8;
+    tft.setTextColor(MUTED, WHITE);
+    tft.drawString(age, 225, y);
+    const int right = 225 - tft.textWidth(age) - 7;
 
     char proj[24]; Utf8::copy(proj, sizeof(proj), x.project);
-    fitTo(proj, 84);                                  // ≤ 12 glyphs
+    XP::fitText(proj, 84);                            // ≤ 12 glyphs
     tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(Theme::INK_DIM, Theme::BG);
-    tft.drawString(proj, kL + 10, y);
-    const int sx = kL + 10 + tft.textWidth(proj) + 8;
+    tft.setTextColor(s_dim ? DIM : BLACK, WHITE);
+    tft.drawString(proj, 23, y);
+    const int sx = 23 + tft.textWidth(proj) + 7;
 
     char st[48];
     if (x.detail[0]) snprintf_P(st, sizeof(st), PSTR("%s \xC2\xB7 %s"), stateLabel(x.state), x.detail);
     else             snprintf_P(st, sizeof(st), PSTR("%s"), stateLabel(x.state));
     if (x.detail[0] && tft.textWidth(st) > right - sx)
         snprintf_P(st, sizeof(st), PSTR("%s"), stateLabel(x.state));   // drop the detail
-    fitTo(st, right - sx);
-    tft.setTextColor(sc, Theme::BG);
+    XP::fitText(st, right - sx);
+    tft.setTextColor(sc, WHITE);
     tft.drawString(st, sx, y);
 }
 
 static uint32_t s_boardRev = 0;
 
-// Bottom rows: credential banner > project board (3 rows).
+// Field interior (x 11..228, y 167..208): credential strip + rule (KeyExpired)
+// then the board, or "Chưa có hoạt động project" centred.
 static void paintBottomRows(const ClaudeData& d) {
-    const int startY = 176, rowH = 14;
-    tft.fillRect(kL, startY, SCREEN_W - kL, rowH * 3, Theme::BG);
-    int row = 0;
+    tft.fillRect(kL + 1, kFieldY + 1, kR - kL - 1, kFieldH - 2, WHITE);
+    int y = kFieldY + 2, rows = 3;                      // rows at 168, 181, 194
     if (CredState::bad(d.cred)) {
-        Chrome::credBanner(startY, true, d.cred);
-        row = 1;
+        Chrome::credBanner(kL + 1, kFieldY + 1, kR - kL - 1, true, d.cred);   // y 167..180
+        tft.drawFastHLine(kL + 1, kFieldY + 15, kR - kL - 1, STATUS_LINE);      // y 181
+        y = kFieldY + 16;                               // rows at 182, 195
+        rows = 2;
     }
     s_cred = d.cred;
     Display::useFont("JBMono-11");
@@ -288,138 +307,134 @@ static void paintBottomRows(const ClaudeData& d) {
     const Projects::Board& b = AttentionQueue::projects();
     const uint32_t now = AttentionQueue::now();
     int ord[Projects::kMax], n = Projects::ordered(b, ord, now);
-    const int room = 3 - row;
-    const int show = n > room ? room : n;
-    for (int i = 0; i < show; i++, row++) paintProjectRow(b.e[ord[i]], startY + row * rowH, now);
+    const int show = n > rows ? rows : n;
+    for (int i = 0; i < show; i++) paintProjectRow(b.e[ord[i]], y + i * kRowH, now);
 
-    if (n == 0 && row < 3) {
-        tft.setTextDatum(TL_DATUM);
-        tft.setTextColor(Theme::MUTED, Theme::BG);
-        tft.drawString("Chưa có hoạt động project", kL, startY + row * rowH);
+    if (n == 0) {
+        tft.setTextDatum(TC_DATUM);
+        tft.setTextColor(MUTED, WHITE);
+        tft.drawString("Chưa có hoạt động project", Layout::XP_MID, rows == 3 ? 182 : y + 7);
     }
     s_boardRev = AttentionQueue::projectsRevision();
 }
 
-void chClaudeDraw(const ChannelCtx& ctx) {
-    Display::clear();
+struct Windows { float heroPct, secPct; time_t heroRst, secRst; bool weeklyHero; };
+static Windows windowsFor(const ChannelCtx& ctx) {
+    const ClaudeData& d = *ctx.claude;
+    const bool w = ctx.settings->claudeWeeklyHero;
+    return { w ? d.weeklyPct : d.sessionPct, w ? d.sessionPct : d.weeklyPct,
+             w ? d.weeklyReset : d.sessionReset, w ? d.sessionReset : d.weeklyReset, w };
+}
 
+void chClaudeDraw(const ChannelCtx& ctx) {
+    XP::window("Claude", XPCore::ICON_CLAWD, false);
     const ClaudeData& d = *ctx.claude;
     s_meta = metaFor(ctx);
-    Display::statusBar("Claude", s_meta.text, Theme::CORAL, s_meta.color);
+    XP::titleMeta(s_meta.text);
+    s_heroPct = -2.f; s_secPct = -2.f;
+    s_heroReset[0] = 0; s_secSub[0] = 0;
+    s_asleep = -1; s_zzShown = -1; s_clawdFrame = 0xFF;
+    s_loading = false;
 
-    // Nothing to show yet and something is wrong: the credential/offline card.
+    // Nothing to show yet and something is wrong: the XP message box.
     if (!d.valid && (CredState::bad(d.cred) || d.err[0])) {
         Chrome::credCard(true, d.cred, 0, d.err);
-        s_heroPct = -2.f; s_secPct = -2.f;
-        s_heroReset[0] = 0; s_secSub[0] = 0;
         return;
     }
     if (!d.valid) {
-        Display::useFont("JBMono-16B");
-        tft.setTextDatum(MC_DATUM);
-        tft.setTextColor(Theme::MUTED, Theme::BG);
-        tft.drawString("Đang tải", Layout::CONTENT_MID, 100);
-        Display::loadingDots(Layout::CONTENT_MID - 21, 128, 0, Theme::CORAL);
-        s_loadDot = 0;
-        s_heroPct = -2.f; s_secPct = -2.f;
-        s_heroReset[0] = 0; s_secSub[0] = 0;
+        XP::loading("Đang tải...");
+        s_loading = true;
+        s_loadStep = ctx.now_ms / 200;
+        XP::loadingStep(s_loadStep);
         return;
     }
 
-    const bool swapped = ctx.settings->claudeWeeklyHero;
-    const float heroPct  = swapped ? d.weeklyPct   : d.sessionPct;
-    const float secPct   = swapped ? d.sessionPct  : d.weeklyPct;
-    const time_t heroRst = swapped ? d.weeklyReset : d.sessionReset;
-    const time_t secRst  = swapped ? d.sessionReset: d.weeklyReset;
-    s_stale = dimData(*ctx.settings, d.lastOk, d.cred);
+    const Windows w = windowsFor(ctx);
+    s_stale = Api::isStale(d.lastOk, *ctx.settings);
+    s_dim = s_stale;
 
     Display::useFont("JBMono-11");
     tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(Theme::MUTED, Theme::BG);
-    tft.drawString(swapped ? "TUẦN" : "PHIÊN 5 GIỜ", kL, 32);
+    tft.setTextColor(LABEL, BODY);
+    tft.drawString(w.weeklyHero ? "Hạn mức tuần" : "Phiên 5 giờ", kL, 28);
 
-    paintRightColumn();
-    paintSessReset(heroRst);
-    paintSessHero(heroPct, s_stale);
-    Display::dotsDivider(kL, 146, kW);
+    paintRightColumn(w.heroPct, w.heroRst, frameAsleep(clawdFrame()));
 
-    const char* secLabel = swapped ? "PHIÊN 5 GIỜ" : "TUẦN";
-    paintWeeklyCompact(secLabel, secPct, secRst);
-    Display::dotsDivider(kL, 170, kW);
+    XP::groupBox(kL, kGroupY, kR + 1 - kL, kGroupH, w.weeklyHero ? "Phiên 5 giờ" : "Hạn mức tuần");
+    paintSecondary(w.secPct, w.secRst);
+
+    XP::field(kL, kFieldY, kR + 1 - kL, kFieldH);
     paintBottomRows(d);
 
-    s_heroPct = (heroPct < 0) ? -2.f : heroPct;
-    s_secPct  = (secPct  < 0) ? -2.f : secPct;
+    s_heroPct = (w.heroPct < 0) ? -2.f : w.heroPct;
+    s_secPct  = (w.secPct  < 0) ? -2.f : w.secPct;
 }
 
 void chClaudeTick(const ChannelCtx& ctx) {
     if (!ctx.claude) return;
     const ClaudeData& d = *ctx.claude;
-    if (!d.valid && (CredState::bad(d.cred) || d.err[0])) return;   // static card
-    if (!d.valid) {                       // loading — sweep the chase dots
-        int lit = (ctx.now_ms / 150) % 5;
-        if (lit != s_loadDot) {
-            Display::loadingDots(Layout::CONTENT_MID - 21, 128, lit, Theme::CORAL);
-            s_loadDot = lit;
-        }
+    if (!d.valid && (CredState::bad(d.cred) || d.err[0])) return;   // static message box
+    if (!d.valid) {                       // loading — advance the marquee
+        uint32_t step = ctx.now_ms / 200;
+        if (s_loading && step != s_loadStep) { XP::loadingStep(step); s_loadStep = step; }
         return;
     }
 
-    // Countdown / badge / pace strings only change on a minute boundary;
-    // recompute (and heap-allocate) them only then, not on every 5 Hz tick.
+    // Countdowns / meta only change on a minute boundary; recompute (and
+    // heap-allocate) them only then, not on every 5 Hz tick.
     time_t t = time(nullptr);
     struct tm tm; localtime_r(&t, &tm);
     static int s_cdMin = -1;
     const bool minTick = (tm.tm_min != s_cdMin);
 
-    const bool swapped = ctx.settings->claudeWeeklyHero;
-    const float heroPct  = swapped ? d.weeklyPct   : d.sessionPct;
-    const float secPct   = swapped ? d.sessionPct  : d.weeklyPct;
-    const time_t heroRst = swapped ? d.weeklyReset : d.sessionReset;
-    const time_t secRst  = swapped ? d.sessionReset: d.weeklyReset;
+    const Windows w = windowsFor(ctx);
+    const bool stale = Api::isStale(d.lastOk, *ctx.settings);
+    const bool dimChanged = stale != s_stale;
+    s_stale = stale;
+    s_dim = stale;
 
-    paintClawd();                       // mood / blink / step — only when the frame changes
-    tickZz();                           // sleeping: next Zz frame every 400 ms
+    // Clawd: awake ↔ asleep relays the right column; otherwise only the frame.
+    const bool asleep = frameAsleep(clawdFrame());
+    if ((asleep ? 1 : 0) != s_asleep) {
+        paintRightColumn(w.heroPct, w.heroRst, asleep);
+        s_heroPct = (w.heroPct < 0) ? -2.f : w.heroPct;
+    } else {
+        paintClawd();                     // mood / blink / step — only when the frame changes
+    }
+    tickZz();                             // sleeping: next Zz frame every 400 ms
 
-    if (minTick) {
+    if (minTick || dimChanged) {
         MetaSlot m = metaFor(ctx);
-        if (m != s_meta) { Display::statusMeta(m.text, Theme::CORAL, m.color); s_meta = m; }
-        String fresh = (heroRst > 0) ? Api::formatCountdown(heroRst) : String("--");
-        if (strcmp(fresh.c_str(), s_heroReset) != 0) paintSessReset(heroRst);
+        if (m != s_meta) { XP::titleMeta(m.text); s_meta = m; }
     }
 
-    float p = (heroPct < 0) ? -2.f : heroPct;
-    bool stale = dimData(*ctx.settings, d.lastOk, d.cred);
-    if (fabsf(p - s_heroPct) > 0.4f || stale != s_stale) {
-        paintSessHero(heroPct, stale);
+    float p = (w.heroPct < 0) ? -2.f : w.heroPct;
+    if (fabsf(p - s_heroPct) > 0.4f || dimChanged) {
+        paintHero(w.heroPct);
+        if (s_asleep == 1) paintReset(w.heroRst);       // its slot is inside the hero band
         s_heroPct = p;
-        s_stale = stale;
+    }
+    if (minTick || dimChanged) {
+        String fresh = (w.heroRst > 0) ? Api::formatCountdown(w.heroRst) : String("--");
+        if (dimChanged || strcmp(fresh.c_str(), s_heroReset) != 0) paintReset(w.heroRst);
     }
 
-    // Secondary compact row — pct moves on refresh, countdown at minute ticks.
-    float sp = (secPct < 0) ? -2.f : secPct;
-    bool secDirty = fabsf(sp - s_secPct) > 0.4f;
+    // Secondary group — pct moves on refresh, countdown at minute ticks.
+    float sp = (w.secPct < 0) ? -2.f : w.secPct;
+    bool secDirty = fabsf(sp - s_secPct) > 0.4f || dimChanged;
     if (!secDirty && minTick) {
-        String subFresh;
-        if (secPct < 0) subFresh = "--";
-        else {
-            subFresh = String((int)(Api::shownPct(secPct) + 0.5f)) + "%";   // as painted
-            if (secRst > 0) subFresh += " \xC2\xB7 " + Api::formatCountdown(secRst);
-        }
-        if (strcmp(subFresh.c_str(), s_secSub) != 0) secDirty = true;
+        char fresh[40]; secText(w.secPct, w.secRst, fresh, sizeof(fresh));
+        if (strcmp(fresh, s_secSub) != 0) secDirty = true;
     }
     if (secDirty) {
-        const char* secLabel = swapped ? "PHIÊN 5 GIỜ" : "TUẦN";
-        paintWeeklyCompact(secLabel, secPct, secRst);
+        paintSecondary(w.secPct, w.secRst);
         s_secPct = sp;
     }
 
-    // Bottom rows: the project board moved, the credential changed, or a new
-    // minute (ages "2M" tick, entries time out).
-    bool rowsDirty = d.cred != s_cred || AttentionQueue::projectsRevision() != s_boardRev || minTick;
-    if (rowsDirty) {
+    // Field: the board moved, the credential changed, staleness flipped, or a
+    // new minute (ages "2P" tick, entries time out).
+    if (d.cred != s_cred || AttentionQueue::projectsRevision() != s_boardRev || minTick || dimChanged)
         paintBottomRows(d);
-    }
 
     s_cdMin = tm.tm_min;
 }

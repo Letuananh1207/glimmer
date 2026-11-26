@@ -12,12 +12,16 @@ namespace Display {
     void backlightOff();
     void setInvert(bool on);                       // toggle ST7789 INVON/INVOFF at runtime
 
-    // High-level scenes
-    void drawSplash(const char* line);             // animated startup screen
-    void drawSetupMode(const char* ap, const char* ip);
-    void drawConnecting(const char* ssid, int attempt);
+    // System screens, drawn after real XP (P-2026-11-26.9, screen_specs §17).
+    // None shows an information line any more: the line / ssid / attempt /
+    // pct arguments are accepted and ignored (the web page has them).
+    void drawSplash(const char* line);             // boot: black, flag, logo, running box
+    void splashStep(uint32_t step);                // boot box at step (= ms / 200); no-op off the boot screen
+    void splashWait(uint32_t ms);                  // delay(ms) that keeps the boot box running
+    void drawSetupMode(const char* ap, const char* ip);   // log-on screen: tile ap (split at '-') + ip
+    void drawConnecting(const char* ssid, int attempt);   // welcome: painted once
     void drawError(const char* title, const char* msg);
-    void drawOtaProgress(uint8_t pct);             // shown during OTA flash
+    void drawOtaProgress(uint8_t pct);             // "đang cập nhật...": painted once
 
     // 16×16 glimmer spark logo — direct-blit, no FS dependency.
     void drawLogo(int x, int y, uint16_t color);
@@ -46,7 +50,8 @@ namespace Display {
     void drawBlockedGlyph(int cx, int cy, uint16_t color);
 
     // Re-arm partial-redraw state for boot/system screens so the next
-    // drawSplash/drawConnecting/drawOtaProgress paints chrome from scratch.
+    // drawSplash/drawConnecting/drawOtaProgress paints chrome from scratch
+    // (each also repaints when a different system screen was last up).
     // Call this whenever a channel takes over the screen or a different
     // system screen activates.
     void resetSystemScreens();
@@ -81,10 +86,9 @@ namespace Display {
 
     // ── Design-system primitives (added v0.8) ──
     //
-    // Universal 22-px status bar across the top of every channel screen.
-    //   center:      title text, JBMono-12B
-    //   right slot:  small meta text (model name, location code, etc.)
-    //   y=22:        1-px accent under-line in the channel's color
+    // LEGACY (pre-XP) — forwards to the XP title bar (xp.h): title bar shows
+    // "<title> · <meta>"; accent/metaColor are ignored. New code: XP::window,
+    // XP::titleMeta. Removed once every channel is on XP (phase 2).
     void statusBar(const char* title, const char* rightMeta, uint16_t accent,
                    uint16_t metaColor = 0x8BF2 /* Theme::MUTED */);
     // Repaint only the status bar's right-meta slot (safe from tick()).

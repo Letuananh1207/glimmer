@@ -99,8 +99,11 @@ Bản thiết kế gốc của màn thiết bị đã mất; việc đầu tiên
 - Luật hành vi của màn ở `CLAUDE.md` gốc (mục Channels, Attention queue, Stale data & night modes, Credential states):
   thứ tự ưu tiên thẻ, thời gian giữ thẻ, khi nào dim / tối, kênh nào hiện theo skill. Vẽ trái luật → nói ngay: đổi luật
   (dòng "Đổi luật" trong CHANGELOG, phía code chốt) hay đổi ý tưởng.
-- Phong cách hiện có: nền đen, màu ấm, chữ mono, số VT323 to, linh vật Clawd, tiếng Việt viết hoa ở nhãn. Đổi phong
-  cách là quyết định của người dùng.
+- Phong cách hiện có (từ P-2026-11-26.8/.9): **kiểu Windows XP (Luna)** — cửa sổ thanh tiêu đề xanh, thân be, thanh
+  tác vụ có nút start; số VT323, linh vật Clawd, tiếng Việt. Đổi phong cách là quyết định của người dùng.
+- **Chức năng mới phía thiết bị phải tham khảo kỹ Windows XP thật** (người dùng yêu cầu 2026-11-26): tìm thành phần XP
+  thật tương ứng (hộp thoại, bong bóng khay, thanh tiến độ khối, danh sách, groupbox, màn welcome / đăng nhập…) và vẽ đúng
+  dáng, chữ, trạng thái, cách XP thật hành xử — không tự chế. Ghi trong ghi chú/CHANGELOG thành phần XP nào được dùng.
 - Sửa đúng artboard, chỉ phần được yêu cầu. Mỗi lượt: sửa → một dòng đã đổi gì → người dùng xem trên canvas. Chưa chắc →
   2–3 phương án, mỗi cái một artboard cạnh nhau.
 - Nhãn mới: đo theo mục Giới hạn **ngay khi vẽ**, ghi số px vào ghi chú để lúc chốt chép vào đặc tả.

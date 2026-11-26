@@ -1,20 +1,38 @@
-// Weather Forecast — 3-day range bars (design has 5-day, our API gives 3).
-// Design-true from WeatherForecastScreen.
+// Weather Forecast — XP window, design P-2026-11-26.8 §17 XP-Forecast
+// (+ -Empty). A white list box (10, 28) 220×162 with three 53-px rows:
+//
+//   row i: base = 28 + 53·i; today's row filled xpRowHi (y base+2..base+52),
+//          ruled xpRowLine at base+53 between rows
+//          label JBMono-12B TL (18, base+8) — today xpSky, else black
+//          condition JBMono-11 TL (18, base+28) muted
+//          lo TR (112, base+20) xpSky · track 74×4 at (118, base+25) xpRowLine
+//          · span 6 high at base+24 (today xpSky, else muted) · hi TR (222) xpRed
+//   status bar "3 ngày tới"
+// Empty: the list box with the sun icon ×2 (104, 70) xpGroup and
+// "Chưa có dự báo" JBMono-12B TC (120, 110) muted.
 
 #include "channel.h"
 #include "display.h"
 #include "theme.h"
 #include "config.h"
 #include "weather.h"
-#include "weather_icons.h"
 #include "layout.h"
+#include "utf8.h"
+#include "xp.h"
 #include <time.h>
 
+namespace C = Theme::XP;
 
 // tick cache: 3 days × (tmin, tmax, code)
 static float   s_fcMin[3]  = {-999, -999, -999};
 static float   s_fcMax[3]  = {-999, -999, -999};
 static uint8_t s_fcCode[3] = {255, 255, 255};
+
+static constexpr int kBoxX = 10, kBoxY = 28, kBoxW = 220, kBoxH = 162;
+static constexpr int kRowH = 53;
+// Track x 118..191; the span maps [gMin, gMax] onto x 125..183 (7 px inset
+// each side — measured from the design's three spans).
+static constexpr int kTrackX = 118, kTrackW = 74, kSpanX = 125, kSpanW = 59;
 
 bool chForecastEnabled(const ChannelCtx& ctx) {
     if (!ctx.settings || !ctx.settings->showForecast) return false;
@@ -23,59 +41,48 @@ bool chForecastEnabled(const ChannelCtx& ctx) {
     return w && w->valid;
 }
 
-// Row band (design P-2026-11-25.3 §15 Forecast-Dock): x 36..239 — right of
-// the dock (x 2..31) — h 52, step 56 from y 32. Text from x 44, track 92×8
-// at x 104, lo TR 206, hi TR 228.
-static constexpr int kRowX = 36;
-
 static void paintRow(int i, const WeatherDay& day, float gMin, float range, bool f) {
-    const char* labels[3] = { "NAY", "MAI", "KIA" };   // hôm nay / ngày mai / ngày kia
-    int rowH = 56;
-    int top = 32;
-    int y = top + i * rowH;
-    bool isToday = (i == 0);
+    static const char* const kLabels[3] = { "Nay", "Mai", "Kia" };
+    const int base = kBoxY + i * kRowH;
+    const bool today = (i == 0);
+    const uint16_t bg = today ? C::ROW_HI : C::WHITE;
 
-    // Clear the row band (today: PANEL background)
-    tft.fillRect(kRowX, y, SCREEN_W - kRowX, rowH - 4, isToday ? Theme::PANEL : Theme::BG);
-    tft.fillRect(kRowX, y, 2, rowH - 4, isToday ? Theme::CORAL : Theme::LINE);
+    // Row band y base+1..base+52 inside the box (the rule at base+53 stays).
+    tft.fillRect(kBoxX + 1, base + 1, kBoxW - 2, kRowH - 1, C::WHITE);
+    if (today) tft.fillRect(kBoxX + 1, base + 2, kBoxW - 2, kRowH - 2, C::ROW_HI);
 
-    Display::useFont("JBMono-16B");
     tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(isToday ? Theme::INK : Theme::INK_DIM,
-                     isToday ? Theme::PANEL : Theme::BG);
-    tft.drawString(labels[i], 44, y + 4);
+    Display::useFont("JBMono-12B");
+    tft.setTextColor(today ? C::SKY : C::BLACK, bg);
+    tft.drawString(kLabels[i], 18, base + 8);
 
-    WeatherIcon::draw(44, y + 26, day.code, isToday ? Theme::SKY : Theme::MUTED);
     Display::useFont("JBMono-11");
-    tft.setTextColor(Theme::MUTED, isToday ? Theme::PANEL : Theme::BG);
-    tft.drawString(Weather::describe(day.code), 62, y + 28);
+    tft.setTextColor(C::MUTED, bg);
+    char cond[24]; Utf8::copy(cond, sizeof(cond), Weather::describe(day.code));
+    XP::fitText(cond, 112 - 21 - 18 - 4);   // stops left of the lo column
+    tft.drawString(cond, 18, base + 28);
 
-    float dMin = day.tmin, dMax = day.tmax;
+    const float dMin = day.tmin, dMax = day.tmax;
+    tft.fillRect(kTrackX, base + 25, kTrackW, 4, C::ROW_LINE);
     if (dMin > -900 && dMax > -900) {
-        int barX = 104, barY = y + 10, barW = 92, barH = 8;
-        tft.fillRect(barX, barY, barW, barH, Theme::PANEL2);
-        int x0 = barX + (int)((dMin - gMin) / range * barW);
-        int x1 = barX + (int)((dMax - gMin) / range * barW);
+        int x0 = kSpanX + (int)((dMin - gMin) / range * kSpanW + 0.5f);
+        int x1 = kSpanX + (int)((dMax - gMin) / range * kSpanW + 0.5f);   // exclusive
         if (x1 < x0 + 4) x1 = x0 + 4;
-        // Solid span (no gradient — design P-2026-11-25.4 §11), kept inside
-        // the track: last column ≤ barX + barW - 1 (x 195).
-        const int last = barX + barW - 1;
-        if (x1 > last) { x1 = last; if (x0 > x1 - 4) x0 = x1 - 4; }
-        if (x0 < barX) x0 = barX;
-        tft.fillRect(x0, barY, x1 - x0 + 1, barH, isToday ? Theme::SKY : Theme::MUTED);
+        if (x1 > kTrackX + kTrackW) { x1 = kTrackX + kTrackW; if (x0 > x1 - 4) x0 = x1 - 4; }
+        if (x0 < kTrackX) x0 = kTrackX;
+        tft.fillRect(x0, base + 24, x1 - x0, 6, today ? C::SKY : C::MUTED);
     }
 
-    char minBuf[6], maxBuf[6];
-    if (dMin > -900) snprintf(minBuf, sizeof(minBuf), "%.0f", Weather::toDisplay(dMin, f));
-    else             snprintf(minBuf, sizeof(minBuf), "--");
-    if (dMax > -900) snprintf(maxBuf, sizeof(maxBuf), "%.0f", Weather::toDisplay(dMax, f));
-    else             snprintf(maxBuf, sizeof(maxBuf), "--");
-    Display::useFont("JBMono-11");
+    char minBuf[8], maxBuf[8];
+    if (dMin > -900) snprintf_P(minBuf, sizeof(minBuf), PSTR("%.0f°"), Weather::toDisplay(dMin, f));
+    else             snprintf_P(minBuf, sizeof(minBuf), PSTR("--"));
+    if (dMax > -900) snprintf_P(maxBuf, sizeof(maxBuf), PSTR("%.0f°"), Weather::toDisplay(dMax, f));
+    else             snprintf_P(maxBuf, sizeof(maxBuf), PSTR("--"));
     tft.setTextDatum(TR_DATUM);
-    tft.setTextColor(Theme::MUTED, isToday ? Theme::PANEL : Theme::BG);
-    tft.drawString(minBuf, 206, y + 28);
-    tft.setTextColor(Theme::INK, isToday ? Theme::PANEL : Theme::BG);
-    tft.drawString(maxBuf, 228, y + 28);
+    tft.setTextColor(C::SKY, bg);
+    tft.drawString(minBuf, 112, base + 20);
+    tft.setTextColor(C::RED, bg);
+    tft.drawString(maxBuf, 222, base + 20);
 }
 
 static void computeRange(const WeatherData* w, float& gMin, float& range) {
@@ -90,20 +97,28 @@ static void computeRange(const WeatherData* w, float& gMin, float& range) {
 }
 
 void chForecastDraw(const ChannelCtx& ctx) {
-    Display::clear();
-    Display::statusBar("Dự báo", "3 NGÀY", Theme::SKY);
+    XP::window("Dự báo", XPCore::ICON_WEATHER, true);
+    XP::statusBar("3 ngày tới", "");
+    XP::field(kBoxX, kBoxY, kBoxW, kBoxH);
 
     const WeatherData* w = &Weather::snapshot();
     if (!w || !w->valid) {
-        Display::drawText("chưa có dự báo", Layout::CONTENT_MID, 110, Theme::MUTED, Display::TITLE);
+        XP::drawIcon(XPCore::ICON_WEATHER, 104, 70, 2, C::GROUP);
+        Display::useFont("JBMono-12B");
+        tft.setTextDatum(TC_DATUM);
+        tft.setTextColor(C::MUTED, C::WHITE);
+        tft.drawString("Chưa có dự báo", Layout::XP_MID, 110);
         for (int i = 0; i < 3; i++) { s_fcMin[i] = -999; s_fcMax[i] = -999; s_fcCode[i] = 255; }
         return;
     }
 
+    // Rules between the rows (y 81, 134).
+    for (int i = 1; i < 3; i++)
+        tft.fillRect(kBoxX + 1, kBoxY + i * kRowH, kBoxW - 2, 1, C::ROW_LINE);
+
     bool f = ctx.settings && ctx.settings->useFahrenheit;
     float gMin, range;
     computeRange(w, gMin, range);
-
     for (int i = 0; i < 3; i++) {
         paintRow(i, w->forecast[i], gMin, range, f);
         s_fcMin[i]  = w->forecast[i].tmin;
@@ -117,7 +132,6 @@ void chForecastTick(const ChannelCtx& ctx) {
     if (!w || !w->valid) return;
     bool f = ctx.settings && ctx.settings->useFahrenheit;
 
-    // Only repaint rows where data changed
     bool anyDirty = false;
     for (int i = 0; i < 3; i++) {
         if (w->forecast[i].tmin != s_fcMin[i]
@@ -126,7 +140,7 @@ void chForecastTick(const ChannelCtx& ctx) {
     }
     if (!anyDirty) return;
 
-    // If the global range changes, the bar scale shifts — repaint all 3.
+    // The global range moves every span — repaint all 3 rows.
     float gMin, range;
     computeRange(w, gMin, range);
     for (int i = 0; i < 3; i++) {

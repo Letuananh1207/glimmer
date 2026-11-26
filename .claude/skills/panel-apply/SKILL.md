@@ -29,6 +29,10 @@ khi sửa). Tiến độ: `.panel_design_sync.json` ở gốc repo — `{"applie
 | code màn | `src/channels/ch_<kênh>.cpp`, `chrome.{h,cpp}` (status bar, thẻ credential), `src/core/display.cpp` (Clawd, màn hệ thống), `theme.h`, `layout.h` |
 | xem trước không cần nạp | `python tools/screens.py out.png [số màn…]` (vẽ tay theo code — **sửa layout thì sửa cả file này**), `tools/vlwpreview.py` (đo chữ) |
 
+**Theo Windows XP thật** (người dùng yêu cầu 2026-11-26): mọi chức năng mới phía thiết bị tham khảo kỹ XP thật — phiếu
+nêu thành phần XP tương ứng và hành vi của nó; khi đặc tả im lặng, làm đúng như XP thật làm và ghi vào báo cáo; brief
+cho agent phải kèm yêu cầu này.
+
 **Thiết kế trước, code sau.** Màn mà `design/panel/` chưa có → **không tự vẽ tạm**: soạn phiếu (mục 5), chờ bản chốt.
 Phần không dính giao diện (dữ liệu, API, scheduler) làm trước được nếu người dùng muốn.
 

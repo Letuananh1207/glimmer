@@ -141,7 +141,7 @@ static void handleApiState() {
     d["reset_reason"]        = ESP.getResetReason();
     d["build"]               = __DATE__ " " __TIME__;
     d["active_channel"]      = mainActiveChannelName();
-    // Skills: every one this firmware has + the enabled ones (dock tabs, R-SK-1/2). "skill"
+    // Skills: every one this firmware has + the enabled ones (taskbar buttons, R-SK-1/2). "skill"
     // = the first enabled, for apps before 2026-11-25.3 (they hide the switch without it, R-SK-4).
     {
         const char* on = pSettings ? pSettings->skillsOn.c_str() : Skill::kDefaultOn;

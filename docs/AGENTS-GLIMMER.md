@@ -67,10 +67,9 @@ Behaviour:
 
 - **Approvals and questions** (`approval`, `input`) hold the screen until
   cleared or expired (user setting "Hold the screen until answered", on by
-  default). While any waits, the Claude tab of the dock on the left edge
-  shows an amber count badge; on the full-screen card and the night face
-  (no dock) the strip at the bottom is solid amber (approval) or sky
-  (question) instead.
+  default). While any waits, the Claude button on the taskbar at the bottom
+  shows an amber count badge; while such a card is on screen the Claude
+  button is lit orange instead. The night face has no taskbar.
 - The queue holds **5** cards, most important first. When full, the least
   important, oldest card goes; approvals/questions are never pushed out by
   anything less important — the push fails instead (HTTP 409 / MCP
@@ -78,7 +77,7 @@ Behaviour:
 - Several cards holding the screen cycle every 6 s.
 - In night mode "clock" or "dark", only `urgent` cards, `error` cards with no
   `agent`, and — if the user enabled "Show approvals at night too" —
-  approvals/questions appear; others wait (the strip still lights).
+  approvals/questions appear; others wait.
 
 ### How cards look
 

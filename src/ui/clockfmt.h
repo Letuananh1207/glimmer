@@ -35,6 +35,28 @@ inline void date(const struct tm& tm, const char* sep, char* buf, size_t n) {
     snprintf(buf, n, "%s%s%d/%d", weekday(tm.tm_wday, true), sep, tm.tm_mday, tm.tm_mon + 1);
 }
 
+// "Chủ Nhật", "Thứ Hai" … "Thứ Bảy" — title case for the XP windows
+// (P-2026-11-26.8: XP-Clock "Thứ Tư · 25/11", XP-Night "Thứ Tư 25/11").
+inline const char* weekdayTitle(int wday) {
+    static const char* const kTitle[7] = {"Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư",
+                                          "Thứ Năm", "Thứ Sáu", "Thứ Bảy"};
+    if (wday < 0 || wday > 6) wday = 0;
+    return kTitle[wday];
+}
+
+// "Thứ Hai<sep>24/11" in title case. buf ≥ 24.
+inline void dateTitle(const struct tm& tm, const char* sep, char* buf, size_t n) {
+    snprintf(buf, n, "%s%s%d/%d", weekdayTitle(tm.tm_wday), sep, tm.tm_mday, tm.tm_mon + 1);
+}
+
+// "GMT+7", "GMT-3", "GMT+5:30" from a UTC offset in minutes.
+inline void gmtLabel(int tzMin, char* buf, size_t n) {
+    char sign = tzMin < 0 ? '-' : '+';
+    int a = tzMin < 0 ? -tzMin : tzMin;
+    if (a % 60) snprintf(buf, n, "GMT%c%d:%02d", sign, a / 60, a % 60);
+    else        snprintf(buf, n, "GMT%c%d", sign, a / 60);
+}
+
 // "17:48" or "5:48PM".
 inline void hm(time_t t, bool h24, char* buf, size_t n) {
     struct tm tm; localtime_r(&t, &tm);

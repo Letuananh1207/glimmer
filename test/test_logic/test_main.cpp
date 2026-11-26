@@ -12,7 +12,7 @@
 #include "utf8.h"
 #include "skill_core.h"
 #include "projects_core.h"
-#include "dock_core.h"
+#include "xp_core.h"
 #include "photos_core.h"
 #include <time.h>
 #include <initializer_list>
@@ -635,20 +635,130 @@ void test_countdown_units() {
     TimeUtil::countdown(23L * 3600 + 59 * 60, b, sizeof(b)); TEST_ASSERT_EQUAL_STRING("23G 59P", b);
 }
 
-void test_dock_tabs_and_badge() {
-    TEST_ASSERT_EQUAL(Dock::TAB_NO_DOCK, Dock::tabFor("Attention"));
-    TEST_ASSERT_EQUAL(Dock::TAB_NO_DOCK, Dock::tabFor("Night"));
-    TEST_ASSERT_EQUAL(Dock::TAB_NO_DOCK, Dock::tabFor(nullptr));
-    TEST_ASSERT_EQUAL(Dock::TAB_NONE, Dock::tabFor("Info"));
-    TEST_ASSERT_EQUAL(Dock::TAB_WEATHER, Dock::tabFor("Weather"));
-    TEST_ASSERT_EQUAL(Dock::TAB_WEATHER, Dock::tabFor("Forecast"));
-    TEST_ASSERT_EQUAL(Dock::TAB_CLOCK, Dock::tabFor("Clock"));
+void test_taskbar_buttons_and_badge() {
+    using namespace XPCore;
+    TEST_ASSERT_EQUAL(BTN_NO_BAR, buttonFor("Night"));
+    TEST_ASSERT_EQUAL(BTN_NO_BAR, buttonFor(nullptr));
+    TEST_ASSERT_EQUAL(BTN_CLAUDE, buttonFor("Attention"));   // agent cards are Claude windows
+    TEST_ASSERT_EQUAL(BTN_NONE, buttonFor("Info"));
+    TEST_ASSERT_EQUAL(BTN_WEATHER, buttonFor("Weather"));
+    TEST_ASSERT_EQUAL(BTN_WEATHER, buttonFor("Forecast"));
+    TEST_ASSERT_EQUAL(BTN_CLOCK, buttonFor("Clock"));
     const char* agent[] = {"Home", "Agents", "Claude", "Codex", "AI", "Trend", "Setup"};
-    for (const char* n : agent) TEST_ASSERT_EQUAL(Dock::TAB_CLAUDE, Dock::tabFor(n));
-    TEST_ASSERT_EQUAL(-1, Dock::badgeGlyph(0));
-    TEST_ASSERT_EQUAL(1, Dock::badgeGlyph(1));
-    TEST_ASSERT_EQUAL(9, Dock::badgeGlyph(9));
-    TEST_ASSERT_EQUAL(10, Dock::badgeGlyph(10));   // '+'
+    for (const char* n : agent) {
+        TEST_ASSERT_EQUAL(BTN_CLAUDE, buttonFor(n));
+        TEST_ASSERT_EQUAL(ICON_CLAWD, iconFor(n));
+    }
+    TEST_ASSERT_EQUAL(ICON_INFO, iconFor("Info"));
+    TEST_ASSERT_EQUAL(ICON_WEATHER, iconFor("Forecast"));
+    TEST_ASSERT_EQUAL(ICON_NONE, iconFor("Night"));
+    TEST_ASSERT_EQUAL(-1, badgeGlyph(0));
+    TEST_ASSERT_EQUAL(1, badgeGlyph(1));
+    TEST_ASSERT_EQUAL(9, badgeGlyph(9));
+    TEST_ASSERT_EQUAL(10, badgeGlyph(10));   // '+'
+    // Orange Claude button: approval / question / error cards only.
+    TEST_ASSERT_TRUE(flashes(Attention::K_APPROVAL));
+    TEST_ASSERT_TRUE(flashes(Attention::K_INPUT));
+    TEST_ASSERT_TRUE(flashes(Attention::K_ERROR));
+    TEST_ASSERT_FALSE(flashes(Attention::K_PROGRESS));
+    TEST_ASSERT_FALSE(flashes(Attention::K_SUCCESS));
+}
+
+void test_taskbar_state_looks() {
+    using namespace XPCore;
+    BarState s;
+    s.mask = buttonMask("agent,photo,weather,clock");
+    s.active = BTN_CLAUDE; s.badge = 1; s.progress = 10; s.accent = 0xFA89;
+    TEST_ASSERT_EQUAL(LOOK_PRESSED, lookOf(BTN_CLAUDE, s));
+    TEST_ASSERT_EQUAL(LOOK_NORMAL, lookOf(BTN_PHOTO, s));
+    TEST_ASSERT_EQUAL(1, badgeOn(BTN_CLAUDE, s));
+    TEST_ASSERT_EQUAL(-1, badgeOn(BTN_WEATHER, s));
+    TEST_ASSERT_EQUAL(10, progressOn(BTN_CLAUDE, s));
+    TEST_ASSERT_EQUAL(0, progressOn(BTN_CLOCK, s));
+    // A card that needs you: orange, no badge, no progress (XP-Attention).
+    BarState f = s; f.flash = true;
+    TEST_ASSERT_EQUAL(LOOK_FLASH, lookOf(BTN_CLAUDE, f));
+    TEST_ASSERT_EQUAL(-1, badgeOn(BTN_CLAUDE, f));
+    TEST_ASSERT_EQUAL(0, progressOn(BTN_CLAUDE, f));
+    TEST_ASSERT_TRUE(buttonChanged(BTN_CLAUDE, s, f));
+    TEST_ASSERT_FALSE(buttonChanged(BTN_PHOTO, s, f));
+    // Progress tick on the Weather button repaints only that button.
+    BarState w = s; w.active = BTN_WEATHER;
+    BarState w2 = w; w2.progress = 11;
+    TEST_ASSERT_TRUE(buttonChanged(BTN_WEATHER, w, w2));
+    TEST_ASSERT_FALSE(buttonChanged(BTN_CLAUDE, w, w2));
+    // Progress: 26 px × elapsed / slide, clamped; 0 for no slide.
+    TEST_ASSERT_EQUAL(0, progressLen(0, 20000));
+    TEST_ASSERT_EQUAL(13, progressLen(10000, 20000));
+    TEST_ASSERT_EQUAL(26, progressLen(30000, 20000));
+    TEST_ASSERT_EQUAL(0, progressLen(5000, 0));
+    // Start button rounding: 5,3,2,1,1, 0×16, 1,1,2,3,5.
+    TEST_ASSERT_EQUAL(5, startInset(0));
+    TEST_ASSERT_EQUAL(0, startInset(5));
+    TEST_ASSERT_EQUAL(0, startInset(20));
+    TEST_ASSERT_EQUAL(1, startInset(21));
+    TEST_ASSERT_EQUAL(5, startInset(25));
+}
+
+void test_xp_progress_blocks_and_marquee() {
+    using namespace XPCore;
+    // XP-Claude-A weekly bar 220×14 at (10,102), padY 2: blocks 22×8 from (13,105), gap 2.
+    Blocks b = blocks(10, 102, 220, 14, 2);
+    TEST_ASSERT_EQUAL(13, b.x0); TEST_ASSERT_EQUAL(105, b.y0);
+    TEST_ASSERT_EQUAL(22, b.w);  TEST_ASSERT_EQUAL(8, b.h);
+    TEST_ASSERT_EQUAL(2, b.gap); TEST_ASSERT_EQUAL(22, b.lastW);
+    // Session bar 208×7 at (16,151): 21×3 from (18,153), gap 1, last 28.
+    b = blocks(16, 151, 208, 7);
+    TEST_ASSERT_EQUAL(18, b.x0); TEST_ASSERT_EQUAL(153, b.y0);
+    TEST_ASSERT_EQUAL(21, b.w);  TEST_ASSERT_EQUAL(3, b.h);
+    TEST_ASSERT_EQUAL(1, b.gap); TEST_ASSERT_EQUAL(28, b.lastW);
+    // XP-Home 120×14 at (70,134), default padY 1: 10×10 from (73,136), last 18.
+    b = blocks(70, 134, 120, 14);
+    TEST_ASSERT_EQUAL(73, b.x0); TEST_ASSERT_EQUAL(136, b.y0);
+    TEST_ASSERT_EQUAL(10, b.w);  TEST_ASSERT_EQUAL(10, b.h); TEST_ASSERT_EQUAL(18, b.lastW);
+    // XP-AI 90×12 at (18,164): gap 2, 7×8 from (21,166), last 12.
+    b = blocks(18, 164, 90, 12);
+    TEST_ASSERT_EQUAL(2, b.gap);
+    TEST_ASSERT_EQUAL(21, b.x0); TEST_ASSERT_EQUAL(166, b.y0);
+    TEST_ASSERT_EQUAL(7, b.w);   TEST_ASSERT_EQUAL(8, b.h); TEST_ASSERT_EQUAL(12, b.lastW);
+    // XP-Codex 220×14 at (10,102): 22×10 from (13,104).
+    b = blocks(10, 102, 220, 14);
+    TEST_ASSERT_EQUAL(104, b.y0); TEST_ASSERT_EQUAL(10, b.h); TEST_ASSERT_EQUAL(22, b.w);
+    // XP-Attention-Progress 180×14 at (30,166): 17×10 from (33,168), last 22.
+    b = blocks(30, 166, 180, 14);
+    TEST_ASSERT_EQUAL(33, b.x0); TEST_ASSERT_EQUAL(168, b.y0);
+    TEST_ASSERT_EQUAL(17, b.w);  TEST_ASSERT_EQUAL(10, b.h); TEST_ASSERT_EQUAL(22, b.lastW);
+    // Loading box 140×14 at (50,116), padY 2: cells 13×8 on a 15 pitch from (53,119).
+    b = blocks(50, 116, 140, 14, 2);
+    TEST_ASSERT_EQUAL(53, b.x0); TEST_ASSERT_EQUAL(119, b.y0);
+    TEST_ASSERT_EQUAL(13, b.w);  TEST_ASSERT_EQUAL(8, b.h); TEST_ASSERT_EQUAL(2, b.gap);
+    // Same lighting rule as pixelBar: block i when pct > i·11.11.
+    TEST_ASSERT_TRUE(blockLit(1, 0));
+    TEST_ASSERT_FALSE(blockLit(0, 0));
+    TEST_ASSERT_TRUE(blockLit(89, 8));
+    TEST_ASSERT_FALSE(blockLit(38, 4));
+    // Marquee: 3 lit cells, head enters left, leaves right, period 11 steps.
+    TEST_ASSERT_TRUE(marqueeLit(0, 0));
+    TEST_ASSERT_FALSE(marqueeLit(0, 1));
+    TEST_ASSERT_TRUE(marqueeLit(5, 3));
+    TEST_ASSERT_TRUE(marqueeLit(5, 5));
+    TEST_ASSERT_FALSE(marqueeLit(5, 6));
+    TEST_ASSERT_TRUE(marqueeLit(10, 8));
+    TEST_ASSERT_FALSE(marqueeLit(10, 7));
+    TEST_ASSERT_TRUE(marqueeLit(11, 0));     // wraps
+    // Status bar divider 8 px left of the right text (XP-Home: 98 px → x 125).
+    TEST_ASSERT_EQUAL(125, statusDividerX(98));
+    TEST_ASSERT_EQUAL(146, statusDividerX(77));
+    // Right text room: XP-AI "CL 2G 14P · CX 3NG" (126 px) beside "Dùng Claude" (77).
+    TEST_ASSERT_TRUE(statusRightMax(77) >= 126);
+    TEST_ASSERT_EQUAL(215, statusRightMax(0));
+    TEST_ASSERT_EQUAL(120, statusRightMax(160));       // never below 120 while the left can give
+    // Boot box: 3 of 6 lanes, enters left, leaves right, period 8 (XP-Splash = step 3).
+    TEST_ASSERT_TRUE(bootLit(3, 1)); TEST_ASSERT_TRUE(bootLit(3, 3));
+    TEST_ASSERT_FALSE(bootLit(3, 0)); TEST_ASSERT_FALSE(bootLit(3, 4));
+    TEST_ASSERT_TRUE(bootLit(0, 0)); TEST_ASSERT_FALSE(bootLit(0, 1));
+    TEST_ASSERT_TRUE(bootLit(7, 5)); TEST_ASSERT_FALSE(bootLit(7, 4));
+    TEST_ASSERT_TRUE(bootLit(8, 0));                    // wraps
 }
 
 void test_clock_ampm_vietnamese() {
@@ -777,24 +887,26 @@ void test_skill_filter_and_default() {
     TEST_ASSERT_FALSE(Skill::shows("weather", "agent,clock"));   // Weather/Forecast off
 }
 
-void test_dock_tabs_follow_enabled_skills() {
-    uint8_t m = Dock::tabMask("agent,clock");
-    TEST_ASSERT_EQUAL(2, Dock::tabCount(m));
-    TEST_ASSERT_EQUAL(0, Dock::slotOf(Dock::TAB_CLAUDE, m));
-    TEST_ASSERT_EQUAL(-1, Dock::slotOf(Dock::TAB_WEATHER, m));
-    TEST_ASSERT_EQUAL(1, Dock::slotOf(Dock::TAB_CLOCK, m));
-    TEST_ASSERT_EQUAL(-1, Dock::slotOf(Dock::TAB_NONE, m));
-    TEST_ASSERT_EQUAL(78, Dock::frameH(m));
-    TEST_ASSERT_EQUAL(114, Dock::frameH(Dock::tabMask(Skill::kDefaultOn)));
-    TEST_ASSERT_EQUAL(0, Dock::slotOf(Dock::TAB_WEATHER, Dock::tabMask("weather")));
+void test_taskbar_buttons_follow_enabled_skills() {
+    using namespace XPCore;
+    uint8_t m = buttonMask("agent,clock");
+    TEST_ASSERT_EQUAL(2, buttonCount(m));
+    TEST_ASSERT_EQUAL(0, slotOf(BTN_CLAUDE, m));
+    TEST_ASSERT_EQUAL(-1, slotOf(BTN_WEATHER, m));
+    TEST_ASSERT_EQUAL(1, slotOf(BTN_CLOCK, m));
+    TEST_ASSERT_EQUAL(-1, slotOf(BTN_NONE, m));
+    TEST_ASSERT_EQUAL(101, buttonX(slotOf(BTN_CLOCK, m)));   // packed: x 71 + 30k
+    TEST_ASSERT_EQUAL(3, buttonCount(buttonMask(Skill::kDefaultOn)));
+    TEST_ASSERT_EQUAL(0, slotOf(BTN_WEATHER, buttonMask("weather")));
     // Ảnh (P-2026-11-25.7): tab 2, off by default.
     TEST_ASSERT_TRUE(Skill::known("photo"));
     TEST_ASSERT_FALSE(Skill::inList(Skill::kDefaultOn, "photo"));
-    TEST_ASSERT_EQUAL(Dock::TAB_PHOTO, Dock::tabFor("Photo"));
-    uint8_t all = Dock::tabMask("clock,photo,weather,agent");
-    TEST_ASSERT_EQUAL(150, Dock::frameH(all));
-    TEST_ASSERT_EQUAL(1, Dock::slotOf(Dock::TAB_PHOTO, all));
-    TEST_ASSERT_EQUAL(3, Dock::slotOf(Dock::TAB_CLOCK, all));
+    TEST_ASSERT_EQUAL(BTN_PHOTO, buttonFor("Photo"));
+    uint8_t all = buttonMask("clock,photo,weather,agent");
+    TEST_ASSERT_EQUAL(4, buttonCount(all));
+    TEST_ASSERT_EQUAL(1, slotOf(BTN_PHOTO, all));
+    TEST_ASSERT_EQUAL(3, slotOf(BTN_CLOCK, all));
+    TEST_ASSERT_EQUAL(161, buttonX(3));   // design: Đồng hồ at x 161
     char on[48];
     Skill::normalise("clock,photo,agent", on, sizeof(on), true);
     TEST_ASSERT_EQUAL_STRING("agent,photo,clock", on);
@@ -931,13 +1043,15 @@ int main(int, char**) {
     RUN_TEST(test_short_duration_units);
     RUN_TEST(test_countdown_units);
     RUN_TEST(test_clock_ampm_vietnamese);
-    RUN_TEST(test_dock_tabs_and_badge);
+    RUN_TEST(test_taskbar_buttons_and_badge);
+    RUN_TEST(test_taskbar_state_looks);
+    RUN_TEST(test_xp_progress_blocks_and_marquee);
     RUN_TEST(test_projects_follow_hook_events);
     RUN_TEST(test_projects_order_idle_and_eviction);
     RUN_TEST(test_projects_sessions_merge_per_project);
     RUN_TEST(test_projects_from_pushed_cards);
     RUN_TEST(test_skill_filter_and_default);
-    RUN_TEST(test_dock_tabs_follow_enabled_skills);
+    RUN_TEST(test_taskbar_buttons_follow_enabled_skills);
     RUN_TEST(test_photo_jpeg_header_check);
     RUN_TEST(test_photo_names_order_and_rotation);
     RUN_TEST(test_photo_room_limits);
