@@ -78,3 +78,11 @@ P-2026-11-26.14). Mở app lần đầu: thiết bị đang hiện chương trì
 `WindowStack` thêm `z` (thứ tự kích hoạt, để `×` biết cửa sổ trước đó) và `sel` (biểu tượng desktop đang chọn), gửi
 xuống bằng `POST /api/windows` (`toJson`); `MenuView` / `MenuItem` (`touch.dart`) = menu chuột phải, gửi `POST /api/menu`.
 `DeviceState.windowsApi` (có `windows` trong `/api/state`) → `ControlCaps.windows`.
+
+## Cửa sổ XP thật (panel P-2026-11-26.17, R-DK-14)
+
+Model đọc từ thiết bị (không lưu): `WeatherDay.uv` (`uv` trong `weather.days[]` của `/api/state`, chỉ số UV cao nhất
+trong ngày; < 0 hoặc thiếu = null, firmware cũ); `weatherPlace` trong `/api/settings` (tên nơi, rỗng = chưa có) — có
+khoá này nghĩa là firmware cửa sổ XP thật (`xpReal`). Model ô màn: `MirrorWeather.code` / `uv` / `place`,
+`MirrorDay.code`, `MirrorClock.place` (`lib/domain/models/mirror_ambient.dart`); chạm mới `TouchKind.trayClock` /
+`balloonBody` / `tab` (`lib/domain/models/touch.dart`). Không di trú, backend (nếu có) không cần đồng bộ.

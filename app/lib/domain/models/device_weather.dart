@@ -22,20 +22,21 @@ class DeviceWeather {
   });
 
   factory DeviceWeather.fromJson(Map<String, dynamic> j) => DeviceWeather(
-        valid: jsonBool(j['valid']),
-        tempC: _temp(j['temp_c']),
-        feelsC: _temp(j['feels_c']),
-        code: jsonInt(j['code']),
-        desc: jsonStr(j['desc']),
-        isDay: j['is_day'] != false,
-        humidity: _nonNeg(j['humidity'])?.round(),
-        windKmh: _nonNeg(j['wind_kmh']),
-        lastOk: jsonInt(j['last_ok']),
-        stale: jsonBool(j['stale']),
-        err: jsonStr(j['err']),
-        days: List.unmodifiable(
-            (j['days'] as List? ?? const []).whereType<Map<String, dynamic>>().map(WeatherDay.fromJson)),
-      );
+    valid: jsonBool(j['valid']),
+    tempC: _temp(j['temp_c']),
+    feelsC: _temp(j['feels_c']),
+    code: jsonInt(j['code']),
+    desc: jsonStr(j['desc']),
+    isDay: j['is_day'] != false,
+    humidity: _nonNeg(j['humidity'])?.round(),
+    windKmh: _nonNeg(j['wind_kmh']),
+    lastOk: jsonInt(j['last_ok']),
+    stale: jsonBool(j['stale']),
+    err: jsonStr(j['err']),
+    days: List.unmodifiable(
+      (j['days'] as List? ?? const []).whereType<Map<String, dynamic>>().map(WeatherDay.fromJson),
+    ),
+  );
 
   /// The device has a good reading (false before the first fetch or after errors).
   final bool valid;
@@ -67,10 +68,18 @@ class DeviceWeather {
 
 /// One forecast day.
 class WeatherDay {
-  const WeatherDay({this.tmin, this.tmax, this.code = 0, this.desc = ''});
+  const WeatherDay({this.tmin, this.tmax, this.code = 0, this.desc = '', this.uv});
 
-  factory WeatherDay.fromJson(Map<String, dynamic> j) =>
-      WeatherDay(tmin: _temp(j['tmin']), tmax: _temp(j['tmax']), code: jsonInt(j['code']), desc: jsonStr(j['desc']));
+  factory WeatherDay.fromJson(Map<String, dynamic> j) => WeatherDay(
+    tmin: _temp(j['tmin']),
+    tmax: _temp(j['tmax']),
+    code: jsonInt(j['code']),
+    desc: jsonStr(j['desc']),
+    uv: j['uv'] is num && (j['uv'] as num) >= 0 ? (j['uv'] as num).toDouble() : null,
+  );
+
+  /// Today's UV index max (firmware with the XP-Real Weather tab, P-2026-11-26.17); null = unknown / older firmware.
+  final double? uv;
 
   /// °C low / high; null = unknown.
   final double? tmin, tmax;

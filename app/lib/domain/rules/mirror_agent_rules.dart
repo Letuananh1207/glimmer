@@ -4,6 +4,7 @@ import '../models/attention_card.dart';
 import '../models/device_photo.dart';
 import '../models/device_state.dart';
 import '../models/mirror_agents.dart';
+import 'control_rules.dart';
 import 'skill_rules.dart';
 
 /// `kind` of a /push card (unknown → info).
@@ -153,14 +154,19 @@ int _toDisplay(double c, bool fahrenheit) => (fahrenheit ? c * 9 / 5 + 32 : c).r
 
 /// Desktop icons (panel P-2026-11-26.14 §17 XP-Desk): column 0 (centre x 40) Claude, Codex, Ảnh then the trash;
 /// column 1 (centre x 120) Thời tiết, Đồng hồ — cells 48 tall from y 8, column 1 stops above the weather balloon.
-List<DeskIcon> deskIconsOf(List<String> skillsOn) {
+/// [oneColumn] (R-DK-14, panel P-2026-11-26.17 XP-Desk-OneCol): only column 0 — Weather opens from the tray, the
+/// clock from the tray clock, as XP.
+List<DeskIcon> deskIconsOf(List<String> skillsOn, {bool oneColumn = false}) {
   const x0 = 40, x1 = 120, y0 = 8, cell = 48;
   final col0 = <String?>[
     if (skillsOn.contains(SkillIds.agent)) ...['Claude', 'Codex'],
     if (skillsOn.contains(SkillIds.photo)) 'Photo',
     null,
   ];
-  final col1 = [if (skillsOn.contains(SkillIds.weather)) 'Weather', if (skillsOn.contains(SkillIds.clock)) 'Clock'];
+  final col1 = [
+    if (!oneColumn && skillsOn.contains(SkillIds.weather)) 'Weather',
+    if (!oneColumn && skillsOn.contains(SkillIds.clock)) 'Clock',
+  ];
   return [
     for (final (i, p) in col0.indexed) DeskIcon(p, x0, y0 + cell * i),
     for (final (i, p) in col1.indexed) DeskIcon(p, x1, y0 + cell * i),
@@ -182,7 +188,7 @@ DesktopView desktopOf(DeviceState s, Map<String, dynamic>? settings) {
     // R-DK-13: the device reports whether its balloon is up; older firmware kept it up with a location set.
     balloon: on.contains(SkillIds.weather) && (s.balloon ?? s.weatherConfigured),
     tipBalloon: s.balloon != null,
-    icons: deskIconsOf(on),
+    icons: deskIconsOf(on, oneColumn: xpReal(settings)),
     temp: valid ? _toDisplay(w.tempC!, f) : null,
     feels: valid && w.feelsC != null ? _toDisplay(w.feelsC!, f) : null,
     desc: valid ? w.desc : '',

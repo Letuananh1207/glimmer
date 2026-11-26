@@ -2,7 +2,22 @@
 // Worked out by domain/rules/touch_rules.dart and control_rules.dart.
 
 /// What a touch hits.
-enum TouchKind { none, minimize, maximize, close, start, taskbar, icon, tray, balloonClose }
+/// R-DK-14 (XP-Real firmware): [trayClock] opens Đồng hồ, [balloonBody] opens Thời tiết, [tab] switches the Weather
+/// window between Hiện tại (`program` Weather) and Dự báo (`program` Forecast).
+enum TouchKind {
+  none,
+  minimize,
+  maximize,
+  close,
+  start,
+  taskbar,
+  icon,
+  tray,
+  balloonClose,
+  trayClock,
+  balloonBody,
+  tab,
+}
 
 class TouchTarget {
   const TouchTarget(this.kind, {this.skill, this.program});
@@ -68,11 +83,21 @@ class MenuView {
   /// Rows top to bottom: an item, or null for a separator.
   List<MenuItem?> get rows => kind == MenuKind.desktop
       ? const [
-          MenuItem.arrange, MenuItem.refresh, null, MenuItem.paste, MenuItem.pasteShortcut, null, //
+          MenuItem.arrange,
+          MenuItem.refresh,
+          null,
+          MenuItem.paste,
+          MenuItem.pasteShortcut,
+          null, //
           MenuItem.newItem, null, MenuItem.properties,
         ]
       : const [
-          MenuItem.restore, MenuItem.move, MenuItem.size, MenuItem.minimize, MenuItem.maximize, null, //
+          MenuItem.restore,
+          MenuItem.move,
+          MenuItem.size,
+          MenuItem.minimize,
+          MenuItem.maximize,
+          null, //
           MenuItem.close,
         ];
 

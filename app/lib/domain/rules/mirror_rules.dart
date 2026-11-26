@@ -33,7 +33,7 @@ MirrorFrame mirrorFrameOf(
     settings: settings,
     deviceNow: epoch > 0 ? deviceLocal(epoch, tz) : DateTime(1970),
     h24: settings?['clock24h'] != false,
-    taskbar: taskbarOf(state, shown, cards, windows),
+    taskbar: taskbarOf(state, shown, cards, windows, settings: settings),
     screenOff: state.screenOn == false,
     ambient: ambientOf(state, settings, epoch, epoch > 0 ? deviceLocal(epoch, tz) : DateTime.utc(1970)),
     usage: usageMirrorOf(state, settings),
@@ -46,7 +46,13 @@ MirrorFrame mirrorFrameOf(
 /// Taskbar while [channel] shows (design 2026-11-26.7): the open [windows] in opening order (the last
 /// [TaskbarModel.max]), the top one pressed when it is on screen; the Claude button carries the badge and lights orange
 /// on a card that needs the user.
-TaskbarModel taskbarOf(DeviceState state, String channel, List<AttentionCard> cards, WindowStack windows) {
+TaskbarModel taskbarOf(
+  DeviceState state,
+  String channel,
+  List<AttentionCard> cards,
+  WindowStack windows, {
+  Map<String, dynamic>? settings,
+}) {
   final open = windows.open;
   // R-DK-13: firmware with the tray balloon + weather skill on → weather icon in the tray, 3 buttons.
   final tray = state.balloon != null && state.skillsOn.contains(SkillIds.weather);
@@ -63,7 +69,8 @@ TaskbarModel taskbarOf(DeviceState state, String channel, List<AttentionCard> ca
       },
   ];
   final top = windows.top;
-  final i = top != null && top == channel ? programs.indexOf(top) : -1;
+  // R-DK-14: the Dự báo tab presses the Weather window's button.
+  final i = top != null && top == windowOf(channel, real: xpReal(settings)) ? programs.indexOf(top) : -1;
   final flash =
       channel == 'Attention' &&
       cards.any((c) => c.showsInS <= 0 && (c.kind == 'approval' || c.kind == 'input' || c.kind == 'error'));

@@ -3,6 +3,7 @@ import 'dart:ui';
 import '../../../core/themes/xp_colors.dart';
 import 'xp_bits.dart';
 import 'xp_canvas.dart';
+import 'xp_weather_art.dart';
 
 /// Title-bar / taskbar icons (`XPCore::Icon`).
 enum XpIcon { none, clawd, photo, weather, clock, info }
@@ -128,12 +129,58 @@ abstract final class Xp {
     return (x0: x + 1 + gap, y0: y + 1 + py, w: bw, h: ih - 2 * py, gap: gap, lastW: bw + avail % 9);
   }
 
-  /// Group box: 1-px outline (inside not filled) + caption JBMono-11 at (x+7, y−6) on a body patch.
-  static void groupBox(XpCanvas c, int x, int y, int w, int h, String label) {
+  /// Group box: 1-px outline (inside not filled) + caption JBMono-11 at (x+7, y−6) on a patch of [bg] (the body, or
+  /// white on a tab page).
+  static void groupBox(XpCanvas c, int x, int y, int w, int h, String label, {Color bg = XpColors.body}) {
     c.outline(x, y, w, h, XpColors.group);
     if (label.isEmpty) return;
-    c.fill(x + 4, y - 6, c.textWidth(label, XpFont.jb11).round() + 6, 13, XpColors.body);
+    c.fill(x + 4, y - 6, c.textWidth(label, XpFont.jb11).round() + 6, 13, bg);
     c.text(label, x + 7, y - 6, XpFont.jb11, XpColors.groupLabel);
+  }
+
+  /// Luna tab control (`XP::tabs`, panel P-2026-11-26.17): white page (6, 41) 228×169, tabs from x 6 on a body strip
+  /// y 26–40, each JBMono-11 width + 10; the selected one raised with the orange / yellow top and joined to the page.
+  static void tabs(XpCanvas c, List<String> labels, int selected) {
+    c.outline(6, 41, 228, 169, XpColors.fieldBorder);
+    c.fill(7, 42, 226, 167, XpColors.white);
+    c.fill(6, 26, 228, 15, XpColors.body);
+    var x = 6, sx = 6, sw = 0;
+    for (final (i, t) in labels.indexed) {
+      final w = c.textWidth(t, XpFont.jb11).round() + 10;
+      if (i == selected) {
+        sx = x;
+        sw = w;
+      } else {
+        c.outline(x, 28, w - 1, 14, XpColors.fieldBorder);
+        c.fill(x + 1, 29, w - 3, 12, XpColors.rowLine);
+        c.text(t, x + 5, 29, XpFont.jb11, XpColors.black);
+      }
+      x += w;
+    }
+    c.fill(sx, 26, sw, 1, XpColors.welcomeOrange);
+    c.fill(sx, 27, sw, 2, XpColors.flagYellow);
+    c.fill(sx, 27, 1, 15, XpColors.fieldBorder);
+    c.fill(sx + sw - 1, 27, 1, 15, XpColors.fieldBorder);
+    c.fill(sx + 1, 29, sw - 2, 13, XpColors.white);
+    c.text(labels[selected], sx + 5, 29, XpFont.jb11, XpColors.black);
+  }
+
+  /// Weather icon by WMO [code] (`XP::weatherIcon`): sun (0–1), sun and cloud (2–3, fog 45 / 48), rain (the rest);
+  /// 32×32 when [big], else 16×16.
+  static void weatherIcon(XpCanvas c, int code, num x, num y, {bool big = false}) {
+    final sun = code <= 1, partly = !sun && (code <= 3 || code == 45 || code == 48);
+    final art = sun
+        ? (big ? XpWeatherArt.sun32 : XpWeatherArt.sun16)
+        : partly
+        ? (big ? XpWeatherArt.partly32 : XpWeatherArt.partly16)
+        : (big ? XpWeatherArt.rain32 : XpWeatherArt.rain16);
+    c.colorBits(art, x, y, const {
+      'Y': XpColors.iconWarn,
+      'A': XpColors.amber,
+      'G': XpColors.fieldBorder,
+      'W': XpColors.white,
+      'B': XpColors.iconInfo,
+    });
   }
 
   /// White field / list box: border + white fill.

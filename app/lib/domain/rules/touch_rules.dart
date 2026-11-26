@@ -4,6 +4,7 @@
 // icons (`DesktopView.icons`: cells 48 tall, labels up to 80 px wide).
 import '../models/mirror_frame.dart';
 import '../models/touch.dart';
+import 'control_rules.dart';
 
 /// Half of the 44 × 44 dp hit box around a small target's centre, in device pixels at the mirror's 1.5 scale.
 const touchReach = 44 / 1.5 / 2;
@@ -16,6 +17,12 @@ const _buttonX0 = 71, _buttonStep = 30, _buttonW = 28, _buttonCy = 227;
 const _iconHalfW = 40, _iconCell = 48;
 // R-DK-13 (panel P-2026-11-26.15): the tray's weather icon 16×14 at (180, 220), the balloon's × 12×12 at (220, 143).
 const _trayIconCx = 188, _closeCx = 226, _closeCy = 149;
+// R-DK-14 (panel P-2026-11-26.17): the balloon box 140×62 at (96, 138); the tray clock right of the tray icon (tray
+// from x 196 without it); the Weather window's tabs "Hiện tại" x 6–71, "Dự báo" x 72–123 (JBMono-11 width + 10), y 26–41.
+const _balloonX = 96, _balloonY = 138, _balloonW = 140, _balloonH = 62;
+const _trayX = 196, _trayClockXWithIcon = 203;
+const _tabs = [(6, 72, 'Weather'), (72, 124, 'Forecast')];
+const _tabCy = 34;
 
 /// Channels drawn as an XP window with the title bar buttons (not the desktop, the night face, cards, setup).
 bool hasWindowButtons(String channel) =>
@@ -28,16 +35,35 @@ TouchTarget touchTargetAt(double x, double y, MirrorFrame frame) {
 
   // The balloon's × (desktop, balloon up) — it lies over the icons.
   final desk = frame.agents.desktop;
-  if (ch == 'Home' && desk.balloon && desk.tipBalloon &&
-      (x - _closeCx).abs() <= touchReach && (y - _closeCy).abs() <= touchReach) {
+  if (ch == 'Home' &&
+      desk.balloon &&
+      desk.tipBalloon &&
+      (x - _closeCx).abs() <= touchReach &&
+      (y - _closeCy).abs() <= touchReach) {
     return const TouchTarget(TouchKind.balloonClose);
   }
 
-  // Taskbar: start, then the open windows' buttons, then the tray's weather icon.
+  final real = xpReal(frame.settings);
+  // R-DK-14: the balloon's body opens Thời tiết.
+  if (real &&
+      ch == 'Home' &&
+      desk.balloon &&
+      desk.tipBalloon &&
+      x >= _balloonX &&
+      x < _balloonX + _balloonW &&
+      y >= _balloonY &&
+      y < _balloonY + _balloonH) {
+    return const TouchTarget(TouchKind.balloonBody);
+  }
+
+  // Taskbar: start, then the open windows' buttons, then the tray's weather icon and clock.
   if (y >= _buttonCy - touchReach) {
     if (y >= _taskbarY && x < _startRight) return const TouchTarget(TouchKind.start);
     if (frame.taskbar.trayWeather && y >= _taskbarY && (x - _trayIconCx).abs() <= touchReach) {
       return const TouchTarget(TouchKind.tray);
+    }
+    if (real && y >= _taskbarY && x >= (frame.taskbar.trayWeather ? _trayClockXWithIcon : _trayX)) {
+      return const TouchTarget(TouchKind.trayClock);
     }
     final programs = frame.taskbar.programs;
     for (var i = 0; i < programs.length; i++) {
@@ -59,6 +85,13 @@ TouchTarget touchTargetAt(double x, double y, MirrorFrame frame) {
       }
     }
     if (best != null) return TouchTarget(best);
+  }
+
+  // R-DK-14: the Weather window's tabs.
+  if (real && (ch == 'Weather' || ch == 'Forecast') && (y - _tabCy).abs() <= touchReach) {
+    for (final (x0, x1, p) in _tabs) {
+      if (x >= x0 && x < x1) return TouchTarget(TouchKind.tab, program: p);
+    }
   }
 
   // Desktop icons (the trash opens nothing).
@@ -112,7 +145,16 @@ MenuView? holdMenuAt(double x, double y, MirrorFrame frame, {Set<String> minimiz
 /// The window programs (the channels that open as a window).
 String? programOf(String channel) =>
     const {
-      'Claude', 'Codex', 'AI', 'Trend', 'Agents', 'Photo', 'Weather', 'Forecast', 'Clock', 'Info', //
+      'Claude',
+      'Codex',
+      'AI',
+      'Trend',
+      'Agents',
+      'Photo',
+      'Weather',
+      'Forecast',
+      'Clock',
+      'Info', //
     }.contains(channel)
     ? channel
     : null;

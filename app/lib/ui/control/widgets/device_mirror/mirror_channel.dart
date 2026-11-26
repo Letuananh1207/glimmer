@@ -62,11 +62,15 @@ class NightChannel extends MirrorChannel {
     // `ClockFmt::hourField`: "07" (24 h) or " 7" (12 h, space-padded so the digits keep their place).
     final hour = f.h24 ? t.hour.toString().padLeft(2, '0') : '${t.hour % 12 == 0 ? 12 : t.hour % 12}'.padLeft(2);
     final time = synced ? '$hour:${t.minute.toString().padLeft(2, '0')}' : '--:--';
-    c.text(time, 120, 65, XpFont.vt86, XpColors.label, align: XpAlign.center);
+    // Panel P-2026-11-26.17 XP-Night-Saver: the 170×100 block at (14, 22) — the device moves it every minute to a
+    // spot the app cannot know, so the mirror keeps the first one. VT323-86 sits in a 70-px line box here, 86 on the
+    // design page: +8.
+    const bx = 14, by = 22;
+    c.text(time, bx, by + 8, XpFont.vt86, XpColors.label);
     if (!synced) return;
     var date = '${l.devXpWeekday('${t.weekday}')} ${t.day}/${t.month}';
-    if (!f.h24) date += '  ${t.hour >= 12 ? l.devClockPm : l.devClockAm}';
-    c.text(date, 120, 150, XpFont.jb11, XpColors.label, align: XpAlign.center);
+    if (!f.h24) date += ' ${t.hour >= 12 ? l.devClockPm : l.devClockAm}';
+    c.text(date, bx + 85, by + 86, XpFont.jb11, XpColors.label, align: XpAlign.center);
   }
 }
 

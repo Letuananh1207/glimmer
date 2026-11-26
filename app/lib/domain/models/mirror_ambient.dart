@@ -34,7 +34,10 @@ enum SunEvent { rise, set }
 
 /// One forecast day, temperatures in the display unit (rounded), the Forecast bar span in device x.
 class MirrorDay {
-  const MirrorDay({this.hi, this.lo, this.desc = '', this.spanX0 = 0, this.spanX1 = 0});
+  const MirrorDay({this.hi, this.lo, this.desc = '', this.code = 0, this.spanX0 = 0, this.spanX1 = 0});
+
+  /// WMO code (the Forecast row icon, `XP::weatherIcon`).
+  final int code;
 
   /// Rounded high / low in the display unit; null = unknown ("--").
   final int? hi, lo;
@@ -59,7 +62,19 @@ class MirrorWeather {
     this.days = const [],
     this.sunEvent,
     this.sunAt,
+    this.code = 0,
+    this.uv,
+    this.place = '',
   });
+
+  /// WMO code now (the 32-px icon, `XP::weatherIcon`).
+  final int code;
+
+  /// Today's UV index (rounded); null = unknown.
+  final int? uv;
+
+  /// Place name (`weatherPlace`, sent by the app with its location); empty = no line.
+  final String place;
 
   final WeatherPhase phase;
   final WeatherErr err;
@@ -89,7 +104,16 @@ class MirrorWeather {
 enum GreetSlot { night, morning, afternoon, evening, late }
 
 class MirrorClock {
-  const MirrorClock({this.week = 0, this.gmt = '', this.greet = GreetSlot.morning, this.userName = ''});
+  const MirrorClock({
+    this.week = 0,
+    this.gmt = '',
+    this.greet = GreetSlot.morning,
+    this.userName = '',
+    this.place = '',
+  });
+
+  /// `weatherPlace` ("Múi giờ: GMT+7 · Hà Nội"); empty = the zone alone.
+  final String place;
 
   /// ISO week of the device date ("Tuần 48").
   final int week;

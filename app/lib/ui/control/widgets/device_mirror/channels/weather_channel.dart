@@ -17,14 +17,15 @@ String xpHm(AppLocalizations l, DateTime t, bool h24) {
   return '$h:$m${t.hour < 12 ? l.devClockAm : l.devClockPm}';
 }
 
-/// Weather (`ch_weather.cpp`, XP-Weather / -Loading / -Error / -Stale): VT323-86 temperature, the right stack
-/// (feels, humidity, wind), condition + today's hi / lo, the "Mai" / "Kia" group boxes and the sun status bar.
-/// Stale dims every value and puts "cũ 2G" in the title. UV is not in `/api/state`, so its row is never drawn.
+/// Weather (`ch_weather.cpp`, panel P-2026-11-26.17 XP-Weather-Props / -Loading / -Error): an XP property sheet,
+/// tab "Hiện tại" — the 32-px icon, condition 16B, the place (`weatherPlace`), VT323-44 temperature, then the rows
+/// Cảm giác · Độ ẩm · Gió · Chỉ số UV and Cao / thấp · Mặt trời mọc / lặn. No status bar; stale dims every value and
+/// puts "cũ 2G" in the title. The Dự báo tab is [ForecastChannel] (one window, R-DK-14).
 class WeatherChannel extends MirrorChannel {
   const WeatherChannel();
 
-  static const _boxX = [10, 124];
-  static const _boxY = 144, _boxW = 106, _boxH = 46;
+  /// VT323-44 is drawn in a 36-px line box here, 44 on the design page: +4 keeps the digits where the panel has them.
+  static const _tempY = 45 + 4;
 
   @override
   void paint(XpCanvas c, MirrorFrame f, AppLocalizations l) {
@@ -44,56 +45,44 @@ class WeatherChannel extends MirrorChannel {
     }
     final stale = w.stale;
     final age = w.age;
-    Xp.window(
-      c,
-      title,
-      icon: XpIcon.weather,
-      meta: stale && age != null ? l.devXpStaleMeta(xpSpan(l, age)) : '',
-      statusBar: true,
-    );
-    final status = stale
-        ? (age == null ? '' : l.devXpWeatherUpdated(xpSpan(l, age, long: true)))
-        : (w.sunAt == null ? '' : l.devXpWeatherSun(w.sunEvent!.name, xpHm(l, w.sunAt!, f.h24)));
-    Xp.statusBar(c, status, '');
+    Xp.window(c, title, icon: XpIcon.weather, meta: stale && age != null ? l.devXpStaleMeta(xpSpan(l, age)) : '');
+    Xp.tabs(c, [l.devXpTabNow, l.devXpTabForecast], 0);
 
     final ink = stale ? XpColors.dim : XpColors.black;
-    final label = stale ? XpColors.dim : XpColors.label;
-    if (w.temp != null) c.text('${w.temp}°', 10, 23, XpFont.vt86, ink);
+    Xp.weatherIcon(c, w.code, 14, 50, big: true);
+    c.text(w.desc, 54, 52, XpFont.jb16b, ink, maxWidth: 112);
+    if (w.place.isNotEmpty) {
+      c.text(w.place, 54, 71, XpFont.jb11, stale ? XpColors.dim : XpColors.label, maxWidth: 112);
+    }
+    if (w.temp != null) c.text('${w.temp}°', 226, _tempY, XpFont.vt44, ink, align: XpAlign.right);
+    c.fill(12, 90, 216, 1, XpColors.group);
+    c.fill(12, 164, 216, 1, XpColors.group);
 
-    var ry = 32;
-    for (final line in [
-      if (w.feels != null) l.devXpWeatherFeels(w.feels!),
-      if (w.humidity != null) l.devXpWeatherHumidity(w.humidity!),
-      if (w.wind != null) l.devXpWeatherWind(w.wind!),
-    ]) {
-      c.text(line, Xp.right, ry, XpFont.jb11, label, align: XpAlign.right);
-      ry += 18;
+    void row(int y, String label, String value) {
+      c.text(label, 14, y, XpFont.jb11, ink);
+      c.text(value, 112, y, XpFont.jb11, ink);
     }
 
-    c.text(w.desc, 12, 100, XpFont.jb13, stale ? XpColors.dim : XpColors.sky, maxWidth: 128);
+    String or(Object? v, String Function() s) => v == null ? '--' : s();
+    row(96, l.devXpRowFeels, or(w.feels, () => '${w.feels}°'));
+    row(112, l.devXpRowHumidity, or(w.humidity, () => '${w.humidity}%'));
+    row(128, l.devXpRowWind, or(w.wind, () => l.devXpWindValue(w.wind!)));
+    row(144, l.devXpRowUv, or(w.uv, () => l.devXpUvValue(w.uv!, uvLevel(w.uv!))));
     final today = w.days.isEmpty ? const MirrorDay() : w.days.first;
-    if (today.hi != null && today.lo != null) {
-      c.text('${today.hi}° / ${today.lo}°', 12, 118, XpFont.jb11, label);
-    }
-
-    for (var k = 0; k < 2; k++) {
-      final x = _boxX[k], cx = x + _boxW ~/ 2;
-      Xp.groupBox(c, x, _boxY, _boxW, _boxH, k == 0 ? l.devXpDayTomorrow : l.devXpDayAfter);
-      final d = k + 1 < w.days.length ? w.days[k + 1] : const MirrorDay();
-      if (d.hi != null && d.lo != null) {
-        c.text('${d.hi}/${d.lo}', cx, 149, XpFont.vt32, ink, align: XpAlign.center);
-      }
-      c.text(
-        d.desc,
-        cx,
-        175,
-        XpFont.jb11,
-        stale ? XpColors.dim : XpColors.muted,
-        align: XpAlign.center,
-        maxWidth: _boxW - 6,
-      );
-    }
+    row(171, l.devXpRowHiLo, today.hi == null || today.lo == null ? '--' : '${today.hi}° / ${today.lo}°');
+    row(187, l.devXpRowSun((w.sunEvent ?? SunEvent.rise).name), w.sunAt == null ? '--' : xpHm(l, w.sunAt!, f.h24));
   }
+
+  /// `uvWord` of ch_weather.cpp: < 3 thấp, < 6 trung bình, < 8 cao, < 11 rất cao, else cực cao.
+  static String uvLevel(int uv) => uv < 3
+      ? 'low'
+      : uv < 6
+      ? 'moderate'
+      : uv < 8
+      ? 'high'
+      : uv < 11
+      ? 'veryHigh'
+      : 'extreme';
 
   static String _errText(AppLocalizations l, MirrorWeather w) => switch (w.err) {
     WeatherErr.http => l.devXpWeatherErrHttp(w.errCode),

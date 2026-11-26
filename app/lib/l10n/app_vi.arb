@@ -3123,5 +3123,121 @@
   "appChat": "Tin nhắn",
   "@appChat": {
     "description": "Tên chương trình (skill sắp có)"
+  },
+  "devXpTitleDateTime": "Ngày và Giờ",
+  "@devXpTitleDateTime": {
+    "description": "Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)"
+  },
+  "devXpTabNow": "Hiện tại",
+  "@devXpTabNow": {
+    "description": "Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)"
+  },
+  "devXpTabForecast": "Dự báo",
+  "@devXpTabForecast": {
+    "description": "Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)"
+  },
+  "devXpTabDateTime": "Ngày và giờ",
+  "@devXpTabDateTime": {
+    "description": "Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)"
+  },
+  "devXpTabTimeZone": "Múi giờ",
+  "@devXpTabTimeZone": {
+    "description": "Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)"
+  },
+  "devXpGroupDate": "Ngày",
+  "@devXpGroupDate": {
+    "description": "Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)"
+  },
+  "devXpGroupTime": "Giờ",
+  "@devXpGroupTime": {
+    "description": "Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)"
+  },
+  "devXpWeekdayShort": "{day, select, 1{T2} 2{T3} 3{T4} 4{T5} 5{T6} 6{T7} other{CN}}",
+  "@devXpWeekdayShort": {
+    "description": "Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)",
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "devXpClockZone": "Múi giờ: {zone}",
+  "@devXpClockZone": {
+    "description": "Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)",
+    "placeholders": {
+      "zone": {
+        "type": "String"
+      }
+    }
+  },
+  "devXpRowFeels": "Cảm giác:",
+  "@devXpRowFeels": {
+    "description": "Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)"
+  },
+  "devXpRowHumidity": "Độ ẩm:",
+  "@devXpRowHumidity": {
+    "description": "Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)"
+  },
+  "devXpRowWind": "Gió:",
+  "@devXpRowWind": {
+    "description": "Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)"
+  },
+  "devXpRowUv": "Chỉ số UV:",
+  "@devXpRowUv": {
+    "description": "Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)"
+  },
+  "devXpRowHiLo": "Cao / thấp:",
+  "@devXpRowHiLo": {
+    "description": "Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)"
+  },
+  "devXpRowSun": "{event, select, set{Mặt trời lặn:} other{Mặt trời mọc:}}",
+  "@devXpRowSun": {
+    "description": "Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)",
+    "placeholders": {
+      "event": {
+        "type": "String"
+      }
+    }
+  },
+  "devXpUvValue": "{n} · {level, select, low{thấp} moderate{trung bình} high{cao} veryHigh{rất cao} other{cực cao}}",
+  "@devXpUvValue": {
+    "description": "Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "level": {
+        "type": "String"
+      }
+    }
+  },
+  "devXpWindValue": "{n} km/h",
+  "@devXpWindValue": {
+    "description": "Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "devXpColDay": "Ngày",
+  "@devXpColDay": {
+    "description": "Ô màn thiết bị (Thời tiết tab Dự báo, ch_forecast.cpp / XP-Forecast-Details, panel P-2026-11-26.17)"
+  },
+  "devXpColSky": "Trời",
+  "@devXpColSky": {
+    "description": "Ô màn thiết bị (Thời tiết tab Dự báo, ch_forecast.cpp / XP-Forecast-Details, panel P-2026-11-26.17)"
+  },
+  "devXpColLow": "Thấp",
+  "@devXpColLow": {
+    "description": "Ô màn thiết bị (Thời tiết tab Dự báo, ch_forecast.cpp / XP-Forecast-Details, panel P-2026-11-26.17)"
+  },
+  "devXpColHigh": "Cao",
+  "@devXpColHigh": {
+    "description": "Ô màn thiết bị (Thời tiết tab Dự báo, ch_forecast.cpp / XP-Forecast-Details, panel P-2026-11-26.17)"
+  },
+  "devXpDayTodayLong": "Hôm nay",
+  "@devXpDayTodayLong": {
+    "description": "Ô màn thiết bị (Thời tiết tab Dự báo, ch_forecast.cpp / XP-Forecast-Details, panel P-2026-11-26.17)"
   }
 }

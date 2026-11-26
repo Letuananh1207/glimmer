@@ -61,7 +61,8 @@ import 'app_localizations_vi.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale)
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -69,7 +70,8 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -81,12 +83,13 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
-    delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-  ];
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[Locale('vi')];
@@ -3480,9 +3483,142 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Tin nhắn'**
   String get appChat;
+
+  /// Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày và Giờ'**
+  String get devXpTitleDateTime;
+
+  /// Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiện tại'**
+  String get devXpTabNow;
+
+  /// Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)
+  ///
+  /// In vi, this message translates to:
+  /// **'Dự báo'**
+  String get devXpTabForecast;
+
+  /// Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày và giờ'**
+  String get devXpTabDateTime;
+
+  /// Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)
+  ///
+  /// In vi, this message translates to:
+  /// **'Múi giờ'**
+  String get devXpTabTimeZone;
+
+  /// Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày'**
+  String get devXpGroupDate;
+
+  /// Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)
+  ///
+  /// In vi, this message translates to:
+  /// **'Giờ'**
+  String get devXpGroupTime;
+
+  /// Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)
+  ///
+  /// In vi, this message translates to:
+  /// **'{day, select, 1{T2} 2{T3} 3{T4} 4{T5} 5{T6} 6{T7} other{CN}}'**
+  String devXpWeekdayShort(String day);
+
+  /// Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)
+  ///
+  /// In vi, this message translates to:
+  /// **'Múi giờ: {zone}'**
+  String devXpClockZone(String zone);
+
+  /// Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)
+  ///
+  /// In vi, this message translates to:
+  /// **'Cảm giác:'**
+  String get devXpRowFeels;
+
+  /// Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)
+  ///
+  /// In vi, this message translates to:
+  /// **'Độ ẩm:'**
+  String get devXpRowHumidity;
+
+  /// Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)
+  ///
+  /// In vi, this message translates to:
+  /// **'Gió:'**
+  String get devXpRowWind;
+
+  /// Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ số UV:'**
+  String get devXpRowUv;
+
+  /// Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)
+  ///
+  /// In vi, this message translates to:
+  /// **'Cao / thấp:'**
+  String get devXpRowHiLo;
+
+  /// Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)
+  ///
+  /// In vi, this message translates to:
+  /// **'{event, select, set{Mặt trời lặn:} other{Mặt trời mọc:}}'**
+  String devXpRowSun(String event);
+
+  /// Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)
+  ///
+  /// In vi, this message translates to:
+  /// **'{n} · {level, select, low{thấp} moderate{trung bình} high{cao} veryHigh{rất cao} other{cực cao}}'**
+  String devXpUvValue(int n, String level);
+
+  /// Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)
+  ///
+  /// In vi, this message translates to:
+  /// **'{n} km/h'**
+  String devXpWindValue(int n);
+
+  /// Ô màn thiết bị (Thời tiết tab Dự báo, ch_forecast.cpp / XP-Forecast-Details, panel P-2026-11-26.17)
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày'**
+  String get devXpColDay;
+
+  /// Ô màn thiết bị (Thời tiết tab Dự báo, ch_forecast.cpp / XP-Forecast-Details, panel P-2026-11-26.17)
+  ///
+  /// In vi, this message translates to:
+  /// **'Trời'**
+  String get devXpColSky;
+
+  /// Ô màn thiết bị (Thời tiết tab Dự báo, ch_forecast.cpp / XP-Forecast-Details, panel P-2026-11-26.17)
+  ///
+  /// In vi, this message translates to:
+  /// **'Thấp'**
+  String get devXpColLow;
+
+  /// Ô màn thiết bị (Thời tiết tab Dự báo, ch_forecast.cpp / XP-Forecast-Details, panel P-2026-11-26.17)
+  ///
+  /// In vi, this message translates to:
+  /// **'Cao'**
+  String get devXpColHigh;
+
+  /// Ô màn thiết bị (Thời tiết tab Dự báo, ch_forecast.cpp / XP-Forecast-Details, panel P-2026-11-26.17)
+  ///
+  /// In vi, this message translates to:
+  /// **'Hôm nay'**
+  String get devXpDayTodayLong;
 }
 
-class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -3491,7 +3627,8 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
   }
 
   @override
-  bool isSupported(Locale locale) => <String>['vi'].contains(locale.languageCode);
+  bool isSupported(Locale locale) =>
+      <String>['vi'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;

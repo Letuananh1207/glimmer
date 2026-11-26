@@ -247,6 +247,7 @@ static void handleApiState() {
         for (const WeatherDay& wd : w.forecast) {
             JsonObject o = days.add<JsonObject>();
             o[F("tmin")] = wd.tmin; o[F("tmax")] = wd.tmax; o[F("code")] = wd.code;
+            o[F("uv")]   = wd.uvMax;            // < 0 = unknown (P-2026-11-26.17 Weather tab)
             o[F("desc")] = Weather::describe(wd.code);
         }
     }

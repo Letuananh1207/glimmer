@@ -412,4 +412,40 @@ void main() {
       expect(rig.posts('/api/balloon'), isEmpty);
     });
   });
+
+  group('R-DK-14 XP-Real windows', () {
+    const real = {'brightness': 50, 'nightMode': 0, 'showClaude': true, 'tzMinutes': 420, 'weatherPlace': 'Hà Nội'};
+
+    test('R-DK-14 tabs switch Hiện tại / Dự báo in one window; reopening keeps the last tab', () async {
+      vm = await make(state: _state(), settings: real);
+      answer('Weather');
+      await vm.openProgram('Weather');
+      answer('Forecast');
+      expect(vm.tap(100, 34).kind, TouchKind.tab);
+      await pumpEventQueue();
+      expect(sent().last, 'Forecast');
+      expect(vm.windows.open, ['Weather']);
+      vm.tap(100, 34); // the shown tab: nothing
+      await pumpEventQueue();
+      expect(sent().where((n) => n == 'Forecast').length, 1);
+      answer('Home');
+      await vm.minimizeTop();
+      expect(vm.windows.minimized, {'Weather'});
+      answer('Forecast');
+      await vm.taskbar('Weather');
+      expect(sent().last, 'Forecast', reason: 'XP restores the window on its last tab');
+    });
+
+    test('R-DK-14 tray clock opens Clock; the balloon body opens Weather', () async {
+      vm = await make(state: {..._state(), 'balloon': true, 'weather_configured': true}, settings: real);
+      answer('Weather');
+      expect(vm.tap(140, 170).kind, TouchKind.balloonBody);
+      await pumpEventQueue();
+      expect(sent().last, 'Weather');
+      answer('Clock');
+      expect(vm.tap(225, 227).kind, TouchKind.trayClock);
+      await pumpEventQueue();
+      expect(sent().last, 'Clock');
+    });
+  });
 }

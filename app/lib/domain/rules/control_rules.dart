@@ -8,7 +8,15 @@ import 'skill_rules.dart';
 
 /// Every channel of the firmware, in its rotation order (`kChannels[]`).
 const deviceChannels = [
-  'Attention', 'Night', 'Setup', 'Home', 'Agents', 'Claude', 'Codex', 'AI', 'Trend', //
+  'Attention',
+  'Night',
+  'Setup',
+  'Home',
+  'Agents',
+  'Claude',
+  'Codex',
+  'AI',
+  'Trend', //
   'Photo', 'Weather', 'Forecast', 'Clock', 'Info',
 ];
 
@@ -102,6 +110,13 @@ const programChannels = {'Claude', 'Codex', 'AI', 'Trend', 'Agents', 'Photo', 'W
 
 bool isProgram(String channel) => programChannels.contains(channel);
 
+/// R-DK-14: firmware of panel P-2026-11-26.17 (XP-Real windows), told by its settings carrying `weatherPlace`.
+bool xpReal(Map<String, dynamic>? settings) => settings?.containsKey('weatherPlace') == true;
+
+/// R-DK-14: the window (program) a [channel] belongs to: on XP-Real firmware Forecast is the "Dự báo" tab of the
+/// Weather window (one window, one taskbar button); otherwise each program is its own window.
+String windowOf(String channel, {required bool real}) => real && channel == 'Forecast' ? 'Weather' : channel;
+
 /// R-DK-9: programs of the enabled [skillsOn], by group, in the sheet's order. Channels whose `show*` flag is off in
 /// [settings] are left out (the device answers 404 for them); Info only when `showInfo` is on.
 Map<ProgramGroup, List<String>> programsOf(List<String> skillsOn, Map<String, dynamic>? settings) {
@@ -119,7 +134,8 @@ Map<ProgramGroup, List<String>> programsOf(List<String> skillsOn, Map<String, dy
     ],
     ProgramGroup.other: [
       for (final c in const ['Weather', 'Forecast', 'Clock', 'Photo'])
-        if (on.contains(channelSkill(c)) && shown(c)) c,
+        // R-DK-14: XP-Real firmware — Dự báo is a tab of Thời tiết, not a program of its own.
+        if (on.contains(channelSkill(c)) && shown(c) && !(c == 'Forecast' && xpReal(settings))) c,
     ],
     ProgramGroup.system: [if (settings?['showInfo'] == true) 'Info'],
   };

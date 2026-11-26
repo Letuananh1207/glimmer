@@ -3,6 +3,7 @@ import 'package:glimmer_app/domain/models/device_state.dart';
 import 'package:glimmer_app/domain/models/mirror_frame.dart';
 import 'package:glimmer_app/domain/models/touch.dart';
 import 'package:glimmer_app/domain/models/windows.dart';
+import 'package:glimmer_app/domain/rules/control_rules.dart';
 import 'package:glimmer_app/domain/rules/mirror_agent_rules.dart';
 import 'package:glimmer_app/domain/rules/mirror_rules.dart';
 import 'package:glimmer_app/domain/rules/touch_rules.dart';
@@ -189,6 +190,59 @@ void main() {
       expect((old.agents.desktop.balloon, old.agents.desktop.tipBalloon), (true, false),
           reason: 'old firmware: the always-on balloon');
       expect(touchTargetAt(226, 149, old).kind, TouchKind.none);
+    });
+  });
+
+  group('R-DK-14 XP-Real windows (panel P-2026-11-26.17)', () {
+    MirrorFrame frame(String channel, {bool real = true, bool? balloon, WindowStack windows = WindowStack.empty}) =>
+        mirrorFrameOf(
+          DeviceState.fromJson({
+            'fw': '1.0',
+            'wifi': 'connected',
+            'active_channel': channel,
+            'skills_on': const ['agent', 'weather', 'clock'],
+            'weather_configured': true,
+            'balloon': ?balloon,
+          }),
+          now: DateTime(2026, 11, 26),
+          windows: windows,
+          settings: {'tzMinutes': 420, if (real) 'weatherPlace': 'Hà Nội'},
+        );
+
+    test('R-DK-14 desktop: one column, no Weather / Clock icons; old firmware keeps two', () {
+      expect([for (final i in frame('Home').agents.desktop.icons) i.program], ['Claude', 'Codex', null]);
+      expect(frame('Home').agents.desktop.icons.every((i) => i.cx == 40), isTrue);
+      expect([for (final i in frame('Home', real: false).agents.desktop.icons) i.program], [
+        'Claude', 'Codex', null, 'Weather', 'Clock', //
+      ]);
+    });
+
+    test('R-DK-14 tray clock → Clock, balloon body → Weather (its × stays ×); old firmware: neither', () {
+      expect(touchTargetAt(225, 227, frame('Claude', balloon: false)).kind, TouchKind.trayClock);
+      expect(touchTargetAt(188, 227, frame('Home', balloon: false)).kind, TouchKind.tray);
+      expect(touchTargetAt(210, 227, frame('Home')).kind, TouchKind.trayClock, reason: 'no weather tray: from x 196');
+      final up = frame('Home', balloon: true);
+      expect(touchTargetAt(140, 170, up).kind, TouchKind.balloonBody);
+      expect(touchTargetAt(226, 149, up).kind, TouchKind.balloonClose);
+      expect(touchTargetAt(140, 170, frame('Home', balloon: false)).kind, isNot(TouchKind.balloonBody));
+      expect(touchTargetAt(225, 227, frame('Claude', real: false, balloon: false)).kind, TouchKind.none);
+      expect(touchTargetAt(140, 170, frame('Home', real: false, balloon: true)).kind, TouchKind.none);
+    });
+
+    test('R-DK-14 the Weather window tabs; Dự báo presses the Weather button; one program', () {
+      final w = WindowStack.empty.opened('Claude').opened('Weather');
+      final f = frame('Forecast', windows: w);
+      expect(touchTargetAt(30, 34, f), const TouchTarget(TouchKind.tab, program: 'Weather'));
+      expect(touchTargetAt(100, 34, f), const TouchTarget(TouchKind.tab, program: 'Forecast'));
+      expect(touchTargetAt(150, 34, f).kind, TouchKind.none);
+      expect(touchTargetAt(30, 34, frame('Clock')).kind, TouchKind.none);
+      expect(touchTargetAt(30, 34, frame('Forecast', real: false)).kind, TouchKind.none);
+      expect(f.taskbar.programs, ['Claude', 'Weather']);
+      expect(f.taskbar.active, 1);
+      expect(windowOf('Forecast', real: true), 'Weather');
+      expect(windowOf('Forecast', real: false), 'Forecast');
+      expect(programsOf(const ['weather'], {'weatherPlace': ''})[ProgramGroup.other], ['Weather']);
+      expect(programsOf(const ['weather'], {})[ProgramGroup.other], ['Weather', 'Forecast']);
     });
   });
 }

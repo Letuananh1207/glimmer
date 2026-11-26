@@ -60,6 +60,12 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
   final Duration failureFor;
 
   Map<String, dynamic>? _settings;
+
+  /// R-DK-14: the Weather window's last tab (Weather = Hiện tại, Forecast = Dự báo) — restoring it shows that tab, as XP.
+  String _weatherTab = 'Weather';
+
+  bool get _real => rules.xpReal(_settings);
+  String _windowOf(String channel) => rules.windowOf(channel, real: _real);
   String? _pendingChannel;
   bool? _pendingScreen;
   int? _pendingNight;
@@ -221,8 +227,10 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
   void _follow(String active) {
     final installed = rules.programSet(_device.state?.skillsOn ?? const [], _settings);
     var w = _windows.only(installed.contains);
-    if (rules.isProgram(active) && installed.contains(active) && w.top != active) {
-      w = w.opened(active);
+    final win = _windowOf(active);
+    if (win == 'Weather' && _real) _weatherTab = active;
+    if (rules.isProgram(active) && installed.contains(win) && w.top != win) {
+      w = w.opened(win);
     } else if (active == 'Home' && w.top != null) {
       w = w.minimize(w.top!);
     }
@@ -391,6 +399,12 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
         unawaited(balloon(false));
       case TouchKind.tray:
         break; // the balloon belongs to the desktop (R-DK-13)
+      case TouchKind.trayClock:
+        unawaited(openProgram('Clock')); // R-DK-14: XP's tray clock opens Date and Time Properties
+      case TouchKind.balloonBody:
+        unawaited(openProgram('Weather'));
+      case TouchKind.tab:
+        unawaited(weatherTab(t.program!));
       case TouchKind.none when f.channel == 'Home' && _windows.sel != null:
         _windows = _windows.select(null); // a tap on an empty spot drops the selection (XP)
         _pushWindows();
@@ -468,15 +482,25 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
   }
 
   /// The window on the device screen: the program shown, if it is one.
-  String? get _shownWindow => rules.isProgram(channel) ? channel : null;
+  String? get _shownWindow => rules.isProgram(channel) ? _windowOf(channel) : null;
 
-  /// Open [program] (desktop icon, Start, Tất cả chương trình): it comes to the top.
+  /// Open [program] (desktop icon, Start, Tất cả chương trình): it comes to the top. R-DK-14: the Weather window
+  /// comes back on its last tab.
   Future<void> openProgram(String program) async {
     if (_device.state == null || !usable || !_can(ControlCommand.open)) return;
+    final win = _windowOf(program);
+    final show = win == 'Weather' && _real && program == 'Weather' ? _weatherTab : program;
     final before = _windows;
-    _windows = _windows.opened(program);
-    _pendingChannel = program;
-    await _run(ControlCommand.open, () => _control.open(program), app: program, undo: () => _windows = before);
+    _windows = _windows.opened(win);
+    _pendingChannel = show;
+    await _run(ControlCommand.open, () => _control.open(show), app: win, undo: () => _windows = before);
+  }
+
+  /// R-DK-14: a tab of the Weather window (Weather = Hiện tại, Forecast = Dự báo); the shown tab does nothing.
+  Future<void> weatherTab(String tab) async {
+    if (tab == channel) return;
+    _weatherTab = tab;
+    await openProgram(tab);
   }
 
   /// `_`: the desktop shows, the window keeps its taskbar button.

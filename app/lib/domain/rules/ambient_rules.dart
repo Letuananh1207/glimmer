@@ -18,6 +18,7 @@ MirrorAmbient ambientOf(DeviceState state, Map<String, dynamic>? settings, int n
       gmt: gmtLabel(tz),
       greet: greetSlot(deviceNow.hour),
       userName: (settings?['userName'] as String? ?? '').trim(),
+      place: (settings?['weatherPlace'] as String? ?? '').trim(),
     ),
     info: infoOf(state, settings, nowEpoch),
   );
@@ -91,11 +92,21 @@ MirrorWeather weatherOf(DeviceWeather? w, Map<String, dynamic>? settings, int no
       for (final d in days)
         () {
           final (x0, x1) = forecastSpan(d.tmin, d.tmax, gMin, range);
-          return MirrorDay(hi: _shown(d.tmax, f), lo: _shown(d.tmin, f), desc: d.desc, spanX0: x0, spanX1: x1);
+          return MirrorDay(
+            hi: _shown(d.tmax, f),
+            lo: _shown(d.tmin, f),
+            desc: d.desc,
+            code: d.code,
+            spanX0: x0,
+            spanX1: x1,
+          );
         }(),
     ],
     sunEvent: sun?.$1,
     sunAt: sun == null ? null : deviceLocal(sun.$2, tz),
+    code: w.code,
+    uv: days.first.uv?.round(),
+    place: (settings?['weatherPlace'] as String? ?? '').trim(),
   );
 }
 
