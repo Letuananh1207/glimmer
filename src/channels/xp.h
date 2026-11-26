@@ -97,11 +97,28 @@ namespace XP {
     // black ! / round ICON_INFO + white i) at (x, y); corners painted BODY.
     void dialogIcon(Dialog kind, int x, int y);
 
-    // "Đang tải" screen: label JBMono-12B BLACK TC (120, 92) + 140×14 box at
-    // (50, 116). Then loadingStep(now_ms / 200) from tick() advances the 3
-    // lit BAR cells (repaints the box interior only).
-    void loading(const char* label);
+    // "Đang tải" screen — XP File Download (P-2026-11-26.16 XP-Load): globe
+    // 24×24 (30, 36) → paper flying over 6 spots → folder 24×20 (186, 38);
+    // label JBMono-12B BLACK TC (120, 92); 140×14 running box at (50, 116);
+    // optional source "từ claude.ai" JBMono-11 MUTED TC (120, 140); wait
+    // cursor. Then loadingStep(now_ms / 200) from tick() advances the 3 lit
+    // cells, moves the paper (old spot cleared to BODY) and the hourglass.
+    void loading(const char* label, const char* source = nullptr);
     void loadingStep(uint32_t step);
+
+    // ── Opening a window (P-2026-11-26.16 XP-Open) ──
+    // "Working in Background" cursor: arrow 12×19 tip (132, 160) + hourglass
+    // frame step % 4 at (142, 169) (frame 3 lies flat at (140, 171)); repaints
+    // its 21×22 cell on BODY.
+    void waitCursor(uint32_t step);
+    // The window's empty frame (title bar, frame, empty BODY, empty status
+    // bar) + the wait cursor — held 200 ms before the content.
+    void emptyFrame(const char* title, XPCore::Icon icon, bool status);
+    // XP "animate windows": the title bar zooms between taskbar slot [slot]'s
+    // button and (0, 0, 240×22) — restore: up, else down — 4 steps × 40 ms
+    // (blocks ~160 ms, delay() yields to Wi-Fi). No buffer: earlier steps
+    // stay until the window / desktop paints over them.
+    void zoom(int slot, bool restore);
     // Generic marquee box anywhere (x, y, w, h) — same look.
     void marquee(int x, int y, int w, int h, uint32_t step);
 

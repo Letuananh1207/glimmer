@@ -83,7 +83,8 @@ abstract class DeviceRepository extends ChangeNotifier {
 
   /// `POST /api/channel`: show channel [name], or [action] next / prev / pause / resume. On success [state] takes
   /// the answer (active channel, paused) at once. 404 = no enabled channel [name].
-  Future<Result<ChannelAnswer>> channel({String? name, String? action});
+  /// [zoomMin]: the app's `_` — the window zooms down to its taskbar button (panel P-2026-11-26.16, R-DK-8).
+  Future<Result<ChannelAnswer>> channel({String? name, String? action, bool zoomMin = false});
 
   /// `POST /api/screen {on}`: backlight off / on now (RAM only); [state] takes the answer. Returns `screen_on`.
   Future<Result<bool>> setScreen(bool on);

@@ -196,6 +196,58 @@ inline bool hits(int ax, int ay, int aw, int ah, int bx, int by, int bw, int bh)
     return ax < bx + bw && bx < ax + aw && ay < by + bh && by < ay + ah;
 }
 
+// ── Opening a window (P-2026-11-26.16, XP-Open: XP "Animate windows when
+// minimizing and maximizing", "Working in Background" cursor, File Download box) ──
+// Order when a window comes up: its taskbar button presses first (only the
+// changed buttons repaint) → restoring a minimized window: the title bar zooms
+// from its button (4 steps × 40 ms; minimizing: the reverse, then the desktop)
+// → the empty frame + wait cursor for 200 ms → the content.
+struct Rect { int16_t x, y, w, h; };
+constexpr int kZoomSteps = 4, kZoomStepMs = 40, kEmptyFrameMs = 200;
+// round(a + (b − a)·i/5) for non-negative values (t = 0.2·i, i = 1..4).
+inline int lerp5(int a, int b, int i) { return (2 * (a * (5 - i) + b * i) + 5) / 10; }
+// Zoom step i (1..4) between the button of taskbar slot [slot] (x 71 + 30·slot,
+// y 217, 28×20) and the title bar (0, 0, 240×22).
+inline Rect zoomRect(int slot, int i) {
+    const int bx = buttonX(slot);
+    return {(int16_t)lerp5(bx, 0, i), (int16_t)lerp5(kBtnY, 0, i),
+            (int16_t)lerp5(kBtnW, 240, i), (int16_t)lerp5(kBtnH, 22, i)};
+}
+// The window comes up through the empty frame (every window but the desktop,
+// the night face and cards; system screens are not channels).
+inline bool framesFirst(const char* name) {
+    return name && strcmp(name, "Home") && strcmp(name, "Attention") && buttonFor(name) != BTN_NO_BAR;
+}
+// Title, icon and status bar of a channel's window — the empty frame drawn
+// before its content (each channel's XP::window call).
+struct WinFrame { const char* title; Icon icon; bool status; };
+inline WinFrame frameOf(const char* name) {
+    struct Row { const char* name; WinFrame f; };
+    static const Row kRows[] = {
+        {"Claude", {"Claude", ICON_CLAWD, false}},      {"Codex", {"Codex", ICON_CLAWD, false}},
+        {"AI", {"AI hôm nay", ICON_CLAWD, true}},       {"Trend", {"Xu hướng", ICON_CLAWD, true}},
+        {"Agents", {"Tác tử", ICON_CLAWD, true}},       {"Photo", {"Ảnh", ICON_PHOTO, false}},
+        {"Weather", {"Thời tiết", ICON_WEATHER, true}}, {"Forecast", {"Dự báo", ICON_WEATHER, true}},
+        {"Clock", {"Đồng hồ", ICON_CLOCK, true}},       {"Info", {"Thông tin", ICON_INFO, false}},
+        {"Setup", {"Cài đặt", ICON_CLAWD, false}},
+    };
+    for (const Row& r : kRows) if (name && !strcmp(r.name, name)) return r.f;
+    return {name ? name : "", iconFor(name), false};
+}
+// Taskbar slot of program [p] among the open windows [open] ([n], opening
+// order) when the bar shows the last [slots]; -1 = no button.
+inline int slotOf(const int8_t* open, int n, int p, int slots) {
+    const int first = n > slots ? n - slots : 0;
+    for (int i = first; i < n; i++) if (open[i] == p) return i - first;
+    return -1;
+}
+// Wait cursor: 4 hourglass frames, one per 200 ms step. File Download paper:
+// 6 positions, one per step.
+inline int hourglassFrame(uint32_t step) { return (int)(step % 4); }
+constexpr int kPaperN = 6;
+inline int paperX(int i) { return 60 + 20 * i; }
+inline int paperY(int i) { static const uint8_t kY[kPaperN] = {48, 43, 40, 40, 43, 48}; return kY[i]; }
+
 // ── Desktop icons (P-2026-11-26.14, XP-Desk, XP Auto Arrange) ──
 // Column 0 (centre x 40): Claude, Codex (agent), Ảnh (photo), then the
 // trash; column 1 (centre x 120): Thời tiết, Đồng hồ. Cells 48 tall from y 8.

@@ -25,7 +25,8 @@ class ControlDeviceUseCase {
   Future<Result<ControlOutcome>> open(String program, {ControlCommand c = ControlCommand.open}) async {
     final refused = _refuse(c);
     if (refused != null) return refused;
-    final r = await _device.channel(name: program);
+    // `_` minimizes: the device zooms the window down to its button (XP); close / Show desktop do not.
+    final r = await _device.channel(name: program, zoomMin: c == ControlCommand.minimize);
     return switch (r) {
       Ok(:final value) => Result.ok(ControlOutcome(active: value.active, matched: value.active == program)),
       Error(:final error) => Result.error(error),

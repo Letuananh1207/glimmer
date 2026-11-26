@@ -36,6 +36,41 @@ const uint32_t kInfoBits[9] PROGMEM = {
     0x0C, 0x0C, 0x00, 0x1C, 0x0C, 0x0C, 0x0C, 0x0C, 0x1E,
 };
 
+// ── P-2026-11-26.16 art (screen_specs §17 XP-Open), one char per pixel, '.' = transparent ──
+const char kArrow[] PROGMEM = "X...........XX..........XWX.........XWWX........XWWWX.......XWWWWX......XWWWWWX.....XWWWWWWX....XWWWWWWWX...XWWWWWWWWX..XWWWWWWWWWX.XWWWWWWXXXXXXWWWXWWX....XWWXXWWX....XWX..XWWX...XX...XWWX...X.....XWWX........XWWX.........XX...";   // 12×19
+const char kGlass0[] PROGMEM = "XXXXXXXXX.XSSSSSX..XSSSSSX...XSSSX.....XSX......XWX.....XWWWX...XWWWWWX..XWWWWWX..XWWWWWX..XWWWWWX.XXXXXXXXX";   // 9×12
+const char kGlass1[] PROGMEM = "XXXXXXXXX.XWWWWWX..XWWWWWX...XSSSX.....XSX......XSX.....XWSWX...XWWSWWX..XWWWWWX..XWWSWWX..XSSSSSX.XXXXXXXXX";   // 9×12
+const char kGlass2[] PROGMEM = "XXXXXXXXX.XWWWWWX..XWWWWWX...XWWWX.....XWX......XWX.....XWWWX...XWWWWWX..XWSSSWX..XSSSSSX..XSSSSSX.XXXXXXXXX";   // 9×12
+const char kGlass3[] PROGMEM = "X..........XXXX....XXXXXXWWX..XWWSSXXWWWXXWWSSSXXWWWWWWWSSSXXWWWXXWWSSSXXWWX..XWWSSXXXX....XXXXXX..........X";   // 12×9
+const char kGlobe[] PROGMEM = "...............................EEEEEEEEEE.............EEBBBBBBBBEE..........EELLLBBBBBBBBBEE.......EELLLLLLBBBBBBBBEE......ELLLLLLLBBBBBLLLLE.....ELLLLLLLLLBBBBLLLLBE...EELLLLLLLLLBBBBLLLLBEE..EBLLLLLLLLLBBBBBBBBBBE..EBLLLLLLLLLBBBBBBBBBBE..EBLLLLLLLLLBBBBBBBBBBE..EBBLLLLLLLBBBBBBBBBBBE..EBBLLLLLLLBBBLLLBBBBBE..EBBBBLLLBBBBLLLLLBBBBE..EBBBBBBBBBBLLLLLLLBBBE..EBBBBBBBBBBLLLLLLLBBBE..EEBBBBBBBBBLLLLLLLBBEE...EBBBBBBBBBLLLLLLLBBE.....EBBBBBBBBLLLLLLLBE......EEBBBBBBBBLLLLLBEE.......EEBBBBBBBBLLLBEE..........EEBBBBBBBBEE.............EEEEEEEEEE...............................";   // 24×24
+const char kFolder[] PROGMEM = "DDDDDDDD................DFFFFFFFD...............DFFFFFFFFDDDDDDDDDDDDDD.DFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDDDDDDDDDDDDDDDDDDDDDDDD........................";   // 24×20
+const char kPaper[] PROGMEM = "BBBBBBB...BWWWWWBB..BWLLLWWBB.BWWWWWWWB.BWLLLLLWB.BWWWWWWWB.BWLLLLLWB.BWWWWWWWB.BWLLLLLWB.BWWWWWWWB.BBBBBBBBB.";   // 10×11
+
+struct Ink { char key; uint16_t color; };
+// Draw a char-art bitmap at (x, y): runs of one key → one fillRect; unknown keys transparent.
+void drawArt(const char* art, int w, int h, int x, int y, const Ink* inks, int nInks) {
+    for (int r = 0; r < h; r++) {
+        for (int c = 0; c < w;) {
+            const char k = (char)pgm_read_byte(&art[r * w + c]);
+            int run = 1;
+            while (c + run < w && (char)pgm_read_byte(&art[r * w + c + run]) == k) run++;
+            for (int i = 0; i < nInks; i++)
+                if (inks[i].key == k) { tft.fillRect(x + c, y + r, run, 1, inks[i].color); break; }
+            c += run;
+        }
+    }
+}
+
+// File Download paper position shown now (-1 = none drawn).
+int s_paperAt = -1;
+
+void drawPaper(int i) {
+    static const Ink kInks[] = {{'B', FIELD_BORDER}, {'W', WHITE}, {'L', DIM}};
+    if (s_paperAt >= 0) tft.fillRect(XPCore::paperX(s_paperAt), XPCore::paperY(s_paperAt), 10, 11, BODY);
+    drawArt(kPaper, 10, 11, XPCore::paperX(i), XPCore::paperY(i), kInks, 3);
+    s_paperAt = i;
+}
+
 IconBits bitsOf(Icon i) {
     switch (i) {
         case XPCore::ICON_CLAWD:   return {18, 10, kClawdBits};
@@ -350,15 +385,62 @@ void marquee(int x, int y, int w, int h, uint32_t step) {
             tft.fillRect(b.x0 + i * (b.w + b.gap), b.y0, b.w, b.h, BAR);
 }
 
-void loading(const char* label) {
+void waitCursor(uint32_t step) {
+    static const Ink kArrowInk[] = {{'X', BLACK}, {'W', WHITE}};
+    static const Ink kGlass[] = {{'X', BLACK}, {'W', WHITE}, {'S', AMBER}};
+    tft.fillRect(132, 160, 21, 22, BODY);        // the cursor's cell (arrow + hourglass)
+    drawArt(kArrow, 12, 19, 132, 160, kArrowInk, 2);
+    switch (XPCore::hourglassFrame(step)) {
+        case 0:  drawArt(kGlass0, 9, 12, 142, 169, kGlass, 3); break;
+        case 1:  drawArt(kGlass1, 9, 12, 142, 169, kGlass, 3); break;
+        case 2:  drawArt(kGlass2, 9, 12, 142, 169, kGlass, 3); break;
+        default: drawArt(kGlass3, 12, 9, 140, 171, kGlass, 3); break;
+    }
+}
+
+void emptyFrame(const char* title, Icon icon, bool status) {
+    window(title, icon, status);
+    waitCursor(0);
+}
+
+void zoom(int slot, bool restore) {
+    for (int k = 1; k <= XPCore::kZoomSteps; k++) {
+        const int i = restore ? k : XPCore::kZoomSteps + 1 - k;
+        const XPCore::Rect r = XPCore::zoomRect(slot, i);
+        tft.fillRect(r.x, r.y, r.w, r.h, TITLE);
+        tft.drawFastHLine(r.x, r.y, r.w, TITLE_HI);
+        tft.drawFastHLine(r.x, r.y + 1, r.w, TITLE_LIGHT);
+        tft.drawFastHLine(r.x, r.y + r.h - 1, r.w, TITLE_EDGE);
+        delay(XPCore::kZoomStepMs);              // yields to Wi-Fi
+    }
+}
+
+void loading(const char* label, const char* source) {
+    static const Ink kGlobeInk[] = {{'E', TITLE_EDGE}, {'B', ICON_INFO}, {'L', GREEN}};
+    static const Ink kFolderInk[] = {{'D', AMBER}, {'F', USER_PIC}};
+    drawArt(kGlobe, 24, 24, 30, 36, kGlobeInk, 3);
+    drawArt(kFolder, 24, 20, 186, 38, kFolderInk, 2);
+    s_paperAt = -1;
+    drawPaper(0);
     Display::useFont("JBMono-12B");
     tft.setTextDatum(TC_DATUM);
     tft.setTextColor(BLACK, BODY);
     tft.drawString(label, 120, 92);
     marquee(50, 116, 140, 14, 0);
+    if (source && *source) {
+        Display::useFont("JBMono-11");
+        tft.setTextColor(MUTED, BODY);
+        tft.drawString(source, 120, 140);
+    }
+    waitCursor(0);
 }
 
-void loadingStep(uint32_t step) { marquee(50, 116, 140, 14, step); }
+void loadingStep(uint32_t step) {
+    marquee(50, 116, 140, 14, step);
+    const int i = (int)(step % XPCore::kPaperN);
+    if (i != s_paperAt) drawPaper(i);
+    waitCursor(step);
+}
 
 void infoStrip(int x, int y, int w, const char* text, uint16_t textColor) {
     static const uint8_t kBang[5] = {0x04, 0x0E, 0x0A, 0x1F, 0x1B};   // 5×5, bit 4 = left

@@ -216,7 +216,7 @@ void chWeatherDraw(const ChannelCtx& ctx) {
     if (!s_w.valid) {
         XP::window("Thời tiết", XPCore::ICON_WEATHER, false);
         if (!s_w.err[0]) {                           // never loaded, no error yet
-            XP::loading("Đang tải thời tiết...");
+            XP::loading("Đang tải...", "từ open-meteo.com");
             s_loadStep = 0;
             return;
         }

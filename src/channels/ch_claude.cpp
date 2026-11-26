@@ -384,7 +384,7 @@ void chClaudeDraw(const ChannelCtx& ctx) {
         return;
     }
     if (!d.valid) {
-        XP::loading("Đang tải...");
+        XP::loading("Đang tải...", "từ claude.ai");
         s_loading = true;
         s_loadStep = ctx.now_ms / 200;
         XP::loadingStep(s_loadStep);

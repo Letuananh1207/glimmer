@@ -161,6 +161,9 @@ void main() {
       await Future<void>.delayed(Duration.zero);
     }
     expect(sent(), ['Claude', 'Home']);
+    // `_` asks the device to zoom the window down to its button (panel P-2026-11-26.16); opening does not.
+    final bodies = [for (final c in rig.posts('/api/channel')) c.body as Map];
+    expect((bodies.first['zoom'], bodies.last['zoom']), (null, 'min'));
     expect(vm.windows.minimized, {'Claude'});
     expect(vm.frame!.taskbar.programs, ['Claude']);
     expect(vm.frame!.taskbar.active, isNull);

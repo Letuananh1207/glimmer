@@ -353,6 +353,8 @@ enum SysScreen : uint8_t { SYS_NONE, SYS_SPLASH, SYS_WELCOME, SYS_SETUP, SYS_OTA
 static SysScreen s_sysScreen = SYS_NONE;
 static int s_bootStep = -1;
 
+bool Display::systemScreenShown() { return s_sysScreen != SYS_NONE; }
+
 void Display::resetSystemScreens() {
     s_sysScreen = SYS_NONE;
     s_bootStep = -1;

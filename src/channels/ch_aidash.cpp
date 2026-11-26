@@ -198,7 +198,21 @@ static MetaSlot metaFor(const ChannelCtx& ctx) {
     return m;
 }
 
+// Both sides still loading (no number, no key problem): the XP File Download
+// box (P-2026-11-26.16 XP-Load) until a fetch changes the data's shape.
+static bool     s_loadBox = false;
+static uint32_t s_loadStep = 0;
+
 void chAiDashDraw(const ChannelCtx& ctx) {
+    Side ls[2] = {sideOf(ctx, 0), sideOf(ctx, 1)};
+    s_loadBox = modeOf(ls[0]) == 1 && modeOf(ls[1]) == 1;
+    if (s_loadBox) {
+        XP::window("AI hôm nay", XPCore::ICON_CLAWD, false);
+        XP::loading("Đang tải...");
+        s_loadStep = ctx.now_ms / 200;
+        XP::loadingStep(s_loadStep);
+        return;
+    }
     XP::window("AI hôm nay", XPCore::ICON_CLAWD, true);
     s_meta = metaFor(ctx);
     XP::titleMeta(s_meta.text);
@@ -220,6 +234,11 @@ void chAiDashDraw(const ChannelCtx& ctx) {
 }
 
 void chAiDashTick(const ChannelCtx& ctx) {
+    if (s_loadBox) {
+        const uint32_t step = ctx.now_ms / 200;
+        if (step != s_loadStep) { XP::loadingStep(step); s_loadStep = step; }
+        return;
+    }
     Side s[2] = {sideOf(ctx, 0), sideOf(ctx, 1)};
     bool changed = false;
     for (int i = 0; i < 2; i++) {

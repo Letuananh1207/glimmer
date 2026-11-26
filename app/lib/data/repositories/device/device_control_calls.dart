@@ -10,12 +10,12 @@ mixin _ControlCalls on DeviceRepository {
   Future<Map<String, dynamic>> _json(String method, String path, {Object? body, int tries});
 
   @override
-  Future<Result<ChannelAnswer>> channel({String? name, String? action}) => _call(() async {
+  Future<Result<ChannelAnswer>> channel({String? name, String? action, bool zoomMin = false}) => _call(() async {
     final a = ChannelAnswer.fromJson(
       await _json(
         'POST',
         '/api/channel',
-        body: {if (action != null) 'action': action else 'name': name ?? ''},
+        body: {if (action != null) 'action': action else 'name': name ?? '', if (zoomMin) 'zoom': 'min'},
         tries: 1,
       ),
     );

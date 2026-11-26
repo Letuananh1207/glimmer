@@ -53,7 +53,8 @@ reserve: 65536, side: 188}`; `POST /api/photos` multipart, trường `photo` = J
 
 Điều khiển (màn Điều khiển, thiết kế 2026-11-26.5; cần token nếu đặt; firmware cũ thiếu → `400 unknown action` /
 404 — R-DK-3 khoá nút khi `/api/state` không có `paused` / `screen_on` / `slide_ms`):
-- `POST /api/channel {"name":"Claude"}` | `{"action":"next"}` | `{"action":"prev"}` → `{ok, active, paused}`;
+- `POST /api/channel {"name":"Claude"}` (thêm `"zoom":"min"` khi app bấm `_`: máy cho thanh tiêu đề bay xuống nút, panel
+  P-2026-11-26.16) | `{"action":"next"}` | `{"action":"prev"}` → `{ok, active, paused}`;
   tên lạ → 404, action lạ → 400.
 - `POST /api/channel {"action":"pause"}` / `{"action":"resume"}` → `{ok, active, paused}`: vẫn trả lời nhưng từ panel
   P-2026-11-26.14 thiết bị **không xoay kênh** nữa (app vẫn dùng `paused` có mặt để biết firmware nhận chạm).

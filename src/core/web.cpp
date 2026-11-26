@@ -10,7 +10,8 @@
 //   POST /api/factory-reset
 //   POST /push         — attention card (see attention_json.h); GET lists, /push/clear removes
 //   POST /hook         — trimmed agent hook event (tools/agents/glimmer-hook.sh)
-//   POST /api/channel  — {"name":…} show a channel | {"action":"next"|"prev"|"pause"|"resume"}
+//   POST /api/channel  — {"name":…[,"zoom":"min"]} show a channel (zoom: the app's _ button, the window
+//                        zooms down) | {"action":"next"|"prev"|"pause"|"resume"}
 //   POST /api/screen   — {"on":false|true} backlight off / on now (RAM only)
 //   POST /api/windows  — {"open":[…],"top":…|null,"min":[…],"sel":…|null} the app's open windows (RAM only)
 //   POST /api/menu     — {"kind":"desktop"|"window"|"none","x","y","minimized"} context menu (RAM only)
@@ -61,6 +62,7 @@ extern uint32_t    mainHeapRefusals();
 extern uint32_t    mainMinMaxBlock();
 extern uint32_t    mainNextFetchInMs();
 extern bool        mainShowChannel(const char* name);
+extern void        mainNoteMinimize();
 extern void        mainNextChannel();
 extern void        mainPrevChannel();
 extern void        mainSetPaused(bool paused);
@@ -965,9 +967,13 @@ void Web::begin(Settings& settings) {
         else if (*action) {
             server.send_P(400, PSTR("application/json"), PSTR("{\"error\":\"unknown action\"}"));
             return;
-        } else if (!mainShowChannel(d["name"] | "")) {
-            server.send(404, "application/json", "{\"error\":\"no enabled channel with that name\"}");
-            return;
+        } else {
+            // {"zoom":"min"} = the app's _ button: the window zooms down to its button (P-2026-11-26.16).
+            if (!strcmp(d["zoom"] | "", "min")) mainNoteMinimize();
+            if (!mainShowChannel(d["name"] | "")) {
+                server.send(404, "application/json", "{\"error\":\"no enabled channel with that name\"}");
+                return;
+            }
         }
         JsonDocument r;
         r["ok"]     = true;

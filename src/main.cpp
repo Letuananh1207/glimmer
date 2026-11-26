@@ -278,6 +278,14 @@ static XPCore::BarState barState(uint32_t) {
 // The channel drawActive() painted last (to see the desktop come up / go away).
 static const char* g_drawnName = nullptr;
 
+// Opening a window (P-2026-11-26.16, XP-Open): the empty frame is up and the
+// content comes at g_contentAt; a window being restored from / minimized to
+// its taskbar button zooms (XP "animate windows").
+static bool     g_contentDue = false;
+static uint32_t g_contentAt  = 0;
+static int8_t   g_restoring  = XPCore::PROG_NONE;   // minimized program coming back up
+static int8_t   g_minimizing = XPCore::PROG_NONE;   // program going down to its button
+
 static bool isHome(const char* name) { return name && !strcmp(name, "Home"); }
 
 // Tray balloon (P-2026-11-26.15): pops up when the desktop comes up from
@@ -288,9 +296,25 @@ static void noteDrawn(const char* name) {
     g_drawnName = name;
 }
 
+// Taskbar slot showing program [p] in [s], -1 = none.
+static int slotOf(const XPCore::BarState& s, int p) {
+    for (int i = 0; p >= 0 && i < XPCore::kSlots; i++) if (s.prog[i] == p) return i;
+    return -1;
+}
+
+// A context menu stays over the screen it was opened on (not on Night / cards).
+static void drawMenuOver(const char* name) {
+    if (g_menu.kind == XPCore::MENU_NONE) return;
+    if (XPCore::buttonFor(name) == XPCore::BTN_NO_BAR || !strcmp(name, "Attention")) g_menu = Control::Menu();
+    else XPMenu::draw(g_menu);
+}
+
 static void drawActive() {
+    g_contentDue = false;
+    const bool afterSystem = Display::systemScreenShown();
     if (g_activeCount == 0) {
         noteDrawn(nullptr);
+        g_restoring = g_minimizing = XPCore::PROG_NONE;
         XP::drawNoChannels();                               // XP-NoChannels
         Taskbar::draw(barState(millis()), g_settings.clock24h);
         return;
@@ -298,20 +322,66 @@ static void drawActive() {
     // Re-arm splash/connecting/OTA partial-redraw state in case we re-enter
     // a system screen later (e.g., WiFi reconnect drops to drawConnecting).
     Display::resetSystemScreens();
-    // Quiet cut: the channel's draw() paints its window in ~80 ms.
     ChannelCtx ctx = makeCtx();
     const char* name = kChannels[g_activeIdx[g_activePtr]].name;
+    const char* prev = g_drawnName;
     noteDrawn(name);
     XP::setDefaultIcon(XPCore::iconFor(name));   // for the legacy Display::statusBar
-    kChannels[g_activeIdx[g_activePtr]].draw(ctx);
-    // Taskbar after the channel (main.cpp owns y 214..239); none on Night.
-    if (XPCore::buttonFor(name) == XPCore::BTN_NO_BAR) Taskbar::hide();
-    else Taskbar::draw(barState(millis()), g_settings.clock24h);
-    // A context menu stays over the screen it was opened on (not on Night / cards).
-    if (g_menu.kind != XPCore::MENU_NONE) {
-        if (XPCore::buttonFor(name) == XPCore::BTN_NO_BAR || !strcmp(name, "Attention")) g_menu = Control::Menu();
-        else XPMenu::draw(g_menu);
+
+    // P-2026-11-26.16 (XP-Open). 1. The window's button presses first: with the
+    // taskbar still on screen only the changed buttons repaint.
+    const bool hasBar = XPCore::buttonFor(name) != XPCore::BTN_NO_BAR;
+    const bool barKept = hasBar && Taskbar::shown() && !afterSystem;
+    const XPCore::BarState bar = barState(millis());
+    if (barKept) Taskbar::update(bar, g_settings.clock24h);
+    // 2. Restoring a minimized window: its title bar zooms up from the button;
+    //    minimizing: down to it, then the desktop. Nothing else zooms (XP).
+    if (barKept) {
+        const int p = XPCore::progOf(name);
+        if (isHome(name) && g_minimizing >= 0) {
+            const int slot = slotOf(bar, g_minimizing);
+            if (slot >= 0) XP::zoom(slot, false);
+        } else if (p >= 0 && p == g_restoring) {
+            const int slot = slotOf(bar, p);
+            if (slot >= 0) XP::zoom(slot, true);
+        }
     }
+    g_restoring = g_minimizing = XPCore::PROG_NONE;
+    // 3. A window that just came up shows its empty frame + the wait cursor for
+    //    200 ms; the content comes from loop(). Back from a card / the night
+    //    face, or a repaint of the same window: the content at once.
+    const bool fresh = !prev || strcmp(prev, name);
+    const bool revealed = prev && (!strcmp(prev, "Attention") || !strcmp(prev, "Night"));
+    if (fresh && !revealed && XPCore::framesFirst(name)) {
+        const XPCore::WinFrame f = XPCore::frameOf(name);
+        XP::emptyFrame(f.title, f.icon, f.status);
+        g_contentDue = true;
+        g_contentAt = millis() + XPCore::kEmptyFrameMs;
+    } else {
+        kChannels[g_activeIdx[g_activePtr]].draw(ctx);
+    }
+    // Taskbar (main.cpp owns y 214..239); none on Night.
+    if (!hasBar) Taskbar::hide();
+    else if (!barKept) Taskbar::draw(bar, g_settings.clock24h);
+    if (!g_contentDue) drawMenuOver(name);
+}
+
+// 4. The content of a window whose empty frame is up (see drawActive).
+static void drawDueContent(uint32_t now) {
+    if (!g_contentDue || (int32_t)(now - g_contentAt) < 0 || !g_activeCount) return;
+    g_contentDue = false;
+    ChannelCtx ctx = makeCtx();
+    const char* name = kChannels[g_activeIdx[g_activePtr]].name;
+    kChannels[g_activeIdx[g_activePtr]].draw(ctx);
+    drawMenuOver(name);
+}
+
+// /api/channel {"name":"Home","zoom":"min"} — the app's _ button: the window on
+// screen goes down to its taskbar button (zooms), unlike close / Show desktop.
+void mainNoteMinimize() {
+    if (!g_activeCount) return;
+    const int p = XPCore::progOf(kChannels[g_activeIdx[g_activePtr]].name);
+    if (p >= 0) g_minimizing = (int8_t)p;
 }
 
 // Recompute, and repaint only when what should be on screen changed.
@@ -336,7 +406,10 @@ bool mainShowChannel(const char* name) {
             g_activePtr = i;
             g_menu = Control::Menu();
             g_wantHome = false;
-            Control::adopt(g_windows, XPCore::progOf(kChannels[g_activeIdx[i]].name));
+            const int p = XPCore::progOf(kChannels[g_activeIdx[i]].name);
+            // A minimized window coming back up zooms from its button (XP).
+            if (p >= 0 && (g_windows.minMask >> p & 1)) g_restoring = (int8_t)p;
+            Control::adopt(g_windows, p);
             drawActive();
             markSlide(millis());
             return true;
@@ -384,6 +457,8 @@ void mainSlideTiming(uint32_t& totalMs, uint32_t& leftMs) { totalMs = leftMs = 0
 // changing on the desktop repaints it; the taskbar catches up by itself.
 void mainSetWindows(const Control::Windows& w) {
     const bool selChanged = w.sel != g_windows.sel;
+    // The list may come before the /api/channel that shows its top window.
+    if (w.top >= 0 && (g_windows.minMask >> w.top & 1) && !(w.minMask >> w.top & 1)) g_restoring = w.top;
     g_windows = w;
     if (selChanged && g_activeCount && !strcmp(kChannels[g_activeIdx[g_activePtr]].name, "Home")) drawActive();
 }
@@ -895,8 +970,9 @@ void loop() {
     // (every 200 ms) to update only the regions that changed. NO full redraw
     // here — channels handle their own minimal repaints (see channel.h's
     // PARTIAL REDRAW DISCIPLINE comment).
+    drawDueContent(now);
     static uint32_t lastTick = 0;
-    if (!g_apMode && g_activeCount > 0 && now - lastTick >= 200) {
+    if (!g_apMode && g_activeCount > 0 && !g_contentDue && now - lastTick >= 200) {
         lastTick = now;
         auto tickFn = kChannels[g_activeIdx[g_activePtr]].tick;
         // A context menu is over the window: nothing may paint under / over it.

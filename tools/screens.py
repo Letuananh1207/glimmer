@@ -432,9 +432,62 @@ def marquee(sc, x, y, w, h, step):
             sc.rect(x0 + i * (bw + gap), y0, bw, bh, X["BAR"])
 
 
-def loading(sc, label, step=5):
+# ── P-2026-11-26.16 art (xp.cpp, one char per pixel, '.' = transparent) ──
+def _xp_art():
+    src = (Path(__file__).resolve().parent.parent / "src" / "channels" / "xp.cpp").read_text(encoding="utf-8")
+    return {m[1]: (int(m[3]), int(m[4]), m[2])
+            for m in re.finditer(r'const char (k\w+)\[\] PROGMEM = "([^"]+)";\s*// (\d+)×(\d+)', src)}
+
+
+XP_ART = _xp_art()
+
+
+def draw_art(sc, name, x, y, inks):
+    w, h, a = XP_ART[name]
+    for r in range(h):
+        for c in range(w):
+            k = a[r * w + c]
+            if k in inks:
+                sc.pixel(x + c, y + r, inks[k])
+
+
+def wait_cursor(sc, frame=0):
+    """XP::waitCursor: arrow tip (132, 160) + hourglass frame (frame 3 flat at (140, 171))."""
+    sc.rect(132, 160, 21, 22, X["BODY"])
+    draw_art(sc, "kArrow", 132, 160, {"X": X["BLACK"], "W": X["WHITE"]})
+    inks = {"X": X["BLACK"], "W": X["WHITE"], "S": X["AMBER"]}
+    if frame % 4 == 3:
+        draw_art(sc, "kGlass3", 140, 171, inks)
+    else:
+        draw_art(sc, f"kGlass{frame % 4}", 142, 169, inks)
+
+
+PAPER_Y = (48, 43, 40, 40, 43, 48)
+
+
+def loading(sc, label, step=5, source=None, paper=None, glass=0):
+    """XP::loading + loadingStep (P-2026-11-26.16 XP File Download): globe, paper, folder, label, box, source."""
+    draw_art(sc, "kGlobe", 30, 36, {"E": X["TITLE_EDGE"], "B": X["ICON_INFO"], "L": X["GREEN"]})
+    draw_art(sc, "kFolder", 186, 38, {"D": X["AMBER"], "F": X["USER_PIC"]})
+    i = (step % 6) if paper is None else paper
+    draw_art(sc, "kPaper", 60 + 20 * i, PAPER_Y[i], {"B": X["FIELD_BORDER"], "W": X["WHITE"], "L": X["DIM"]})
     sc.text("JBMono-12B", label, 120, 92, X["BLACK"], "TC")
     marquee(sc, 50, 116, 140, 14, step)
+    if source:
+        sc.text("JBMono-11", source, 120, 140, X["MUTED"], "TC")
+    wait_cursor(sc, glass)
+
+
+def zoom_bands(sc, slot, steps=(1, 2, 3, 4)):
+    """XP::zoom: the title-bar bands between taskbar slot [slot]'s button and (0, 0, 240×22)."""
+    bx = 71 + 30 * slot
+    lerp = lambda a, b, i: (2 * (a * (5 - i) + b * i) + 5) // 10
+    for i in steps:
+        x, y, w, h = lerp(bx, 0, i), lerp(217, 0, i), lerp(28, 240, i), lerp(20, 22, i)
+        sc.rect(x, y, w, h, X["TITLE"])
+        sc.hline(x, y, w, X["TITLE_HI"])
+        sc.hline(x, y + 1, w, X["TITLE_LIGHT"])
+        sc.hline(x, y + h - 1, w, X["TITLE_EDGE"])
 
 
 def info_strip(sc, x, y, w, text, color=None):
@@ -804,9 +857,12 @@ def cred_card_xp(sc, title, meta, kind, head, lines, link=None, sub=None, badge=
     taskbar(sc, active="claude", badge=badge, accent=slide_accent(accent))
 
 
-def loading_xp(sc, title, badge=1):
+LOAD_SOURCE = {"Claude": "từ claude.ai", "Codex": "từ chatgpt.com", "Thời tiết": "từ open-meteo.com"}
+
+
+def loading_xp(sc, title, badge=1, step=5, paper=None, glass=0):
     window(sc, title, "clawd")
-    loading(sc, "Đang tải...", step=5)
+    loading(sc, "Đang tải...", step=step, source=LOAD_SOURCE.get(title), paper=paper, glass=glass)
     taskbar(sc, active="claude", badge=badge, accent=slide_accent(title))
 
 
@@ -960,7 +1016,7 @@ def desktop(sc, *, cl="Claude 38%", cx="Codex 71%", line1=f"29° {DOT} Ít mây"
         balloon_xp(sc, line1, line2)
     # The desktop presses no button: open windows are raised (P-2026-11-26.14).
     tw = ("weather" in skills) if tray is None else tray
-    taskbar(sc, windows=list(windows), top=None, badge=badge, tray_weather=tw)
+    taskbar(sc, windows=list(windows), top=top, badge=badge, tray_weather=tw)
 
 
 # ── AI hôm nay (ch_aidash.cpp) ──
@@ -1135,7 +1191,7 @@ def weather(sc, *, stale=False, status="Mặt trời lặn 17:24", meta="", temp
 
 def weather_loading(sc):
     window(sc, "Thời tiết", "weather", False)
-    loading(sc, "Đang tải thời tiết...")
+    loading(sc, "Đang tải...", source=LOAD_SOURCE["Thời tiết"])
     taskbar(sc, active="weather", accent=T_SKY, badge=1)
 
 
@@ -1329,6 +1385,16 @@ SCREENS_B = [
      desktop, "XPDeskTray"),
     ("Desktop · bong bóng", "XP-Desk-Balloon · hiện ~10 s khi vào desktop",
      lambda s: desktop(s, balloon=True), "XPDeskBalloon"),
+    ("Mở · nút lún trước", "XP-Open-1 · khôi phục Claude: nút lún, chưa vẽ gì khác",
+     lambda s: desktop(s, windows=["Claude"], top="Claude", tray=False, balloon=True, badge=0), "XPOpen1"),
+    ("Mở · thanh tiêu đề bay", "XP-Open-2 · 4 dải từ nút lên (0, 0)",
+     lambda s: (desktop(s, windows=["Claude"], top="Claude", tray=False, balloon=True, badge=0), zoom_bands(s, 0)),
+     "XPOpen2"),
+    ("Mở · khung trước", "XP-Open-3 · khung trống + con trỏ chờ, 200 ms",
+     lambda s: (window(s, "Claude", "clawd"), wait_cursor(s, 0),
+                taskbar(s, windows=["Claude"], top="Claude", badge=0)), "XPOpen3"),
+    ("Đang tải · hộp tải về", "XP-Load · quả địa cầu → giấy → thư mục, từ claude.ai",
+     lambda s: loading_xp(s, "Claude", badge=0, step=38, paper=2, glass=0), "XPLoad"),
     ("Cửa sổ mở", "XP-Win-Open · Claude trên cùng, 3 cửa sổ",
      lambda s: (claude_xp(s), taskbar(s, windows=["Claude", "Weather", "Clock"], top="Claude")), "XPWinOpen"),
     ("Menu desktop", "XP-Menu-Desktop · giữ chỗ trống",

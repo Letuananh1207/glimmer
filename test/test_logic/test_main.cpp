@@ -765,6 +765,47 @@ void test_tray_weather_and_balloon() {
     TEST_ASSERT_FALSE(hits(40 - 18, 152 - 6, 36, 30, kBalAreaX, kBalAreaY, kBalAreaW, kBalAreaH));
 }
 
+// P-2026-11-26.16 (XP-Open): the title bar zooms between the taskbar button and
+// (0, 0, 240×22) in 4 steps (rects of XP-Open-2.dc.html for slot 0); every
+// window but the desktop / night / cards comes up through its empty frame.
+void test_window_open_zoom_and_frame() {
+    using namespace XPCore;
+    const int16_t want[4][4] = {{57, 174, 70, 20}, {43, 130, 113, 21}, {28, 87, 155, 21}, {14, 43, 198, 22}};
+    for (int i = 1; i <= 4; i++) {
+        Rect r = zoomRect(0, i);
+        TEST_ASSERT_EQUAL(want[i - 1][0], r.x);
+        TEST_ASSERT_EQUAL(want[i - 1][1], r.y);
+        TEST_ASSERT_EQUAL(want[i - 1][2], r.w);
+        TEST_ASSERT_EQUAL(want[i - 1][3], r.h);
+    }
+    TEST_ASSERT_TRUE(zoomRect(2, 1).x > zoomRect(0, 1).x);      // later slots start further right
+    TEST_ASSERT_TRUE(framesFirst("Claude"));
+    TEST_ASSERT_TRUE(framesFirst("Clock"));
+    TEST_ASSERT_TRUE(framesFirst("Info"));
+    TEST_ASSERT_FALSE(framesFirst("Home"));
+    TEST_ASSERT_FALSE(framesFirst("Attention"));
+    TEST_ASSERT_FALSE(framesFirst("Night"));
+    TEST_ASSERT_FALSE(framesFirst(nullptr));
+    WinFrame f = frameOf("Weather");
+    TEST_ASSERT_EQUAL_STRING("Thời tiết", f.title);
+    TEST_ASSERT_EQUAL(ICON_WEATHER, f.icon);
+    TEST_ASSERT_TRUE(f.status);
+    TEST_ASSERT_FALSE(frameOf("Claude").status);
+    TEST_ASSERT_EQUAL_STRING("AI hôm nay", frameOf("AI").title);
+    // Slot of a program among the last [slots] open windows.
+    const int8_t open[] = {PROG_CLAUDE, PROG_CODEX, PROG_WEATHER, PROG_CLOCK};
+    TEST_ASSERT_EQUAL(3, slotOf(open, 4, PROG_CLOCK, 4));
+    TEST_ASSERT_EQUAL(-1, slotOf(open, 4, PROG_CLAUDE, 3));    // scrolled off with the weather tray
+    TEST_ASSERT_EQUAL(0, slotOf(open, 4, PROG_CODEX, 3));
+    // File Download paper and the hourglass: one step per 200 ms.
+    TEST_ASSERT_EQUAL(60, paperX(0));
+    TEST_ASSERT_EQUAL(160, paperX(5));
+    TEST_ASSERT_EQUAL(40, paperY(2));
+    TEST_ASSERT_EQUAL(48, paperY(5));
+    TEST_ASSERT_EQUAL(3, hourglassFrame(7));
+    TEST_ASSERT_EQUAL(0, hourglassFrame(8));
+}
+
 void test_xp_progress_blocks_and_marquee() {
     using namespace XPCore;
     // XP-Claude-A weekly bar 220×14 at (10,102), padY 2: blocks 22×8 from (13,105), gap 2.
@@ -1277,6 +1318,7 @@ int main(int, char**) {
     RUN_TEST(test_taskbar_state_looks);
     RUN_TEST(test_xp_progress_blocks_and_marquee);
     RUN_TEST(test_tray_weather_and_balloon);
+    RUN_TEST(test_window_open_zoom_and_frame);
     RUN_TEST(test_projects_follow_hook_events);
     RUN_TEST(test_projects_order_idle_and_eviction);
     RUN_TEST(test_projects_sessions_merge_per_project);

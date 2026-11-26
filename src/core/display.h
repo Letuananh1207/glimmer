@@ -55,6 +55,9 @@ namespace Display {
     // Call this whenever a channel takes over the screen or a different
     // system screen activates.
     void resetSystemScreens();
+    // A system screen (boot, welcome, log-on, update) painted since the last
+    // resetSystemScreens(): the taskbar pixels are gone, repaint it whole.
+    bool systemScreenShown();
 
     // Primitives reused by channels
     void clear();

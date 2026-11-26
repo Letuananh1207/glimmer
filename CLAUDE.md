@@ -149,7 +149,20 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
   `tft.fillScreen()`. File-static caches with sentinels (`-1`, `-2.f`) +
   per-region `paintX()` helpers that clear only their band; `draw()` seeds the
   cache. References: `ch_clock.cpp`, `ch_weather.cpp`.
-- **No animated transitions** — every switch is an instant cut.
+- **No animated transitions** — every switch is an instant cut, with exactly
+  two exceptions (P-2026-11-26.16, XP-Open, user-approved): restoring a
+  minimized window / minimizing one (the app's `_`, `/api/channel
+  {"zoom":"min"}`) zooms the title bar between its taskbar button and the top
+  (`XP::zoom`, 4 × 40 ms, **blocks loop ~160 ms**, `delay()` yields to Wi-Fi);
+  and a window that just came up (not from a card / the night face, not a
+  repaint) shows its empty frame + the wait cursor (`XP::emptyFrame`,
+  `XPCore::frameOf`) for 200 ms, the content drawn from `loop()`
+  (`drawDueContent`; no `tick()` meanwhile). Its taskbar button presses first:
+  with the taskbar on screen `drawActive()` only `Taskbar::update`s changed
+  buttons (full draw after Night / a system screen,
+  `Display::systemScreenShown()`). Loading screens (Claude, Codex, Weather,
+  AI) = XP File Download: `XP::loading(label, source)` globe → flying paper →
+  folder + "từ claude.ai" …, `loadingStep` moves paper / marquee / hourglass.
 - **XP look** (P-2026-11-26.8/.9, `screen_specs.md` §17): every channel but
   Night is an XP window — `XP::window(title, icon, status)` (`xp.{h,cpp}`):
   title bar y 0–21, frame, body `Theme::XP::BODY` x 2–237 y 22–213 (content
