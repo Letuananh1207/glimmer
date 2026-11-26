@@ -5,6 +5,35 @@ widget và việc cần làm — không ghi đường dẫn file hay cách code.
 
 ---
 
+## 2026-11-26.9 — Đặt vị trí thời tiết từ điện thoại
+
+- **Vị trí thời tiết · `WeatherLocationScreen`** (màn mới; `source/WeatherLocation.dc.html`, `screen_specs.md` §9; ảnh
+  `WeatherLocation*.png`, 16 trạng thái):
+  - Thẻ "Thiết bị đang dùng": tên nơi + toạ độ, nút Sửa tên / Xoá vị trí; chưa đặt → thẻ trống.
+  - Nút "Dùng vị trí hiện tại" (GPS chỉ khi bấm): đang lấy · chưa cho quyền (mở cài đặt điện thoại) · định vị tắt · không lấy được.
+  - Tìm thành phố (Open-Meteo, có ghi chú dưới ô): đang tìm · kết quả (tên + vùng, nước, toạ độ) · không có kết quả · lỗi mạng.
+  - Chọn GPS / kết quả → bảng xác nhận: sửa tên hiện trên thiết bị (≤ 16 ký tự), xem trước hai dòng trên thiết bị →
+    "Đặt cho thiết bị"; đang gửi · thiết bị không nhận (thử lại) · đã đặt (thông báo nhỏ).
+  - Xoá có hỏi trước; firmware cũ: chỉ gửi toạ độ, không ô tên.
+- **Cài đặt · `SettingsScreen`** (`screen_specs.md` §3; ảnh `Settings.png`, `SettingsChanged.png`): nhóm THỜI TIẾT mới giữa BAN ĐÊM
+  và SỐ LIỆU CLAUDE, một dòng "Vị trí thời tiết" (phụ = tên nơi) → màn mới. Không tính vào nút Lưu. Khung 1400 → 1520.
+- **Số liệu · tab Thời tiết chưa đặt** (`screen_specs.md` §2; ảnh `DashboardWeatherNoLocation.png`): nút "Đặt vị trí trong Cài đặt"
+  → "Đặt vị trí thời tiết", icon place, mở thẳng màn mới.
+- **Token**: `skillWeatherWash`, `size.searchField`, `size.locationNameMax`, `radius.searchField`. **Chuỗi**: 51 khoá mới
+  (`settingsSectionWeather`, `settingsWeatherLocation…`, `weatherLocation…`); `weatherSetLocation` đổi chữ.
+- Phiếu: `app/docs/phieu_thiet_ke/2026-11-26-vi-tri-thoi-tiet.md`
+- Không cần firmware mới: dùng `weatherLat`, `weatherLon`, `weatherPlace` sẵn có. Xoá = gửi 0, 0, "" (firmware coi là chưa đặt).
+
+**Việc cần làm trong code:**
+- `WeatherLocationScreen` (mới, màn đẩy): đọc / ghi vị trí qua `/api/settings`, không lưu trên app; GPS chỉ khi bấm (xin quyền,
+  phân biệt từ chối / tắt định vị / lỗi), tên nơi từ dịch vụ tra địa chỉ của điện thoại; tìm Open-Meteo geocoding sau khi ngừng gõ;
+  bảng xác nhận có ô tên ≤ 16 ký tự; gửi rồi chờ thiết bị nhận (lỗi → giữ vị trí cũ, thử lại); xoá có hỏi; firmware không có
+  `weatherPlace` → chỉ gửi toạ độ.
+- `SettingsScreen`: nhóm THỜI TIẾT + dòng Vị trí thời tiết (phụ = tên nơi / "chưa đặt" / toạ độ khi firmware cũ) → màn mới.
+- Tab Thời tiết (`weatherNoLoc`): nút mới mở thẳng màn Vị trí thời tiết.
+- Kiểm tra trên máy thật: sau khi xoá vị trí, cửa sổ Thời tiết của thiết bị có còn hiện bản thời tiết cũ đã lưu hay không;
+  nếu còn → ghi phiếu panel.
+
 ## 2026-11-26.8 — Bỏ thẻ hướng dẫn chạm: không chữ nào về chuyển, thu nhỏ, tắt app
 
 - **Điều khiển · `ControlScreen`** (`source/Control.dc.html`, `screen_specs.md` §8; ảnh 16 `Control*.png` chụp lại):

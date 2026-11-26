@@ -20,6 +20,8 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
 
 ## 2. Màn hình — `DashboardScreen` (Dashboard.png, DashboardEmpty.png, DashboardStale.png, DashboardSetup.png, DashboardLoading.png, DashboardWeather.png, DashboardWeatherNoLocation.png, DashboardClock.png, DashboardSingle.png, DashboardPhoto.png, DashboardPhotoEmpty.png, DashboardPhotoFull.png, DashboardPhotoAdd.png, DashboardPhotoDelete.png, DashboardPhotoDeleting.png, DashboardPhotoDeleteError.png)
 
+> **2026-11-26.9 — Nút đặt vị trí** (phiếu `app/docs/phieu_thiet_ke/2026-11-26-vi-tri-thoi-tiet.md`): ở `weatherNoLoc`, nút viền đổi thành `weatherSetLocation` ("Đặt vị trí thời tiết"), icon place (thay tune), mở thẳng màn **Vị trí thời tiết** (§9) thay vì tab Cài đặt. Ảnh `DashboardWeatherNoLocation.png` chụp lại.
+
 > **2026-11-26.5 — Thành màn phụ "Số liệu"** (phiếu `app/docs/phieu_thiet_ke/2026-11-26-app-dieu-khien-thiet-bi.md`): không còn là tab 1. Đẩy từ Điều khiển (chạm ô màn / nút
 > "Số liệu"), mở đúng tab của kênh đang hiện; không có thanh dưới. Đầu màn (Clawd, tên, IP) thay bằng thanh trên cao 56:
 > nút quay lại 48 (`detailsBackA11y`) → Điều khiển, `detailsTitle` 18/700, nút refresh 44 bên phải. Mọi phần thân, `DockTabBar`
@@ -103,6 +105,8 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
 - Thanh điều hướng dưới, tab 1 (Agent).
 
 ## 3. Cài đặt — `SettingsScreen` (Settings.png, SettingsChanged.png, SettingsError.png)
+
+> **2026-11-26.9 — Nhóm THỜI TIẾT** (phiếu `app/docs/phieu_thiet_ke/2026-11-26-vi-tri-thoi-tiet.md`): giữa BAN ĐÊM và SỐ LIỆU CLAUDE thêm tiêu đề nhóm `settingsSectionWeather` và một dòng 72 là liên kết: icon place 24 `skillWeather`, `settingsWeatherLocation` 16 ink, phụ 12 muted = `weatherPlace` của thiết bị (rỗng → `settingsWeatherLocationNone`; firmware cũ → toạ độ), mũi tên chevron 24 muted → màn **Vị trí thời tiết** (§9). Dòng này không tính vào `settingsSaveCount`: đổi vị trí áp ngay ở màn kia. Khung cao 1520 (`normal`, `changed`); ảnh `Settings.png`, `SettingsChanged.png` chụp lại.
 
 > **2026-11-26.5:** thanh dưới tab 1 đổi thành "Điều khiển" (`navControl`, `icons/nav-control.svg`, huy hiệu agent chờ giữ nguyên); ảnh chụp lại.
 
@@ -349,3 +353,57 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
   + `controlOfflineOverlay` 14/700 + `controlOfflineOverlayNote` 12 muted; mọi nút mờ. Chưa từng kết nối / đang tìm → màn Kết nối.
 - Thanh điều hướng dưới, tab 1 (Điều khiển) đang chọn.
 
+## 9. Vị trí thời tiết — `WeatherLocationScreen` (WeatherLocation.png, WeatherLocationUnset.png, WeatherLocationGpsLoading.png, WeatherLocationGpsDenied.png, WeatherLocationGpsOff.png, WeatherLocationGpsFail.png, WeatherLocationSearching.png, WeatherLocationResults.png, WeatherLocationNoResults.png, WeatherLocationSearchError.png, WeatherLocationConfirm.png, WeatherLocationSending.png, WeatherLocationSendFailed.png, WeatherLocationDone.png, WeatherLocationClear.png, WeatherLocationOldFw.png)
+
+> **2026-11-26.9 — Màn mới** (phiếu `app/docs/phieu_thiet_ke/2026-11-26-vi-tri-thoi-tiet.md`): đặt vị trí thời tiết của thiết bị từ điện thoại. Màn đẩy (không thanh dưới), mở từ
+> Cài đặt › THỜI TIẾT và từ nút `weatherSetLocation` của tab Thời tiết. Prop `state`: `set`, `unset`, `gpsLoading`,
+> `gpsDenied`, `gpsOff`, `gpsFail`, `searching`, `results`, `noResults`, `searchError`, `confirm`, `sending`, `sendFailed`,
+> `done`, `clear`, `oldFw`. Khung 844.
+
+- **Dữ liệu:** đọc `weatherLat`, `weatherLon`, `weatherPlace` từ `GET /api/settings`; ghi bằng `POST /api/settings
+  {weatherLat, weatherLon, weatherPlace}` (thiết bị áp ngay). Không lưu vị trí riêng trên app. Có khoá `weatherPlace` = firmware
+  hiện tên nơi; không có → `oldFw`.
+- **Thanh trên** 56: nút quay lại 48 → màn mở nó, `weatherLocationTitle` 18/700.
+- **Thẻ hiện tại** (`panel`, bo 14, đệm 16, lề 6 16): `weatherLocationCurrent` (label) → hàng cách 12, lề trên 12: ô 40 bo 12 nền
+  `skillWeatherTint` + icon place 24 `skillWeather`; cột: tên nơi 20/700 ink, `weatherLocationCoords` 12 muted. Kẻ 1 `line` (lề 14 0 4).
+  Hai nút chữ cao 44 căn phải: `weatherLocationRename` 13/500 inkDim → bảng sửa tên; `weatherLocationClear` 13/500 coral → hỏi xoá.
+  - `unset`: ô 40 nền `panel2`, icon muted; `weatherNoLocationTitle` 16/700 + `weatherLocationUnsetBody` 13 inkDim; không có nút.
+  - `oldFw`: tên = toạ độ (20/700); thêm `weatherLocationOldFwNote` 12 amber (lề trên 10).
+- **Nút GPS** (`LocationGpsButton`, lề 6 16): cao ≥ 68, bo 14, nền `skillWeatherWash`, viền 1 `skillWeather`, đệm 12 14, cách 12:
+  ô 40 bo 12 `skillWeatherTint` + icon my_location 24 `skillWeather`; `weatherLocationUseGps` 15/500 ink + `weatherLocationUseGpsSub`
+  12 muted; chevron 24 muted. Bấm → xin quyền (hộp thoại của hệ thống) → lấy vị trí → bảng xác nhận. Chỉ lấy vị trí khi bấm.
+  - `gpsLoading`: vòng xoay 24 thay icon, viền `line`, không bấm được, `weatherLocationGpsLoading` / `…Sub`, không chevron.
+  - Tên nơi từ toạ độ: dịch vụ tra địa chỉ của điện thoại (Open-Meteo không tra ngược); không có tên → ô tên để trống, người dùng gõ.
+- **Thanh báo GPS** (`panel2`, bo 14, đệm 14 16, lề 0 16 6, dưới nút GPS): tiêu đề 14/700 + thân 13 inkDim + nút căn phải.
+  - `gpsDenied` amber `weatherLocationGpsDeniedTitle` / `…Body`, nút viền `weatherLocationOpenAppSettings` (khi bị từ chối hẳn;
+    còn hỏi được thì bấm lại nút GPS là hệ thống hỏi lại).
+  - `gpsOff` amber `weatherLocationGpsOffTitle` / `…Body`, nút viền `weatherLocationTurnOnGps`.
+  - `gpsFail` coral `weatherLocationGpsFailTitle` / `…Body`, nút chữ `commonRetry`.
+- **Tìm thành phố:** `weatherLocationSearchSection` (label, đệm 18 20 8). Ô tìm (`LocationSearchField`, lề 0 16): cao 52, bo 12,
+  nền `panel`, viền 1 `line` (có chữ: `skillWeather`), đệm 0 14, icon search 22 inkDim, chữ 16 (`weatherLocationSearchHint` muted
+  khi trống), nút × 44 (`weatherLocationSearchClearA11y`) khi có chữ. Dưới ô: `weatherLocationSearchPrivacy` 11 muted (lề 6 4 0).
+  Tìm sau khi ngừng gõ ~400 ms, từ 2 ký tự, Open-Meteo geocoding (`language=vi`, tối đa 10 kết quả).
+  - Kết quả (thẻ `panel` bo 14, lề 10 16 0): mỗi dòng ≥ 60, đệm 8 16, kẻ trên 1 `line` từ dòng 2: icon place 20 muted, tên 16 ink,
+    `weatherLocationResultSub` 12 muted. Bấm → bảng xác nhận.
+  - `searching`: một dòng 60 vòng xoay 20 + `weatherLocationSearching` 14 inkDim.
+  - `noResults`: thẻ đệm 18 16: `weatherLocationNoResultsTitle` 14/700 + `…Body` 13 inkDim.
+  - `searchError`: thanh báo coral `weatherLocationSearchErrorTitle` / `…Body` + `commonRetry`.
+- **Bảng xác nhận** (`LocationConfirmSheet`, `confirm`): lớp phủ đen 60 %; bảng `panel` bo trên 20, đệm 10 20 28: tay nắm 36×4 `line`
+  (lề dưới 14) → `weatherLocationConfirmTitle` 16/700 → vùng + toạ độ 12 muted (lề 4 0 16) → `weatherLocationNameLabel` → ô tên cao
+  52 bo 12 nền `bg` viền 1 `skillWeather`, chữ 16, bộ đếm `weatherLocationNameCount` 12 muted bên phải; tối đa 16 ký tự (thiết bị cắt
+  thêm nếu vẫn quá khe) → `weatherLocationNameHint` 11 muted → khung xem trước (`panel2` bo 12, đệm 12 14, lề trên 14):
+  `weatherLocationPreview` + `weatherLocationPreviewWeather` / `…Clock` 13 ink, tên nơi 700 `skillWeather` → hai nút cao 48 bo 14 cách
+  10 (lề trên 18): `commonCancel` (nền `panel2`, ink, flex 1) và `weatherLocationApply` (nền `skillWeather`, chữ `bg` 14/700, flex 1.4).
+  Tên mặc định = tên kết quả / tên tra được; sửa được.
+  - Sửa tên (nút `weatherLocationRename`): cùng bảng, tiêu đề `weatherLocationRenameTitle`, nút `weatherLocationSaveName`; chỉ gửi
+    `weatherPlace`.
+  - `sending`: nút chính vòng xoay 18 màu `bg` + `weatherLocationSending`, cả hai nút khoá.
+  - `sendFailed` (thiết bị không trả lời / lỗi): trên tiêu đề thanh báo (`panel2` bo 12, đệm 12 14, lề dưới 14)
+    `weatherLocationRejectedTitle` coral 14/700 + `…Body`; nút chính thành `commonRetry`. Vị trí cũ giữ nguyên.
+  - `oldFw`: không có ô tên và xem trước; thay bằng `weatherLocationOldFwSheet` 13 amber; nút `weatherLocationApplyCoords`; chỉ gửi
+    `weatherLat` / `weatherLon`.
+- `done`: thiết bị nhận → đóng bảng, thẻ hiện tại cập nhật, thông báo nhỏ (nền ink, chữ `bg` 14/500, bo 12, đệm 14 16, cách đáy 24,
+  lề 16) `weatherLocationDone`, tự ẩn sau 3 s.
+- `clear`: hộp thoại rộng 312, `panel`, bo 20, đệm 24, cách 14: `weatherLocationClearTitle` 18/700, `weatherLocationClearBody` 13
+  inkDim, nút chữ `commonCancel` inkDim và `weatherLocationClearOk` coral 700, cao 44. Xoá = gửi `weatherLat` 0, `weatherLon` 0,
+  `weatherPlace` "" (thiết bị coi là chưa đặt) → về `unset`.

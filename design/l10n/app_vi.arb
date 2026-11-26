@@ -980,9 +980,9 @@
   "@weatherNoLocationBody": {
     "description": "Thân trạng thái thiếu vị trí"
   },
-  "weatherSetLocation": "Đặt vị trí trong Cài đặt",
+  "weatherSetLocation": "Đặt vị trí thời tiết",
   "@weatherSetLocation": {
-    "description": "Nút viền → Cài đặt"
+    "description": "Nút ở tab Thời tiết khi chưa đặt vị trí → màn Vị trí thời tiết (đổi 2026-11-26.9)"
   },
   "clockTitle": "ĐỒNG HỒ",
   "@clockTitle": {
@@ -1789,5 +1789,264 @@
   "appChat": "Tin nhắn",
   "@appChat": {
     "description": "Tên chương trình (skill sắp có)"
+  },
+  "settingsSectionWeather": "THỜI TIẾT",
+  "@settingsSectionWeather": {
+    "description": "Nhóm Cài đặt"
+  },
+  "settingsWeatherLocation": "Vị trí thời tiết",
+  "@settingsWeatherLocation": {
+    "description": "Dòng Cài đặt → màn Vị trí thời tiết; phụ = tên nơi hoặc settingsWeatherLocationNone"
+  },
+  "settingsWeatherLocationNone": "chưa đặt",
+  "@settingsWeatherLocationNone": {
+    "description": "Phụ khi thiết bị chưa có vị trí"
+  },
+  "weatherLocationTitle": "Vị trí thời tiết",
+  "@weatherLocationTitle": {
+    "description": "Tiêu đề thanh trên"
+  },
+  "weatherLocationCurrent": "THIẾT BỊ ĐANG DÙNG",
+  "@weatherLocationCurrent": {
+    "description": "Nhãn thẻ vị trí hiện tại"
+  },
+  "weatherLocationCoords": "{lat}, {lon}",
+  "@weatherLocationCoords": {
+    "description": "Toạ độ, 2 số lẻ",
+    "placeholders": {
+      "lat": {
+        "type": "String"
+      },
+      "lon": {
+        "type": "String"
+      }
+    }
+  },
+  "weatherLocationRename": "Sửa tên",
+  "@weatherLocationRename": {
+    "description": "Nút chữ → bảng sửa tên"
+  },
+  "weatherLocationClear": "Xoá vị trí",
+  "@weatherLocationClear": {
+    "description": "Nút chữ coral → hỏi xoá"
+  },
+  "weatherLocationUnsetBody": "Thiết bị chưa lấy được thời tiết. Chọn một nơi bên dưới.",
+  "@weatherLocationUnsetBody": {
+    "description": "Thẻ khi chưa đặt (tiêu đề dùng weatherNoLocationTitle)"
+  },
+  "weatherLocationOldFwNote": "Firmware này chưa hiện tên nơi — thiết bị chỉ nhận toạ độ. Cập nhật firmware để thấy tên trên màn Thời tiết và Đồng hồ.",
+  "@weatherLocationOldFwNote": {
+    "description": "Thẻ hiện tại, firmware không có weatherPlace"
+  },
+  "weatherLocationUseGps": "Dùng vị trí hiện tại",
+  "@weatherLocationUseGps": {
+    "description": "Nút GPS"
+  },
+  "weatherLocationUseGpsSub": "Chỉ lấy khi bạn bấm, rồi hỏi lại trước khi gửi.",
+  "@weatherLocationUseGpsSub": {
+    "description": "Phụ nút GPS"
+  },
+  "weatherLocationGpsLoading": "Đang lấy vị trí…",
+  "@weatherLocationGpsLoading": {
+    "description": "Nút GPS khi đang lấy"
+  },
+  "weatherLocationGpsLoadingSub": "Chờ định vị của điện thoại, vài giây.",
+  "@weatherLocationGpsLoadingSub": {
+    "description": "Phụ khi đang lấy"
+  },
+  "weatherLocationGpsDeniedTitle": "Chưa cho phép vị trí",
+  "@weatherLocationGpsDeniedTitle": {
+    "description": "Thanh báo amber"
+  },
+  "weatherLocationGpsDeniedBody": "App cần quyền vị trí để lấy toạ độ của điện thoại. Hoặc tìm thành phố bên dưới.",
+  "@weatherLocationGpsDeniedBody": {
+    "description": "Thanh báo"
+  },
+  "weatherLocationOpenAppSettings": "Mở cài đặt điện thoại",
+  "@weatherLocationOpenAppSettings": {
+    "description": "Nút viền khi quyền bị từ chối hẳn"
+  },
+  "weatherLocationGpsOffTitle": "Định vị đang tắt",
+  "@weatherLocationGpsOffTitle": {
+    "description": "Thanh báo amber"
+  },
+  "weatherLocationGpsOffBody": "Bật định vị (GPS) của điện thoại rồi bấm lại.",
+  "@weatherLocationGpsOffBody": {
+    "description": "Thanh báo"
+  },
+  "weatherLocationTurnOnGps": "Bật định vị",
+  "@weatherLocationTurnOnGps": {
+    "description": "Nút viền → cài đặt vị trí của hệ thống"
+  },
+  "weatherLocationGpsFailTitle": "Không lấy được vị trí",
+  "@weatherLocationGpsFailTitle": {
+    "description": "Thanh báo coral"
+  },
+  "weatherLocationGpsFailBody": "Điện thoại chưa định vị được (trong nhà, sóng yếu). Thử lại hoặc tìm thành phố.",
+  "@weatherLocationGpsFailBody": {
+    "description": "Thanh báo; nút commonRetry"
+  },
+  "weatherLocationSearchSection": "HOẶC TÌM THÀNH PHỐ",
+  "@weatherLocationSearchSection": {
+    "description": "Nhãn nhóm"
+  },
+  "weatherLocationSearchHint": "Tên thành phố, vd Đà Nẵng",
+  "@weatherLocationSearchHint": {
+    "description": "Chữ mờ ô tìm"
+  },
+  "weatherLocationSearchPrivacy": "Chữ bạn gõ được gửi tới Open-Meteo để tìm (như trang web của thiết bị).",
+  "@weatherLocationSearchPrivacy": {
+    "description": "Ghi chú dưới ô tìm"
+  },
+  "weatherLocationSearchClearA11y": "Xoá chữ",
+  "@weatherLocationSearchClearA11y": {
+    "description": "Nhãn đọc màn hình nút × trong ô tìm"
+  },
+  "weatherLocationSearching": "Đang tìm…",
+  "@weatherLocationSearching": {
+    "description": "Dòng khi đang tìm"
+  },
+  "weatherLocationResultSub": "{area} · {lat}, {lon}",
+  "@weatherLocationResultSub": {
+    "description": "Dòng phụ kết quả; area = \"Tỉnh, Nước\"",
+    "placeholders": {
+      "area": {
+        "type": "String"
+      },
+      "lat": {
+        "type": "String"
+      },
+      "lon": {
+        "type": "String"
+      }
+    }
+  },
+  "weatherLocationNoResultsTitle": "Không thấy “{query}”",
+  "@weatherLocationNoResultsTitle": {
+    "description": "Không có kết quả",
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "weatherLocationNoResultsBody": "Kiểm tra chính tả, hoặc thử tên không dấu / tên tiếng Anh.",
+  "@weatherLocationNoResultsBody": {
+    "description": "Không có kết quả"
+  },
+  "weatherLocationSearchErrorTitle": "Không tìm được",
+  "@weatherLocationSearchErrorTitle": {
+    "description": "Lỗi mạng, coral"
+  },
+  "weatherLocationSearchErrorBody": "Điện thoại không tới được Open-Meteo. Kiểm tra mạng rồi thử lại.",
+  "@weatherLocationSearchErrorBody": {
+    "description": "Lỗi mạng; nút commonRetry"
+  },
+  "weatherLocationConfirmTitle": "Đặt vị trí này?",
+  "@weatherLocationConfirmTitle": {
+    "description": "Tiêu đề bảng xác nhận"
+  },
+  "weatherLocationRenameTitle": "Sửa tên nơi",
+  "@weatherLocationRenameTitle": {
+    "description": "Tiêu đề bảng khi bấm Sửa tên"
+  },
+  "weatherLocationNameLabel": "TÊN HIỆN TRÊN THIẾT BỊ",
+  "@weatherLocationNameLabel": {
+    "description": "Nhãn ô tên"
+  },
+  "weatherLocationNameCount": "{n}/16",
+  "@weatherLocationNameCount": {
+    "description": "Bộ đếm ký tự",
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "weatherLocationNameHint": "Tối đa 16 ký tự để vừa khe trên màn thiết bị.",
+  "@weatherLocationNameHint": {
+    "description": "Dưới ô tên"
+  },
+  "weatherLocationPreview": "TRÊN THIẾT BỊ",
+  "@weatherLocationPreview": {
+    "description": "Nhãn khung xem trước"
+  },
+  "weatherLocationPreviewWeather": "Thời tiết: {desc} · {place}",
+  "@weatherLocationPreviewWeather": {
+    "description": "Xem trước dòng cửa sổ Thời tiết",
+    "placeholders": {
+      "desc": {
+        "type": "String"
+      },
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "weatherLocationPreviewClock": "Đồng hồ: Múi giờ: GMT{offset} · {place}",
+  "@weatherLocationPreviewClock": {
+    "description": "Xem trước dòng múi giờ",
+    "placeholders": {
+      "offset": {
+        "type": "String"
+      },
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "weatherLocationApply": "Đặt cho thiết bị",
+  "@weatherLocationApply": {
+    "description": "Nút chính bảng xác nhận"
+  },
+  "weatherLocationApplyCoords": "Đặt toạ độ cho thiết bị",
+  "@weatherLocationApplyCoords": {
+    "description": "Nút chính khi firmware cũ"
+  },
+  "weatherLocationSaveName": "Lưu tên",
+  "@weatherLocationSaveName": {
+    "description": "Nút chính bảng sửa tên"
+  },
+  "weatherLocationSending": "Đang gửi…",
+  "@weatherLocationSending": {
+    "description": "Nút chính khi đang gửi"
+  },
+  "weatherLocationRejectedTitle": "Thiết bị không nhận",
+  "@weatherLocationRejectedTitle": {
+    "description": "Thanh báo trong bảng, coral"
+  },
+  "weatherLocationRejectedBody": "Vị trí trên thiết bị chưa đổi. Kiểm tra thiết bị còn cùng mạng rồi thử lại.",
+  "@weatherLocationRejectedBody": {
+    "description": "Thanh báo; nút chính thành commonRetry"
+  },
+  "weatherLocationOldFwSheet": "Firmware này chưa hiện tên nơi: thiết bị chỉ nhận toạ độ.",
+  "@weatherLocationOldFwSheet": {
+    "description": "Bảng xác nhận, firmware cũ (thay ô tên)"
+  },
+  "weatherLocationDone": "Đã đặt {place} cho thiết bị.",
+  "@weatherLocationDone": {
+    "description": "Thông báo nhỏ sau khi thiết bị nhận",
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "weatherLocationClearTitle": "Xoá vị trí thời tiết?",
+  "@weatherLocationClearTitle": {
+    "description": "Hộp thoại"
+  },
+  "weatherLocationClearBody": "Thiết bị sẽ không lấy thời tiết và dự báo nữa, tên “{place}” cũng bỏ khỏi màn Thời tiết và Đồng hồ. Mọi điện thoại cùng thấy thay đổi này.",
+  "@weatherLocationClearBody": {
+    "description": "Hộp thoại",
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "weatherLocationClearOk": "Xoá",
+  "@weatherLocationClearOk": {
+    "description": "Nút coral hộp thoại"
   }
 }

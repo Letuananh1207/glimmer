@@ -1,7 +1,7 @@
 {
   "meta": {
     "name": "glimmer",
-    "version": "2026-11-25.2",
+    "version": "2026-11-26.9",
     "frame": {
       "width": 390,
       "height": 844,
@@ -153,6 +153,10 @@
     "xpSelect": {
       "value": "#316AC5",
       "use": "Nền nhãn biểu tượng desktop đang chọn (XP)"
+    },
+    "skillWeatherWash": {
+      "value": "rgba(84, 182, 255, 0.08)",
+      "use": "Nền nút \"Dùng vị trí hiện tại\" (viền skillWeather)"
     }
   },
   "font": {
@@ -282,7 +286,9 @@
     "deviceShell": 376,
     "deviceScreen": 360,
     "deviceScale": 1.5,
-    "roundButton": 56
+    "roundButton": 56,
+    "searchField": 52,
+    "locationNameMax": 16
   },
   "radius": {
     "card": 14,
@@ -300,7 +306,8 @@
     "photoTile": 10,
     "sheet": 20,
     "deviceShell": 20,
-    "snackbar": 12
+    "snackbar": 12,
+    "searchField": 12
   },
   "border": {
     "hairline": 1

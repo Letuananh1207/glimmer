@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-26.8",
+  "version": "2026-11-26.9",
   "start": "Connect",
   "rule": "Chưa kết nối được thiết bị → Connect. Kết nối được → khung 4 tab: tab 1 = Control (điều khiển: ô màn thiết bị + nút), tab 2 = Skills, tab 3 = Settings, tab 4 = Device. Dashboard (Số liệu) là màn phụ đẩy từ Control, mở đúng tab của kênh đang hiện. Settings và Device dùng chung; Connect, WifiSetup, PhotoCrop ngoài khung tab.",
   "screens": {
@@ -197,6 +197,41 @@
         "Dashboard": "Quay lại / 'Xong' / 'Về danh sách ảnh' (về tab Ảnh)",
         "photoPicker": "'Chọn ảnh khác' / 'Thêm ảnh khác' (mở lại trình chọn ảnh của hệ thống)"
       }
+    },
+    "WeatherLocation": {
+      "source": "source/WeatherLocation.dc.html",
+      "states": [
+        "set",
+        "unset",
+        "gpsLoading",
+        "gpsDenied",
+        "gpsOff",
+        "gpsFail",
+        "searching",
+        "results",
+        "noResults",
+        "searchError",
+        "confirm",
+        "sending",
+        "sendFailed",
+        "done",
+        "clear",
+        "oldFw"
+      ],
+      "push": true,
+      "from": {
+        "Settings": "Dòng 'Vị trí thời tiết' (nhóm THỜI TIẾT)",
+        "Dashboard": "Tab Thời tiết chưa đặt: nút 'weatherSetLocation'"
+      },
+      "pop": "Nút quay lại → màn mở nó",
+      "rules": [
+        "Vị trí đọc / ghi trên thiết bị (weatherLat, weatherLon, weatherPlace trong /api/settings), app không lưu riêng",
+        "GPS chỉ khi bấm nút; tìm thành phố gửi chữ gõ tới Open-Meteo geocoding",
+        "Đổi áp ngay (không qua nút Lưu của Cài đặt)",
+        "Tên nơi ≤ 16 ký tự",
+        "Xoá = weatherLat 0, weatherLon 0, weatherPlace \"\"",
+        "Firmware không có weatherPlace → chỉ gửi toạ độ"
+      ]
     }
   },
   "tabs": [
