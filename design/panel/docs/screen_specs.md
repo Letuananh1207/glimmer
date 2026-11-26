@@ -1844,6 +1844,8 @@ Nguồn `source/Photo-Empty.dc.html` · ảnh `screens/@2x/PhotoEmpty.png`
 
 ## 17. Kiểu XP (Luna) — giao diện toàn máy
 
+> **P-2026-11-26.20 — Start menu kiểu XP:** app chạm start → thiết bị vẽ Start menu 2 cột + menu con Tất cả chương trình — xem mục XP-Start.
+
 > **P-2026-11-26.19 — biểu tượng desktop kiểu XP:** Codex / Ảnh / Thùng rác thành bitmap màu 32×23 — xem mục XP-Real.
 
 > **P-2026-11-26.18 — nhãn desktop không có %:** `Claude` / `Codex` chỉ là tên — xem mục XP-Real.
@@ -2692,6 +2694,45 @@ Nguồn `source/XP-Desk-Agent.dc.html`, `XP-Desk-All.dc.html`, `XP-Desk-Selected
 - **Thanh tác vụ** = cửa sổ đang mở (app giữ danh sách, gửi xuống), theo thứ tự mở, tối đa 4 nút 28×20 tại x 71 / 101 / 131 / 161, y 217 (icon như cũ). Cửa sổ trên cùng: nút lõm (xpBtnPressedEdge / xpBtnPressed). Thu nhỏ: nút thường. Desktop đang hiện: không nút nào lõm. Không mở gì: chỉ start + khay. **Không còn vạch tiến độ 2 px** ở đáy nút. Badge amber / nút cam khi agent chờ giữ như cũ, trên nút Claude nếu cửa sổ Claude đang mở.
 - **Thu nhỏ** (`XPDeskAll`: Claude đã thu nhỏ): desktop hiện, nút Claude còn trên thanh tác vụ, không lõm. **Tắt (×)**: nút biến mất, hiện cửa sổ mở trước đó chưa thu nhỏ, hết → desktop.
 - **Nút □** (`XPWinOpen`, thanh tiêu đề mọi cửa sổ): ô (202, 3, 16×16) viền white, nền xpTitleLight `#2B80F5`, nét □ 8×8 tại (206, 6) màu xpCaptionOff `#7FA4F0` (thanh trên 2 px) — mờ như XP làm với cửa sổ không đổi cỡ. Tâm nút: `_` x 192, `□` x 210, `×` x 228 (y 11).
+
+### XP-Start — Start menu (app chạm start)
+
+> **P-2026-11-26.20 — Start menu kiểu XP trên thiết bị.**
+
+Nguồn `source/XP-Start-Menu.dc.html`, `XP-Start-All.dc.html` · ảnh `XPStartMenu.png`, `XPStartAll.png`. Token `themeXP.startMenu`.
+Thành phần XP thật: *Start menu* kiểu mới của XP (Luna, hai cột: dải người dùng, chương trình ghim + hay dùng, *All Programs*,
+cột phải xanh nhạt, dải *Log Off* / *Turn Off Computer*), menu con *All Programs* mở ngang.
+
+- **Khi hiện**: app chạm start → lệnh menu kind `start` (như menu chuột phải); vẽ đè từ (0, 0) tới y 213, trên desktop hoặc cửa
+  sổ đang hiện. Nút start lún: các hàng xpStartHi → xpStartDark, xpStart → xpGreen (chỉ vẽ lại nút). Đóng như XP-Menu: chọn mục,
+  chạm ngoài, `kind:none`, thẻ agent chen ngang → vẽ lại màn dưới bằng `draw()`, nút start nhả. `tick()` của kênh dưới dừng khi
+  menu mở. Thiết bị không tự làm gì theo mục — app gửi lệnh.
+- **Dải người dùng** (0, 0, 240×32): 6 dải ngang 5–6 px `#3D95FF` `#2B80F5` `#1C6BE8` `#0F5BDC` `#0A50D2` `#0B4CC8`; hàng y 0
+  x 3–236 `#5A9BF6`. Ảnh 24×24 tại (5, 4): viền white 1 px, viền trong xpDim, nền xpSelectIcon-sáng `#93C0F3` (y 6–19) + cỏ
+  `#76BE37` (y 20–25), Clawd 16×10 `#D97757` tại (9, 11). Tên `Clawd` JBMono-16B white TL (35, 7), bóng xpTitleShadow (+1, +1), 50 px.
+- **Vạch cam** y 32 `#F0A030` (20 px hai đầu `#F7C97A`), y 33 `#B8661E`.
+- **Thân** y 34–189: viền xpBtnEdge `#1A50C8` x 0 và x 239. Cột trái white x 1–151; x 152 `#95BDEE`; cột phải `#D3E5FA` x 153–238.
+- **Cột trái** (chương trình theo skill bật):
+  - Ghim (skill agent): Claude — Clawd ×2 36×20 tại (3, 39), `Claude` JBMono-12B bg TL (42, 37) 42 px, `mức dùng` JBMono-11
+    xpMuted TL (42, 51) 56 px. Codex — bitmap Command Prompt 32×23 (P-.19) tại (5, 65), `Codex` (42, 66) 35 px, `mức dùng` (42, 80).
+  - Vạch xpRowLine (6, 95, 140×1).
+  - Chương trình khác, hàng 20 từ y 99: icon 16 tại (6, hàng+2) (Ảnh 16×14 tại hàng+3), chữ JBMono-11 bg TL (28, hàng+4):
+    `Ảnh` 21, `Thời tiết` 63, `Đồng hồ` 49 px. Skill tắt → bỏ hàng, dồn lên.
+  - Vạch xpRowLine (6, 163, 140×1). `Tất cả chương trình` JBMono-12B bg TL (4, 170), 133 px; mũi tên 12×12 tại (138, 171): viền
+    xpStartShadow `#1E5E1E` góc cắt 1 px, nền xpStart, hàng sáng xpStartHi, tam giác trắng 4 cột (cao 8 → 2).
+- **Cột phải**, hàng 21 từ y 38, icon 16 tại (156, hàng+2), chữ xpTitleShadow `#0A246A` TL (175, hàng+3): `Desktop` 12B 49 px,
+  `Số liệu` 12B 49 px; vạch xpDivider (157, hàng+3, 78×1), bước 8; `Cài đặt` 11 49 px, `Thêm / gỡ` 11 63 px, `Thiết bị` 11 56 px.
+  (`Bảng điều khiển` 105 px không vừa — dùng `Cài đặt`.)
+- **Dải dưới** (0, 190, 240×24): 5 dải `#4285F4` `#2B72E8` `#1C64DC` `#1758D0` `#134CC2`, hàng y 190 xpTaskHi. Nút 16×16 góc cắt
+  1 px: Khởi động lại (8, 194) xanh lá (`#1E5E1E` / xpStart / xpStartHi, mũi tên vòng trắng) + `Khởi động lại` JBMono-11 white TL
+  (27, 196) 91 px; Tắt màn (165, 194) đỏ (`#8A1A1A` / xpIconError / `#F06A50`, ký hiệu nguồn trắng) + `Tắt màn` (184, 196) 49 px.
+- **Icon 16** (bitmap trong source, nhiều màu như P-.19): Ảnh = thư mục My Pictures nhỏ, Thời tiết = mặt trời, Đồng hồ = mặt
+  đồng hồ viền xanh, Desktop = màn hình nền XP, Số liệu = biểu đồ cột, Cài đặt = Control Panel (thanh trượt + chuột), Thêm / gỡ =
+  hộp + đĩa CD, Thiết bị = My Computer.
+- **Tất cả chương trình mở** (`XPStartAll`): hàng (2, 167, 149×20) xpSelect, chữ white, mũi tên giữ. Menu con (151, 62, 89×131):
+  viền xpMenuBorder, nền white; hàng 20 từ y 64: icon tại (154, hàng+2..5), chữ JBMono-11 bg TL (173, hàng+4) — Claude (Clawd
+  16×10), Codex (cửa sổ dòng lệnh 16×12), Ảnh, Thời tiết (hết x 236), Đồng hồ; vạch xpMenuBorder (155, +3, 81×1) bước 7; `Thêm / gỡ`.
+  Chỉ chương trình đã cài. Đóng menu con → vẽ lại vùng (151, 62, 89×131) bằng cột phải + bỏ tô hàng.
 
 ### XP-Menu — menu chuột phải (giữ ≥ 500 ms trên app)
 

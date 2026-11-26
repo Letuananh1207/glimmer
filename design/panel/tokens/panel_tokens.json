@@ -2279,6 +2279,232 @@
       ],
       "minJump": 30,
       "every": "minute"
+    },
+    "startMenu": {
+      "xp": "Start menu Windows XP (2 cột) + menu con All Programs",
+      "source": [
+        "source/XP-Start-Menu.dc.html",
+        "source/XP-Start-All.dc.html"
+      ],
+      "box": [
+        0,
+        0,
+        240,
+        214
+      ],
+      "banner": {
+        "rect": [
+          0,
+          0,
+          240,
+          32
+        ],
+        "bands": [
+          "#3D95FF",
+          "#2B80F5",
+          "#1C6BE8",
+          "#0F5BDC",
+          "#0A50D2",
+          "#0B4CC8"
+        ],
+        "top": "#5A9BF6",
+        "pic": [
+          5,
+          4,
+          24,
+          24
+        ],
+        "name": {
+          "text": "Clawd",
+          "font": "JBMono-16B",
+          "at": [
+            35,
+            7
+          ],
+          "color": "white",
+          "shadow": "xpTitleShadow",
+          "w": 50
+        }
+      },
+      "orangeLine": {
+        "y32": "#F0A030",
+        "ends": "#F7C97A",
+        "y33": "#B8661E"
+      },
+      "body": {
+        "y": [
+          34,
+          189
+        ],
+        "frame": "xpBtnEdge",
+        "left": {
+          "x": [
+            1,
+            151
+          ],
+          "fill": "white"
+        },
+        "edge": {
+          "x": 152,
+          "color": "#95BDEE"
+        },
+        "right": {
+          "x": [
+            153,
+            238
+          ],
+          "fill": "#D3E5FA",
+          "text": "xpTitleShadow"
+        }
+      },
+      "left": {
+        "pinned": [
+          [
+            "Claude",
+            "JBMono-12B",
+            [
+              42,
+              37
+            ],
+            42
+          ],
+          [
+            "Codex",
+            "JBMono-12B",
+            [
+              42,
+              66
+            ],
+            35
+          ]
+        ],
+        "pinnedSub": [
+          "mức dùng",
+          "JBMono-11",
+          "xpMuted",
+          56
+        ],
+        "rowsFrom": 99,
+        "rowH": 20,
+        "programs": [
+          [
+            "Ảnh",
+            21
+          ],
+          [
+            "Thời tiết",
+            63
+          ],
+          [
+            "Đồng hồ",
+            49
+          ]
+        ],
+        "allPrograms": {
+          "text": "Tất cả chương trình",
+          "font": "JBMono-12B",
+          "at": [
+            4,
+            170
+          ],
+          "w": 133,
+          "arrow": [
+            138,
+            171,
+            12,
+            12
+          ]
+        }
+      },
+      "right": {
+        "rowH": 21,
+        "from": 38,
+        "items": [
+          [
+            "Desktop",
+            "JBMono-12B",
+            49
+          ],
+          [
+            "Số liệu",
+            "JBMono-12B",
+            49
+          ],
+          "—",
+          [
+            "Cài đặt",
+            "JBMono-11",
+            49
+          ],
+          [
+            "Thêm / gỡ",
+            "JBMono-11",
+            63
+          ],
+          [
+            "Thiết bị",
+            "JBMono-11",
+            56
+          ]
+        ]
+      },
+      "bottom": {
+        "rect": [
+          0,
+          190,
+          240,
+          24
+        ],
+        "bands": [
+          "#4285F4",
+          "#2B72E8",
+          "#1C64DC",
+          "#1758D0",
+          "#134CC2"
+        ],
+        "restart": {
+          "icon": [
+            8,
+            194
+          ],
+          "text": [
+            27,
+            196
+          ],
+          "w": 91
+        },
+        "turnOff": {
+          "icon": [
+            165,
+            194
+          ],
+          "text": [
+            184,
+            196
+          ],
+          "w": 49
+        }
+      },
+      "allPrograms": {
+        "rowSel": [
+          2,
+          167,
+          149,
+          20
+        ],
+        "submenu": [
+          151,
+          62,
+          89,
+          131
+        ],
+        "textX": 173,
+        "rowH": 20
+      },
+      "startPressed": {
+        "xpStartHi": "xpStartDark",
+        "xpStart": "xpGreen"
+      }
     }
   }
 }

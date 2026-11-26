@@ -5,6 +5,29 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-26.20 — Start menu kiểu Windows XP trên thiết bị
+
+- **Start menu** (`source/XP-Start-Menu.dc.html`, `XP-Start-All.dc.html`, `screen_specs.md` §17 mục XP-Start; ảnh
+  `XPStartMenu.png`, `XPStartAll.png`) — Start menu XP 2 cột thu vào (0, 0, 240×214):
+  - Dải người dùng xanh Luna: ảnh Clawd 24×24 khung trắng, `Clawd` JBMono-16B (50 px); vạch cam 2 px.
+  - Cột trái trắng: ghim Claude / Codex (icon lớn, JBMono-12B, `mức dùng` 56 px); Ảnh / Thời tiết / Đồng hồ (icon 16);
+    `Tất cả chương trình` JBMono-12B 133 px + mũi tên xanh lá.
+  - Cột phải `#D3E5FA`: `Desktop`, `Số liệu` (đậm); `Cài đặt`, `Thêm / gỡ`, `Thiết bị` (chữ `#0A246A`).
+  - Dải dưới: `Khởi động lại` (nút xanh lá, chỗ Log Off) và `Tắt màn` (nút đỏ, chỗ Turn Off Computer).
+  - Tất cả chương trình mở: hàng tô xpSelect, menu con (151, 62, 89×131) với chương trình đã cài + `Thêm / gỡ`.
+  - Nút start lún (xanh lá đậm) khi menu mở. Mục giống `StartMenuSheet` của app; `Bảng điều khiển` → `Cài đặt` cho vừa cột.
+  - Máy hiện chưa vẽ Start menu (chỉ app có).
+- Đổi luật: Start menu không còn "chỉ ở app" — app chạm start thì thiết bị cũng hiện menu (như menu chuột phải); thiết bị chỉ
+  vẽ, app chọn mục rồi gửi lệnh.
+- Cần firmware: lệnh menu kind `start` (và trạng thái Tất cả chương trình mở) trong `/api/menu` + `/api/state` `menu`; màu
+  mới trong dải / cột / icon 16 (lấy từ source).
+
+**Việc cần làm trong code:**
+- Thiết bị: vẽ Start menu khi app gửi kind `start`, menu con khi app mở Tất cả chương trình; nút start lún khi menu mở; đóng
+  như menu chuột phải (vẽ lại màn dưới); danh sách chương trình theo skill bật.
+- App: chạm start → gửi lệnh menu `start` song song với `StartMenuSheet`; mở / đóng Tất cả chương trình → gửi trạng thái;
+  đóng sheet → `kind:none`.
+
 ## P-2026-11-26.19 — Biểu tượng desktop vẽ lại theo kiểu Windows XP
 
 - **Kênh Home — desktop** (`source/XP-Desk-Icons.dc.html`, `screen_specs.md` §17 mục XP-Real; ảnh `XPDeskIcons.png`):
