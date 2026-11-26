@@ -5,6 +5,16 @@ widget và việc cần làm — không ghi đường dẫn file hay cách code.
 
 ---
 
+## 2026-11-26.8 — Bỏ thẻ hướng dẫn chạm: không chữ nào về chuyển, thu nhỏ, tắt app
+
+- **Điều khiển · `ControlScreen`** (`source/Control.dc.html`, `screen_specs.md` §8; ảnh 16 `Control*.png` chụp lại):
+  - Bỏ `TouchLegend` ("Chạm màn như dùng chuột": thu nhỏ, phóng to, tắt app, đổi app, mở Start, chuột phải). Dưới ô màn chỉ còn
+    thẻ độ sáng và ba nút tròn. Cùng với 2026-11-26.7: không vòng chạm, không chip "Đang mở… / Thu nhỏ…", không dòng chữ dưới ô màn.
+- **Chuỗi:** các khoá `controlLegend…` đánh dấu không dùng.
+
+**Việc cần làm trong code:**
+- `ControlScreen`: bỏ thẻ hướng dẫn chạm; bỏ mọi chip / dòng chữ trạng thái khi chuyển, thu nhỏ, tắt app (áp cả mục 2026-11-26.7).
+
 ## 2026-11-26.7 — Thanh tác vụ theo cửa sổ đang mở, bỏ vòng chạm và chữ trạng thái
 
 - **Điều khiển · `ControlScreen` / `TouchMirror`** (`source/Control.dc.html`, `screen_specs.md` §8; ảnh 16 `Control*.png`, mới

@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-26.7",
+  "version": "2026-11-26.8",
   "start": "Connect",
   "rule": "Chưa kết nối được thiết bị → Connect. Kết nối được → khung 4 tab: tab 1 = Control (điều khiển: ô màn thiết bị + nút), tab 2 = Skills, tab 3 = Settings, tab 4 = Device. Dashboard (Số liệu) là màn phụ đẩy từ Control, mở đúng tab của kênh đang hiện. Settings và Device dùng chung; Connect, WifiSetup, PhotoCrop ngoài khung tab.",
   "screens": {
@@ -58,7 +58,7 @@
       "desktop": "Mỗi skill đã cài = một biểu tượng desktop (cột 1 rồi cột 2, từ trên xuống); cài mới → thêm biểu tượng ở trạng thái chọn; gỡ → bỏ",
       "start": "Mở app lần đầu / sau khởi động lại: desktop, thanh tác vụ trống",
       "taskbar": "Thanh tác vụ = cửa sổ đang mở theo thứ tự mở (28 px, từ x 71, cách 30); cửa sổ trên cùng = nút lõm; thu nhỏ = nút nổi; tắt = bỏ nút, hiện cửa sổ mở trước đó; hết cửa sổ = desktop, thanh trống. Không còn nút cố định theo skill.",
-      "feedback": "Không vòng chạm, không chip trạng thái: màn đổi ngay là phản hồi; chỉ CommandSnackbar khi thiết bị không nhận lệnh"
+      "feedback": "Không vòng chạm, không chip, không chữ hướng dẫn hay trạng thái về chuyển / thu nhỏ / tắt app: màn đổi ngay là phản hồi; chỉ CommandSnackbar khi thiết bị không nhận lệnh"
     },
     "Connect": {
       "source": "source/Connect.dc.html",

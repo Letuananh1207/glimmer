@@ -248,6 +248,9 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
 
 ## 8. Điều khiển — `ControlScreen` (Control.png, ControlOpened.png, ControlTwoOpen.png, ControlMinimized.png, ControlClosed.png, ControlInstalled.png, ControlStart.png, ControlAllPrograms.png, ControlFailed.png, ControlCard.png, ControlScreenOff.png, ControlNight.png, ControlBrightness.png, ControlOldFw.png, ControlSetup.png, ControlOffline.png)
 
+> **2026-11-26.8 — Bỏ thẻ hướng dẫn chạm.** `TouchLegend` ("Chạm màn như dùng chuột") **bỏ**: dưới ô màn không còn chữ nào về chuyển,
+> thu nhỏ, tắt app. Thứ tự dưới ô màn: thẻ độ sáng (lề 12 16 0), ba nút tròn. Ảnh 16 `Control*.png` chụp lại.
+
 > **2026-11-26.7 — Thanh tác vụ theo cửa sổ đang mở, bỏ vòng chạm và chữ trạng thái.** Prop `state`: `normal`, `opened`, `twoOpen`, `minimized`, `closed`, `installed`, `start`, `allPrograms`, `failed`, `card`, `screenOff`, `night`, `brightness`, `oldFw`, `setup`, `offline`
 > (bỏ `tapMin`, `tapIcon`, `tapClose`, `sending`; thêm `opened`, `twoOpen`, `closed`; `normal` nay là desktop lúc mới vào).
 > 844, trừ `card` / `oldFw` / `setup` / `offline` 960. Ảnh 16 `Control*.png`.

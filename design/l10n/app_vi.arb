@@ -1615,39 +1615,39 @@
   },
   "controlLegendTitle": "CHẠM MÀN NHƯ DÙNG CHUỘT",
   "@controlLegendTitle": {
-    "description": "Thẻ hướng dẫn dưới ô màn"
+    "description": "Không dùng từ 2026-11-26.8. Thẻ hướng dẫn dưới ô màn"
   },
   "controlLegendMin": "thu nhỏ",
   "@controlLegendMin": {
-    "description": "Thẻ hướng dẫn, ký hiệu _"
+    "description": "Không dùng từ 2026-11-26.8. Thẻ hướng dẫn, ký hiệu _"
   },
   "controlLegendMax": "phóng to",
   "@controlLegendMax": {
-    "description": "Thẻ hướng dẫn, ký hiệu □"
+    "description": "Không dùng từ 2026-11-26.8. Thẻ hướng dẫn, ký hiệu □"
   },
   "controlLegendClose": "tắt app",
   "@controlLegendClose": {
-    "description": "Thẻ hướng dẫn, ký hiệu ×"
+    "description": "Không dùng từ 2026-11-26.8. Thẻ hướng dẫn, ký hiệu ×"
   },
   "controlLegendTaskbar": "nút dưới: đổi app",
   "@controlLegendTaskbar": {
-    "description": "Thẻ hướng dẫn, ký hiệu ▭"
+    "description": "Không dùng từ 2026-11-26.8. Thẻ hướng dẫn, ký hiệu ▭"
   },
   "controlLegendStartKey": "start",
   "@controlLegendStartKey": {
-    "description": "Ký hiệu trong thẻ hướng dẫn"
+    "description": "Không dùng từ 2026-11-26.8. Ký hiệu trong thẻ hướng dẫn"
   },
   "controlLegendStart": "mở Start",
   "@controlLegendStart": {
-    "description": "Thẻ hướng dẫn"
+    "description": "Không dùng từ 2026-11-26.8. Thẻ hướng dẫn"
   },
   "controlLegendHoldKey": "giữ",
   "@controlLegendHoldKey": {
-    "description": "Ký hiệu trong thẻ hướng dẫn"
+    "description": "Không dùng từ 2026-11-26.8. Ký hiệu trong thẻ hướng dẫn"
   },
   "controlLegendHold": "chuột phải",
   "@controlLegendHold": {
-    "description": "Thẻ hướng dẫn"
+    "description": "Không dùng từ 2026-11-26.8. Thẻ hướng dẫn"
   },
   "startSubtitle": "Start · mở chương trình trên thiết bị",
   "@startSubtitle": {
