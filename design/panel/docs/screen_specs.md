@@ -1836,6 +1836,8 @@ Nguồn `source/Photo-Empty.dc.html` · ảnh `screens/@2x/PhotoEmpty.png`
 
 ## 17. Kiểu XP (Luna) — giao diện toàn máy
 
+> **P-2026-11-26.12 — Màn đầu kiểu desktop:** `XP-Desktop` thay kênh Trang chủ: nền = ảnh JPEG người dùng (240×214), nền dự phòng vẽ pixel; biểu tượng desktop; bong bóng thời tiết ở khay.
+
 > **P-2026-11-26.11 — Màu theo XP, mắt Clawd đen:** số to (38%, 41%, 71%) màu đen, màu báo mức chỉ ở thanh tiến độ; chữ mờ xpDim = `#ACA899`; link xpLink = `#0066CC`; mắt Clawd (và miệng khi vui) luôn đen trên mọi nền.
 
 > **P-2026-11-26.10 — Góc khởi động:** Clawd trắng ở góc dưới phải màn khởi động đổi thành chữ `Clawdsoft` nghiêng trắng.
@@ -2604,3 +2606,25 @@ Nguồn `source/XP-OtaProgress.dc.html` · ảnh `screens/@2x/XPOtaProgress.png`
 |---|---|---|---|---|
 | 120, 130 | TC | `JBMono-11` | `Đừng tắt hay rút điện máy.` | 182 |
 
+### XP-Desktop — màn đầu kiểu desktop (thay Trang chủ)
+
+Nguồn `source/XP-Desktop.dc.html` · ảnh `screens/@2x/XPDesktop.png` (nền dự phòng). Token `themeXP.desktop`.
+
+- **Nền** (x 0–239, y 0–213): ảnh JPEG baseline 240×214 ≤ 40 KB người dùng gửi lên, vẽ ở (0, 0) một lần khi vào màn. Chưa có / hỏng → nền dự phòng vẽ pixel: trời 11 dải xanh đậm → gần trắng (mỗi dải 11 px), vệt mây ti góc trên trái + trên phải, cụm mây nhỏ giữa trên, chùm mây bồng giữa-phải, hàng mây thấp y 106 bên phải, dải núi xa x 160–239 từ y ~123, gò cỏ đỉnh y 112 tại x 96 (mép trái y 118, mép phải y 132), cỏ 5 dải sáng → đậm theo độ sâu, dải tối chéo tiền cảnh trái, mép đáy đậm.
+- **Biểu tượng** cột trái, tâm x 40, ô cao 48 từ y 8: Clawd ×2 / cửa sổ dòng lệnh ×2 / ảnh ×2 / thùng rác ×2; nhãn `JBMono-11` white TC dưới icon (y ô + 24) + bóng đen (+1, +1).
+- **Bong bóng khay**: 136×50 tại (100, 150), viền đen 1 px, nền xpInfoBar, đuôi chỉ xuống khay giờ (x 206); icon thời tiết xpAmber, `Thời tiết` 12B, 2 dòng 11.
+- **Thanh tác vụ**: như §17, không nút skill nào lõm.
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 41, 33 | TC | `JBMono-11` | `Claude 38%` | 70 |
+| 40, 32 | TC | `JBMono-11` | `Claude 38%` | 70 |
+| 41, 81 | TC | `JBMono-11` | `Codex 71%` | 63 |
+| 40, 80 | TC | `JBMono-11` | `Codex 71%` | 63 |
+| 41, 129 | TC | `JBMono-11` | `Ảnh` | 21 |
+| 40, 128 | TC | `JBMono-11` | `Ảnh` | 21 |
+| 41, 177 | TC | `JBMono-11` | `Thùng rác` | 63 |
+| 40, 176 | TC | `JBMono-11` | `Thùng rác` | 63 |
+| 126, 155 | TL | `JBMono-12B` | `Thời tiết` | 63 |
+| 106, 172 | TL | `JBMono-11` | `29° · Ít mây` | 84 |
+| 106, 185 | TL | `JBMono-11` | `cảm giác 33°` | 84 |

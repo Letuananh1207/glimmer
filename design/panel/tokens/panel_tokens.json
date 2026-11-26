@@ -1,7 +1,7 @@
 {
   "meta": {
     "name": "glimmer panel",
-    "version": "P-2026-11-26.11",
+    "version": "P-2026-11-26.12",
     "frame": {
       "width": 240,
       "height": 240,
@@ -985,6 +985,126 @@
         "value": "#000000",
         "rgb565": "0x0000",
         "use": "chữ thường, số to (hạn mức, chi phí), mắt Clawd"
+      },
+      "xpDesk_1A55D0": {
+        "value": "#1A55D0",
+        "rgb565": "0x1ABA",
+        "use": "nền dự phòng màn desktop"
+      },
+      "xpDesk_1F5CD4": {
+        "value": "#1F5CD4",
+        "rgb565": "0x1AFA",
+        "use": "nền dự phòng màn desktop"
+      },
+      "xpDesk_2665D8": {
+        "value": "#2665D8",
+        "rgb565": "0x233B",
+        "use": "nền dự phòng màn desktop"
+      },
+      "xpDesk_2F6EDC": {
+        "value": "#2F6EDC",
+        "rgb565": "0x2B7B",
+        "use": "nền dự phòng màn desktop"
+      },
+      "xpDesk_3A79E0": {
+        "value": "#3A79E0",
+        "rgb565": "0x3BDC",
+        "use": "nền dự phòng màn desktop"
+      },
+      "xpDesk_3C8A1E": {
+        "value": "#3C8A1E",
+        "rgb565": "0x3C43",
+        "use": "nền dự phòng màn desktop"
+      },
+      "xpDesk_3F8F20": {
+        "value": "#3F8F20",
+        "rgb565": "0x3C64",
+        "use": "nền dự phòng màn desktop"
+      },
+      "xpDesk_4784E4": {
+        "value": "#4784E4",
+        "rgb565": "0x443C",
+        "use": "nền dự phòng màn desktop"
+      },
+      "xpDesk_4A9C24": {
+        "value": "#4A9C24",
+        "rgb565": "0x4CE4",
+        "use": "nền dự phòng màn desktop"
+      },
+      "xpDesk_5690E8": {
+        "value": "#5690E8",
+        "rgb565": "0x549D",
+        "use": "nền dự phòng màn desktop"
+      },
+      "xpDesk_5FAE2C": {
+        "value": "#5FAE2C",
+        "rgb565": "0x5D65",
+        "use": "nền dự phòng màn desktop"
+      },
+      "xpDesk_68A0EC": {
+        "value": "#68A0EC",
+        "rgb565": "0x6D1D",
+        "use": "nền dự phòng màn desktop"
+      },
+      "xpDesk_76BE37": {
+        "value": "#76BE37",
+        "rgb565": "0x75E6",
+        "use": "nền dự phòng màn desktop"
+      },
+      "xpDesk_7DB0F0": {
+        "value": "#7DB0F0",
+        "rgb565": "0x7D9E",
+        "use": "nền dự phòng màn desktop"
+      },
+      "xpDesk_7FA89A": {
+        "value": "#7FA89A",
+        "rgb565": "0x7D53",
+        "use": "nền dự phòng màn desktop"
+      },
+      "xpDesk_93C0F3": {
+        "value": "#93C0F3",
+        "rgb565": "0x961E",
+        "use": "nền dự phòng màn desktop"
+      },
+      "xpDesk_93CF48": {
+        "value": "#93CF48",
+        "rgb565": "0x9669",
+        "use": "nền dự phòng màn desktop"
+      },
+      "xpDesk_9DBDEE": {
+        "value": "#9DBDEE",
+        "rgb565": "0x9DFD",
+        "use": "nền dự phòng màn desktop"
+      },
+      "xpDesk_AACFF6": {
+        "value": "#AACFF6",
+        "rgb565": "0xAE7E",
+        "use": "nền dự phòng màn desktop"
+      },
+      "xpDesk_B2DE63": {
+        "value": "#B2DE63",
+        "rgb565": "0xB6EC",
+        "use": "nền dự phòng màn desktop"
+      },
+      "xpDesk_C2D6F3": {
+        "value": "#C2D6F3",
+        "rgb565": "0xC6BE",
+        "use": "nền dự phòng màn desktop"
+      },
+      "xpDesk_DDE6EE": {
+        "value": "#DDE6EE",
+        "rgb565": "0xDF3D",
+        "use": "nền dự phòng màn desktop"
+      },
+      "xpDesk_E4EDFB": {
+        "value": "#E4EDFB",
+        "rgb565": "0xE77F",
+        "use": "nền dự phòng màn desktop"
+      },
+      "xpDesk_F7F9FE": {
+        "value": "#F7F9FE",
+        "rgb565": "0xF7DF",
+        "use": "nền dự phòng màn desktop"
       }
     },
     "zone": {
@@ -1373,6 +1493,79 @@
     "rules": {
       "heroNumber": "số to (VT323-86 / VT323-44) màu đen; màu báo mức chỉ ở thanh tiến độ khối",
       "clawdEyes": "ô mắt Clawd (và lỗ miệng / mắt nửa ô khi vui) luôn tô #000000, mọi nền — giữ như bản gốc nền đen"
+    },
+    "desktop": {
+      "replaces": "kênh Trang chủ (Home) — màn đầu sau khởi động",
+      "wallpaper": {
+        "source": "ảnh JPEG người dùng gửi lên",
+        "format": "JPEG baseline",
+        "w": 240,
+        "h": 214,
+        "at": [
+          0,
+          0
+        ],
+        "maxBytes": 40960,
+        "fallback": "nền vẽ pixel (trời, mây ti, mây bồng, núi xa, gò cỏ) — xem source/XP-Desktop.dc.html và ảnh XPDesktop.png",
+        "draw": "một lần khi vào màn, giải mã từng khối như skill Ảnh; rồi vẽ đè biểu tượng, bong bóng, thanh tác vụ"
+      },
+      "icons": {
+        "column": "tâm x 40, ô cao 48 từ y 8",
+        "label": "JBMono-11 white TC, bóng đen (+1, +1), tại y ô + 24",
+        "items": [
+          [
+            "Claude <x>%",
+            "Clawd ×2"
+          ],
+          [
+            "Codex <x>%",
+            "cửa sổ dòng lệnh ×2"
+          ],
+          [
+            "Ảnh",
+            "icon ảnh ×2"
+          ],
+          [
+            "Thùng rác",
+            "thùng ×2"
+          ]
+        ]
+      },
+      "balloon": {
+        "box": [
+          100,
+          150,
+          136,
+          50
+        ],
+        "border": "bg",
+        "fill": "xpInfoBar",
+        "tail": "đuôi 8→1 px tại x 206, chỉ xuống khay giờ",
+        "content": [
+          [
+            "icon thời tiết",
+            "(106, 155)",
+            "xpAmber"
+          ],
+          [
+            "Thời tiết",
+            "JBMono-12B",
+            "(126, 155)"
+          ],
+          [
+            "29° · Ít mây",
+            "JBMono-11",
+            "(106, 172)"
+          ],
+          [
+            "cảm giác 33°",
+            "JBMono-11",
+            "(106, 185)",
+            "xpLabel"
+          ]
+        ]
+      },
+      "taskbar": "như mọi màn, không nút skill nào lõm"
     }
   }
 }

@@ -5,6 +5,24 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-26.12 — Màn đầu kiểu desktop XP (thay Trang chủ)
+
+- **Màn desktop** — mới (`source/XP-Desktop.dc.html`, `screen_specs.md` §17 mục XP-Desktop, token `themeXP.desktop`; ảnh `XPDesktop.png`):
+  - Nền = ảnh JPEG người dùng gửi lên (baseline, đúng 240×214, ≤ 40 KB) vẽ ở (0, 0) một lần khi vào màn. Chưa có / hỏng → nền
+    dự phòng vẽ pixel phỏng bố cục hình nền XP (trời xanh đậm → nhạt, mây ti, mây bồng, núi xa, gò cỏ).
+  - Biểu tượng desktop cột trái (tâm x 40, bước 48): Claude 38%, Codex 71%, Ảnh, Thùng rác — nhãn trắng có bóng đen.
+  - Bong bóng vàng ở khay (136×50 tại (100, 150), đuôi chỉ khay giờ): thời tiết `29° · Ít mây`, `cảm giác 33°`.
+  - Thanh tác vụ như mọi màn, không nút nào lõm.
+- Đổi luật: kênh Trang chủ (Home) kiểu cửa sổ thay bằng màn desktop; IP và "Còn 9G hôm nay" không còn trên màn đầu.
+- Cần firmware: lưu ảnh nền JPEG trên LittleFS + API tải lên / xoá ảnh nền; 24 màu nền dự phòng (token `themeXP.color`, tên `xpDesk_*`).
+- Cần app: chọn ảnh nền, cắt / thu nhỏ 240×214, gửi lên máy (phiên `/ui-design`).
+
+**Việc cần làm trong code:**
+- Kênh `Home` → màn desktop: vẽ ảnh nền (hoặc nền dự phòng), biểu tượng + nhãn có bóng, bong bóng thời tiết, thanh tác vụ không nút lõm.
+  `tick()`: cập nhật % trong nhãn Claude / Codex và chữ bong bóng — chỉ vẽ lại vùng nhãn / bong bóng (vẽ lại phần nền dưới nó từ ảnh hoặc màu dự phòng).
+- Ảnh nền: lưu, tải lên, xoá; kiểm tra baseline + đúng 240×214 khi tải.
+- Bản xem trước màn trên máy tính vẽ theo.
+
 ## P-2026-11-26.11 — Màu theo XP, mắt Clawd đen
 
 - **Mọi màn XP** (`source/XP-*.dc.html`, `screen_specs.md` §17, token `themeXP.color` / `themeXP.rules`; ảnh 44 màn `XP*.png`):
