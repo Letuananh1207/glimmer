@@ -170,14 +170,26 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
   program of the enabled skills (P-2026-11-26.14, `XPCore::deskIcons`: column
   x 40 Claude % / Codex % / Ảnh / Thùng rác, column x 120 Thời tiết / Đồng hồ)
   with shadowed labels, the app's selected icon (`windows.sel`) in XP select
-  colours, weather tray balloon (weather skill on). `tick()` restores the
-  wallpaper under a changed label with `Wallpaper::paint(rect, cap)` (partial
-  JPEG decode, early stop) — never a fill colour. No taskbar button pressed.
+  colours. `tick()` restores the wallpaper under a changed label with
+  `Wallpaper::paint(rect, cap)` (partial JPEG decode, early stop) — never a
+  fill colour. No taskbar button pressed.
+- **Tray balloon** (P-2026-11-26.15, XP notification balloon; weather skill on
+  only): **not always up** — weather shows permanently only in the Weather
+  window. The balloon (140×62 at (96, 138), tail to the tray icon) pops up
+  ~10 s (`XPCore::Balloon`) when the desktop comes up from another screen,
+  when the weather changes while it shows (other description or ≥ 3°,
+  `weatherNews`), and on `POST /api/balloon {"show":true}` (app taps the tray
+  icon); `{"show":false}` (×) or anything taking the screen (a card) hides
+  it. Hiding repaints the wallpaper of x 96..235 y 138..211 + the icons /
+  labels under it. Only over the desktop (409 elsewhere); `/api/state`
+  `balloon`.
 - **Taskbar** y 214–239 (`taskbar.{h,cpp}`, pure `xp_core.h`): painted by
   `main.cpp` after `draw()`, never by a channel; `Taskbar::update` ~4 Hz
   repaints only a changed slot + the tray clock per minute. Start button,
   one 28-px button per **open window** (P-2026-11-26.14: the app's list,
-  opening order, last 4, from x 71; nothing open → start + tray only), the
+  opening order, last 4, from x 71; nothing open → start + tray only; weather
+  skill on → tray from x 176 with the weather icon at (180, 220) and only the
+  last **3** buttons, P-2026-11-26.15), the
   top window's pressed while it shows, no slide progress. AMBER badge = agents
   waiting and the orange "needs you" look sit on the **Claude window's**
   button only (no Claude window open → no taskbar signal; the card itself
@@ -269,8 +281,8 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
   app is the computer, the device its screen. `POST /api/channel {name}`
   opens a window (adopted into the list if the app did not send it),
   `POST /api/windows {open, top, min, sel}` = the app's open windows (whole
-  list each time), `POST /api/menu`, `POST /api/screen {"on"}`; `/api/state`
-  `windows`, `menu`, `paused` (still reported: the app detects the remote
+  list each time), `POST /api/menu`, `POST /api/balloon {"show"}`,
+  `POST /api/screen {"on"}`; `/api/state` `windows`, `menu`, `balloon`, `paused` (still reported: the app detects the remote
   firmware by it), `screen_on`, `slide_ms` / `slide_left_ms` (always 0).
   `prev` / `pause` / `resume` still answer but nothing rotates. Screen off = backlight 0 on top of the night rules until an urgent /
   approval / question / user-error card holds the screen

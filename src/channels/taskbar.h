@@ -6,7 +6,8 @@
 //
 //   start button x 0–67 (flag + italic "start"), one 28×20 button per open
 //   window at x 71 + 30k (P-2026-11-26.14, ≤ 4, opening order), tray
-//   x 196–239 with the clock. The top window's button pressed (no slide
+//   x 196–239 with the clock — from x 176 with the weather icon, and ≤ 3
+//   buttons, while the weather skill is on (P-2026-11-26.15). The top window's button pressed (no slide
 //   progress); agents waiting = AMBER badge on the Claude window's button; a
 //   card that needs the user = that button lit orange (xpFlash).
 #include <stdint.h>

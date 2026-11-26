@@ -723,6 +723,48 @@ void test_taskbar_state_looks() {
     TEST_ASSERT_EQUAL(5, startInset(25));
 }
 
+// P-2026-11-26.15: weather skill on → tray from x 176 with the weather icon,
+// only 3 window buttons; the tray balloon shows ~10 s and pops up on weather news.
+void test_tray_weather_and_balloon() {
+    using namespace XPCore;
+    TEST_ASSERT_EQUAL(196, trayX(false));
+    TEST_ASSERT_EQUAL(176, trayX(true));
+    TEST_ASSERT_EQUAL(4, slotsFor(false));
+    TEST_ASSERT_EQUAL(3, slotsFor(true));
+    // 4 open with the weather tray: the last 3, slot 3 empty (it would overlap the tray).
+    const int8_t four[] = {PROG_CLAUDE, PROG_CODEX, PROG_WEATHER, PROG_CLOCK};
+    BarState s;
+    fillBar(s, four, 4, PROG_CLOCK, PROG_CLOCK, slotsFor(true));
+    TEST_ASSERT_EQUAL(PROG_CODEX, s.prog[0]);
+    TEST_ASSERT_EQUAL(PROG_CLOCK, s.prog[2]);
+    TEST_ASSERT_EQUAL(PROG_NONE, s.prog[3]);
+    TEST_ASSERT_EQUAL(2, s.pressed);
+    TEST_ASSERT_TRUE(buttonX(2) + kBtnW <= kTrayXWeather);
+    // Balloon: 10 s from show, × hides at once, millis() wrap-safe.
+    Balloon b;
+    TEST_ASSERT_FALSE(balloonVisible(b, 1000));
+    balloonShow(b, 1000);
+    TEST_ASSERT_TRUE(balloonVisible(b, 1000));
+    TEST_ASSERT_TRUE(balloonVisible(b, 10999));
+    TEST_ASSERT_FALSE(balloonVisible(b, 11001));
+    balloonShow(b, 0xFFFFF000u);                       // across the 49-day wrap
+    TEST_ASSERT_TRUE(balloonVisible(b, 0x00000100u));
+    balloonHide(b);
+    TEST_ASSERT_FALSE(balloonVisible(b, 0x00000100u));
+    // News: another description, or ≥ 3°, or a reading appearing / going.
+    TEST_ASSERT_FALSE(weatherNews(true, true, 29.f, true, 30.9f));
+    TEST_ASSERT_TRUE(weatherNews(true, true, 29.f, true, 32.f));
+    TEST_ASSERT_TRUE(weatherNews(true, true, 29.f, true, 26.f));
+    TEST_ASSERT_TRUE(weatherNews(true, false, 29.f, true, 29.f));
+    TEST_ASSERT_TRUE(weatherNews(true, true, 29.f, false, 0.f));
+    TEST_ASSERT_TRUE(weatherNews(false, true, 0.f, true, 29.f));
+    TEST_ASSERT_FALSE(weatherNews(false, true, 0.f, false, 0.f));
+    // Erasing it repaints box + tail: x 96..235, y 138..211; an icon in column 1 row 4 is under it.
+    TEST_ASSERT_EQUAL(74, kBalAreaH);
+    TEST_ASSERT_TRUE(hits(120 - 18, 152 - 6, 36, 30, kBalAreaX, kBalAreaY, kBalAreaW, kBalAreaH));
+    TEST_ASSERT_FALSE(hits(40 - 18, 152 - 6, 36, 30, kBalAreaX, kBalAreaY, kBalAreaW, kBalAreaH));
+}
+
 void test_xp_progress_blocks_and_marquee() {
     using namespace XPCore;
     // XP-Claude-A weekly bar 220×14 at (10,102), padY 2: blocks 22×8 from (13,105), gap 2.
@@ -1234,6 +1276,7 @@ int main(int, char**) {
     RUN_TEST(test_taskbar_buttons_and_badge);
     RUN_TEST(test_taskbar_state_looks);
     RUN_TEST(test_xp_progress_blocks_and_marquee);
+    RUN_TEST(test_tray_weather_and_balloon);
     RUN_TEST(test_projects_follow_hook_events);
     RUN_TEST(test_projects_order_idle_and_eviction);
     RUN_TEST(test_projects_sessions_merge_per_project);

@@ -490,14 +490,17 @@ PROG_ICON = {"Photo": "photo", "Weather": "weather", "Forecast": "weather", "Clo
 _BTN_PROG = {"claude": "Claude", "photo": "Photo", "weather": "Weather", "clock": "Clock"}
 
 
-def taskbar(sc, *, active="claude", windows=None, top=None, flash=False, badge=1, clock="14:32", **_old):
-    """Taskbar::draw. windows = open programs in opening order (last 4 shown), top = the one on top
-    (pressed while it shows). Legacy callers pass active = the button of the only open window."""
+def taskbar(sc, *, active="claude", windows=None, top=None, flash=False, badge=1, clock="14:32",
+            tray_weather=False, **_old):
+    """Taskbar::draw. windows = open programs in opening order (last 4 shown — last 3 with the
+    weather tray, P-2026-11-26.15), top = the one on top (pressed while it shows). Legacy callers
+    pass active = the button of the only open window."""
     if windows is None:
         windows = [_BTN_PROG[active]] if active else []
         top = windows[0] if windows else None
-    windows = windows[-4:]
-    task_bands(sc, 0, 196, 0, 25)
+    tray_x = 176 if tray_weather else 196
+    windows = windows[-(3 if tray_weather else 4):]
+    task_bands(sc, 0, tray_x, 0, 25)
     for r in range(26):                                   # start button
         edge = 67 - START_INSET[r]
         c = X["START_HI"] if r <= 1 else X["START"] if r <= 22 else X["START_DARK"]
@@ -527,9 +530,11 @@ def taskbar(sc, *, active="claude", windows=None, top=None, flash=False, badge=1
                 for c in range(3):
                     if row >> (2 - c) & 1:
                         sc.pixel(x + 21 + c, 217 + r, BG)
-    sc.rect(196, 214, 44, 26, X["TRAY"])
-    sc.vline(196, 214, 26, X["TRAY_EDGE"])
-    sc.hline(197, 214, 43, X["TRAY_HI"])
+    sc.rect(tray_x, 214, 240 - tray_x, 26, X["TRAY"])
+    sc.vline(tray_x, 214, 26, X["TRAY_EDGE"])
+    sc.hline(tray_x + 1, 214, 239 - tray_x, X["TRAY_HI"])
+    if tray_weather:
+        draw_icon(sc, "weather", 180, 220, 1, X["ICON_WARN"])
     sc.text("JBMono-11", clock, 218, 221, X["WHITE"], "TC")
 
 
@@ -882,9 +887,42 @@ def desk_icons(skills):
     return [(p, 40, 8 + 48 * i) for i, p in enumerate(col0)] + [(p, 120, 8 + 48 * i) for i, p in enumerate(col1)]
 
 
+def balloon_xp(sc, line1, line2):
+    """ch_home.cpp paintBalloon (P-2026-11-26.15, XP notification balloon): box 140×62 at (96, 138)
+    with stepped corners, tail from the bottom x 178..190 to its tip (190, 211), × button."""
+    bx, by, bw, bh = 96, 138, 140, 62
+    y1 = by + bh - 1
+    sc.hline(bx + 2, by, bw - 4, X["BLACK"])
+    sc.hline(bx + 1, by + 1, bw - 2, X["BLACK"])
+    sc.hline(bx + 2, by + 1, bw - 4, X["INFO_BAR"])
+    sc.rect(bx, by + 2, bw, bh - 4, X["BLACK"])
+    sc.rect(bx + 1, by + 2, bw - 2, bh - 4, X["INFO_BAR"])
+    sc.hline(bx + 1, y1 - 1, bw - 2, X["BLACK"])
+    sc.hline(bx + 2, y1 - 1, bw - 4, X["INFO_BAR"])
+    sc.hline(bx + 2, y1, bw - 4, X["BLACK"])
+    sc.hline(179, y1, 11, X["INFO_BAR"])
+    for y in range(y1 + 1, 212):
+        x0 = 178 + (y - y1 - 1)
+        sc.hline(x0, y, 190 - x0 + 1, X["INFO_BAR"])
+        sc.pixel(x0, y, X["BLACK"])
+        sc.pixel(190, y, X["BLACK"])
+    draw_icon(sc, "weather", 102, 144, 1, X["AMBER"])
+    sc.text("JBMono-12B", "Thời tiết", 122, 144, X["BLACK"])
+    sc.rect(220, 143, 12, 12, X["DIM"])
+    sc.rect(221, 144, 10, 10, X["WHITE"])
+    for k in range(6):
+        sc.pixel(223 + k, 146 + k, X["BLACK"])
+        sc.pixel(228 - k, 146 + k, X["BLACK"])
+    sc.text("JBMono-11", fit(sc, "JBMono-11", line1, 132), 102, 164, X["BLACK"] if line2 else X["DIM"])
+    if line2:
+        sc.text("JBMono-11", fit(sc, "JBMono-11", line2, 132), 102, 178, X["LABEL"])
+
+
 def desktop(sc, *, cl="Claude 38%", cx="Codex 71%", line1=f"29° {DOT} Ít mây", line2="cảm giác 33°",
-            balloon=True, badge=1, skills=("agent", "photo", "weather", "clock"), sel=None,
-            windows=(), top=None):
+            balloon=False, badge=1, skills=("agent", "photo", "weather", "clock"), sel=None,
+            windows=(), top=None, tray=None):
+    """tray=None: the weather tray icon when the weather skill is on (P-2026-11-26.15); the older
+    design images (before .15) are drawn with tray=False."""
     sc.img.paste(_desk_wallpaper(), (0, 0))
     labels = {"Claude": cl, "Codex": cx, "Photo": "Ảnh", "Weather": "Thời tiết", "Clock": "Đồng hồ", None: "Thùng rác"}
     for prog, x, y in desk_icons(skills):
@@ -919,20 +957,10 @@ def desktop(sc, *, cl="Claude 38%", cx="Codex 71%", line1=f"29° {DOT} Ít mây"
             sc.text("JBMono-11", t, x + 1, ly + 1, X["BLACK"], "TC")
             sc.text("JBMono-11", t, x, ly, X["WHITE"], "TC")
     if balloon and "weather" in skills:
-        sc.rect(100, 150, 136, 50, X["BLACK"])
-        sc.rect(101, 151, 134, 48, X["INFO_BAR"])
-        for k in range(7):
-            w = 8 - k
-            sc.hline(206, 199 + k, w, X["INFO_BAR"])
-            sc.pixel(206, 199 + k, X["BLACK"])
-            sc.pixel(206 + w - 1, 199 + k, X["BLACK"])
-        draw_icon(sc, "weather", 106, 155, 1, X["AMBER"])
-        sc.text("JBMono-12B", "Thời tiết", 126, 155, X["BLACK"])
-        sc.text("JBMono-11", fit(sc, "JBMono-11", line1, 128), 106, 172, X["BLACK"] if line2 else X["DIM"])
-        if line2:
-            sc.text("JBMono-11", fit(sc, "JBMono-11", line2, 128), 106, 185, X["LABEL"])
+        balloon_xp(sc, line1, line2)
     # The desktop presses no button: open windows are raised (P-2026-11-26.14).
-    taskbar(sc, windows=list(windows), top=None, badge=badge)
+    tw = ("weather" in skills) if tray is None else tray
+    taskbar(sc, windows=list(windows), top=None, badge=badge, tray_weather=tw)
 
 
 # ── AI hôm nay (ch_aidash.cpp) ──
@@ -1297,6 +1325,10 @@ SCREENS_B = [
      lambda s: desktop(s, windows=["Claude"]), "XPDeskAll"),
     ("Desktop · vừa cài Đồng hồ", "XP-Desk-Selected · Đồng hồ đang chọn",
      lambda s: desktop(s, sel="Clock"), "XPDeskSelected"),
+    ("Desktop · khay thời tiết", "XP-Desk-Tray · không bong bóng, icon thời tiết ở khay",
+     desktop, "XPDeskTray"),
+    ("Desktop · bong bóng", "XP-Desk-Balloon · hiện ~10 s khi vào desktop",
+     lambda s: desktop(s, balloon=True), "XPDeskBalloon"),
     ("Cửa sổ mở", "XP-Win-Open · Claude trên cùng, 3 cửa sổ",
      lambda s: (claude_xp(s), taskbar(s, windows=["Claude", "Weather", "Clock"], top="Claude")), "XPWinOpen"),
     ("Menu desktop", "XP-Menu-Desktop · giữ chỗ trống",

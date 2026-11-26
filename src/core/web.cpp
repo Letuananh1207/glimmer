@@ -14,13 +14,14 @@
 //   POST /api/screen   — {"on":false|true} backlight off / on now (RAM only)
 //   POST /api/windows  — {"open":[…],"top":…|null,"min":[…],"sel":…|null} the app's open windows (RAM only)
 //   POST /api/menu     — {"kind":"desktop"|"window"|"none","x","y","minimized"} context menu (RAM only)
+//   POST /api/balloon  — {"show":true|false} desktop tray balloon: show 10 s / hide now (RAM only)
 //   POST /mcp          — JSON-RPC: push_card, clear_card, list_cards, get_state, show/next_channel
 //   GET  /api/photos   — photos on the device + limits; POST uploads one (multipart field
 //                        "photo", baseline JPEG 188×188); DELETE /api/photos?name=p3.jpg
 //   GET  /api/wallpaper — desktop wallpaper state + limits; POST uploads it (multipart field
 //                        "wallpaper", baseline JPEG 240×214 ≤ 40 KB); DELETE removes it
 //   The API token (when set) guards /push*, /hook, /mcp, /api/refresh, /api/channel,
-//   /api/screen, /api/windows, /api/menu, photo and wallpaper upload / delete.
+//   /api/screen, /api/windows, /api/menu, /api/balloon, photo and wallpaper upload / delete.
 //   POST /update       — OTA firmware + filesystem (ESP8266HTTPUpdateServer)
 
 #include "web.h"
@@ -72,6 +73,8 @@ extern const Control::Windows& mainWindows();
 extern void        mainSetWindows(const Control::Windows& w);
 extern const Control::Menu& mainMenu();
 extern bool        mainSetMenu(const Control::Menu& m);
+extern bool        mainSetBalloon(bool show);
+extern bool        mainBalloonShown();
 extern void        mainSettingsChanged();
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -196,6 +199,7 @@ static void handleApiState() {
         if (w.sel >= 0) wo["sel"] = XPCore::progName(w.sel); else wo["sel"] = nullptr;
         const XPCore::MenuKind k = mainMenu().kind;
         d["menu"] = k == XPCore::MENU_DESKTOP ? "desktop" : k == XPCore::MENU_WINDOW ? "window" : "none";
+        d["balloon"] = mainBalloonShown();      // desktop tray balloon up now (P-2026-11-26.15)
     }
     d["photos"]              = Photos::count();
     d["wallpaper"]           = Wallpaper::present();
@@ -1017,6 +1021,25 @@ void Web::begin(Settings& settings) {
             return;
         }
         server.send(200, "application/json", "{\"ok\":true}");
+    });
+
+    // Tray balloon (P-2026-11-26.15): the app taps the tray icon → show for
+    // 10 s; × → hide. 409 when the desktop is not on screen / weather skill off.
+    server.on("/api/balloon",        HTTP_POST, []() {
+        if (!checkAuth()) { server.send(401, "application/json", "{\"error\":\"unauthorized\"}"); return; }
+        JsonDocument d;
+        if (deserializeJson(d, server.arg("plain")) || !d["show"].is<bool>()) {
+            server.send_P(400, PSTR("application/json"), PSTR("{\"error\":\"body must be {show: true|false}\"}"));
+            return;
+        }
+        if (!mainSetBalloon(d["show"].as<bool>())) {
+            server.send_P(409, PSTR("application/json"), PSTR("{\"error\":\"no balloon on this screen\"}"));
+            return;
+        }
+        JsonDocument r;
+        r["ok"]      = true;
+        r["balloon"] = mainBalloonShown();
+        sendJson(200, r);
     });
 
     // Backlight off / on now, whatever the night window says (RAM only; an

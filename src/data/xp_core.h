@@ -130,13 +130,23 @@ struct BarState {
     int8_t pressed = -1;           // slot of the top window, -1 = none
     bool   flash   = false;        // a card that needs the user holds the screen
     int8_t badge   = -1;           // badgeGlyph of the agents waiting
+    bool   trayWeather = false;    // weather icon in the tray (weather skill on, P-2026-11-26.15)
 };
 
+// ── Tray (P-2026-11-26.15, XP-Desk-Tray): x 196–239 with the clock; with the
+// weather skill on it grows 20 px left (x 176) for the weather icon 16×14 at
+// (180, 220), and the taskbar keeps only 3 window buttons (x 71 / 101 / 131).
+constexpr int kTrayX = 196, kTrayXWeather = 176;
+constexpr int kTrayIconX = 180, kTrayIconY = 220;
+inline int trayX(bool weather) { return weather ? kTrayXWeather : kTrayX; }
+inline int slotsFor(bool weather) { return weather ? 3 : kSlots; }
+
 // Slots from the open windows [open] (opening order, [n] of them): the last
-// kSlots; [top] pressed when it is the program on screen ([shown]).
-inline void fillBar(BarState& s, const int8_t* open, int n, int top, int shown) {
-    const int first = n > kSlots ? n - kSlots : 0;
-    for (int i = 0; i < kSlots; i++) s.prog[i] = first + i < n ? open[first + i] : PROG_NONE;
+// [slots] (≤ kSlots); [top] pressed when it is the program on screen ([shown]).
+inline void fillBar(BarState& s, const int8_t* open, int n, int top, int shown, int slots = kSlots) {
+    if (slots > kSlots) slots = kSlots;
+    const int first = n > slots ? n - slots : 0;
+    for (int i = 0; i < kSlots; i++) s.prog[i] = i < slots && first + i < n ? open[first + i] : PROG_NONE;
     s.pressed = -1;
     for (int i = 0; i < kSlots; i++)
         if (top >= 0 && s.prog[i] == top && top == shown) s.pressed = (int8_t)i;
@@ -153,6 +163,37 @@ inline int badgeOnSlot(int i, const BarState& s) {
 // Does slot i need a repaint going from a to b?
 inline bool slotChanged(int i, const BarState& a, const BarState& b) {
     return a.prog[i] != b.prog[i] || lookOfSlot(i, a) != lookOfSlot(i, b) || badgeOnSlot(i, a) != badgeOnSlot(i, b);
+}
+
+// ── Tray balloon (P-2026-11-26.15, XP notification balloon tip) ──
+// Shows ~10 s when the desktop comes up, when the weather changes while it is
+// up, and when the app taps the tray icon; × (or a card taking the screen)
+// hides it at once. One balloon at a time. until = millis() it hides at, 0 = hidden.
+constexpr uint32_t kBalloonMs = 10000;
+struct Balloon { uint32_t until = 0; };
+inline void balloonShow(Balloon& b, uint32_t now) { b.until = (now + kBalloonMs) | 1u; }   // never 0
+inline void balloonHide(Balloon& b) { b.until = 0; }
+inline bool balloonVisible(const Balloon& b, uint32_t now) {
+    return b.until != 0 && (int32_t)(b.until - now) > 0;
+}
+// Worth a new balloon: the description changed, or the temperature moved ≥ 3°
+// (or a reading appeared / went away).
+inline bool weatherNews(bool validA, bool sameDesc, float tempA, bool validB, float tempB) {
+    if (validA != validB) return true;
+    if (!validA) return false;
+    const float d = tempA - tempB;
+    return !sameDesc || d >= 3.0f || d <= -3.0f;
+}
+
+// Balloon geometry (token themeXP.desktop.balloon): box 140×62 at (96, 138),
+// corners stepped 2 px, black border, xpInfoBar; the tail opens the bottom at
+// x 178..190 and narrows to its tip (190, 211), right edge straight.
+constexpr int kBalX = 96, kBalY = 138, kBalW = 140, kBalH = 62;
+constexpr int kBalTailX0 = 178, kBalTailX1 = 190, kBalTailTipY = 211;
+// What erasing it repaints: the box and the tail (x 96..235, y 138..211).
+constexpr int kBalAreaX = kBalX, kBalAreaY = kBalY, kBalAreaW = kBalW, kBalAreaH = kBalTailTipY - kBalY + 1;
+inline bool hits(int ax, int ay, int aw, int ah, int bx, int by, int bw, int bh) {
+    return ax < bx + bw && bx < ax + aw && ay < by + bh && by < ay + ah;
 }
 
 // ── Desktop icons (P-2026-11-26.14, XP-Desk, XP Auto Arrange) ──

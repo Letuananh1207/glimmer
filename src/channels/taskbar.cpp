@@ -116,10 +116,13 @@ void paintClock() {
     tft.drawString(s_clock, 218, 221);
 }
 
-void paintTray() {
-    tft.fillRect(196, kY, 44, Layout::TASKBAR_H, TRAY);
-    tft.drawFastVLine(196, kY, Layout::TASKBAR_H, TRAY_EDGE);
-    tft.drawFastHLine(197, kY, 43, TRAY_HI);
+// Tray x 196..239 (clock), or from x 176 with the weather icon (P-2026-11-26.15).
+void paintTray(bool weather) {
+    const int x = trayX(weather);
+    tft.fillRect(x, kY, 240 - x, Layout::TASKBAR_H, TRAY);
+    tft.drawFastVLine(x, kY, Layout::TASKBAR_H, TRAY_EDGE);
+    tft.drawFastHLine(x + 1, kY, 239 - x, TRAY_HI);
+    if (weather) XP::drawIcon(ICON_WEATHER, kTrayIconX, kTrayIconY, 1, ICON_WARN);
     paintClock();
 }
 
@@ -130,16 +133,18 @@ namespace Taskbar {
 void draw(const BarState& s, bool h24) {
     s_state = s;
     s_shown = true;
-    bands(0, 196, 0, 25);   // behind the start's rounded edge + gaps between buttons
+    bands(0, trayX(s.trayWeather), 0, 25);   // behind the start's rounded edge + gaps between buttons
     paintStart();
-    for (int i = 0; i < kSlots; i++) if (s.prog[i] >= 0) paintSlot(i, s);
+    for (int i = 0; i < slotsFor(s.trayWeather); i++) if (s.prog[i] >= 0) paintSlot(i, s);
     clockText(h24, s_clock, sizeof(s_clock));
-    paintTray();
+    paintTray(s.trayWeather);
 }
 
 void update(const BarState& s, bool h24) {
     if (!s_shown) return;
-    for (int i = 0; i < kSlots; i++)
+    // The weather skill turned on / off: the tray moved and a slot came or went.
+    if (s.trayWeather != s_state.trayWeather) { draw(s, h24); return; }
+    for (int i = 0; i < slotsFor(s.trayWeather); i++)
         if (slotChanged(i, s_state, s)) paintSlot(i, s);
     s_state = s;
     char c[8];

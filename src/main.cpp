@@ -67,6 +67,10 @@ extern void chTrendTick      (const ChannelCtx&);
 extern void chInfoTick       (const ChannelCtx&);
 extern void chNightTick      (const ChannelCtx&);
 extern bool chAttentionNeedsYou();
+extern void chHomeEntered();                       // desktop came up → tray balloon pops up
+extern void chHomeLeft();                          // desktop went away → balloon gone
+extern void chHomeBalloon(const ChannelCtx&, bool show);
+extern bool chHomeBalloonShown();
 extern bool chAttentionWakesScreen();
 
 static const Channel kChannels[] = {
@@ -265,13 +269,28 @@ static XPCore::BarState barState(uint32_t) {
     for (int i = 0; i < g_windows.n; i++)
         if (progInstalled(g_windows.open[i])) open[n++] = g_windows.open[i];
     const char* name = g_activeCount ? kChannels[g_activeIdx[g_activePtr]].name : nullptr;
-    XPCore::fillBar(s, open, n, g_windows.top, XPCore::progOf(name));
+    s.trayWeather = Skill::inList(g_settings.skillsOn.c_str(), "weather");
+    XPCore::fillBar(s, open, n, g_windows.top, XPCore::progOf(name), XPCore::slotsFor(s.trayWeather));
     s.flash = name && !strcmp(name, "Attention") && chAttentionNeedsYou();
     return s;
 }
 
+// The channel drawActive() painted last (to see the desktop come up / go away).
+static const char* g_drawnName = nullptr;
+
+static bool isHome(const char* name) { return name && !strcmp(name, "Home"); }
+
+// Tray balloon (P-2026-11-26.15): pops up when the desktop comes up from
+// another screen, hidden when anything else takes the screen (a card too).
+static void noteDrawn(const char* name) {
+    if (isHome(name) && !isHome(g_drawnName)) chHomeEntered();
+    if (!isHome(name) && isHome(g_drawnName)) chHomeLeft();
+    g_drawnName = name;
+}
+
 static void drawActive() {
     if (g_activeCount == 0) {
+        noteDrawn(nullptr);
         XP::drawNoChannels();                               // XP-NoChannels
         Taskbar::draw(barState(millis()), g_settings.clock24h);
         return;
@@ -282,6 +301,7 @@ static void drawActive() {
     // Quiet cut: the channel's draw() paints its window in ~80 ms.
     ChannelCtx ctx = makeCtx();
     const char* name = kChannels[g_activeIdx[g_activePtr]].name;
+    noteDrawn(name);
     XP::setDefaultIcon(XPCore::iconFor(name));   // for the legacy Display::statusBar
     kChannels[g_activeIdx[g_activePtr]].draw(ctx);
     // Taskbar after the channel (main.cpp owns y 214..239); none on Night.
@@ -384,6 +404,26 @@ bool mainSetMenu(const Control::Menu& m) {
         drawActive();
     }
     return true;
+}
+
+// Tray balloon from the app (POST /api/balloon): tap the tray icon → show
+// 10 s, × → hide. Only over the desktop (the balloon is part of it) and with
+// the weather skill on; an open context menu closes first, as in XP.
+bool mainSetBalloon(bool show) {
+    if (g_apMode || !g_activeCount || !isHome(kChannels[g_activeIdx[g_activePtr]].name)) return !show;
+    if (show && !Skill::inList(g_settings.skillsOn.c_str(), "weather")) return false;
+    if (g_menu.kind != XPCore::MENU_NONE) {
+        g_menu = Control::Menu();
+        if (show) chHomeEntered(); else chHomeLeft();
+        drawActive();
+        return true;
+    }
+    chHomeBalloon(makeCtx(), show);
+    return true;
+}
+
+bool mainBalloonShown() {
+    return g_activeCount && isHome(kChannels[g_activeIdx[g_activePtr]].name) && chHomeBalloonShown();
 }
 
 // A new / deleted wallpaper: repaint the desktop if it is on screen.
