@@ -34,6 +34,8 @@
 #include "xp.h"
 #include "taskbar.h"
 #include "photos.h"
+#include "wallpaper.h"
+#include "control_core.h"
 
 // ── Channel registry — declared in their own .cpp files ─────────────────────
 extern bool chClaudeEnabled(const ChannelCtx&);  extern void chClaudeDraw(const ChannelCtx&);
@@ -64,6 +66,7 @@ extern void chTrendTick      (const ChannelCtx&);
 extern void chInfoTick       (const ChannelCtx&);
 extern void chNightTick      (const ChannelCtx&);
 extern bool chAttentionNeedsYou();
+extern bool chAttentionWakesScreen();
 
 static const Channel kChannels[] = {
     //  name        enabled              draw                  tick           skill (nullptr = system)
@@ -99,6 +102,11 @@ static uint32_t    g_lastRefresh = 0;     // millis of the last completed fetch 
 static uint32_t    g_lastSlide   = 0;
 static bool        g_nightFace   = false; // night window + mode clock/dark
 
+// App remote control (design 2026-11-26.5), RAM only — R-DK-4: lost on
+// reboot, the saved autoRotate / night settings are never touched.
+static Control::Rotation g_rot;           // rotation paused + frozen slide time
+static bool        g_screenOff   = false; // backlight off on the app's command
+
 // ── Fetch scheduler state ────────────────────────────────────────────────────
 
 enum Job : uint8_t { JOB_CLAUDE, JOB_CODEX, JOB_CODEX_RESETS, JOB_WEATHER, JOB_STATUS_CLAUDE,
@@ -131,6 +139,8 @@ bool     mainPinApprovals()   { return g_settings.pinApprovals; }
 bool     mainAgentNightShow() { return g_settings.agentNightShow; }
 uint32_t mainApprovalTtlS()   { return (uint32_t)g_settings.approvalTtlMin * 60UL; }
 bool     mainAgentDoneCards() { return g_settings.agentDoneCards; }
+bool     mainPaused()       { return g_rot.paused; }
+bool     mainScreenOn()     { return !g_screenOff; }
 uint32_t mainHeapRefusals() { return g_heapRefusals; }
 uint32_t mainMinMaxBlock()  { return g_minMaxBlk; }
 
@@ -170,6 +180,8 @@ static void applyBrightness() {
                                     chAttentionEnabled(ctx), g_settings.brightness,
                                     g_settings.nightBright);
     if (idleNow() && pct > kIdleDimPct) pct = kIdleDimPct;
+    // Screen off from the app: dark until a card that needs the user holds the screen.
+    pct = (uint8_t)Control::brightness(pct, g_screenOff, g_screenOff && chAttentionWakesScreen());
     Display::setBrightness(pct);
 }
 
@@ -218,6 +230,14 @@ static bool rotating() {
         || (g_activeCount == 1 && Photos::count() > 1 && !strcmp(kChannels[g_activeIdx[0]].name, "Photo"));
 }
 
+// A new slide starts now (a paused rotation stays paused, at its start).
+static void markSlide(uint32_t now) {
+    g_lastSlide = now;
+    Control::restart(g_rot);
+}
+
+static uint32_t slideMs() { return (uint32_t)g_settings.channelSec * 1000UL; }
+
 // What the taskbar shows now (P-2026-11-26.8): enabled skills' buttons, the
 // active channel's pressed, the Claude button orange on a card that needs
 // the user, the waiting badge, slide progress (none when not rotating, on a
@@ -233,8 +253,7 @@ static XPCore::BarState barState(uint32_t now) {
     s.flash  = !strcmp(name, "Attention") && chAttentionNeedsYou();
     const bool photoEmpty = !strcmp(name, "Photo") && chPhotoEmpty();
     if (rotating() && !photoEmpty)
-        s.progress = (uint8_t)XPCore::progressLen(now - g_lastSlide,
-                                                  (uint32_t)g_settings.channelSec * 1000UL);
+        s.progress = (uint8_t)XPCore::progressLen(Control::elapsed(g_rot, now, g_lastSlide), slideMs());
     return s;
 }
 
@@ -265,7 +284,7 @@ static void refreshScreen(bool force) {
     const char* after = g_activeCount ? kChannels[g_activeIdx[g_activePtr]].name : nullptr;
     if (force || before != after || countBefore != g_activeCount) {
         drawActive();
-        g_lastSlide = millis();
+        markSlide(millis());
     }
 }
 
@@ -276,7 +295,7 @@ bool mainShowChannel(const char* name) {
         if (!strcasecmp(kChannels[g_activeIdx[i]].name, name)) {
             g_activePtr = i;
             drawActive();
-            g_lastSlide = millis();
+            markSlide(millis());
             return true;
         }
     }
@@ -288,7 +307,47 @@ void mainNextChannel() {
     if (g_activeCount == 0) return;
     g_activePtr = (g_activePtr + 1) % g_activeCount;
     drawActive();
-    g_lastSlide = millis();
+    markSlide(millis());
+}
+
+// The channel before the current one (app d-pad, swipe right).
+void mainPrevChannel() {
+    recomputeActive();
+    if (g_activeCount == 0) return;
+    g_activePtr = Control::prevIndex(g_activePtr, g_activeCount);
+    drawActive();
+    markSlide(millis());
+}
+
+// Temporary rotation pause (R-DK-4): no auto-advance, the taskbar's slide
+// progress stops where it is; manual next / prev / show still work and keep
+// it paused; agent cards still interrupt.
+void mainSetPaused(bool paused) {
+    uint32_t now = millis();
+    if (paused) Control::pause(g_rot, now, g_lastSlide, slideMs());
+    else        g_lastSlide = Control::resume(g_rot, now, g_lastSlide);
+}
+
+// Backlight off / on now, whatever the night window says (RAM only).
+void mainSetScreenOn(bool on) {
+    g_screenOff = !on;
+    applyBrightness();
+}
+
+// The active channel's slide: total and what is left, as the taskbar
+// progress counts it. 0 / 0 when nothing rotates (one channel, autoRotate
+// off, night face, a card holding the screen).
+void mainSlideTiming(uint32_t& totalMs, uint32_t& leftMs) {
+    totalMs = leftMs = 0;
+    if (g_apMode || g_activeCount == 0 || !rotating()) return;
+    if (!strcmp(kChannels[g_activeIdx[g_activePtr]].name, "Attention")) return;
+    totalMs = slideMs();
+    leftMs  = Control::slideLeft(Control::elapsed(g_rot, millis(), g_lastSlide), totalMs);
+}
+
+// A new / deleted wallpaper: repaint the desktop if it is on screen.
+void mainWallpaperChanged() {
+    if (g_activeCount && !strcmp(kChannels[g_activeIdx[g_activePtr]].name, "Home")) drawActive();
 }
 
 // ── Fetch scheduler ──────────────────────────────────────────────────────────
@@ -603,6 +662,7 @@ void setup() {
     UsageHistory::begin();
     AttentionQueue::projectsBegin();
     Photos::begin();
+    Wallpaper::begin();
     Api::refreshCred(g_settings, g_claude, g_codex);
 
     Display::splashStep(millis() / 200);
@@ -683,6 +743,9 @@ void loop() {
         static bool wasIdle = false;                 // idle dim: react within 1 s
         bool idle = idleNow();
         if (idle != wasIdle) { wasIdle = idle; applyBrightness(); }
+        static bool wasWake = false;                 // screen off: a waking card lights it
+        bool wake = g_screenOff && chAttentionWakesScreen();
+        if (wake != wasWake) { wasWake = wake; applyBrightness(); }
     }
     static bool wasAttention = false;
     ChannelCtx ctx = makeCtx();
@@ -696,7 +759,7 @@ void loop() {
         recomputeActive();
         drawActive();
         applyBrightness();
-        g_lastSlide = now;
+        markSlide(now);
     }
     wasAttention = attention;
 
@@ -732,15 +795,14 @@ void loop() {
     }
 
     // Channel auto-rotate — instant cut (no transition animation).
-    uint32_t slideMs = (uint32_t)g_settings.channelSec * 1000UL;
     const bool holding = attention && g_activeCount
                       && !strcmp(kChannels[g_activeIdx[g_activePtr]].name, "Attention");
     // Photo alone in the rotation still steps through the photos (a frame of one channel).
     const bool photoSolo = g_activeCount == 1 && Photos::count() > 1
                         && !strcmp(kChannels[g_activeIdx[0]].name, "Photo");
-    if (!g_apMode && g_settings.autoRotate && !g_nightFace && !holding
-        && (g_activeCount > 1 || photoSolo) && now - g_lastSlide >= slideMs) {
-        g_lastSlide = now;
+    if (!g_apMode && g_settings.autoRotate && !g_nightFace && !holding && !g_rot.paused
+        && (g_activeCount > 1 || photoSolo) && now - g_lastSlide >= slideMs()) {
+        markSlide(now);
         // Pick up any settings toggles before deciding what's next.
         recomputeActive();
         if (g_activeCount > 0) g_activePtr = (g_activePtr + 1) % g_activeCount;

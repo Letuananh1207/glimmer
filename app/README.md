@@ -39,7 +39,7 @@ Play Store thì cần tạo khóa ký riêng.
 ## API thiết bị dùng tới
 
 `GET /api/state` (có `claude_usage`, `projects`, `time`, `skill`, `skills`, `skills_on`, `weather`, `photos` = số
-ảnh), `GET/POST
+ảnh, `wallpaper` = có hình nền riêng, `paused`, `screen_on`, `slide_ms`, `slide_left_ms`), `GET/POST
 /api/settings`, `GET /api/export`, `POST /api/import`, `POST /api/reboot`,
 `POST /api/refresh`, `POST /api/channel`, `GET /push`, `POST /push/clear`,
 `POST /update` (multipart `firmware` / `filesystem`). Token (nếu đặt) gửi qua
@@ -50,3 +50,22 @@ reserve: 65536, side: 188}`; `POST /api/photos` multipart, trường `photo` = J
 ≤ 40 KB (app cắt vuông + thu nhỏ trước khi gửi) → 200 `{ok, name, count}`; lỗi `{error}` với mã `full` / `too_big`
 (413), `no_space` (507), `not_jpeg` / `progressive` / `bad_size` / `truncated` / `empty` / `field` (400), `fs` (500);
 `DELETE /api/photos?name=p3.jpg` → `{ok, count}` / 404. Upload và xoá cần token (nếu đặt).
+
+Điều khiển (màn Điều khiển, thiết kế 2026-11-26.5; cần token nếu đặt; firmware cũ thiếu → `400 unknown action` /
+404 — R-DK-3 khoá nút khi `/api/state` không có `paused` / `screen_on` / `slide_ms`):
+- `POST /api/channel {"name":"Claude"}` | `{"action":"next"}` | `{"action":"prev"}` → `{ok, active, paused}`;
+  tên lạ → 404, action lạ → 400.
+- `POST /api/channel {"action":"pause"}` / `{"action":"resume"}` → `{ok, active, paused}`. Dừng xoay **tạm** (RAM, mất
+  khi khởi động lại, không đổi `autoRotate` — R-DK-4); đang dừng vẫn đổi kênh tay được và vẫn dừng; thẻ agent vẫn chen.
+  Máy chưa hiện gì khi dừng (phiếu `docs/phieu_panel/2026-11-26-tam-dung-xoay-va-tat-man.md`), chỉ vạch tiến độ ở nút
+  thanh tác vụ đứng yên.
+- `POST /api/screen {"on":false|true}` → `{ok, screen_on}`. Tắt / bật đèn nền ngay, không theo giờ đêm, RAM. Thẻ urgent /
+  cần duyệt / câu hỏi / lỗi của người dùng vẫn làm sáng màn lúc nó giữ màn; `screen_on` vẫn là `false` (lệnh của app).
+- `/api/state`: `paused` (bool), `screen_on` (bool), `slide_ms` = độ dài slide đang chạy, `slide_left_ms` = còn lại —
+  cả hai `0` khi không xoay (một kênh, tắt tự xoay, mặt đêm, thẻ đang giữ màn). Đang dừng: `slide_left_ms` đứng yên.
+- Bỏ một thẻ: `POST /push/clear {"id":"…"}` → `{cleared: 1|0}` (như MCP `clear_card`); id lấy từ `GET /push`.
+
+Hình nền desktop (màn đầu, P-2026-11-26.12): `GET /api/wallpaper` → `{set, size, w: 240, h: 214, max_bytes: 40960, free,
+reserve}`; `POST /api/wallpaper` multipart, trường `wallpaper` = JPEG **baseline** đúng **240×214**, ≤ 40 KB → 200
+`{ok, size}`; lỗi `{error}`: `too_big` (413), `no_space` (507), `not_jpeg` / `progressive` / `bad_size` / `truncated` /
+`empty` / `field` (400), `fs` (500); `DELETE /api/wallpaper` → `{ok}` / 404 (đang dùng nền mặc định). Cần token (nếu đặt).

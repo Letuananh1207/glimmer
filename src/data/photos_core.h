@@ -23,15 +23,18 @@ constexpr int      kSide         = 188;          // exact width = height (Layout
 // as soon as the SOF is seen; the rest of the stream is ignored.
 enum JpegVerdict : uint8_t {
     JPEG_PENDING = 0,    // need more bytes
-    JPEG_OK,             // baseline (SOF0), kSide × kSide, 1 or 3 components
+    JPEG_OK,             // baseline (SOF0), the expected size, 1 or 3 components
     JPEG_NOT_JPEG,       // no SOI / broken marker
     JPEG_PROGRESSIVE,    // SOF2 (or any non-baseline SOF)
-    JPEG_BAD_SIZE,       // baseline but not kSide × kSide
+    JPEG_BAD_SIZE,       // baseline but not the expected size
     JPEG_TRUNCATED,      // stream ended before the SOF (finish())
 };
 
 class JpegSniffer {
 public:
+    // Expected size: a photo (kSide²) by default; the desktop wallpaper passes
+    // Wallpaper::kW × kH.
+    explicit JpegSniffer(uint16_t wantW = kSide, uint16_t wantH = kSide) : wantW_(wantW), wantH_(wantH) {}
     JpegVerdict verdict() const { return v_; }
     uint16_t width()  const { return w_; }
     uint16_t height() const { return h_; }
@@ -56,6 +59,7 @@ private:
     uint8_t  sof_[6] = {};  // precision, h hi, h lo, w hi, w lo, ncomp
     uint8_t  sofN_ = 0;
     uint16_t w_ = 0, h_ = 0;
+    uint16_t wantW_, wantH_;
 
     static bool isSof(uint8_t m) {
         // C0..CF are SOFn except C4 (DHT), C8 (JPG), CC (DAC).
@@ -95,7 +99,7 @@ private:
                 h_ = (uint16_t)(sof_[1] << 8 | sof_[2]);
                 w_ = (uint16_t)(sof_[3] << 8 | sof_[4]);
                 if (sof_[0] != 8 || (sof_[5] != 1 && sof_[5] != 3)) v_ = JPEG_NOT_JPEG;
-                else if (w_ != kSide || h_ != kSide) v_ = JPEG_BAD_SIZE;
+                else if (w_ != wantW_ || h_ != wantH_) v_ = JPEG_BAD_SIZE;
                 else v_ = JPEG_OK;
                 break;
         }
@@ -191,3 +195,16 @@ inline const char* roomCode(Room r) {
 }
 
 }  // namespace Photos
+
+// ── Desktop wallpaper (P-2026-11-26.12, token themeXP.desktop.wallpaper) ─────
+// One baseline JPEG of exactly kW × kH at /wallpaper.jpg, drawn at (0, 0)
+// behind the desktop icons. Same header check and free-space reserve as the
+// photos (Photos::room with count 0).
+namespace Wallpaper {
+constexpr int      kW        = 240;
+constexpr int      kH        = 214;               // y 0..213, above the taskbar
+constexpr uint32_t kMaxBytes = Photos::kMaxBytes; // 40 KB
+inline Photos::Room room(uint32_t size, uint32_t fsFree, uint32_t blockSize) {
+    return Photos::room(0, size, fsFree, blockSize);
+}
+}  // namespace Wallpaper

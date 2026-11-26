@@ -14,6 +14,8 @@
 #include "projects_core.h"
 #include "xp_core.h"
 #include "photos_core.h"
+#include "control_core.h"
+#include "desk_wallpaper.h"
 #include <time.h>
 #include <initializer_list>
 #if defined(_WIN32)   // host tests on Windows (MinGW) lack the POSIX localtime_r
@@ -641,10 +643,11 @@ void test_taskbar_buttons_and_badge() {
     TEST_ASSERT_EQUAL(BTN_NO_BAR, buttonFor(nullptr));
     TEST_ASSERT_EQUAL(BTN_CLAUDE, buttonFor("Attention"));   // agent cards are Claude windows
     TEST_ASSERT_EQUAL(BTN_NONE, buttonFor("Info"));
+    TEST_ASSERT_EQUAL(BTN_NONE, buttonFor("Home"));          // the desktop: no button pressed
     TEST_ASSERT_EQUAL(BTN_WEATHER, buttonFor("Weather"));
     TEST_ASSERT_EQUAL(BTN_WEATHER, buttonFor("Forecast"));
     TEST_ASSERT_EQUAL(BTN_CLOCK, buttonFor("Clock"));
-    const char* agent[] = {"Home", "Agents", "Claude", "Codex", "AI", "Trend", "Setup"};
+    const char* agent[] = {"Agents", "Claude", "Codex", "AI", "Trend", "Setup"};
     for (const char* n : agent) {
         TEST_ASSERT_EQUAL(BTN_CLAUDE, buttonFor(n));
         TEST_ASSERT_EQUAL(ICON_CLAWD, iconFor(n));
@@ -1003,6 +1006,103 @@ void test_photo_room_limits() {
     TEST_ASSERT_EQUAL_STRING("no_space", roomCode(ROOM_NO_SPACE));
 }
 
+// ── Desktop wallpaper (P-2026-11-26.12) ─────────────────────────────────────
+
+void test_wallpaper_header_and_fallback() {
+    uint8_t b[200];
+    using namespace Photos;
+    // Exactly 240×214 baseline; a photo-sized or swapped one is refused.
+    size_t n = makeJpeg(b, 0xC0, 240, 214);
+    JpegSniffer ok(Wallpaper::kW, Wallpaper::kH);
+    TEST_ASSERT_EQUAL(JPEG_OK, ok.feed(b, n));
+    JpegSniffer photo;                                   // photos still want 188²
+    TEST_ASSERT_EQUAL(JPEG_BAD_SIZE, photo.feed(b, n));
+    n = makeJpeg(b, 0xC0, 214, 240);
+    JpegSniffer swapped(Wallpaper::kW, Wallpaper::kH);
+    TEST_ASSERT_EQUAL(JPEG_BAD_SIZE, swapped.feed(b, n));
+    n = makeJpeg(b, 0xC2, 240, 214);
+    JpegSniffer prog(Wallpaper::kW, Wallpaper::kH);
+    TEST_ASSERT_EQUAL(JPEG_PROGRESSIVE, prog.feed(b, n));
+    // ≤ 40 KB, same free-space reserve as the photos.
+    TEST_ASSERT_EQUAL(ROOM_OK, Wallpaper::room(40960, 300000, 8192));
+    TEST_ASSERT_EQUAL(ROOM_TOO_BIG, Wallpaper::room(40961, 300000, 8192));
+    TEST_ASSERT_EQUAL(ROOM_NO_SPACE, Wallpaper::room(30000, 30000 + 8192 + kReserveBytes - 1, 8192));
+    // Fallback runs: 214 rows of exactly 240 px, palette indices in range.
+    int i = 0;
+    for (int y = 0; y < Desk::kDeskH; y++) {
+        int x = 0;
+        while (x < Desk::kDeskW) {
+            TEST_ASSERT_TRUE(i < Desk::kDeskRunCount);
+            TEST_ASSERT_TRUE(Desk::kDeskRuns[2 * i] < Desk::kDeskPalN);
+            TEST_ASSERT_TRUE(Desk::kDeskRuns[2 * i + 1] > 0);
+            x += Desk::kDeskRuns[2 * i + 1];
+            i++;
+        }
+        TEST_ASSERT_EQUAL(Desk::kDeskW, x);
+    }
+    TEST_ASSERT_EQUAL(Desk::kDeskRunCount, i);
+    TEST_ASSERT_EQUAL_HEX16(0x1ABA, Desk::kDeskPal[Desk::kDeskRuns[0]]);   // top band #1A55D0
+}
+
+// ── App remote control (design 2026-11-26.5) ────────────────────────────────
+
+void test_control_prev_and_pause() {
+    using namespace Control;
+    TEST_ASSERT_EQUAL(-1, prevIndex(0, 0));
+    TEST_ASSERT_EQUAL(2, prevIndex(0, 3));        // wraps to the last
+    TEST_ASSERT_EQUAL(0, prevIndex(1, 3));
+    TEST_ASSERT_EQUAL(0, prevIndex(0, 1));
+    TEST_ASSERT_EQUAL(2, prevIndex(7, 3));        // out of range → last
+
+    // Pause freezes the slide clock; resume continues from there (R-DK-4).
+    Rotation r;
+    uint32_t last = 1000, slide = 10000;
+    TEST_ASSERT_EQUAL_UINT32(4000, elapsed(r, 5000, last));
+    pause(r, 5000, last, slide);
+    TEST_ASSERT_TRUE(r.paused);
+    TEST_ASSERT_EQUAL_UINT32(4000, elapsed(r, 60000, last));   // frozen
+    pause(r, 9000, last, slide);                                // idempotent
+    TEST_ASSERT_EQUAL_UINT32(4000, r.frozen);
+    TEST_ASSERT_EQUAL_UINT32(6000, slideLeft(elapsed(r, 60000, last), slide));
+    last = resume(r, 60000, last);
+    TEST_ASSERT_FALSE(r.paused);
+    TEST_ASSERT_EQUAL_UINT32(56000, last);
+    TEST_ASSERT_EQUAL_UINT32(5000, elapsed(r, 61000, last));
+    TEST_ASSERT_EQUAL_UINT32(56000, resume(r, 70000, last));   // not paused: unchanged
+    // A manual switch while paused: still paused, at the slide's start.
+    pause(r, 62000, last, slide);
+    restart(r);
+    TEST_ASSERT_TRUE(r.paused);
+    TEST_ASSERT_EQUAL_UINT32(0, elapsed(r, 99000, 99000));
+    // Pausing an overdue slide (a card held the screen) caps at the slide.
+    Rotation o; pause(o, 50000, 0, slide);
+    TEST_ASSERT_EQUAL_UINT32(slide, o.frozen);
+    TEST_ASSERT_EQUAL_UINT32(0, slideLeft(o.frozen, slide));
+    TEST_ASSERT_EQUAL_UINT32(0, slideLeft(5, 0));
+    // Wrap-around of millis().
+    TEST_ASSERT_EQUAL_UINT32(20, elapsed(Rotation(), 10, 0xFFFFFFF6u));
+}
+
+void test_control_screen_off_wake() {
+    using namespace Control;
+    Attention::Item it;
+    it.used = true;
+    it.kind = Attention::K_SUCCESS;
+    TEST_ASSERT_FALSE(wakesScreen(it));
+    it.kind = Attention::K_APPROVAL; TEST_ASSERT_TRUE(wakesScreen(it));
+    it.kind = Attention::K_INPUT;    TEST_ASSERT_TRUE(wakesScreen(it));
+    it.kind = Attention::K_PROGRESS; TEST_ASSERT_FALSE(wakesScreen(it));
+    it.urgent = true;                TEST_ASSERT_TRUE(wakesScreen(it));
+    it.urgent = false;
+    it.kind = Attention::K_ERROR;    TEST_ASSERT_TRUE(wakesScreen(it));     // user's red card
+    strcpy(it.id, "sys:0:1");        TEST_ASSERT_FALSE(wakesScreen(it));    // device notice
+    strcpy(it.id, "x");
+    it.agent = Attention::AGENT_CLAUDE; TEST_ASSERT_FALSE(wakesScreen(it)); // agent error
+    TEST_ASSERT_EQUAL(0, brightness(80, true, false));
+    TEST_ASSERT_EQUAL(80, brightness(80, true, true));
+    TEST_ASSERT_EQUAL(80, brightness(80, false, false));
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_claude_limits_drive_windows_and_ignore_codenames);
@@ -1055,5 +1155,8 @@ int main(int, char**) {
     RUN_TEST(test_photo_jpeg_header_check);
     RUN_TEST(test_photo_names_order_and_rotation);
     RUN_TEST(test_photo_room_limits);
+    RUN_TEST(test_wallpaper_header_and_fallback);
+    RUN_TEST(test_control_prev_and_pause);
+    RUN_TEST(test_control_screen_off_wake);
     return UNITY_END();
 }

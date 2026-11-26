@@ -1,292 +1,293 @@
-// Home — XP window "Trang chủ" (P-2026-11-26.8, screen_specs §17 XP-Home,
-// XP-Home-KeyBad, XP-Home-NoWeather; source/XP-Home*.dc.html).
+// Home — the XP desktop (P-2026-11-26.12, screen_specs §17 XP-Desktop, token
+// themeXP.desktop, source/XP-Desktop.dc.html). Replaces the "Trang chủ" window.
 //
-// chHomeDraw  → full paint (XP::window), seeds the cache.
-// chHomeTick  → 5 Hz, diffs the cache, repaints only changed regions; every
-//               clear is BODY and stays inside its own band (never y ≥ 214).
+// chHomeDraw  → wallpaper (user JPEG /wallpaper.jpg, else the fallback pixel
+//               wallpaper), desktop icons + labels, tray balloon; seeds the cache.
+// chHomeTick  → 5 Hz: repaints only a label whose text changed (the wallpaper
+//               under it restored from the JPEG / fallback first) and the
+//               balloon's two text lines (solid INFO_BAR, no wallpaper).
 //
-//   y 0..21     title "Trang chủ" (Clawd)
-//   y 30..89    VT323-86 "14:32" black TL (10, 30): HH x 10, ":" x 78, MM x 112
-//   x 186 y 32  weather icon 16×14 ×2, xpAmber (only with weather)
-//   y 66        temperature JBMono-12B TR (229, 66) xpSky / "--°" xpDim
-//   y 100       date JBMono-11 xpLabel TL (10, 100) · condition TR (229, 100)
-//               xpSky / "chưa có thời tiết" xpDim
-//   y 124..187  groupbox "Hạn mức" (10, 124, 220×64)
-//   y 135 / 159 Claude / Codex: label (18) · XP bar (70, y−1, 120×14) · value
-//               TR (222, y) in the bar colour; a credential note replaces bar +
-//               value (TL 70, xpRed — "Khóa bị từ chối"); loading = marquee
-//   y 196..213  status bar: IP · "Còn 9G hôm nay"
+//   y 0..213   wallpaper 240×214 at (0, 0) — no window, no title bar
+//   icons      column centre x 40, cells 48 tall from y 8:
+//                Clawd 18×10 ×2 (22, 9) · terminal 16×10 ×2 (24, 56)
+//                photo 16×11 ×2 (24, 104) · trash 14×10 ×2 (26, 152)
+//   labels     JBMono-11 white TC (40, cell + 24), black shadow (+1, +1):
+//                "Claude 38%" · "Codex 71%" · "Ảnh" · "Thùng rác"
+//   balloon    136×50 at (100, 150), black border, INFO_BAR, tail 8→1 px at
+//              x 206 down to the tray clock (y 199..205); weather icon ×1
+//              xpAmber (106, 155), "Thời tiết" 12B TL (126, 155), lines
+//              JBMono-11 TL (106, 172) black and (106, 185) xpLabel.
+//   taskbar    main.cpp's; no button pressed (XPCore::buttonFor("Home")).
 
 #include "channel.h"
 #include "display.h"
 #include "theme.h"
 #include "config.h"
 #include "weather.h"
-#include "clockfmt.h"
 #include "chrome.h"
-#include "layout.h"
 #include "utf8.h"
 #include "xp.h"
-#include <ESP8266WiFi.h>
+#include "wallpaper.h"
+#include "desk_wallpaper.h"
 #include <time.h>
 #include <math.h>
 
 namespace {
 using namespace Theme::XP;
-constexpr int kClockX = 10, kClockY = 30, kClockH = 60;   // digits ink y 37..85
-constexpr int kIconX = 186, kIconY = 32;                  // 32×28
-constexpr int kTempY = 66, kTempL = 184;                  // temp clear x 184..229
-constexpr int kR = Layout::XP_RIGHT;                      // 229
-constexpr int kDateY = 100, kCondX = 110;                 // date x 10..109 · condition x 110..229
-constexpr int kGroupX = 10, kGroupY = 124, kGroupW = 220, kGroupH = 64;
-constexpr int kClY = 135, kCxY = 159;
-constexpr int kLabelX = 18, kBarX = 70, kBarW = 120, kBarH = 14, kValR = 222;
-constexpr int kRowL = kGroupX + 1, kRowW = kGroupW - 2;   // row clears x 11..228 (inside the groupbox)
-constexpr float kLoading = -4.f;                          // cache sentinel: row shows the marquee
+
+constexpr int kColX = 40;                    // icon column centre
+constexpr int kCellY0 = 8, kCellH = 48;      // cell i: y 8 + 48 i
+constexpr int kLabels = 4;                   // Claude, Codex, Ảnh, Thùng rác
+constexpr int kLabelH = 16;                  // band y−1 .. y+14 (line box 13 + shadow + accents)
+constexpr int kLabelMaxW = 80;               // column x 0..79
+constexpr uint16_t kTrash = 0xDF3D;          // #DDE6EE xpDesk_DDE6EE
+
+constexpr int kBalX = 100, kBalY = 150, kBalW = 136, kBalH = 50;
+constexpr int kTailX = 206, kTailY = 199, kTailRows = 7;
+constexpr int kLineX = 106, kLine1Y = 172, kLine2Y = 185;
+constexpr int kLineW = kBalX + kBalW - 2 - kLineX;   // text up to x 233
+
+// Terminal 16×10 and trash 14×10 (source XP-Desktop.dc.html), bit (w-1-x) = pixel x.
+const uint16_t kTermBits[10] PROGMEM = {
+    0xFFFF, 0x8001, 0xFFFF, 0x8001, 0xA001, 0x9001, 0xA701, 0x8001, 0x8001, 0xFFFF,
+};
+const uint16_t kPromptBits[3] PROGMEM = {0x20, 0x10, 0x27};   // 6×3 ">_"
+const uint16_t kTrashBits[10] PROGMEM = {
+    0x07F8, 0x0FFC, 0x1FFE, 0x0AA8, 0x0AA8, 0x0AA8, 0x0AA8, 0x0AA8, 0x0AA8, 0x07FC,
+};
+
+void drawCells(const uint16_t* rows, int w, int h, int x, int y, int scale, uint16_t color) {
+    for (int r = 0; r < h; r++) {
+        const uint16_t row = pgm_read_word(&rows[r]);
+        for (int c = 0; c < w;) {
+            if (!(row >> (w - 1 - c) & 1)) { c++; continue; }
+            int run = 0;
+            while (c + run < w && (row >> (w - 1 - c - run) & 1)) run++;
+            tft.fillRect(x + c * scale, y + r * scale, run * scale, scale, color);
+            c += run;
+        }
+    }
 }
 
+int labelY(int i) { return kCellY0 + kCellH * i + 24; }
+
+// Label band of a text tw px wide (+1 shadow), centred on the column.
+struct Band { int x, y, w, h; };
+Band bandFor(int i, int tw) {
+    int w = tw + 3;
+    if (w > kLabelMaxW + 4) w = kLabelMaxW + 4;
+    int x = kColX - w / 2;
+    if (x < 0) x = 0;
+    return {x, labelY(i) - 1, w, kLabelH};
+}
+Band unite(const Band& a, const Band& b) {
+    const int x0 = a.x < b.x ? a.x : b.x, x1 = (a.x + a.w > b.x + b.w) ? a.x + a.w : b.x + b.w;
+    return {x0, a.y, x1 - x0, a.h};
+}
+
+// The capture the label text blends its anti-aliased edges against.
+const Wallpaper::Cap* s_bg = nullptr;
+uint16_t bgAt(uint16_t x, uint16_t y) {
+    const Wallpaper::Cap* c = s_bg;
+    if (c && c->buf && x >= c->x && y >= c->y && x < c->x + c->w && y < c->y + c->h)
+        return c->buf[(y - c->y) * c->w + (x - c->x)];
+    return Wallpaper::present() ? BLACK : Wallpaper::fallbackAt(x, y);
+}
+uint16_t shadowAt(uint16_t, uint16_t) { return BLACK; }
+
+}  // namespace
+
 // ── File-static cache so tick() can diff vs last paint ──
-static int     s_hh = -1, s_mm = -1, s_hour = -1, s_mday = -1;
-static float   s_cl = -2.f, s_cx = -2.f;
-static int     s_loadStep = -1;
-static Cred    s_clCred = Cred::NOT_SET, s_cxCred = Cred::NOT_SET;
-static float   s_tempC = -999.f;
-static uint8_t s_code = 255;
-static bool    s_wValid = false;
+static char     s_label[2][16];            // Claude / Codex label as drawn ("Claude 100%")
+static int16_t  s_labelW[kLabels];         // drawn band width (0 = none)
+static bool     s_balloon = false;         // balloon shown (weather configured)
+static uint32_t s_balloonSig = 0;          // hash of the two lines + dim flag
+
+static uint32_t sigOf(const char* a, const char* b, bool dim) {
+    uint32_t h = dim ? 0x9E3779B9u : 2166136261u;   // FNV-1a
+    for (const char* p = a; *p; p++) h = (h ^ (uint8_t)*p) * 16777619u;
+    h = (h ^ 0xFFu) * 16777619u;
+    for (const char* p = b; *p; p++) h = (h ^ (uint8_t)*p) * 16777619u;
+    return h;
+}
 
 bool chHomeEnabled(const ChannelCtx& ctx) {
     return ctx.settings && ctx.settings->showHome
         && time(nullptr) > 1000000000L;
 }
 
-// ── Per-region paint helpers ──
+// ── Text of the moving parts ──
 
-static int digitW() {
-    Display::useFont("VT323-86");
-    return tft.textWidth("0");                    // 34
-}
-
-static void paintHH(int hh, bool h24) {
-    const int dw = digitW();
-    char b[4]; ClockFmt::hourField(hh, h24, b, sizeof(b));
-    tft.fillRect(kClockX, kClockY, dw * 2, kClockH, BODY);
-    tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(BLACK, BODY);
-    tft.drawString(b, kClockX, kClockY);
-}
-
-static void paintColon() {
-    const int dw = digitW();
-    tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(BLACK, BODY);
-    tft.drawString(":", kClockX + dw * 2, kClockY);
-}
-
-static void paintMM(int mm) {
-    const int dw = digitW();
-    const int x = kClockX + dw * 3;               // 112
-    char b[4]; snprintf_P(b, sizeof(b), PSTR("%02d"), mm);
-    tft.fillRect(x, kClockY, dw * 2, kClockH, BODY);   // x 112..179
-    tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(BLACK, BODY);
-    tft.drawString(b, x, kClockY);
-}
-
-static void paintDate(const struct tm& tmv) {
-    char b[32]; ClockFmt::dateTitle(tmv, " ", b, sizeof(b));   // "Thứ Tư 25/11"
-    tft.fillRect(kClockX, kDateY - 1, kCondX - kClockX, 15, BODY);
-    Display::useFont("JBMono-11");
-    XP::fitText(b, kCondX - kClockX - 2);
-    tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(LABEL, BODY);
-    tft.drawString(b, kClockX, kDateY);
-}
-
-// Icon + temperature + condition. No weather yet → no icon, "--°" and
-// "chưa có thời tiết" in xpDim (XP-Home-NoWeather).
-static void paintWeather(const WeatherData* w, bool f) {
-    const bool valid = w && w->valid;
-    tft.fillRect(kIconX, kIconY, 32, 28, BODY);
-    if (valid) XP::drawIcon(XPCore::ICON_WEATHER, kIconX, kIconY, 2, AMBER);
-
-    char t[12];
-    if (valid) snprintf_P(t, sizeof(t), PSTR("%.0f\xC2\xB0"), Weather::toDisplay(w->tempC, f));
-    else       snprintf_P(t, sizeof(t), PSTR("--\xC2\xB0"));
-    tft.fillRect(kTempL, kTempY - 1, kR + 1 - kTempL, 16, BODY);
-    Display::useFont("JBMono-12B");
-    tft.setTextDatum(TR_DATUM);
-    tft.setTextColor(valid ? SKY : DIM, BODY);
-    tft.drawString(t, kR, kTempY);
-
-    char c[48];
-    Utf8::copy(c, sizeof(c), valid ? Weather::describe(w->code) : "chưa có thời tiết");
-    tft.fillRect(kCondX, kDateY - 1, kR + 1 - kCondX, 15, BODY);
-    Display::useFont("JBMono-11");
-    XP::fitText(c, kR + 1 - kCondX);
-    tft.setTextDatum(TR_DATUM);
-    tft.setTextColor(valid ? SKY : DIM, BODY);
-    tft.drawString(c, kR, kDateY);
-}
-
-// Credential note colour: chrome.h's xpCredColor, muted for "not set".
-static uint16_t noteColor(Cred c) {
-    return c == Cred::NOT_SET ? MUTED : xpCredColor(c);
-}
-
-// Row band y−2 .. y+13 (x 11..228): label + whatever sits right of it.
-static void rowLabel(int y, const char* label) {
-    tft.fillRect(kRowL, y - 2, kRowW, 16, BODY);
-    Display::useFont("JBMono-11");
-    tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(BLACK, BODY);
-    tft.drawString(label, kLabelX, y);
-}
-
-static bool hasNote(bool isClaude, Cred cred) {
+// "Claude 38%" while a usage % is known; the bare name otherwise (no key,
+// loading, a credential problem) — theo XP thật a desktop icon is its name.
+static void usageLabel(char* out, size_t n, const char* name, bool isClaude, Cred cred, float pct) {
     char note[64]; Chrome::credLine(isClaude, cred, note, sizeof(note));
-    return note[0] != '\0';
+    if (pct < 0 || note[0]) { snprintf_P(out, n, PSTR("%s"), name); return; }
+    snprintf_P(out, n, PSTR("%s %.0f%%"), name, Api::shownPct(pct));
 }
 
-// Loading: label + a marquee where the bar goes (theo XP thật: XP shows a
-// marquee progress bar while the amount is unknown). withLabel = first frame.
-static void paintRowLoading(int y, const char* label, uint32_t step, bool withLabel) {
-    if (withLabel) rowLabel(y, label);
-    XP::marquee(kBarX, y - 1, kBarW, kBarH, step);
+static void labelText(int i, const ChannelCtx& ctx, char* out, size_t n) {
+    switch (i) {
+        case 0: usageLabel(out, n, "Claude", true, ctx.claude->cred,
+                           Api::claudeHeroPct(*ctx.settings, *ctx.claude)); break;
+        case 1: usageLabel(out, n, "Codex", false, ctx.codex->cred,
+                           Api::codexHeroPct(*ctx.settings, *ctx.codex)); break;
+        case 2: Utf8::copy(out, n, "Ảnh"); break;
+        default: Utf8::copy(out, n, "Thùng rác"); break;
+    }
 }
 
-// Healthy colours as drawn in XP-Home: Claude xpGreen, Codex xpAmber.
-static void paintUsageRow(int y, const char* label, bool isClaude, Cred cred, float pct) {
-    rowLabel(y, label);
-    char note[64]; Chrome::credLine(isClaude, cred, note, sizeof(note));
-    if (note[0]) {
-        // "khóa bị từ chối · cập nhật" → "Khóa bị từ chối" (XP-Home-KeyBad):
-        // sentence case; the " · hint" tail goes when it does not fit.
-        Utf8::sentence(note);
-        Display::useFont("JBMono-11");
-        const int maxW = kValR - kBarX;
-        if (tft.textWidth(note) > maxW) {
-            char* sep = strstr(note, " · ");
-            if (sep) *sep = '\0';
-        }
-        XP::fitText(note, maxW);
-        tft.setTextDatum(TL_DATUM);
-        tft.setTextColor(noteColor(cred), BODY);
-        tft.drawString(note, kBarX, y);
+// Balloon lines: "29° · Ít mây" / "cảm giác 33°"; no reading yet →
+// "chưa có thời tiết" in xpDim (as the old Home's NoWeather).
+static void balloonText(const ChannelCtx& ctx, char* l1, size_t n1, char* l2, size_t n2, bool& dim) {
+    const WeatherData& w = Weather::snapshot();
+    const bool f = ctx.settings->useFahrenheit;
+    dim = !w.valid;
+    if (!w.valid) {
+        Utf8::copy(l1, n1, "chưa có thời tiết");
+        l2[0] = '\0';
         return;
     }
-    const float shown = pct < 0 ? 0.f : Api::shownPct(pct);
-    const uint16_t c = xpUsageColor(pct, isClaude ? GREEN : AMBER);
-    XP::progress(kBarX, y - 1, kBarW, kBarH, shown, c, 1);
-    char v[8];
-    if (pct >= 0) snprintf_P(v, sizeof(v), PSTR("%.0f%%"), shown);
-    else          snprintf_P(v, sizeof(v), PSTR("--"));
+    char d[40]; Utf8::copy(d, sizeof(d), Weather::describe(w.code));
+    snprintf_P(l1, n1, PSTR("%.0f\xC2\xB0 \xC2\xB7 %s"), Weather::toDisplay(w.tempC, f), d);
+    if (w.feelsC > -900.f) snprintf_P(l2, n2, PSTR("cảm giác %.0f\xC2\xB0"), Weather::toDisplay(w.feelsC, f));
+    else l2[0] = '\0';
+}
+
+// ── Painting ──
+
+// Label text over the band already holding the wallpaper (cap = its pixels).
+static void drawLabelText(int i, const char* text, const Wallpaper::Cap* cap) {
     Display::useFont("JBMono-11");
-    tft.setTextDatum(TR_DATUM);
-    tft.setTextColor(c, BODY);
-    tft.drawString(v, kValR, y);
+    tft.setTextDatum(TC_DATUM);
+    const int y = labelY(i);
+    s_bg = cap;
+    tft.setCallback(bgAt);                   // shadow edges blend into the wallpaper
+    tft.setTextColor(BLACK, WHITE);          // bg unused: the callback decides
+    tft.drawString(text, kColX + 1, y + 1);
+    tft.setCallback(shadowAt);               // text edges blend into the shadow
+    tft.setTextColor(WHITE, BLACK);
+    tft.drawString(text, kColX, y);
+    tft.setCallback(nullptr);
+    s_bg = nullptr;
 }
 
-static void paintStatus(int hour) {
-    char right[24]; snprintf_P(right, sizeof(right), PSTR("Còn %dG hôm nay"), 23 - hour);
-    XP::statusBar(WiFi.localIP().toString().c_str(), right);
+static int measure(const char* text) {
+    Display::useFont("JBMono-11");
+    int w = tft.textWidth(text);
+    return w > kLabelMaxW ? kLabelMaxW : w;
 }
 
-// "loading" only for a *configured* side without a credential note (an
-// unconfigured one stays valid=false/err="" and must read as a note or "--",
-// not a perpetual loader).
-static bool clLoadingNow(const ChannelCtx& ctx) {
-    return ctx.claude && !ctx.settings->claudeKey.isEmpty() && claudeLoading(*ctx.claude)
-        && !hasNote(true, ctx.claude->cred);
+// One label from tick(): restore the wallpaper under the old ∪ new text, then
+// draw. The capture buffer (≤ 84×16×2 B) is malloc'd for the call.
+static void paintLabel(int i, const char* text) {
+    char t[24]; Utf8::copy(t, sizeof(t), text);
+    Display::useFont("JBMono-11");
+    XP::fitText(t, kLabelMaxW);
+    Band b = bandFor(i, measure(t));
+    if (s_labelW[i]) b = unite(b, bandFor(i, s_labelW[i] - 3));
+    Wallpaper::Cap cap{(int16_t)b.x, (int16_t)b.y, (int16_t)b.w, (int16_t)b.h, nullptr};
+    cap.buf = (uint16_t*)malloc((size_t)b.w * b.h * 2);
+    Wallpaper::paint(b.x, b.y, b.w, b.h, &cap, 1);
+    drawLabelText(i, t, cap.buf ? &cap : nullptr);
+    free(cap.buf);
+    s_labelW[i] = (int16_t)(measure(t) + 3);
+    if (i < 2) Utf8::copy(s_label[i], sizeof(s_label[i]), text);
 }
-static bool cxLoadingNow(const ChannelCtx& ctx) {
-    return ctx.codex && !ctx.settings->codexToken.isEmpty() && codexLoading(*ctx.codex)
-        && !hasNote(false, ctx.codex->cred);
+
+static void paintBalloonLines(const char* line1, const char* line2, bool dim) {
+    tft.fillRect(kLineX, kLine1Y - 1, kLineW, 27, INFO_BAR);   // y 171..197 (border at 199)
+    Display::useFont("JBMono-11");
+    tft.setTextDatum(TL_DATUM);
+    char a[48]; Utf8::copy(a, sizeof(a), line1);
+    XP::fitText(a, kLineW);
+    tft.setTextColor(dim ? DIM : BLACK, INFO_BAR);
+    tft.drawString(a, kLineX, kLine1Y);
+    if (line2[0]) {
+        char b[32]; Utf8::copy(b, sizeof(b), line2);
+        XP::fitText(b, kLineW);
+        tft.setTextColor(LABEL, INFO_BAR);
+        tft.drawString(b, kLineX, kLine2Y);
+    }
+}
+
+static void paintBalloon(const char* line1, const char* line2, bool dim) {
+    tft.fillRect(kBalX, kBalY, kBalW, kBalH, BLACK);
+    tft.fillRect(kBalX + 1, kBalY + 1, kBalW - 2, kBalH - 2, INFO_BAR);
+    // Tail: 8 → 2 px wide, black edges, opening the bottom border at x 207..212.
+    for (int k = 0; k < kTailRows; k++) {
+        const int w = 8 - k;
+        tft.drawFastHLine(kTailX, kTailY + k, w, INFO_BAR);
+        tft.drawPixel(kTailX, kTailY + k, BLACK);
+        tft.drawPixel(kTailX + w - 1, kTailY + k, BLACK);
+    }
+    XP::drawIcon(XPCore::ICON_WEATHER, 106, 155, 1, AMBER);
+    Display::useFont("JBMono-12B");
+    tft.setTextDatum(TL_DATUM);
+    tft.setTextColor(BLACK, INFO_BAR);
+    tft.drawString("Thời tiết", 126, 155);
+    paintBalloonLines(line1, line2, dim);
+}
+
+static void drawIcons() {
+    XP::drawIcon(XPCore::ICON_CLAWD, 22, 9, 2, 0);            // Clawd orange, black eyes
+    drawCells(kTermBits, 16, 10, 24, 56, 2, WHITE);           // command window
+    tft.fillRect(26, 62, 28, 12, BLACK);
+    drawCells(kPromptBits, 6, 3, 28, 64, 2, BAR);
+    XP::drawIcon(XPCore::ICON_PHOTO, 24, 104, 2, WHITE);
+    drawCells(kTrashBits, 14, 10, 26, 152, 2, kTrash);
 }
 
 // ── Full repaint ──
 
 void chHomeDraw(const ChannelCtx& ctx) {
-    XP::window("Trang chủ", XPCore::ICON_CLAWD, true);
+    // Label texts and bands first (the font is needed to measure them).
+    char text[kLabels][24];
+    Wallpaper::Cap caps[kLabels];
+    for (int i = 0; i < kLabels; i++) {
+        labelText(i, ctx, text[i], sizeof(text[i]));
+        Display::useFont("JBMono-11");
+        XP::fitText(text[i], kLabelMaxW);
+        Band b = bandFor(i, measure(text[i]));
+        caps[i] = {(int16_t)b.x, (int16_t)b.y, (int16_t)b.w, (int16_t)b.h, nullptr};
+        s_labelW[i] = (int16_t)b.w;
+    }
+    // One decode paints the whole wallpaper and keeps the four label bands
+    // for the text's anti-aliasing (~2 KB each; a failed malloc just means
+    // that label blends against black).
+    if (Wallpaper::present()) Display::releaseFont();
+    for (int i = 0; i < kLabels; i++) caps[i].buf = (uint16_t*)malloc((size_t)caps[i].w * caps[i].h * 2);
+    Wallpaper::paint(0, 0, Wallpaper::kW, Wallpaper::kH, caps, kLabels);
 
-    time_t now = time(nullptr);
-    struct tm tmv; localtime_r(&now, &tmv);
-    const bool f = ctx.settings && ctx.settings->useFahrenheit;
-    const WeatherData* w = &Weather::snapshot();
+    drawIcons();
+    for (int i = 0; i < kLabels; i++) {
+        drawLabelText(i, text[i], caps[i].buf ? &caps[i] : nullptr);
+        free(caps[i].buf);
+        if (i < 2) labelText(i, ctx, s_label[i], sizeof(s_label[i]));
+    }
 
-    paintHH(tmv.tm_hour, ctx.settings->clock24h);
-    paintColon();
-    paintMM(tmv.tm_min);
-    paintWeather(w, f);
-    paintDate(tmv);
-
-    XP::groupBox(kGroupX, kGroupY, kGroupW, kGroupH, "Hạn mức");
-    const bool clL = clLoadingNow(ctx), cxL = cxLoadingNow(ctx);
-    const float cl = ctx.claude ? Api::claudeHeroPct(*ctx.settings, *ctx.claude) : -1.f;
-    const float cx = ctx.codex  ? Api::codexHeroPct(*ctx.settings, *ctx.codex) : -1.f;
-    const uint32_t step = ctx.now_ms / 200;
-    if (clL) paintRowLoading(kClY, "Claude", step, true);
-    else     paintUsageRow(kClY, "Claude", true, ctx.claude->cred, cl);
-    if (cxL) paintRowLoading(kCxY, "Codex", step, true);
-    else     paintUsageRow(kCxY, "Codex", false, ctx.codex->cred, cx);
-
-    paintStatus(tmv.tm_hour);
-
-    // ── Seed cache ──
-    s_hh = tmv.tm_hour; s_mm = tmv.tm_min; s_hour = tmv.tm_hour; s_mday = tmv.tm_mday;
-    s_cl = clL ? kLoading : (cl < 0 ? -2.f : cl);
-    s_cx = cxL ? kLoading : (cx < 0 ? -2.f : cx);
-    s_clCred = ctx.claude->cred; s_cxCred = ctx.codex->cred;
-    s_loadStep = (int)step;
-    s_wValid = w && w->valid;
-    s_tempC = s_wValid ? w->tempC : -999.f;
-    s_code  = s_wValid ? w->code  : 255;
+    // Tray balloon — weather, when a location is set.
+    s_balloon = Weather::configured(*ctx.settings);
+    if (s_balloon) {
+        char l1[48], l2[32]; bool dim;
+        balloonText(ctx, l1, sizeof(l1), l2, sizeof(l2), dim);
+        paintBalloon(l1, l2, dim);
+        s_balloonSig = sigOf(l1, l2, dim);
+    }
 }
 
 // ── Tick: 5 Hz, region-only repaints ──
 
 void chHomeTick(const ChannelCtx& ctx) {
-    time_t now = time(nullptr);
-    if (now < 1000000000L) return;
-    struct tm tmv; localtime_r(&now, &tmv);
-
-    if (tmv.tm_min != s_mm)  { paintMM(tmv.tm_min); s_mm = tmv.tm_min; }
-    if (tmv.tm_hour != s_hh) { paintHH(tmv.tm_hour, ctx.settings->clock24h); s_hh = tmv.tm_hour; }
-    if (tmv.tm_hour != s_hour) { paintStatus(tmv.tm_hour); s_hour = tmv.tm_hour; }
-    if (tmv.tm_mday != s_mday) { paintDate(tmv); s_mday = tmv.tm_mday; }
-
-    // Weather: only on a meaningful change, or when it first lands.
-    const WeatherData* w = &Weather::snapshot();
-    const bool f = ctx.settings && ctx.settings->useFahrenheit;
-    const bool valid = w && w->valid;
-    if (valid != s_wValid || (valid && (fabsf(w->tempC - s_tempC) > 0.4f || w->code != s_code))) {
-        paintWeather(w, f);
-        s_wValid = valid;
-        s_tempC = valid ? w->tempC : -999.f;
-        s_code  = valid ? w->code  : 255;
+    char t[16];
+    for (int i = 0; i < 2; i++) {             // Ảnh / Thùng rác never change
+        labelText(i, ctx, t, sizeof(t));
+        if (strcmp(t, s_label[i])) paintLabel(i, t);
     }
-
-    // Usage rows — marquee while loading; else ±0.4 % hysteresis.
-    const bool clL = clLoadingNow(ctx), cxL = cxLoadingNow(ctx);
-    const float cl = ctx.claude ? Api::claudeHeroPct(*ctx.settings, *ctx.claude) : -1.f;
-    const float cx = ctx.codex  ? Api::codexHeroPct(*ctx.settings, *ctx.codex) : -1.f;
-    const int step = (int)(ctx.now_ms / 200);
-
-    // A credential change swaps the bar for a note (or back).
-    if (ctx.claude->cred != s_clCred) { s_cl = -3.f; s_clCred = ctx.claude->cred; }
-    if (ctx.codex->cred  != s_cxCred) { s_cx = -3.f; s_cxCred = ctx.codex->cred; }
-    if (clL) {
-        if (s_cl != kLoading || step != s_loadStep) paintRowLoading(kClY, "Claude", step, s_cl != kLoading);
-        s_cl = kLoading;                              // data landing repaints the row
-    } else {
-        const float e = cl < 0 ? -2.f : cl;
-        if (fabsf(e - s_cl) > 0.4f) { paintUsageRow(kClY, "Claude", true, ctx.claude->cred, cl); s_cl = e; }
+    if (s_balloon) {
+        char l1[48], l2[32]; bool dim;
+        balloonText(ctx, l1, sizeof(l1), l2, sizeof(l2), dim);
+        const uint32_t sig = sigOf(l1, l2, dim);
+        if (sig != s_balloonSig) { paintBalloonLines(l1, l2, dim); s_balloonSig = sig; }
     }
-    if (cxL) {
-        if (s_cx != kLoading || step != s_loadStep) paintRowLoading(kCxY, "Codex", step, s_cx != kLoading);
-        s_cx = kLoading;
-    } else {
-        const float e = cx < 0 ? -2.f : cx;
-        if (fabsf(e - s_cx) > 0.4f) { paintUsageRow(kCxY, "Codex", false, ctx.codex->cred, cx); s_cx = e; }
-    }
-    s_loadStep = step;
 }

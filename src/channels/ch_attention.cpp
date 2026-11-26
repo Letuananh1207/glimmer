@@ -25,6 +25,7 @@
 #include "utf8.h"
 #include "xp_core.h"
 #include "xp.h"
+#include "control_core.h"
 
 using namespace Attention;
 
@@ -84,6 +85,16 @@ static int holders(int out[kMax]) {
 bool chAttentionEnabled(const ChannelCtx&) {
     int h[kMax];
     return holders(h) > 0;
+}
+
+// A card holding the screen that lights a panel the app turned off
+// (Control::wakesScreen: urgent, approval / question, a user's error card).
+bool chAttentionWakesScreen() {
+    int h[kMax], n = holders(h);
+    const Queue& q = AttentionQueue::get();
+    for (int i = 0; i < n; i++)
+        if (Control::wakesScreen(q.items[h[i]])) return true;
+    return false;
 }
 
 // ── card ────────────────────────────────────────────────────────────────────

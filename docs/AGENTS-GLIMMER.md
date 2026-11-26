@@ -99,14 +99,17 @@ Fonts are ASCII plus `°` and `·` — other characters are dropped.
 
 | | HTTP | MCP |
 |---|---|---|
-| clear one / all | `POST /push/clear` `{"id":"…"}` / `{"all":true}` → `{"cleared":n}` | `clear_card` |
+| clear one / all | `POST /push/clear` `{"id":"…"}` (just that card; `cleared` 0 = no such id) / `{"all":true}` → `{"cleared":n}` | `clear_card` (`id` / `all`) |
 | list | `GET /push` → `{"cards":[…]}` (with `age_s`, `expires_in_s`) | `list_cards` |
 | device state | `GET /api/state` | `get_state` |
-| switch screen | `POST /api/channel` `{"name":"Claude"}` / `{"action":"next"}` | `show_channel` / `next_channel` |
+| switch screen | `POST /api/channel` `{"name":"Claude"}` / `{"action":"next"}` / `{"action":"prev"}` → `{"ok","active","paused"}` | `show_channel` / `next_channel` |
+| pause rotation | `POST /api/channel` `{"action":"pause"}` / `{"action":"resume"}` → `{"ok","active","paused"}` — temporary (RAM only, gone after a reboot; the `autoRotate` setting is untouched); next / prev / show still work and keep it paused; cards still interrupt | — |
+| screen off / on | `POST /api/screen` `{"on":false}` / `{"on":true}` → `{"ok","screen_on"}` — backlight now, whatever the night window says (RAM only); an urgent / approval / question card (or a user's error card) still lights it while it holds the screen | — |
+| desktop wallpaper | `GET /api/wallpaper` → `{"set","size","w":240,"h":214,"max_bytes","free","reserve"}`; `POST /api/wallpaper` multipart field `wallpaper` (baseline JPEG, exactly 240×214, ≤ 40 KB) → `{"ok","size"}` or `{"error"}`; `DELETE /api/wallpaper` → `{"ok"}` / 404 | — |
 | photos (skill `photo`) | `GET /api/photos` → `{"photos":[{"name","size"}],"free","total","max_count","max_bytes","reserve","side"}`; `POST /api/photos` multipart field `photo` (baseline JPEG, exactly 188×188, ≤ 40 KB) → `{"ok","name","count"}` or `{"error"}`; `DELETE /api/photos?name=p3.jpg` | — |
 
 If the user set an API token on the device, every call above except
-`GET /api/state` and `GET /api/photos` needs `Authorization: Bearer <token>` (401 otherwise);
+`GET /api/state`, `GET /api/photos` and `GET /api/wallpaper` needs `Authorization: Bearer <token>` (401 otherwise);
 [`tools/agents/mcp.json`](../tools/agents/mcp.json) carries it as a header
 from `$GLIMMER_TOKEN`. Bad JSON → 400.
 

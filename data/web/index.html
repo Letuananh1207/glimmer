@@ -299,7 +299,7 @@
             <div><label>Vĩ độ</label><input type="number" step="0.0001" x-model.number="settings.weatherLat" placeholder="22.5726"></div>
             <div><label>Kinh độ</label><input type="number" step="0.0001" x-model.number="settings.weatherLon" placeholder="88.3639"></div>
           </div>
-          <div class="hint" x-text="hasLocation() ? 'Dùng cho Thời tiết, Dự báo và Trang chủ.' : 'Chưa có vị trí — Thời tiết và Dự báo sẽ bị ẩn.'"></div>
+          <div class="hint" x-text="hasLocation() ? 'Dùng cho Thời tiết, Dự báo và desktop.' : 'Chưa có vị trí — Thời tiết và Dự báo sẽ bị ẩn.'"></div>
           <div class="field-inline">
             <label class="row"><input type="checkbox" x-model="settings.useFahrenheit">Hiển thị °F</label>
             <button type="button" class="secondary small" x-show="hasLocation()" x-on:click="clearLocation()">Xóa vị trí</button>
@@ -436,6 +436,21 @@
            x-text="'Bộ nhớ còn trống: ' + Math.round(photoInfo.free / 1024) + ' KB (giữ lại ' + Math.round(photoInfo.reserve / 1024) + ' KB cho cấu hình)'"></div>
       <div class="hint">Ảnh nằm trên bộ nhớ LittleFS: nạp lại ảnh LittleFS (phông chữ, giao diện web) sẽ xóa hết ảnh.</div>
     </article>
+    <!-- Desktop wallpaper (P-2026-11-26.12): /api/wallpaper -->
+    <article>
+      <h2>Hình nền desktop</h2>
+      <input type="file" x-ref="wallFile" accept="image/*" x-on:change="uploadWallpaper($event)" style="display:none">
+      <button type="button" class="secondary" x-on:click="$refs.wallFile.click()" x-bind:disabled="wallBusy"
+              x-text="wallBusy ? 'Đang gửi...' : (wallInfo.set ? 'Đổi hình nền' : 'Chọn hình nền')"></button>
+      <button type="button" class="secondary" x-show="wallInfo.set" x-bind:disabled="wallBusy"
+              x-on:click="deleteWallpaper()">Dùng nền mặc định</button>
+      <div class="hint" x-text="wallInfo.set
+           ? 'Đang dùng ảnh riêng (' + ((wallInfo.size || 0) / 1024).toFixed(1) + ' KB).'
+           : 'Đang dùng nền mặc định (đồi cỏ, trời xanh).'"></div>
+      <div class="hint">Trình duyệt cắt phần giữa và thu nhỏ còn 240×214 (màn trên thanh tác vụ),
+        tối đa <span x-text="Math.round((wallInfo.max_bytes || 40960) / 1024)"></span> KB.
+        Hiện ở màn đầu (desktop).</div>
+    </article>
   </section>
 
   <section x-show="page==='device'">
@@ -488,6 +503,8 @@ function app() {
     photos: [],
     photoInfo: {},
     photoBusy: false,
+    wallInfo: {},
+    wallBusy: false,
 
     // Claude hero as a two-way choice instead of a bare checkbox.
     get claudeHero() { return this.settings.claudeWeeklyHero ? 'weekly' : 'session'; },
@@ -515,7 +532,7 @@ function app() {
     channelToggles() {
       const st = this.settings, cl = !!st.claudeKey, cx = !!st.codexToken, loc = this.hasLocation();
       return [
-        {key: 'showHome',     label: 'Bảng Trang chủ', needs: 'sẵn sàng', ready: true},
+        {key: 'showHome',     label: 'Desktop (màn đầu)', needs: 'sẵn sàng', ready: true},
         {key: 'showClaude',   label: 'Mức dùng Claude', needs: cl ? 'sẵn sàng' : 'cần khóa Claude', ready: cl},
         {key: 'showCodex',    label: 'Mức dùng Codex', needs: cx ? 'sẵn sàng' : 'cần token Codex', ready: cx},
         {key: 'showAiDash',   label: 'Bảng AI',        needs: cl && cx ? 'sẵn sàng' : 'cần cả hai tài khoản', ready: cl && cx},
@@ -534,7 +551,7 @@ function app() {
     // Display labels only — channel names and card kinds sent to / compared
     // with the device stay English.
     chLabel(c) {
-      return {Home: 'Trang chủ', Claude: 'Claude', Codex: 'Codex', AI: 'AI', Trend: 'Xu hướng',
+      return {Home: 'Desktop', Claude: 'Claude', Codex: 'Codex', AI: 'AI', Trend: 'Xu hướng',
               Weather: 'Thời tiết', Forecast: 'Dự báo', Clock: 'Đồng hồ', Info: 'Thông tin',
               Setup: 'Cài đặt', Night: 'Ban đêm', Agents: 'Tác tử', Attention: 'Thông báo',
               Photo: 'Ảnh'}[c] || c;
@@ -883,6 +900,7 @@ export GLIMMER_URL=${this.deviceUrl()}` + (tok ? `\nexport GLIMMER_TOKEN=${tok}`
         const r = await fetch('/api/photos');
         if (r.ok) { const j = await r.json(); this.photos = j.photos || []; this.photoInfo = j; }
       } catch (e) { /* keep last list */ }
+      this.loadWallpaper();
     },
     photoError(code) {
       return {full: 'Đã đủ số ảnh tối đa, hãy xóa bớt', too_big: 'Ảnh quá lớn',
@@ -892,19 +910,22 @@ export GLIMMER_URL=${this.deviceUrl()}` + (tok ? `\nexport GLIMMER_TOKEN=${tok}`
               unauthorized: 'Sai API token'}[code] || ('Lỗi: ' + code);
     },
     // Centre square crop → side×side baseline JPEG (canvas encoders write baseline).
-    async photoToJpeg(file, side, maxBytes) {
+    async photoToJpeg(file, side, maxBytes) { return this.imageToJpeg(file, side, side, maxBytes); },
+    // Centre crop to the w:h aspect, scaled to w×h, as a baseline JPEG ≤ maxBytes.
+    async imageToJpeg(file, w, h, maxBytes) {
       const url = URL.createObjectURL(file);
       try {
         const img = await new Promise((ok, bad) => {
           const i = new Image(); i.onload = () => ok(i); i.onerror = bad; i.src = url;
         });
         const c = document.createElement('canvas');
-        c.width = c.height = side;
+        c.width = w; c.height = h;
         const g = c.getContext('2d');
-        g.fillStyle = '#000'; g.fillRect(0, 0, side, side);
-        const s = Math.min(img.naturalWidth, img.naturalHeight);
+        g.fillStyle = '#000'; g.fillRect(0, 0, w, h);
+        const k = Math.min(img.naturalWidth / w, img.naturalHeight / h);
+        const sw = w * k, sh = h * k;
         g.imageSmoothingQuality = 'high';
-        g.drawImage(img, (img.naturalWidth - s) / 2, (img.naturalHeight - s) / 2, s, s, 0, 0, side, side);
+        g.drawImage(img, (img.naturalWidth - sw) / 2, (img.naturalHeight - sh) / 2, sw, sh, 0, 0, w, h);
         for (const q of [0.85, 0.7, 0.55, 0.4]) {
           const b = await new Promise(ok => c.toBlob(ok, 'image/jpeg', q));
           if (b && b.size <= maxBytes) return b;
@@ -942,6 +963,47 @@ export GLIMMER_URL=${this.deviceUrl()}` + (tok ? `\nexport GLIMMER_TOKEN=${tok}`
       this.photoBusy = false;
       if (sent) this.showToast('Đã gửi ' + sent + ' ảnh');
       this.loadPhotos();
+    },
+    // ── Desktop wallpaper: GET/POST/DELETE /api/wallpaper ──
+    async loadWallpaper() {
+      try {
+        const r = await fetch('/api/wallpaper');
+        if (r.ok) this.wallInfo = await r.json();
+      } catch (e) { /* firmware without a wallpaper: keep {} */ }
+    },
+    async uploadWallpaper(ev) {
+      const f = (ev.target.files || [])[0];
+      ev.target.value = '';
+      if (!f) return;
+      const w = this.wallInfo.w || 240, h = this.wallInfo.h || 214, max = this.wallInfo.max_bytes || 40960;
+      this.wallBusy = true;
+      try {
+        let blob;
+        try { blob = await this.imageToJpeg(f, w, h, max); } catch (e) { blob = null; }
+        if (!blob) { this.showToast(f.name + ': không đọc được ảnh', true); }
+        else {
+          const fd = new FormData();
+          fd.append('wallpaper', blob, 'wallpaper.jpg');
+          const r = await fetch('/api/wallpaper', {method: 'POST', headers: this.authHeaders(), body: fd});
+          let j = {};
+          try { j = await r.json(); } catch (e) {}
+          if (r.ok) this.showToast('Đã đổi hình nền');
+          else {
+            const code = j.error || (r.status === 401 ? 'unauthorized' : 'HTTP ' + r.status);
+            this.showToast(code === 'bad_size' ? 'Ảnh phải đúng 240×214' : this.photoError(code), true);
+          }
+        }
+      } catch (e) { this.showToast('Lỗi mạng', true); }
+      this.wallBusy = false;
+      this.loadWallpaper();
+    },
+    async deleteWallpaper() {
+      if (!confirm('Bỏ hình nền riêng, dùng nền mặc định?')) return;
+      try {
+        const r = await fetch('/api/wallpaper', {method: 'DELETE', headers: this.authHeaders()});
+        if (!r.ok && r.status !== 404) this.showToast('Xóa thất bại (HTTP ' + r.status + ')', true);
+      } catch (e) { this.showToast('Lỗi mạng', true); }
+      this.loadWallpaper();
     },
     async deletePhoto(name) {
       if (!confirm('Xóa ảnh ' + name + '?')) return;

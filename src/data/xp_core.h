@@ -36,8 +36,9 @@ inline Btn buttonFor(const char* name) {
     if (!strcmp(name, "Weather") || !strcmp(name, "Forecast")) return BTN_WEATHER;
     if (!strcmp(name, "Clock")) return BTN_CLOCK;
     if (!strcmp(name, "Photo")) return BTN_PHOTO;
-    if (!strcmp(name, "Info")) return BTN_NONE;
-    return BTN_CLAUDE;   // Attention, Home, Agents, Claude, Codex, AI, Trend, Setup
+    // Info and the desktop (Home, P-2026-11-26.12) press no button.
+    if (!strcmp(name, "Info") || !strcmp(name, "Home")) return BTN_NONE;
+    return BTN_CLAUDE;   // Attention, Agents, Claude, Codex, AI, Trend, Setup
 }
 
 // Title-bar icon of a channel's window (sources XP-*.dc.html): Clawd on every

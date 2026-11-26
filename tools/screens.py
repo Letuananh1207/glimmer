@@ -779,36 +779,63 @@ def xp_usage_color_left(remaining, healthy):
     return healthy
 
 
-# ── Home (ch_home.cpp) ──
-def _home_row(sc, y, label, used, healthy, note=None, note_color=None):
-    sc.text("JBMono-11", label, 18, y, X["BLACK"])
-    if note:
-        sc.text("JBMono-11", fit(sc, "JBMono-11", note, 222 - 70), 70, y, note_color or X["RED"])
-        return
-    rem = 100 - used if used >= 0 else -1
-    c = xp_usage_color_left(rem, healthy)
-    progress(sc, 70, y - 1, 120, 14, max(used, 0), c, 1)
-    sc.text("JBMono-11", f"{used}%" if used >= 0 else "--", 222, y, c, "TR")
+# ── Home = the XP desktop (ch_home.cpp, P-2026-11-26.12) ──
+_DESK = (ROOT / "src" / "ui" / "desk_wallpaper.h").read_text(encoding="utf-8")
 
 
-# Home, AI and Trend press the Claude button: slide accent CORAL (main.cpp slideAccent).
-def home(sc, *, weather=True, cl_note=None, cl=38, cx=71, badge=1):
-    window(sc, "Trang chủ", "clawd", True)
-    sc.text("VT323-86", "14", 10, 30, X["BLACK"])
-    dw = sc.width("VT323-86", "0")
-    sc.text("VT323-86", ":", 10 + dw * 2, 30, X["BLACK"])
-    sc.text("VT323-86", "32", 10 + dw * 3, 30, X["BLACK"])
-    if weather:
-        draw_icon(sc, "weather", 186, 32, 2, X["AMBER"])
-    sc.text("JBMono-12B", "29°" if weather else "--°", 229, 66, X["SKY"] if weather else X["DIM"], "TR")
-    sc.text("JBMono-11", "Thứ Tư 25/11", 10, 100, X["LABEL"])
-    sc.text("JBMono-11", "Ít mây" if weather else "chưa có thời tiết", 229, 100,
-            X["SKY"] if weather else X["DIM"], "TR")
-    group_box(sc, 10, 124, 220, 64, "Hạn mức")
-    _home_row(sc, 135, "Claude", cl, X["GREEN"], cl_note)
-    _home_row(sc, 159, "Codex", cx, X["AMBER"])
-    status_bar(sc, "192.168.100.40", "Còn 9G hôm nay")
-    taskbar(sc, active="claude", badge=badge, accent=CORAL)
+def _desk_wallpaper():
+    """The fallback wallpaper from the generated header (tools/deskwall.py)."""
+    pal_src = _DESK[_DESK.index("kDeskPal[kDeskPalN]"):_DESK.index("};")]
+    pal = [hx(m) for m in re.findall(r"// #([0-9A-F]{6})", pal_src)]
+    runs_src = _DESK[_DESK.index("kDeskRuns[kDeskRunCount * 2]"):]
+    runs_src = runs_src[runs_src.index("{") + 1:runs_src.index("};")]
+    v = [int(t) for t in re.findall(r"\d+", runs_src)]
+    im = Image.new("RGB", (240, 214))
+    p = im.load()
+    x = y = 0
+    for i in range(0, len(v), 2):
+        for k in range(v[i + 1]):
+            p[x + k, y] = pal[v[i]]
+        x += v[i + 1]
+        if x >= 240:
+            x, y = 0, y + 1
+    return im
+
+
+DESK_TERM = [0xFFFF, 0x8001, 0xFFFF, 0x8001, 0xA001, 0x9001, 0xA701, 0x8001, 0x8001, 0xFFFF]
+DESK_PROMPT = [0x20, 0x10, 0x27]
+DESK_TRASH = [0x07F8, 0x0FFC, 0x1FFE, 0x0AA8, 0x0AA8, 0x0AA8, 0x0AA8, 0x0AA8, 0x0AA8, 0x07FC]
+
+
+def desktop(sc, *, cl="Claude 38%", cx="Codex 71%", line1=f"29° {DOT} Ít mây", line2="cảm giác 33°",
+            balloon=True, badge=1):
+    sc.img.paste(_desk_wallpaper(), (0, 0))
+    draw_icon(sc, "clawd", 22, 9, 2, CLAWD_ORANGE)
+    sc.bits(DESK_TERM, 16, 24, 56, X["WHITE"], 2)
+    sc.rect(26, 62, 28, 12, X["BLACK"])
+    sc.bits(DESK_PROMPT, 6, 28, 64, X["BAR"], 2)
+    draw_icon(sc, "photo", 24, 104, 2, X["WHITE"])
+    sc.bits(DESK_TRASH, 14, 26, 152, hx("DDE6EE"), 2)
+    for i, t in enumerate((cl, cx, "Ảnh", "Thùng rác")):
+        t = fit(sc, "JBMono-11", t, 80)
+        y = 8 + 48 * i + 24
+        sc.text("JBMono-11", t, 41, y + 1, X["BLACK"], "TC")
+        sc.text("JBMono-11", t, 40, y, X["WHITE"], "TC")
+    if balloon:
+        sc.rect(100, 150, 136, 50, X["BLACK"])
+        sc.rect(101, 151, 134, 48, X["INFO_BAR"])
+        for k in range(7):
+            w = 8 - k
+            sc.hline(206, 199 + k, w, X["INFO_BAR"])
+            sc.pixel(206, 199 + k, X["BLACK"])
+            sc.pixel(206 + w - 1, 199 + k, X["BLACK"])
+        draw_icon(sc, "weather", 106, 155, 1, X["AMBER"])
+        sc.text("JBMono-12B", "Thời tiết", 126, 155, X["BLACK"])
+        sc.text("JBMono-11", fit(sc, "JBMono-11", line1, 128), 106, 172, X["BLACK"] if line2 else X["DIM"])
+        if line2:
+            sc.text("JBMono-11", fit(sc, "JBMono-11", line2, 128), 106, 185, X["LABEL"])
+    # The desktop presses no button (XPCore::buttonFor("Home") = BTN_NONE): no slide progress.
+    taskbar(sc, active=None, badge=badge)
 
 
 # ── AI hôm nay (ch_aidash.cpp) ──
@@ -1162,10 +1189,9 @@ SCREENS_A = [
 ]
 
 SCREENS_B = [
-    ("Trang chủ", "XP-Home", lambda s: home(s), "XPHome"),
-    ("Trang chủ · khóa Claude lỗi", "XP-Home-KeyBad",
-     lambda s: home(s, cl_note="Khóa bị từ chối"), "XPHomeKeyBad"),
-    ("Trang chủ · chưa có thời tiết", "XP-Home-NoWeather", lambda s: home(s, weather=False), "XPHomeNoWeather"),
+    ("Desktop", "XP-Desktop · nền dự phòng, không nút nào lõm", desktop, "XPDesktop"),
+    ("Desktop · chưa có số / thời tiết", "XP-Desktop · tên trần, bong bóng chưa có thời tiết",
+     lambda s: desktop(s, cl="Claude", cx="Codex", line1="chưa có thời tiết", line2=""), None),
     ("AI hôm nay", "XP-AI", lambda s: aidash(s), "XPAI"),
     ("AI · đang tải", "XP-AI-Loading",
      lambda s: aidash(s, modes=(1, 1), used=(-1, -1), credits=None, left="Đang tải...",

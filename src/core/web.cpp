@@ -10,12 +10,15 @@
 //   POST /api/factory-reset
 //   POST /push         — attention card (see attention_json.h); GET lists, /push/clear removes
 //   POST /hook         — trimmed agent hook event (tools/agents/glimmer-hook.sh)
-//   POST /api/channel  — show a channel / next
+//   POST /api/channel  — {"name":…} show a channel | {"action":"next"|"prev"|"pause"|"resume"}
+//   POST /api/screen   — {"on":false|true} backlight off / on now (RAM only)
 //   POST /mcp          — JSON-RPC: push_card, clear_card, list_cards, get_state, show/next_channel
 //   GET  /api/photos   — photos on the device + limits; POST uploads one (multipart field
 //                        "photo", baseline JPEG 188×188); DELETE /api/photos?name=p3.jpg
+//   GET  /api/wallpaper — desktop wallpaper state + limits; POST uploads it (multipart field
+//                        "wallpaper", baseline JPEG 240×214 ≤ 40 KB); DELETE removes it
 //   The API token (when set) guards /push*, /hook, /mcp, /api/refresh, /api/channel,
-//   photo upload and delete.
+//   /api/screen, photo and wallpaper upload / delete.
 //   POST /update       — OTA firmware + filesystem (ESP8266HTTPUpdateServer)
 
 #include "web.h"
@@ -27,6 +30,7 @@
 #include "attention_json.h"
 #include "skill_core.h"
 #include "photos.h"
+#include "wallpaper.h"
 #include <ESP8266HTTPUpdateServer.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
@@ -54,6 +58,13 @@ extern uint32_t    mainMinMaxBlock();
 extern uint32_t    mainNextFetchInMs();
 extern bool        mainShowChannel(const char* name);
 extern void        mainNextChannel();
+extern void        mainPrevChannel();
+extern void        mainSetPaused(bool paused);
+extern bool        mainPaused();
+extern void        mainSetScreenOn(bool on);
+extern bool        mainScreenOn();
+extern void        mainSlideTiming(uint32_t& totalMs, uint32_t& leftMs);
+extern void        mainWallpaperChanged();
 extern void        mainSettingsChanged();
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -153,7 +164,19 @@ static void handleApiState() {
             if (Skill::inList(on, Skill::kAll[i])) so.add(Skill::kAll[i]);
     }
     d["night_face"]          = mainNightFace();
+    // App remote control (design 2026-11-26.5): rotation paused (temporary), backlight
+    // on/off as commanded (a waking card lights an "off" screen without changing it),
+    // the active slide's length and what is left of it (both 0 when nothing rotates).
+    d["paused"]              = mainPaused();
+    d["screen_on"]           = mainScreenOn();
+    {
+        uint32_t total, left;
+        mainSlideTiming(total, left);
+        d["slide_ms"]        = total;
+        d["slide_left_ms"]   = left;
+    }
     d["photos"]              = Photos::count();
+    d["wallpaper"]           = Wallpaper::present();
     d["next_fetch_s"]        = mainNextFetchInMs() / 1000;
     d["claude_configured"]   = pSettings && !pSettings->claudeKey.isEmpty();
     d["codex_configured"]    = pSettings && !pSettings->codexToken.isEmpty();
@@ -806,6 +829,71 @@ static void handlePhotoDelete() {
     sendJson(200, d);
 }
 
+// ── Desktop wallpaper (P-2026-11-26.12) ─────────────────────────────────────
+
+static void handleWallpaperGet() {
+    JsonDocument d;
+    d["set"]       = Wallpaper::present();
+    d["size"]      = Wallpaper::size();
+    d["w"]         = Wallpaper::kW;
+    d["h"]         = Wallpaper::kH;
+    d["max_bytes"] = Wallpaper::kMaxBytes;
+    d["free"]      = Photos::fsFree();
+    d["reserve"]   = Photos::kReserveBytes;
+    sendJson(200, d);
+}
+
+static bool s_wallAuthBad = false;
+
+static void handleWallpaperChunk() {
+    HTTPUpload& up = server.upload();
+    switch (up.status) {
+        case UPLOAD_FILE_START:
+            s_wallAuthBad = !checkAuth();
+            if (!s_wallAuthBad) Wallpaper::uploadStart(up.name.c_str());
+            break;
+        case UPLOAD_FILE_WRITE:
+            if (!s_wallAuthBad) Wallpaper::uploadWrite(up.buf, up.currentSize);
+            break;
+        case UPLOAD_FILE_ABORTED:
+            if (!s_wallAuthBad) Wallpaper::uploadAbort();
+            break;
+        default: break;
+    }
+}
+
+static void handleWallpaperUploadDone() {
+    if (s_wallAuthBad || !checkAuth()) {
+        s_wallAuthBad = false;
+        server.send(401, "application/json", "{\"error\":\"unauthorized\"}");
+        return;
+    }
+    const char* err = Wallpaper::uploadEnd();
+    JsonDocument d;
+    if (*err) {
+        d["error"] = err;
+        // too_big / no_space = limits (413 / 507); format problems = 400.
+        int code = !strcmp(err, "too_big") ? 413 : !strcmp(err, "no_space") ? 507
+                 : !strcmp(err, "fs") ? 500 : 400;
+        sendJson(code, d);
+        return;
+    }
+    d["ok"]   = true;
+    d["size"] = Wallpaper::size();
+    sendJson(200, d);
+    mainWallpaperChanged();
+}
+
+static void handleWallpaperDelete() {
+    if (!checkAuth()) { server.send(401, "application/json", "{\"error\":\"unauthorized\"}"); return; }
+    if (!Wallpaper::remove()) {
+        server.send_P(404, PSTR("application/json"), PSTR("{\"error\":\"no wallpaper\"}"));
+        return;
+    }
+    server.send_P(200, PSTR("application/json"), PSTR("{\"ok\":true}"));
+    mainWallpaperChanged();
+}
+
 // ── Public API ──────────────────────────────────────────────────────────────
 
 void Web::begin(Settings& settings) {
@@ -833,7 +921,9 @@ void Web::begin(Settings& settings) {
         server.send(200, "application/json", "{\"ok\":true}");
     });
 
-    // Manual channel switching: {"name":"Claude"} or {"action":"next"}
+    // Channel control (app remote, design 2026-11-26.5): {"name":"Claude"} shows a
+    // channel; {"action":"next"|"prev"} steps; {"action":"pause"|"resume"} holds the
+    // rotation (RAM only, R-DK-4). Answer: {ok, active, paused}.
     server.on("/api/channel",        HTTP_POST, []() {
         if (!checkAuth()) { server.send(401, "application/json", "{\"error\":\"unauthorized\"}"); return; }
         JsonDocument d;
@@ -841,13 +931,39 @@ void Web::begin(Settings& settings) {
             server.send(400, "application/json", "{\"error\":\"bad json\"}");
             return;
         }
-        if (strcmp(d["action"] | "", "next") == 0) mainNextChannel();
-        else if (!mainShowChannel(d["name"] | "")) {
+        const char* action = d["action"] | "";
+        if      (!strcmp(action, "next"))   mainNextChannel();
+        else if (!strcmp(action, "prev"))   mainPrevChannel();
+        else if (!strcmp(action, "pause"))  mainSetPaused(true);
+        else if (!strcmp(action, "resume")) mainSetPaused(false);
+        else if (*action) {
+            server.send_P(400, PSTR("application/json"), PSTR("{\"error\":\"unknown action\"}"));
+            return;
+        } else if (!mainShowChannel(d["name"] | "")) {
             server.send(404, "application/json", "{\"error\":\"no enabled channel with that name\"}");
             return;
         }
-        String out = String("{\"ok\":true,\"active\":\"") + mainActiveChannelName() + "\"}";
-        server.send(200, "application/json", out);
+        JsonDocument r;
+        r["ok"]     = true;
+        r["active"] = mainActiveChannelName();
+        r["paused"] = mainPaused();
+        sendJson(200, r);
+    });
+
+    // Backlight off / on now, whatever the night window says (RAM only; an
+    // approval / question / urgent card still lights an "off" screen).
+    server.on("/api/screen",         HTTP_POST, []() {
+        if (!checkAuth()) { server.send(401, "application/json", "{\"error\":\"unauthorized\"}"); return; }
+        JsonDocument d;
+        if (deserializeJson(d, server.arg("plain")) || !d["on"].is<bool>()) {
+            server.send_P(400, PSTR("application/json"), PSTR("{\"error\":\"body must be {on: true|false}\"}"));
+            return;
+        }
+        mainSetScreenOn(d["on"].as<bool>());
+        JsonDocument r;
+        r["ok"]        = true;
+        r["screen_on"] = mainScreenOn();
+        sendJson(200, r);
     });
 
     // Legacy + event endpoints
@@ -859,6 +975,9 @@ void Web::begin(Settings& settings) {
     server.on("/api/photos",         HTTP_GET,    handlePhotoList);
     server.on("/api/photos",         HTTP_POST,   handlePhotoUploadDone, handlePhotoUploadChunk);
     server.on("/api/photos",         HTTP_DELETE, handlePhotoDelete);
+    server.on("/api/wallpaper",      HTTP_GET,    handleWallpaperGet);
+    server.on("/api/wallpaper",      HTTP_POST,   handleWallpaperUploadDone, handleWallpaperChunk);
+    server.on("/api/wallpaper",      HTTP_DELETE, handleWallpaperDelete);
 
     // Backwards-compat status (used by some scripts)
     server.on("/status",             HTTP_GET,  handleApiState);
