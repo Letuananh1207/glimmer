@@ -1836,6 +1836,8 @@ Nguồn `source/Photo-Empty.dc.html` · ảnh `screens/@2x/PhotoEmpty.png`
 
 ## 17. Kiểu XP (Luna) — giao diện toàn máy
 
+> **P-2026-11-26.13 — Clawd làm việc theo GIF:** Đang chạy = lấy laptop ra (một lần) rồi gõ lặp; xong = ngủ ngay. Clawd ngủ nâng lên y 44, `4NG` không còn dời sang trái.
+
 > **P-2026-11-26.12 — Màn đầu kiểu desktop:** `XP-Desktop` thay kênh Trang chủ: nền = ảnh JPEG người dùng (240×214), nền dự phòng vẽ pixel; biểu tượng desktop; bong bóng thời tiết ở khay.
 
 > **P-2026-11-26.11 — Màu theo XP, mắt Clawd đen:** số to (38%, 41%, 71%) màu đen, màu báo mức chỉ ở thanh tiến độ; chữ mờ xpDim = `#ACA899`; link xpLink = `#0066CC`; mắt Clawd (và miệng khi vui) luôn đen trên mọi nền.
@@ -1893,7 +1895,8 @@ BBBBBB.YYYYY..
 - **Đang tải**: chữ `JBMono-12B` TC (120, 92); ô 140×14 tại (50, 116), 3 khối xpBar sáng chạy qua 9 ô, 1 ô / 0,2 s.
 - **Dữ liệu cũ**: tiêu đề thêm ` · cũ 14P`; số liệu xpDim (`#ACA899`). **Dải thông báo**: nền xpInfoBar cao 14, icon ! xpAmber, chữ xpRed.
 - **Thẻ agent**: cửa sổ tên theo loại; Clawd ô 6 tại (66, 50); tiêu đề `JBMono-16B` TC (120, 120); chi tiết TC (120, 146); chân TC (120, 176). Cần bạn: nút Claude sáng cam.
-- **Clawd ngủ**: Clawd (156, 52); Zz động như §6, mọi khung dời (−2, −6) — khung 6 tại (196, 32); `4NG` TR (150, 84).
+- **Clawd ngủ** (chưa có project / xong hết): Clawd mắt `sleep` ô 4 tại (156, 44); Zz động như §6, mỗi khung x − 2, y = 24 + round((y − 26) × 14 / 26) (bay trong y 24–38); `4NG` giữ TR (229, 84).
+- **Clawd làm việc** (project đầu bảng Đang chạy): xem mục XP-Claude-Laptop.
 
 **Màn hệ thống (không cửa sổ), theo ảnh chụp XP thật — không dòng thông tin:**
 
@@ -2628,3 +2631,32 @@ Nguồn `source/XP-Desktop.dc.html` · ảnh `screens/@2x/XPDesktop.png` (nền 
 | 126, 155 | TL | `JBMono-12B` | `Thời tiết` | 63 |
 | 106, 172 | TL | `JBMono-11` | `29° · Ít mây` | 84 |
 | 106, 185 | TL | `JBMono-11` | `cảm giác 33°` | 84 |
+
+### XP-Claude-Laptop — Clawd làm việc (lấy laptop → gõ → ngủ)
+
+Nguồn `source/XP-Claude-Laptop.dc.html` (canvas chạy cả vòng) · ảnh `screens/@2x/XPClaudeLaptop.png` (khung gõ đầu), `screens/@2x/XPClaudeLaptopFrames.png` (mọi khung). Token `themeXP.clawdWork` (lưới từng khung).
+
+- Chép theo GIF Clawd: lưới ô 4 px, gốc (136, 30); vùng vẽ lại mỗi khung 98×80 tại (132, 20) — tô xpBody rồi vẽ khung, vẽ lại `4NG` TR (229, 84).
+- Màu: thân CLAWD, mắt `#000000` (luật mắt trong token), laptop nét xpLaptop `#808080`.
+- **Bắt đầu chạy** (project đầu bảng chuyển sang Đang chạy): đoạn mở đầu **một lần** — khung 0 (300 ms), 3 (105 ms), 4 (90 ms), 3 (105 ms), 4 (90 ms), 9 (195 ms), 11 (210 ms), 13 (90 ms), 14 (210 ms), 16 (90 ms), 17 (105 ms), 18 (105 ms): đứng nhìn thẳng → lắc người → lôi laptop ra, giơ lên, đặt xuống → nhún → ngồi.
+- **Đang chạy**: lặp khung 19, 21, 22, mỗi khung 200 ms (= tick 5 Hz).
+- **Xong / bảng trống**: chuyển thẳng sang Clawd ngủ (như mục Clawd ngủ) — không có đoạn cất laptop.
+- Mắt giữ đen suốt chuỗi; khung 18 (tiếp đất) dùng mắt 1 hàng (không mở to) để không nháy.
+
+| khung | ms | lưới (C thân · K mắt · L laptop) |
+|---|---|---|
+| 0 | 300 | `.......................` `.......................` `.......................` `..........CCCCCCCCCC...` `..........CKCCCCCCKC...` `.......CCCCCCCCCCCCCCCC` `.......CCCCCCCCCCCCCCCC` `.......CCCCCCCCCCCCCCCC` `..........CCCCCCCCCC...` `..........CCCCCCCCCC...` `..........C.C...CC.C...` `..........C.C...CC.C...` `..........C.C...CC.C...` |
+| 3 | 105 | `.......................` `.......................` `.......................` `.......................` `..........CCCCCCCCCC...` `..........CCCCCCCCCCCCC` `..........CKCCCCCKKCCCC` `........CCCCCCCCCCCC...` `........CCCCCCCCCCCC...` `........CCCCCCCCCCCC...` `..........CCCCCCCCCC...` `..........C.C...CC.C...` `..........C.C...CC.C...` |
+| 4 | 90 | `.......................` `.......................` `.......................` `.......................` `..........CCCCCCCCCC...` `..........CCCCCCCCCCCCC` `..........CKCCCCCKKCCCC` `..........CCCCCCCCCC...` `........CCCCCCCCCCCC...` `........CCCCCCCCCCCC...` `.........CCCCCCCCCCC...` `..........C.C...CC.C...` `..........C.C...CC.C...` |
+| 3 | 105 | `.......................` `.......................` `.......................` `.......................` `..........CCCCCCCCCC...` `..........CCCCCCCCCCCCC` `..........CKCCCCCKKCCCC` `........CCCCCCCCCCCC...` `........CCCCCCCCCCCC...` `........CCCCCCCCCCCC...` `..........CCCCCCCCCC...` `..........C.C...CC.C...` `..........C.C...CC.C...` |
+| 4 | 90 | `.......................` `.......................` `.......................` `.......................` `..........CCCCCCCCCC...` `..........CCCCCCCCCCCCC` `..........CKCCCCCKKCCCC` `..........CCCCCCCCCC...` `........CCCCCCCCCCCC...` `........CCCCCCCCCCCC...` `.........CCCCCCCCCCC...` `..........C.C...CC.C...` `..........C.C...CC.C...` |
+| 9 | 195 | `.......................` `........L..............` `....LLL................` `....LL....CCCCCCCCCC...` `.......CCCCKCCCCCCKC...` `.......CCCCCCCCCCCCC...` `.......CCCCCCCCCCCCCCCC` `........CCCCCCCCCCCCCCC` `..........CCCCCCCCCC...` `..........CCCCCCCCCC...` `..........C.C...CC.C...` `..........C.C...CC.C...` `..........C.C...CC.C...` |
+| 11 | 210 | `.......................` `.......................` `.......CC..............` `.......CCCCCCCCCCCCC...` `.......CCCCKCCCCCCKC...` `..........CCCCCCCCCC...` `..........CCCCCCCCCCCCC` `..........CCCCCCCCCCCCC` `..........CCCCCCCCCC...` `..........CCCCCCCCCC...` `..........C.C...CC.C...` `..........C.C...CC.C...` `..........C.C...CC.C...` |
+| 13 | 90 | `.......................` `.......................` `.......................` `..........CCCCCCCCCC...` `..........CCCCCCCCCC...` `.LL.......CKCCCCCCKCCCC` `.LLL....CCCCCCCCCCCCCCC` `..LLLLLLCCCCCCCCCCCCCCC` `.......LCCCCCCCCCCCC...` `.......CCCCCCCCCCCCC...` `.........CC.C...CC.C...` `..........C.C...CC.C...` `..........C.C...CC.C...` |
+| 14 | 210 | `.......................` `.......................` `.......................` `..........CCCCCCCCCC...` `..........CCCCCCCCCC...` `..........CKCCCCCCKC...` `..........CCCCCCCCCCCCC` `..........CCCCCCCCCCCCC` `..........CCCCCCCCCC...` `.......CCCCCCCCCCCCC...` `.LL....CCCC.C...CC.C...` `..L.......C.C...CC.C...` `...LLLL...C.C...CC.C...` |
+| 16 | 90 | `.......................` `.......................` `.......................` `..........CCCCCCCCCC...` `..........CCCCCCCCCC...` `.......CCCCKCCCCCCKCCCC` `.......CCCCCCCCCCCCCCCC` `.......CCCCCCCCCCCCC...` `..........CCCCCCCCCC...` `..........CCCCCCCCCC...` `L.........C.C...CC.C...` `.LL.......C.C...CC.C...` `...LLLL...C.C...CC.C...` |
+| 17 | 105 | `........CCC....CCC.....` `........CCC....CCC.....` `........CCCCCCCCCCC....` `........CCCCCCCCCCC....` `.........CCCCCCCCCC....` `.........KKCCCCCKKC....` `.........CCCCCCCCCC....` `.........CCCCCCCCCC....` `.........CCCCCCCCCC....` `.L.......CCCCCCCCCC....` `..L......C..C...C.C....` `...L.....C..C...C.C....` `.........C..C...C.C....` |
+| 18 | 105 | `.......................` `.......................` `.......................` `.......................` `........CCCCCCCCCC.....` `.....CCCCCCCCCCCCC.....` `.....CCCKKCCCKKCCC.....` `.....CCCCCCCCCCCCC.....` `........CCCCCCCCCC.....` `.....CCCCCCCCCCCCC.....` `.LL..CCCC..C...C.......` `..L..CCCC..C...C.......` `...LLLL..C..C...C.C....` |
+| 19 | 200 | `.......................` `.......................` `.......................` `.......................` `........CCCCCCCCCC.....` `........CCCCCCCCCC.....` `........KKCCCKKCCC.....` `........CCCCCCCCCC.....` `......CCCCCCCCCCCC.....` `.L...CCCCCCCCCCCCC.....` `..L..CCCCCCCCCCCCC.....` `...L....C..C...C.......` `.........C..C...C.C....` |
+| 21 | 200 | `.......................` `.......................` `.......................` `.......................` `........CCCCCCCCCC.....` `........CCCCCCCCCC.....` `........KKCCCKKCCC.....` `......CCCCCCCCCCCC.....` `......CCCCCCCCCCCC.....` `......CCCCCCCCCCCC.....` `.LL.....CCCCCCCCCC.....` `..L..CCCC..C...C.......` `...LLLL..C..C...C.C....` |
+| 22 | 200 | `.......................` `.......................` `.......................` `.......................` `........CCCCCCCCCC.....` `........CCCCCCCCCC.....` `........KKCCCKKCCC.....` `.....CCCCCCCCCCCCC.....` `.....CCCCCCCCCCCCC.....` `.....CCCCCCCCCCCCC.....` `.LL...CCCCCCCCCCCC.....` `..L...CCC..C...C.......` `...LLLL..C..C...C.C....` |

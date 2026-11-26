@@ -5,6 +5,25 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-26.13 — Clawd làm việc theo GIF (lấy laptop, gõ, ngủ)
+
+- **Kênh Claude kiểu XP** (`source/XP-Claude-Laptop.dc.html`, `screen_specs.md` §17 mục XP-Claude-Laptop, token `themeXP.clawdWork`;
+  ảnh `XPClaudeLaptop.png`, `XPClaudeLaptopFrames.png`):
+  - Project đầu bảng Đang chạy: thay dáng bước chân bằng Clawd chép theo GIF Clawd — đoạn mở đầu một lần (đứng → lắc → lôi laptop
+    ra → đặt xuống → nhún → ngồi; 12 khung, 90–300 ms) rồi lặp 3 khung gõ, 200 ms / khung.
+  - Laptop là nét xám `#808080` nhìn nghiêng; Clawd quay ¾ sang trái, mắt đen 1 hàng (không nháy).
+  - Xong / bảng trống: chuyển thẳng sang ngủ, không cất laptop.
+- **Clawd ngủ** (`source/XP-Claude-NoProject.dc.html`, `source/XP-Claude-Done.dc.html`; ảnh `XPClaudeNoProject.png`, `XPClaudeDone.png`):
+  Clawd nâng lên y 44, Zz bay trong y 24–38; `4NG` đứng yên TR (229, 84) — sửa lỗi `4NG` bị đẩy sang trái (150, 84).
+- Đổi luật: đoạn mở đầu vẽ lại theo nhịp riêng (90–300 ms / khung, nhanh hơn tick 5 Hz) — chỉ vùng 98×80 px.
+- Cần firmware: màu xpLaptop `#808080` (token); lưới các khung trong token `themeXP.clawdWork.frames`.
+
+**Việc cần làm trong code:**
+- Kênh `Claude`: máy trạng thái Clawd — Đang chạy: phát mở đầu một lần rồi lặp khung gõ; rời Đang chạy → Clawd ngủ ngay.
+  Mỗi khung tô vùng 98×80 tại (132, 20) bằng xpBody, vẽ lưới ô 4 px tại (136, 30), vẽ lại `4NG`.
+- Clawd ngủ: (156, 44), Zz theo công thức §17; `4NG` luôn ở (229, 84).
+- Bản xem trước màn trên máy tính vẽ theo.
+
 ## P-2026-11-26.12 — Màn đầu kiểu desktop XP (thay Trang chủ)
 
 - **Màn desktop** — mới (`source/XP-Desktop.dc.html`, `screen_specs.md` §17 mục XP-Desktop, token `themeXP.desktop`; ảnh `XPDesktop.png`):
