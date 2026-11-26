@@ -33,7 +33,7 @@ const char* levelName(Level l) {
     }
 }
 
-static auto noHeaders = [](HTTPClient& h) { h.addHeader("Accept", "application/json"); };
+static auto noHeaders = [](HTTPClient& h) { h.addHeader(F("Accept"), F("application/json")); };
 
 bool fetch(Vendor v) {
     char url[80];

@@ -806,6 +806,18 @@ void test_window_open_zoom_and_frame() {
     TEST_ASSERT_EQUAL(0, hourglassFrame(8));
 }
 
+// L-4: the TLS gate = largest block ≥ 12 000 and free heap ≥ 20 000. The
+// numbers measured on the device after an OTA soft restart (largest block
+// 15 456–19 304, free ~23.5 K) pass; real shortage does not.
+void test_tls_heap_gate() {
+    using namespace FetchPolicy;
+    TEST_ASSERT_TRUE(tlsHeapOk(23528, 15456));    // soft restart: fetches succeeded on the device
+    TEST_ASSERT_TRUE(tlsHeapOk(21104, 20624));    // after a power cycle
+    TEST_ASSERT_FALSE(tlsHeapOk(23528, 11999));   // no block for BearSSL's largest allocation
+    TEST_ASSERT_FALSE(tlsHeapOk(19999, 19000));   // not enough heap for the ~25 K handshake
+    TEST_ASSERT_TRUE(tlsHeapOk(kTlsMinFree, kTlsMinBlock));
+}
+
 void test_xp_progress_blocks_and_marquee() {
     using namespace XPCore;
     // XP-Claude-A weekly bar 220×14 at (10,102), padY 2: blocks 22×8 from (13,105), gap 2.
@@ -1319,6 +1331,7 @@ int main(int, char**) {
     RUN_TEST(test_xp_progress_blocks_and_marquee);
     RUN_TEST(test_tray_weather_and_balloon);
     RUN_TEST(test_window_open_zoom_and_frame);
+    RUN_TEST(test_tls_heap_gate);
     RUN_TEST(test_projects_follow_hook_events);
     RUN_TEST(test_projects_order_idle_and_eviction);
     RUN_TEST(test_projects_sessions_merge_per_project);

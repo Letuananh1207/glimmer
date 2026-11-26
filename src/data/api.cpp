@@ -224,26 +224,37 @@ static void okSource(FetchPolicy::State& pol, D& out) {
 
 // ── Claude ───────────────────────────────────────────────────────────────────
 
-static String s_cachedOrgId;
-static String s_cachedOrgKey;
+// The org id of the key it was fetched with. Fixed storage, never the heap:
+// Strings set after the first TLS fetch landed in the middle of the block TLS
+// had just freed, splitting it for later handshakes (L-4).
+// The key itself is not copied — only its FNV-1a hash.
+static char     s_cachedOrgId[40] = "";
+static uint32_t s_cachedOrgKey    = 0;
+
+static uint32_t keyHash(const String& k) {
+    uint32_t h = 2166136261u;
+    for (size_t i = 0; i < k.length(); i++) h = (h ^ (uint8_t)k[i]) * 16777619u;
+    return h ? h : 1;
+}
+static bool orgCachedFor(const String& key) { return s_cachedOrgId[0] && s_cachedOrgKey == keyHash(key); }
 
 static void claudeHeaders(HTTPClient& h, const String& key) {
     h.addHeader("Cookie",     "sessionKey=" + key);
-    h.addHeader("Accept",     "application/json");
-    h.addHeader("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)");
-    h.addHeader("Referer",    "https://claude.ai");
-    h.addHeader("Origin",     "https://claude.ai");
+    h.addHeader(F("Accept"),     F("application/json"));
+    h.addHeader(F("User-Agent"), F("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"));
+    h.addHeader(F("Referer"),    F("https://claude.ai"));
+    h.addHeader(F("Origin"),     F("https://claude.ai"));
 }
 
 // orgId set on success. The org list is large (each org carries
 // capabilities/billing metadata) — a filter keeps only [0].uuid.
-static Api::TlsResult fetchClaudeOrg(const String& key, String& orgId) {
-    if (s_cachedOrgId.length() && s_cachedOrgKey == key) {
-        orgId = s_cachedOrgId;
+static Api::TlsResult fetchClaudeOrg(const String& key, char* orgId, size_t n) {
+    if (orgCachedFor(key)) {
+        strncpy(orgId, s_cachedOrgId, n - 1); orgId[n - 1] = 0;
         Api::TlsResult r; r.code = 200; r.parsed = true;
         return r;
     }
-    Api::TlsResult r = Api::tlsGetStream("https://claude.ai/api/organizations",
+    Api::TlsResult r = Api::tlsGetStream(String(F("https://claude.ai/api/organizations")).c_str(),
         [&](HTTPClient& h){ claudeHeaders(h, key); },
         [&](Stream& body) {
             JsonDocument filter;
@@ -253,19 +264,23 @@ static Api::TlsResult fetchClaudeOrg(const String& key, String& orgId) {
             if (e) { Serial.printf_P(PSTR("[claude] org parse: %s\n"), e.c_str()); return false; }
             const char* uuid = doc[0]["uuid"] | "";
             if (!*uuid) return false;
-            orgId = uuid;
+            strncpy(orgId, uuid, n - 1); orgId[n - 1] = 0;
             return true;
         });
-    if (r.code == 200 && r.parsed) { s_cachedOrgId = orgId; s_cachedOrgKey = key; }
+    if (r.code == 200 && r.parsed) {
+        strncpy(s_cachedOrgId, orgId, sizeof(s_cachedOrgId) - 1);
+        s_cachedOrgId[sizeof(s_cachedOrgId) - 1] = 0;
+        s_cachedOrgKey = keyHash(key);
+    }
     return r;
 }
 
 bool Api::fetchClaude(const Settings& s, ClaudeData& out) {
     if (s.claudeKey.isEmpty()) return false;
 
-    String orgId;
-    bool wasCached = (s_cachedOrgId.length() && s_cachedOrgKey == s.claudeKey);
-    TlsResult r = fetchClaudeOrg(s.claudeKey, orgId);
+    char orgId[40] = "";
+    bool wasCached = orgCachedFor(s.claudeKey);
+    TlsResult r = fetchClaudeOrg(s.claudeKey, orgId, sizeof(orgId));
     s_dbgClaudeHttp = r.code;
     if (r.code != 200) {
         snprintf(s_dbgClaudeParse, sizeof(s_dbgClaudeParse), r.markup ? "org-markup" : "org-no-200");
@@ -280,7 +295,7 @@ bool Api::fetchClaude(const Settings& s, ClaudeData& out) {
 
     // `cedar_ember=1` is the query the claude.ai usage page itself sends;
     // without it the response omits the limit-reset grants.
-    String url = "https://claude.ai/api/organizations/" + orgId + "/usage?cedar_ember=1";
+    String url = String(F("https://claude.ai/api/organizations/")) + orgId + F("/usage?cedar_ember=1");
     ClaudeData next = out;
     r = tlsGetStream(url.c_str(),
         [&](HTTPClient& h){ claudeHeaders(h, s.claudeKey); },
@@ -304,7 +319,7 @@ bool Api::fetchClaude(const Settings& s, ClaudeData& out) {
     s_dbgClaudeHttp = r.code;
     if ((r.code == 401 || r.code == 403) && !r.markup) {
         // A dead session can also invalidate the cached org; re-discover next time.
-        s_cachedOrgId = String();
+        s_cachedOrgId[0] = 0;
     }
     if (r.code != 200) {
         snprintf(s_dbgClaudeParse, sizeof(s_dbgClaudeParse), r.markup ? "markup" : "no-200");
@@ -325,10 +340,10 @@ bool Api::fetchClaude(const Settings& s, ClaudeData& out) {
 
 static void codexHeaders(HTTPClient& h, const Settings& s, const String& authVal) {
     h.addHeader("Authorization", authVal);
-    h.addHeader("Accept",        "application/json");
-    h.addHeader("User-Agent",    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)");
-    h.addHeader("Origin",        "https://chatgpt.com");
-    h.addHeader("Referer",       "https://chatgpt.com/");
+    h.addHeader(F("Accept"),        F("application/json"));
+    h.addHeader(F("User-Agent"),    F("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"));
+    h.addHeader(F("Origin"),        F("https://chatgpt.com"));
+    h.addHeader(F("Referer"),       F("https://chatgpt.com/"));
     if (!s.codexDeviceId.isEmpty()) h.addHeader("oai-device-id", s.codexDeviceId);
 }
 
@@ -343,7 +358,7 @@ bool Api::fetchCodex(const Settings& s, CodexData& out) {
 
     String authVal = "Bearer " + s.codexToken;
     CodexData next = out;
-    TlsResult r = tlsGetStream("https://chatgpt.com/backend-api/wham/usage",
+    TlsResult r = tlsGetStream(String(F("https://chatgpt.com/backend-api/wham/usage")).c_str(),
         [&](HTTPClient& h){ codexHeaders(h, s, authVal); },
         [&](Stream& body) {
             JsonDocument filter;
@@ -373,7 +388,7 @@ bool Api::fetchCodexResets(const Settings& s, CodexData& out) {
     if (s.codexToken.isEmpty() || codexJwtExpired(out)) return false;
     String authVal = "Bearer " + s.codexToken;
     ResetGrant g;
-    TlsResult r = tlsGetStream("https://chatgpt.com/backend-api/wham/rate-limit-reset-credits",
+    TlsResult r = tlsGetStream(String(F("https://chatgpt.com/backend-api/wham/rate-limit-reset-credits")).c_str(),
         [&](HTTPClient& h){ codexHeaders(h, s, authVal); },
         [&](Stream& body) {
             JsonDocument filter;

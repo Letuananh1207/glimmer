@@ -74,7 +74,7 @@ namespace Api {
     int  lastClaudeHttp();        // HTTP code (or negative HTTPClient error)
     const char* lastClaudeParse(); // deserialization result ("Ok" on success)
 
-    // Minimum contiguous heap block a TLS handshake needs. The scheduler
-    // refuses to start a TLS job below this (refusals don't count as failures).
-    constexpr uint32_t kTlsFloor = 20000;
+    // TLS heap gate: FetchPolicy::tlsHeapOk (largest block ≥ kTlsMinBlock and
+    // free heap ≥ kTlsMinFree). The scheduler refuses to start a TLS job below
+    // it (refusals don't count as failures).
 }

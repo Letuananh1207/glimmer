@@ -100,4 +100,16 @@ inline bool shouldSurface(const State& st) {
     return st.authLatched || blocked(st) || st.fails >= kSilentFails;
 }
 
+// TLS heap gate (L-4, user-approved 2026-11-26). BearSSL here uses 4 K rx /
+// 1 K tx buffers: its largest single allocation is ~6 KB, the handshake needs
+// ~25 KB in total. So: a contiguous block with 2× headroom over the largest
+// allocation, and enough free heap overall. The old single "largest block ≥
+// 20 000" refused forever after an OTA soft restart split the heap into
+// 15–19 KB blocks, though fetches then succeed (and the heap re-coalesces).
+constexpr uint32_t kTlsMinBlock = 12000;
+constexpr uint32_t kTlsMinFree  = 20000;
+inline bool tlsHeapOk(uint32_t freeHeap, uint32_t maxBlock) {
+    return maxBlock >= kTlsMinBlock && freeHeap >= kTlsMinFree;
+}
+
 }  // namespace FetchPolicy

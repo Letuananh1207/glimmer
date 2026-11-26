@@ -35,16 +35,16 @@ bool isStale(const Settings& s) {
 
 static void save() {
     JsonDocument d;
-    d["t"] = s_w.tempC; d["f"] = s_w.feelsC; d["c"] = s_w.code; d["day"] = s_w.isDay;
-    d["h"] = s_w.humidity; d["w"] = s_w.windKmh; d["ok"] = (uint32_t)s_w.lastOk;
-    d["rs"] = (uint32_t)s_w.rainStart;
-    JsonArray rp = d["rp"].to<JsonArray>();
+    d[F("t")] = s_w.tempC; d[F("f")] = s_w.feelsC; d[F("c")] = s_w.code; d[F("day")] = s_w.isDay;
+    d[F("h")] = s_w.humidity; d[F("w")] = s_w.windKmh; d[F("ok")] = (uint32_t)s_w.lastOk;
+    d[F("rs")] = (uint32_t)s_w.rainStart;
+    JsonArray rp = d[F("rp")].to<JsonArray>();
     for (uint8_t p : s_w.rainPct) rp.add(p);
-    JsonArray fc = d["fc"].to<JsonArray>();
+    JsonArray fc = d[F("fc")].to<JsonArray>();
     for (const WeatherDay& wd : s_w.forecast) {
         JsonObject o = fc.add<JsonObject>();
-        o["lo"] = wd.tmin; o["hi"] = wd.tmax; o["c"] = wd.code; o["uv"] = wd.uvMax;
-        o["sr"] = (uint32_t)wd.sunrise; o["ss"] = (uint32_t)wd.sunset;
+        o[F("lo")] = wd.tmin; o[F("hi")] = wd.tmax; o[F("c")] = wd.code; o[F("uv")] = wd.uvMax;
+        o[F("sr")] = (uint32_t)wd.sunrise; o[F("ss")] = (uint32_t)wd.sunset;
     }
     File f = LittleFS.open("/weather.tmp", "w");
     if (!f) return;
@@ -61,19 +61,19 @@ void begin() {
     JsonDocument d;
     DeserializationError e = deserializeJson(d, f);
     f.close();
-    if (e || d["ok"].isNull()) return;
-    s_w.tempC = d["t"] | -999.0f; s_w.feelsC = d["f"] | s_w.tempC;
-    s_w.code = d["c"] | 0; s_w.isDay = d["day"] | true;
-    s_w.humidity = d["h"] | -1; s_w.windKmh = d["w"] | -1.0f;
-    s_w.lastOk = (time_t)(d["ok"] | 0UL);
-    s_w.rainStart = (time_t)(d["rs"] | 0UL);
-    for (int i = 0; i < 12; i++) s_w.rainPct[i] = d["rp"][i] | 255;
+    if (e || d[F("ok")].isNull()) return;
+    s_w.tempC = d[F("t")] | -999.0f; s_w.feelsC = d[F("f")] | s_w.tempC;
+    s_w.code = d[F("c")] | 0; s_w.isDay = d[F("day")] | true;
+    s_w.humidity = d[F("h")] | -1; s_w.windKmh = d[F("w")] | -1.0f;
+    s_w.lastOk = (time_t)(d[F("ok")] | 0UL);
+    s_w.rainStart = (time_t)(d[F("rs")] | 0UL);
+    for (int i = 0; i < 12; i++) s_w.rainPct[i] = d[F("rp")][i] | 255;
     for (int i = 0; i < 4; i++) {
-        JsonVariant o = d["fc"][i];
-        s_w.forecast[i].tmin = o["lo"] | -999.0f; s_w.forecast[i].tmax = o["hi"] | -999.0f;
-        s_w.forecast[i].code = o["c"] | 0;        s_w.forecast[i].uvMax = o["uv"] | -1.0f;
-        s_w.forecast[i].sunrise = (time_t)(o["sr"] | 0UL);
-        s_w.forecast[i].sunset  = (time_t)(o["ss"] | 0UL);
+        JsonVariant o = d[F("fc")][i];
+        s_w.forecast[i].tmin = o[F("lo")] | -999.0f; s_w.forecast[i].tmax = o[F("hi")] | -999.0f;
+        s_w.forecast[i].code = o[F("c")] | 0;        s_w.forecast[i].uvMax = o[F("uv")] | -1.0f;
+        s_w.forecast[i].sunrise = (time_t)(o[F("sr")] | 0UL);
+        s_w.forecast[i].sunset  = (time_t)(o[F("ss")] | 0UL);
     }
     s_w.valid = s_w.tempC > -900.0f;
 }
@@ -123,33 +123,33 @@ bool fetch(const Settings& s) {
         return fail(0, e);
     }
 
-    JsonObject cur = doc["current"].as<JsonObject>();
+    JsonObject cur = doc[F("current")].as<JsonObject>();
     if (cur.isNull()) return fail(0, "no current");
 
     WeatherData w;
-    w.tempC    = cur["temperature_2m"]       | -999.0f;
-    w.feelsC   = cur["apparent_temperature"] | w.tempC;
-    w.code     = cur["weather_code"]         | 0;
+    w.tempC    = cur[F("temperature_2m")]       | -999.0f;
+    w.feelsC   = cur[F("apparent_temperature")] | w.tempC;
+    w.code     = cur[F("weather_code")]         | 0;
     // Open-Meteo sends is_day as 0/1 — read it as an int, not a JSON bool.
-    w.isDay    = cur["is_day"].isNull() ? true : (cur["is_day"].as<int>() != 0);
-    w.humidity = cur["relative_humidity_2m"] | -1;
-    w.windKmh  = cur["wind_speed_10m"]       | -1.0f;
+    w.isDay    = cur[F("is_day")].isNull() ? true : (cur[F("is_day")].as<int>() != 0);
+    w.humidity = cur[F("relative_humidity_2m")] | -1;
+    w.windKmh  = cur[F("wind_speed_10m")]       | -1.0f;
 
-    JsonObject daily = doc["daily"].as<JsonObject>();
+    JsonObject daily = doc[F("daily")].as<JsonObject>();
     for (int i = 0; i < 4; i++) {
         WeatherDay& d = w.forecast[i];
-        d.tmin    = daily["temperature_2m_min"][i] | -999.0f;
-        d.tmax    = daily["temperature_2m_max"][i] | -999.0f;
-        d.code    = daily["weather_code"][i]       | 0;
-        d.uvMax   = daily["uv_index_max"][i]       | -1.0f;
-        d.sunrise = (time_t)(daily["sunrise"][i]   | 0L);
-        d.sunset  = (time_t)(daily["sunset"][i]    | 0L);
+        d.tmin    = daily[F("temperature_2m_min")][i] | -999.0f;
+        d.tmax    = daily[F("temperature_2m_max")][i] | -999.0f;
+        d.code    = daily[F("weather_code")][i]       | 0;
+        d.uvMax   = daily[F("uv_index_max")][i]       | -1.0f;
+        d.sunrise = (time_t)(daily[F("sunrise")][i]   | 0L);
+        d.sunset  = (time_t)(daily[F("sunset")][i]    | 0L);
     }
 
-    JsonObject hourly = doc["hourly"].as<JsonObject>();
-    w.rainStart = (time_t)(hourly["time"][0] | 0L);
+    JsonObject hourly = doc[F("hourly")].as<JsonObject>();
+    w.rainStart = (time_t)(hourly[F("time")][0] | 0L);
     for (int i = 0; i < 12; i++) {
-        JsonVariant p = hourly["precipitation_probability"][i];
+        JsonVariant p = hourly[F("precipitation_probability")][i];
         w.rainPct[i] = p.isNull() ? 255 : (uint8_t)p.as<int>();
     }
 

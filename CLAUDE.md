@@ -16,7 +16,11 @@ https://claude.ai/artifact/WzLqGhKvD1MYxqaiRkzq1r, exported to `design/` by a de
   (`eagle.flash.4m1m.ld`, 1 MB LittleFS), ST7789 240×240. Backlight GPIO5 is
   **active-low PWM** (`analogWrite 0` = full bright). USB-C is power only.
 - **No PSRAM, ~30 KB free heap** at idle. Never allocate a full 240×240 16bpp
-  framebuffer (~115 KB). Literals in flash: `snprintf_P`/`PSTR`/`F()`.
+  framebuffer (~115 KB). Literals in flash: `snprintf_P`/`PSTR`/`F()` — every
+  plain `"…"` lands in RAM (`.rodata`). ArduinoJson keys / string values
+  `d[F("key")] = F("…")`, responses `server.send_P(…, PSTR(…), PSTR(…))`,
+  headers `addHeader(F(…), F(…))` (L-4: moving these to flash freed 2.1 KB).
+  Check `pio run` `RAM:` before / after any change.
 - **Build**: `pio run -e nodemcuv2` (firmware), `pio run -e nodemcuv2 -t buildfs`
   (LittleFS image, `data/` → `/`), `pio test -e native` (host tests).
   Version: `-D FW_VERSION` in `platformio.ini`.
@@ -240,9 +244,12 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
 - No blocking "refresh all". `main.cpp` job table: claude, codex,
   codex-resets (hourly), weather, status-claude, status-openai. At most one
   job per loop pass, starts ≥ 3 s apart.
-- A TLS job starts only when `ESP.getMaxFreeBlockSize() >= Api::kTlsFloor`
-  (20 000); otherwise deferred 5 s and counted in `heap_refusals` — never an
-  upstream failure. Weather is plain HTTP and skips the gate.
+- A TLS job starts only when `FetchPolicy::tlsHeapOk(freeHeap, maxBlock)`:
+  largest block ≥ 12 000 **and** free heap ≥ 20 000 (L-4, 2026-11-26 — the
+  old "largest block ≥ 20 000" refused forever after an OTA soft restart split
+  the heap into 15–19 KB blocks, though TLS with 4 K / 1 K buffers then works
+  and the heap re-coalesces); otherwise deferred 5 s and counted in
+  `heap_refusals` — never an upstream failure. Weather is plain HTTP and skips the gate.
 - `FetchPolicy::State` (`fetch_policy.h`): backoff 60→120→240→300 s,
   `Retry-After` honoured (≤ 6 h), credential latched bad only after **two**
   consecutive JSON 401/403. Errors surface only after 3 failures or a latched

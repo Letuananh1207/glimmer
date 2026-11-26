@@ -9,7 +9,7 @@
 //
 // Fetching is a staggered job scheduler, not a blocking "refresh all": each
 // loop pass starts at most one job, jobs are spaced ≥ 3 s apart, and a TLS job
-// only starts when the largest free heap block clears Api::kTlsFloor. The web
+// only starts when the heap clears FetchPolicy::tlsHeapOk (L-4). The web
 // server, channel ticks and Wi-Fi checks keep running between jobs.
 
 #include <Arduino.h>
@@ -626,14 +626,14 @@ static void schedulerTick(uint32_t now) {
         // refuse forever (maxblk 18 K < 20 K) though the heap had room.
         if (j != JOB_WEATHER) Display::releaseFont();
         uint32_t blk = ESP.getMaxFreeBlockSize();
+        uint32_t freeHeap = ESP.getFreeHeap();
         if (blk < g_minMaxBlk) g_minMaxBlk = blk;
-        if (j != JOB_WEATHER && blk < Api::kTlsFloor) {
+        if (j != JOB_WEATHER && !FetchPolicy::tlsHeapOk(freeHeap, blk)) {
             // Our own memory, not the upstream: defer briefly, never count it
             // as a failure.
             g_jobDue[j] = now + 5000;
             g_heapRefusals++;
-            Serial.printf_P(PSTR("[sched] %s deferred: maxblk=%u < %u\n"), kJobName[j], blk,
-                          (unsigned)Api::kTlsFloor);
+            Serial.printf_P(PSTR("[sched] %s deferred: maxblk=%u free=%u\n"), kJobName[j], blk, freeHeap);
             return;
         }
         g_lastJobStart = now;

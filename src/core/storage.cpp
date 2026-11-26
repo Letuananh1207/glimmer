@@ -17,68 +17,68 @@ Settings Storage::load() {
     auto err = deserializeJson(doc, f);
     f.close();
     if (err) return s;
-    s.wifiSSID      = doc["wifi_ssid"]      | "";
-    s.wifiPass      = doc["wifi_pass"]      | "";
-    s.claudeKey     = doc["claude_key"]     | "";
-    s.codexToken    = doc["codex_token"]    | "";
-    s.codexDeviceId    = doc["codex_dev"]      | "";
-    s.codexModelLabel  = doc["codex_model"]    | "";
-    s.refreshMin    = doc["refresh_min"]    | 5;
-    s.channelSec    = doc["channel_sec"]    | 8;
-    s.brightness    = doc["brightness"]     | 80;
+    s.wifiSSID      = doc[F("wifi_ssid")]      | "";
+    s.wifiPass      = doc[F("wifi_pass")]      | "";
+    s.claudeKey     = doc[F("claude_key")]     | "";
+    s.codexToken    = doc[F("codex_token")]    | "";
+    s.codexDeviceId    = doc[F("codex_dev")]      | "";
+    s.codexModelLabel  = doc[F("codex_model")]    | "";
+    s.refreshMin    = doc[F("refresh_min")]    | 5;
+    s.channelSec    = doc[F("channel_sec")]    | 8;
+    s.brightness    = doc[F("brightness")]     | 80;
     // Timezone: `tz_min` is authoritative. Configs written before it carried an
     // ambiguous pair (tz_minutes == 0 meant "use the hour-only tz_offset"), so
     // UTC could never be chosen; translate that once on load.
-    if (!doc["tz_min"].isNull()) {
-        s.tzMinutes = doc["tz_min"] | 0;
+    if (!doc[F("tz_min")].isNull()) {
+        s.tzMinutes = doc[F("tz_min")] | 0;
     } else {
-        int16_t legacyMin = doc["tz_minutes"] | 0;
-        int8_t  legacyHr  = doc["tz_offset"]  | 0;
+        int16_t legacyMin = doc[F("tz_minutes")] | 0;
+        int8_t  legacyHr  = doc[F("tz_offset")]  | 0;
         s.tzMinutes = legacyMin != 0 ? legacyMin : (int16_t)(legacyHr * 60);
     }
-    s.showClaude    = doc["show_claude"]    | true;
-    s.showCodex     = doc["show_codex"]     | true;
-    s.showHome      = doc["show_home"]      | true;
-    s.showClock     = doc["show_clock"]     | true;
-    s.showForecast  = doc["show_forecast"]  | true;
-    s.showAiDash    = doc["show_aidash"]    | true;
-    s.showInfo      = doc["show_info"]      | true;
-    s.showTrend     = doc["show_trend"]     | true;
-    s.showAgents    = doc["show_agents"]    | true;
-    s.idleDim       = doc["idle_dim"]       | true;
-    s.showStatus    = doc["show_status"]    | false;
-    s.autoRotate    = doc["auto_rotate"]    | true;
-    s.claudeWeeklyHero = doc["claude_weekly_hero"] | false;
-    s.codexWeeklyHero  = doc["codex_weekly_hero"]  | false;
-    s.clock24h      = doc["clock_24h"]      | true;
-    s.invertDisplay = doc["invert_display"] | true;
+    s.showClaude    = doc[F("show_claude")]    | true;
+    s.showCodex     = doc[F("show_codex")]     | true;
+    s.showHome      = doc[F("show_home")]      | true;
+    s.showClock     = doc[F("show_clock")]     | true;
+    s.showForecast  = doc[F("show_forecast")]  | true;
+    s.showAiDash    = doc[F("show_aidash")]    | true;
+    s.showInfo      = doc[F("show_info")]      | true;
+    s.showTrend     = doc[F("show_trend")]     | true;
+    s.showAgents    = doc[F("show_agents")]    | true;
+    s.idleDim       = doc[F("idle_dim")]       | true;
+    s.showStatus    = doc[F("show_status")]    | false;
+    s.autoRotate    = doc[F("auto_rotate")]    | true;
+    s.claudeWeeklyHero = doc[F("claude_weekly_hero")] | false;
+    s.codexWeeklyHero  = doc[F("codex_weekly_hero")]  | false;
+    s.clock24h      = doc[F("clock_24h")]      | true;
+    s.invertDisplay = doc[F("invert_display")] | true;
     // Night: minute-precision window + mode. Older configs stored whole hours
     // and an on/off dim flag; translate those once on load.
-    if (!doc["night_mode"].isNull()) {
-        s.nightMode     = doc["night_mode"]      | 0;
-        s.nightStartMin = doc["night_start_min"] | 22 * 60;
-        s.nightEndMin   = doc["night_end_min"]   | 7 * 60;
+    if (!doc[F("night_mode")].isNull()) {
+        s.nightMode     = doc[F("night_mode")]      | 0;
+        s.nightStartMin = doc[F("night_start_min")] | 22 * 60;
+        s.nightEndMin   = doc[F("night_end_min")]   | 7 * 60;
     } else {
-        s.nightMode     = (doc["night_dim"] | false) ? 1 : 0;
-        s.nightStartMin = (uint16_t)((doc["night_start"] | 22) * 60);
-        s.nightEndMin   = (uint16_t)((doc["night_end"]   | 7)  * 60);
+        s.nightMode     = (doc[F("night_dim")] | false) ? 1 : 0;
+        s.nightStartMin = (uint16_t)((doc[F("night_start")] | 22) * 60);
+        s.nightEndMin   = (uint16_t)((doc[F("night_end")]   | 7)  * 60);
     }
-    s.nightBright   = doc["night_bright"]   | 15;
-    s.weatherLat    = doc["weather_lat"]    | 0.0f;
-    s.weatherLon    = doc["weather_lon"]    | 0.0f;
-    s.showWeather   = doc["show_weather"]   | true;
-    s.useFahrenheit = doc["fahrenheit"]     | false;
-    s.userName      = doc["user_name"]      | "";
-    s.apiToken      = doc["api_token"]      | "";
-    s.pinApprovals   = doc["pin_approvals"]    | true;
-    s.approvalTtlMin = doc["approval_ttl_min"] | 30;
-    s.agentDoneCards = doc["agent_done_cards"] | false;
-    s.agentNightShow = doc["agent_night_show"] | false;
+    s.nightBright   = doc[F("night_bright")]   | 15;
+    s.weatherLat    = doc[F("weather_lat")]    | 0.0f;
+    s.weatherLon    = doc[F("weather_lon")]    | 0.0f;
+    s.showWeather   = doc[F("show_weather")]   | true;
+    s.useFahrenheit = doc[F("fahrenheit")]     | false;
+    s.userName      = doc[F("user_name")]      | "";
+    s.apiToken      = doc[F("api_token")]      | "";
+    s.pinApprovals   = doc[F("pin_approvals")]    | true;
+    s.approvalTtlMin = doc[F("approval_ttl_min")] | 30;
+    s.agentDoneCards = doc[F("agent_done_cards")] | false;
+    s.agentNightShow = doc[F("agent_night_show")] | false;
     {
         // Before 2026-11-25.3 one "skill" owned the screen and weather/clock always rotated:
         // no "skills_on" yet → everything on, so the device shows what it showed before.
         char on[48];
-        Skill::normalise(doc["skills_on"] | Skill::kDefaultOn, on, sizeof(on), true);
+        Skill::normalise(doc[F("skills_on")] | Skill::kDefaultOn, on, sizeof(on), true);
         s.skillsOn = on;
     }
     return s;
@@ -96,47 +96,47 @@ static bool writeAtomic(const std::function<size_t(File&)>& writer) {
 
 bool Storage::save(const Settings& s) {
     JsonDocument doc;
-    doc["wifi_ssid"]    = s.wifiSSID;
-    doc["wifi_pass"]    = s.wifiPass;
-    doc["claude_key"]   = s.claudeKey;
-    doc["codex_token"]  = s.codexToken;
-    doc["codex_dev"]    = s.codexDeviceId;
-    doc["codex_model"]  = s.codexModelLabel;
-    doc["refresh_min"]  = s.refreshMin;
-    doc["channel_sec"]  = s.channelSec;
-    doc["brightness"]   = s.brightness;
-    doc["tz_min"]       = s.tzMinutes;
-    doc["show_claude"]   = s.showClaude;
-    doc["show_codex"]    = s.showCodex;
-    doc["show_home"]     = s.showHome;
-    doc["show_clock"]    = s.showClock;
-    doc["show_forecast"] = s.showForecast;
-    doc["show_aidash"]   = s.showAiDash;
-    doc["show_info"]     = s.showInfo;
-    doc["show_trend"]    = s.showTrend;
-    doc["show_agents"]   = s.showAgents;
-    doc["idle_dim"]      = s.idleDim;
-    doc["show_status"]   = s.showStatus;
-    doc["auto_rotate"]   = s.autoRotate;
-    doc["claude_weekly_hero"] = s.claudeWeeklyHero;
-    doc["codex_weekly_hero"]  = s.codexWeeklyHero;
-    doc["clock_24h"]     = s.clock24h;
-    doc["invert_display"]= s.invertDisplay;
-    doc["night_mode"]      = s.nightMode;
-    doc["night_start_min"] = s.nightStartMin;
-    doc["night_end_min"]   = s.nightEndMin;
-    doc["night_bright"] = s.nightBright;
-    doc["weather_lat"]  = s.weatherLat;
-    doc["weather_lon"]  = s.weatherLon;
-    doc["show_weather"] = s.showWeather;
-    doc["fahrenheit"]   = s.useFahrenheit;
-    doc["user_name"]    = s.userName;
-    doc["api_token"]    = s.apiToken;
-    doc["pin_approvals"]    = s.pinApprovals;
-    doc["approval_ttl_min"] = s.approvalTtlMin;
-    doc["agent_done_cards"] = s.agentDoneCards;
-    doc["agent_night_show"] = s.agentNightShow;
-    doc["skills_on"]        = s.skillsOn;
+    doc[F("wifi_ssid")]    = s.wifiSSID;
+    doc[F("wifi_pass")]    = s.wifiPass;
+    doc[F("claude_key")]   = s.claudeKey;
+    doc[F("codex_token")]  = s.codexToken;
+    doc[F("codex_dev")]    = s.codexDeviceId;
+    doc[F("codex_model")]  = s.codexModelLabel;
+    doc[F("refresh_min")]  = s.refreshMin;
+    doc[F("channel_sec")]  = s.channelSec;
+    doc[F("brightness")]   = s.brightness;
+    doc[F("tz_min")]       = s.tzMinutes;
+    doc[F("show_claude")]   = s.showClaude;
+    doc[F("show_codex")]    = s.showCodex;
+    doc[F("show_home")]     = s.showHome;
+    doc[F("show_clock")]    = s.showClock;
+    doc[F("show_forecast")] = s.showForecast;
+    doc[F("show_aidash")]   = s.showAiDash;
+    doc[F("show_info")]     = s.showInfo;
+    doc[F("show_trend")]    = s.showTrend;
+    doc[F("show_agents")]   = s.showAgents;
+    doc[F("idle_dim")]      = s.idleDim;
+    doc[F("show_status")]   = s.showStatus;
+    doc[F("auto_rotate")]   = s.autoRotate;
+    doc[F("claude_weekly_hero")] = s.claudeWeeklyHero;
+    doc[F("codex_weekly_hero")]  = s.codexWeeklyHero;
+    doc[F("clock_24h")]     = s.clock24h;
+    doc[F("invert_display")]= s.invertDisplay;
+    doc[F("night_mode")]      = s.nightMode;
+    doc[F("night_start_min")] = s.nightStartMin;
+    doc[F("night_end_min")]   = s.nightEndMin;
+    doc[F("night_bright")] = s.nightBright;
+    doc[F("weather_lat")]  = s.weatherLat;
+    doc[F("weather_lon")]  = s.weatherLon;
+    doc[F("show_weather")] = s.showWeather;
+    doc[F("fahrenheit")]   = s.useFahrenheit;
+    doc[F("user_name")]    = s.userName;
+    doc[F("api_token")]    = s.apiToken;
+    doc[F("pin_approvals")]    = s.pinApprovals;
+    doc[F("approval_ttl_min")] = s.approvalTtlMin;
+    doc[F("agent_done_cards")] = s.agentDoneCards;
+    doc[F("agent_night_show")] = s.agentNightShow;
+    doc[F("skills_on")]        = s.skillsOn;
     return writeAtomic([&](File& f) { return serializeJson(doc, f); });
 }
 
