@@ -5,6 +5,41 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-26.22 — Ngày và Giờ chạm được như Windows XP
+
+- **Kênh Clock** (`source/XP-Clock-Props.dc.html`, mới `XP-Clock-Month.dc.html`, `XP-Clock-Zone.dc.html`,
+  `XP-Clock-Net.dc.html`; `screen_specs.md` §17 mục XP-Real; ảnh `XPClockProps.png`, mới `XPClockMonth.png`,
+  `XPClockZone.png`, `XPClockNet.png`) — theo *Date and Time Properties* XP thật:
+  - 3 tab: `Ngày và giờ` / `Múi giờ` / `Internet` (*Internet Time*).
+  - Tháng và năm tách như XP: ô chọn `Thg 11` (42 px, tên tháng ngắn của Windows tiếng Việt) + ô năm `2026` có ▲▼.
+    Danh sách tháng 9 dòng + thanh cuộn. Chạm ngày → ô đó tô xanh (chỉ xem).
+  - Ô giờ chỉ đọc (nền xám, ▲▼ mờ) vì giờ tự đồng bộ.
+  - Tab Múi giờ: ô chọn `(GMT+07:00) Hà Nội` (126 px) + bản đồ thế giới ô 8 px, cột múi đang chọn sáng hơn; `Tự chỉnh giờ mùa
+    hè` mờ (Việt Nam không có).
+  - Tab Internet: ☑ `Tự đồng bộ với máy chủ`, `pool.ntp.org`, nút `Cập nhật ngay`, `Đã đồng bộ lúc 14:00 ngày 26/11/2026.`,
+    `Lần tới: 15:00.`
+  - Không có OK / Hủy / Áp dụng: đổi là áp ngay.
+  - Máy đang vẽ 2 tab, ô `11/2026` một khối, không phản hồi chạm.
+- Cần firmware: lệnh từ app cho tab / tháng / năm / ngày chọn / danh sách tháng hay múi giờ mở; đổi múi giờ (`tz_min` có
+  sẵn) + tên nơi; đồng bộ lại NTP; giờ đồng bộ lần cuối (và lần tới) trong `/api/state`.
+
+**Việc cần làm trong code:**
+- Kênh `Clock`: 3 tab; ô tháng + ô năm; danh sách tháng; chọn ngày; ô giờ chỉ đọc; trang Múi giờ (bản đồ từ bảng `landRows`
+  trong token) và trang Internet; vẽ lại đúng phần đổi.
+- App: chạm trên màn mô phỏng cửa sổ Ngày và Giờ → gửi lệnh tương ứng; danh sách múi giờ chọn được.
+
+## P-2026-11-26.21 — Bỏ bong bóng thời tiết
+
+- **Kênh Home — desktop** (`screen_specs.md` §17 mục XP-Desk-Tray; `source/XP-Desk-Balloon.dc.html` giữ làm lịch sử, không
+  áp): desktop không bao giờ hiện bong bóng thời tiết — đã có cửa sổ Thời tiết (tab Hiện tại / Dự báo). Biểu tượng thời tiết
+  ở khay giữ (180, 220).
+- Đổi luật: bỏ bong bóng (P-2026-11-26.15) — không hiện khi vào desktop, khi thời tiết đổi, hay theo `/api/balloon`; app chạm
+  biểu tượng khay → mở cửa sổ Thời tiết (tab Hiện tại). `/api/state` `balloon` bỏ (hoặc luôn false).
+
+**Việc cần làm trong code:**
+- Kênh `Home`: bỏ bong bóng và phần vẽ lại hình nền dưới bong bóng.
+- App: chạm biểu tượng thời tiết ở khay → mở cửa sổ Thời tiết thay cho bật bong bóng.
+
 ## P-2026-11-26.20 — Start menu kiểu Windows XP trên thiết bị
 
 - **Start menu** (`source/XP-Start-Menu.dc.html`, `XP-Start-All.dc.html`, `screen_specs.md` §17 mục XP-Start; ảnh

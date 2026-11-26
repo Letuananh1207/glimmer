@@ -1664,7 +1664,8 @@
             "xpLabel"
           ]
         ],
-        "overlap": "vẽ đè lên biểu tượng desktop; ẩn thì vẽ lại hình nền + biểu tượng dưới hộp"
+        "overlap": "vẽ đè lên biểu tượng desktop; ẩn thì vẽ lại hình nền + biểu tượng dưới hộp",
+        "removed": "P-2026-11-26.21 — bỏ: không hiện bong bóng; chạm biểu tượng khay → mở cửa sổ Thời tiết (tab Hiện tại)"
       },
       "taskbar": "nút = cửa sổ đang mở (không nút nào lõm khi desktop đang hiện)"
     },
@@ -2158,7 +2159,321 @@
         12,
         189,
         "JBMono-11"
-      ]
+      ],
+      "p22": {
+        "tabs": [
+          [
+            "Ngày và giờ",
+            6,
+            87
+          ],
+          [
+            "Múi giờ",
+            93,
+            59
+          ],
+          [
+            "Internet",
+            152,
+            66
+          ]
+        ],
+        "month": {
+          "field": [
+            14,
+            62,
+            67,
+            16
+          ],
+          "text": "Thg <m>",
+          "at": [
+            17,
+            63
+          ],
+          "button": [
+            66,
+            63,
+            14,
+            14
+          ]
+        },
+        "year": {
+          "field": [
+            85,
+            62,
+            44,
+            16
+          ],
+          "at": [
+            87,
+            63
+          ],
+          "spin": [
+            116,
+            63,
+            12,
+            14
+          ]
+        },
+        "monthList": {
+          "box": [
+            14,
+            78,
+            67,
+            119
+          ],
+          "rows": 9,
+          "rowH": 13,
+          "sel": "xpSelect",
+          "scroll": {
+            "x": 70,
+            "w": 10,
+            "track": "#F4F3EE"
+          }
+        },
+        "timeReadOnly": {
+          "fill": "xpBody",
+          "spinArrows": "xpDim"
+        },
+        "zone": {
+          "field": [
+            12,
+            50,
+            216,
+            18
+          ],
+          "text": "(GMT+07:00) Hà Nội",
+          "map": [
+            12,
+            74,
+            218,
+            90
+          ],
+          "cell": 8,
+          "grid": [
+            27,
+            11
+          ],
+          "sea": "#3C7FD8",
+          "land": "#5E9E36",
+          "seaSel": "#7FB0EE",
+          "landSel": "#8FCF5A",
+          "landRows": [
+            [
+              [
+                4,
+                8
+              ],
+              [
+                9,
+                12
+              ],
+              [
+                18,
+                24
+              ]
+            ],
+            [
+              [
+                1,
+                8
+              ],
+              [
+                10,
+                11
+              ],
+              [
+                14,
+                26
+              ]
+            ],
+            [
+              [
+                3,
+                9
+              ],
+              [
+                13,
+                25
+              ]
+            ],
+            [
+              [
+                4,
+                8
+              ],
+              [
+                13,
+                23
+              ],
+              [
+                24,
+                24
+              ]
+            ],
+            [
+              [
+                5,
+                7
+              ],
+              [
+                12,
+                22
+              ]
+            ],
+            [
+              [
+                6,
+                7
+              ],
+              [
+                12,
+                17
+              ],
+              [
+                19,
+                19
+              ],
+              [
+                21,
+                22
+              ]
+            ],
+            [
+              [
+                8,
+                10
+              ],
+              [
+                14,
+                16
+              ],
+              [
+                21,
+                23
+              ]
+            ],
+            [
+              [
+                8,
+                10
+              ],
+              [
+                15,
+                16
+              ],
+              [
+                23,
+                24
+              ]
+            ],
+            [
+              [
+                8,
+                10
+              ],
+              [
+                15,
+                16
+              ],
+              [
+                22,
+                25
+              ]
+            ],
+            [
+              [
+                8,
+                9
+              ],
+              [
+                24,
+                24
+              ],
+              [
+                26,
+                26
+              ]
+            ],
+            [
+              [
+                8,
+                8
+              ]
+            ]
+          ],
+          "dst": {
+            "box": [
+              12,
+              172,
+              13,
+              13
+            ],
+            "text": "Tự chỉnh giờ mùa hè",
+            "at": [
+              30,
+              172
+            ],
+            "state": "mờ khi múi không có giờ mùa hè"
+          }
+        },
+        "internet": {
+          "check": [
+            12,
+            52
+          ],
+          "text": "Tự đồng bộ với máy chủ",
+          "server": {
+            "label": [
+              12,
+              77
+            ],
+            "field": [
+              72,
+              74,
+              156,
+              18
+            ],
+            "text": "pool.ntp.org"
+          },
+          "button": {
+            "rect": [
+              125,
+              98,
+              103,
+              21
+            ],
+            "edge": "#003C74",
+            "fill": "#F4F3EE",
+            "bottom": "#D6D0C5",
+            "text": "Cập nhật ngay"
+          },
+          "status": [
+            [
+              "Đã đồng bộ lúc <hh:mm>",
+              [
+                12,
+                130
+              ]
+            ],
+            [
+              "ngày <dd/mm/yyyy>.",
+              [
+                12,
+                144
+              ]
+            ],
+            [
+              "Lần tới: <hh:mm>.",
+              [
+                12,
+                166
+              ],
+              "xpLabel"
+            ]
+          ]
+        }
+      }
     },
     "weatherSheet": {
       "icon": [

@@ -1844,6 +1844,10 @@ Nguồn `source/Photo-Empty.dc.html` · ảnh `screens/@2x/PhotoEmpty.png`
 
 ## 17. Kiểu XP (Luna) — giao diện toàn máy
 
+> **P-2026-11-26.22 — Ngày và Giờ chạm được:** 3 tab (Ngày và giờ / Múi giờ / Internet), tháng + năm tách, danh sách tháng, chọn múi giờ, đồng bộ lại — xem mục XP-Real.
+
+> **P-2026-11-26.21 — bỏ bong bóng thời tiết:** xem mục XP-Desk-Tray.
+
 > **P-2026-11-26.20 — Start menu kiểu XP:** app chạm start → thiết bị vẽ Start menu 2 cột + menu con Tất cả chương trình — xem mục XP-Start.
 
 > **P-2026-11-26.19 — biểu tượng desktop kiểu XP:** Codex / Ảnh / Thùng rác thành bitmap màu 32×23 — xem mục XP-Real.
@@ -2749,6 +2753,8 @@ Nguồn `source/XP-Desk-Tray.dc.html`, `source/XP-Desk-Balloon.dc.html` · ảnh
 
 - **Khay** (mọi màn có thanh tác vụ, khi skill Thời tiết bật): x 176–239 (rộng thêm 20 px), viền trái xpTrayEdge x 176, hàng sáng xpTrayHi y 214; biểu tượng thời tiết 16×14 màu xpIconWarn `#F2C200` tại (180, 220); giờ JBMono-11 white TC (218, 221) như cũ. Skill Thời tiết tắt → khay như cũ (x 196). Thanh tác vụ khi đó chứa tối đa **3** nút cửa sổ (x 71 / 101 / 131).
 - **Desktop bình thường** (`XPDeskTray`): không có bong bóng; cột 1 xếp được tới 4 biểu tượng (y 8 / 56 / 104 / 152).
+> **P-2026-11-26.21 — bỏ bong bóng thời tiết:** desktop không bao giờ hiện bong bóng (bỏ hai mục Bong bóng / Khi hiện dưới đây). Biểu tượng thời tiết ở khay giữ (180, 220); app chạm nó → mở cửa sổ Thời tiết, tab Hiện tại. Thời tiết chỉ còn ở khay + cửa sổ Thời tiết.
+
 - **Bong bóng** (`XPDeskBalloon`, XP notification balloon): hộp (96, 138, 140×62) viền đen 1 px, nền xpInfoBar, góc bo 2 px theo bậc; đuôi mở từ đáy x 178–190 xuống đỉnh (190, 211), cạnh phải thẳng, chỉ vào biểu tượng khay. Tiêu đề: icon thời tiết xpAmber (102, 144) + `Thời tiết` JBMono-12B (122, 144); nút × 12×12 tại (220, 143) (viền xpDim, nền white, × đen 6×6). Thân: `29° · Ít mây` JBMono-11 (102, 164), `cảm giác 33°` xpLabel (102, 178). Đè lên biểu tượng desktop.
 - **Khi hiện**: ~10 s khi vào desktop, và khi thời tiết đổi (mô tả khác hoặc nhiệt độ lệch ≥ 3°) lúc desktop đang hiện; rồi tự ẩn (vẽ lại hình nền + biểu tượng dưới hộp và đuôi). App chạm biểu tượng khay → hiện lại 10 s; chạm × → ẩn ngay. Thẻ agent chen ngang → ẩn. Mỗi lúc một bong bóng. Thời tiết chưa có / lỗi: thân `Chưa có thời tiết` xpDim.
 
@@ -2955,6 +2961,33 @@ Thành phần XP thật: hộp thoại *Date and Time Properties*, trang thuộc
 - Groupbox trên trang tab: nền nhãn white (không phải xpBody).
 
 **Đồng hồ = Ngày và Giờ** (`XPClockProps`; kênh `Clock`). Tiêu đề cửa sổ `Ngày và Giờ` 12B (77 px).
+
+> **P-2026-11-26.22 — Ngày và Giờ chạm được, 3 tab** (`XPClockProps`, `XPClockMonth`, `XPClockZone`, `XPClockNet`; source
+> `XP-Clock-Props|Month|Zone|Net.dc.html`). Theo *Date and Time Properties* XP thật (tab *Date & Time*, *Time Zone*, *Internet
+> Time*). Thay các hàng `tab` và `ô tháng` của bảng dưới; các khối khác giữ.
+>
+> - **Tab**: `Ngày và giờ` (6, 87 rộng) · `Múi giờ` (93, 59) · `Internet` (152, 66; chữ 56 px). Tab chọn như cũ (viền trên
+>   xpWelcomeOrange + 2 hàng xpFlagYellow); app chạm tab → đổi trang, vẽ lại trang (7, 42, 226×167) + 3 tab.
+> - **Ô tháng** (14, 62, 67×16): chữ `Thg 11` TL (17, 63) 42 px (tên tháng ngắn của Windows tiếng Việt, `Thg 1`…`Thg 12`);
+>   nút xổ (66, 63, 14×14) xpBtn + tam giác white. **Ô năm** (85, 62, 44×16): `2026` TL (87, 63) 28 px; nút tăng giảm
+>   (116, 63, 12×14) xpBody, vạch giữa xpFieldBorder, tam giác black. ▲▼ năm → lịch năm đó.
+> - **Danh sách tháng mở** (`XPClockMonth`): (14, 78, 67×119) viền black 1 px, nền white; 9 dòng × 13 từ y 79, chữ TL (17,
+>   dòng); dòng tháng đang xem xpSelect (15, dòng, 55×13) chữ white. Thanh cuộn x 70–79 nền `#F4F3EE`, nút ▲ / ▼ 10×10
+>   xpBtnEdge / xpBtn + mũi tên white 3×2, con trượt xpBtn viền xpBtnEdge. Chọn tháng → đóng danh sách, vẽ lại ô tháng + lịch.
+> - **Chạm một ngày** → ô đó xpSelect chữ white (bỏ tô ô cũ); hôm nay không còn tô nếu chọn ngày khác. Chỉ để xem.
+> - **Ô giờ chỉ đọc** (giờ đồng bộ Internet): nền xpBody thay white, nút tăng giảm (208, 153) tam giác xpDim.
+> - **Tab Múi giờ** (`XPClockZone`): ô chọn (12, 50, 216×18), `(GMT+07:00) Hà Nội` TL (15, 52) 126 px, nút xổ (213, 52).
+>   Bản đồ (12, 74, 218×90) viền xpFieldBorder; lưới 27 × 11 ô 8 px từ (13, 75): biển `#3C7FD8`, đất `#5E9E36`; cột múi đang
+>   chọn (cột = round((kinh độ giữa múi + 180) / 13,33)) biển `#7FB0EE`, đất `#8FCF5A`. Hình đất: bảng `land` trong token.
+>   ☐ (12, 172, 13×13) mờ (viền xpDim, nền xpBody) + `Tự chỉnh giờ mùa hè` xpDim TL (30, 172) 133 px — mờ vì múi không có giờ
+>   mùa hè. Chạm ô chọn → danh sách múi giờ (cùng kiểu danh sách tháng, rộng 216); chọn → đổi múi giờ thiết bị, vẽ lại.
+> - **Tab Internet** (`XPClockNet`): ☑ (12, 52) viền xpFieldBorder, dấu xpCheck 7×6 tại (+3, +3) + `Tự đồng bộ với máy chủ`
+>   (30, 52) 154 px; `Máy chủ:` (12, 77) 56 px + ô (72, 74, 156×18) `pool.ntp.org` (75, 76) 84 px + nút xổ (213, 76); nút XP
+>   (125, 98, 103×21) viền `#003C74` góc cắt 1 px, nền `#F4F3EE`, 2 hàng đáy `#D6D0C5`, `Cập nhật ngay` căn giữa 91 px;
+>   `Đã đồng bộ lúc 14:00` (12, 130) 140 px, `ngày 26/11/2026.` (12, 144) 112 px, `Lần tới: 15:00.` xpLabel (12, 166) 105 px.
+>   Chạm `Cập nhật ngay` → đồng bộ lại; xong → vẽ lại 3 dòng trạng thái.
+> - Không có OK / Hủy / Áp dụng (không đủ chỗ): mọi thay đổi áp ngay.
+
 
 | khối | tọa độ | màu / font | chữ, rộng đo |
 |---|---|---|---|
