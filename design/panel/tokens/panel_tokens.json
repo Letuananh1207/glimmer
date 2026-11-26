@@ -1447,7 +1447,49 @@
         14
       ],
       "lit": 3,
-      "stepMs": 200
+      "stepMs": 200,
+      "globe": [
+        30,
+        36,
+        24,
+        24
+      ],
+      "folder": [
+        186,
+        38,
+        24,
+        20
+      ],
+      "paper": {
+        "size": [
+          10,
+          11
+        ],
+        "x": [
+          60,
+          80,
+          100,
+          120,
+          140,
+          160
+        ],
+        "y": [
+          48,
+          43,
+          40,
+          40,
+          43,
+          48
+        ],
+        "stepMs": 200
+      },
+      "source": [
+        120,
+        140,
+        "TC",
+        "JBMono-11",
+        "xpMuted"
+      ]
     },
     "boot": {
       "bg": "bg",
@@ -1911,6 +1953,65 @@
         ],
         "minimized": "cửa sổ đang thu nhỏ: Khôi phục sáng, Thu nhỏ mờ"
       }
+    },
+    "open": {
+      "use": "P-2026-11-26.16 — thứ tự lên màn của cửa sổ",
+      "from": [
+        71,
+        217,
+        28,
+        20
+      ],
+      "fromStepX": 30,
+      "to": [
+        0,
+        0,
+        240,
+        22
+      ],
+      "zoomT": [
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "zoomStepMs": 40,
+      "zoomColors": [
+        "xpTitle",
+        "xpTitleHi",
+        "xpTitleLight",
+        "xpTitleEdge"
+      ],
+      "zoomOn": "khôi phục từ thu nhỏ / thu nhỏ",
+      "emptyFrameMs": 200
+    },
+    "cursor": {
+      "use": "con trỏ Working in Background",
+      "arrow": [
+        132,
+        160,
+        12,
+        19
+      ],
+      "hourglass": [
+        142,
+        169,
+        9,
+        12
+      ],
+      "hourglassFlat": [
+        140,
+        171,
+        12,
+        9
+      ],
+      "frames": 4,
+      "stepMs": 200,
+      "colors": [
+        "black",
+        "white",
+        "xpAmber"
+      ]
     }
   }
 }

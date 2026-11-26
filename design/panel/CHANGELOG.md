@@ -5,6 +5,35 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-26.16 — Mở cửa sổ như XP: nút lún, thanh tiêu đề bay, khung trước, con trỏ chờ, hộp tải về
+
+- **Mọi kênh có cửa sổ** (`source/XP-Open-1|2|3.dc.html`, `XP-Open-Play.dc.html`; `screen_specs.md` §17 mục XP-Open;
+  ảnh `XPOpen1.png`, `XPOpen2.png`, `XPOpen3.png`):
+  - Nút cửa sổ trên thanh tác vụ lún trước; chỉ vẽ lại nút đổi, không vẽ lại cả thanh tác vụ (máy đang vẽ lại cả dải sau cửa sổ).
+  - Khôi phục cửa sổ đang thu nhỏ: thanh tiêu đề bay từ nút (71 + 30k, 217, 28×20) lên (0, 0, 240×22), 4 bước × 40 ms,
+    dải xpTitle / xpTitleHi / xpTitleLight / xpTitleEdge, vệt giữ lại tới khi cửa sổ phủ. Thu nhỏ: ngược lại. Mở mới /
+    chuyển cửa sổ phía sau / thẻ agent: không bay (như XP thật — thành phần "Animate windows").
+  - Khung trước: tiêu đề + khung + thân xpBody trống 200 ms, rồi nội dung.
+  - Con trỏ "Working in Background" (mũi tên 12×19 mũi (132, 160) + đồng hồ cát 9×12 tại (142, 169), 4 khung × 200 ms) từ
+    lúc khung hiện tới khi có nội dung.
+- **Đang tải Claude / Codex / Thời tiết / AI** (`source/XP-Load-Claude.dc.html`, `XP-Load-Static.dc.html`; ảnh `XPLoad.png`):
+  hộp tải về kiểu XP — quả địa cầu 24×24 (30, 36) → tờ giấy bay 6 vị trí → thư mục 24×20 (186, 38); `Đang tải...` 12B TC
+  (120, 92) 77 px và thanh chạy (50, 116) giữ nguyên; thêm `từ claude.ai` JBMono-11 xpMuted TC (120, 140) 84 px
+  (`từ chatgpt.com` 98, `từ open-meteo.com` 119); con trỏ chờ.
+- Đồng hồ khay: giữ không nhấp nháy dấu `:` (XP thật cũng không).
+- Đổi luật: "No animated transitions — every switch is an instant cut" → cho phép đúng một hiệu ứng: thanh tiêu đề bay
+  4 bước × 40 ms khi khôi phục / thu nhỏ cửa sổ (~160 ms chặn vòng lặp), và khung trống 200 ms trước nội dung. Các chuyển
+  khác vẫn cắt ngay.
+
+**Việc cần làm trong code:**
+- Thanh tác vụ: khi đổi cửa sổ trên cùng chỉ vẽ lại nút cũ và nút mới, không vẽ lại cả dải.
+- Mở cửa sổ (mọi kênh trừ Night / Attention / màn hệ thống): nút lún → (nếu khôi phục từ thu nhỏ: 4 dải tiêu đề bay theo
+  tọa độ trên) → khung + thân trống + con trỏ chờ, đợi 1 nhịp 200 ms → nội dung. Thu nhỏ: 4 dải ngược rồi vẽ desktop.
+- Con trỏ chờ: bitmap mũi tên + 4 khung đồng hồ cát (§17 XP-Open), đổi khung mỗi tick, chỉ vẽ lại ô đồng hồ cát; mất khi nội
+  dung vẽ.
+- Đang tải Claude / Codex / Thời tiết / AI: thêm quả địa cầu, thư mục, tờ giấy bay (xóa ô cũ bằng xpBody) và dòng nguồn
+  `từ <host>`; giữ nhãn và thanh chạy.
+
 ## P-2026-11-26.15 — Thời tiết thành biểu tượng khay, bong bóng hiện tạm như XP
 
 - **Desktop + thanh tác vụ** (`source/XP-Desk-Tray.dc.html`, `XP-Desk-Balloon.dc.html`; `screen_specs.md` §17 mục XP-Desk-Tray;

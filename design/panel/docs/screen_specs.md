@@ -1836,6 +1836,8 @@ Nguồn `source/Photo-Empty.dc.html` · ảnh `screens/@2x/PhotoEmpty.png`
 
 ## 17. Kiểu XP (Luna) — giao diện toàn máy
 
+> **P-2026-11-26.16 — Mở cửa sổ như XP:** nút lún trước, thanh tiêu đề bay khi khôi phục / thu nhỏ, khung trống trước nội dung, con trỏ chờ, đang tải kiểu hộp tải về. Xem mục XP-Open (thay phần "Đang tải" ở Thành phần cho các cửa sổ chưa có số liệu).
+
 > **P-2026-11-26.15 — Thời tiết thành biểu tượng khay, bong bóng hiện tạm như XP:** bỏ bong bóng luôn mở trên desktop; khay có biểu tượng thời tiết, bong bóng XP thật hiện ~10 s. Xem mục XP-Desk-Tray. Thay phần bong bóng của P-2026-11-26.12 / .14.
 
 > **P-2026-11-26.14 — Desktop theo skill, thanh tác vụ = cửa sổ đang mở:** biểu tượng desktop theo skill bật (2 cột), biểu tượng đang chọn; nút thanh tác vụ là cửa sổ đang mở, bỏ vạch tiến độ; menu chuột phải (desktop, cửa sổ); nút □ mờ. Xem mục XP-Desk / XP-Menu.
@@ -2694,3 +2696,192 @@ Nguồn `source/XP-Desk-Tray.dc.html`, `source/XP-Desk-Balloon.dc.html` · ảnh
 - **Desktop bình thường** (`XPDeskTray`): không có bong bóng; cột 1 xếp được tới 4 biểu tượng (y 8 / 56 / 104 / 152).
 - **Bong bóng** (`XPDeskBalloon`, XP notification balloon): hộp (96, 138, 140×62) viền đen 1 px, nền xpInfoBar, góc bo 2 px theo bậc; đuôi mở từ đáy x 178–190 xuống đỉnh (190, 211), cạnh phải thẳng, chỉ vào biểu tượng khay. Tiêu đề: icon thời tiết xpAmber (102, 144) + `Thời tiết` JBMono-12B (122, 144); nút × 12×12 tại (220, 143) (viền xpDim, nền white, × đen 6×6). Thân: `29° · Ít mây` JBMono-11 (102, 164), `cảm giác 33°` xpLabel (102, 178). Đè lên biểu tượng desktop.
 - **Khi hiện**: ~10 s khi vào desktop, và khi thời tiết đổi (mô tả khác hoặc nhiệt độ lệch ≥ 3°) lúc desktop đang hiện; rồi tự ẩn (vẽ lại hình nền + biểu tượng dưới hộp và đuôi). App chạm biểu tượng khay → hiện lại 10 s; chạm × → ẩn ngay. Thẻ agent chen ngang → ẩn. Mỗi lúc một bong bóng. Thời tiết chưa có / lỗi: thân `Chưa có thời tiết` xpDim.
+
+### XP-Open — mở / khôi phục / thu nhỏ cửa sổ, đang tải
+
+Nguồn `source/XP-Open-1|2|3.dc.html`, `XP-Open-Play.dc.html` (chạy thử 6 s), `XP-Load-Claude.dc.html` (động), `XP-Load-Static.dc.html` · ảnh `XPOpen1.png`, `XPOpen2.png`, `XPOpen3.png`, `XPLoad.png`. Token `themeXP.open`, `themeXP.cursor`, `themeXP.loading`.
+
+Thành phần XP thật: *Animate windows when minimizing and maximizing* (thanh tiêu đề bay giữa nút thanh tác vụ và cửa sổ), con trỏ *Working in Background* (mũi tên + đồng hồ cát), hộp thoại *File Download* (giấy bay từ quả địa cầu sang thư mục).
+
+**Thứ tự khi một cửa sổ lên màn** (mọi kênh có cửa sổ; không áp cho Night, thẻ Attention, màn hệ thống):
+
+1. **Nút lún trước** (`XPOpen1`): nút của cửa sổ trên thanh tác vụ đổi sang xpBtnPressedEdge / xpBtnPressed ngay; chỉ vẽ lại nút đó (và nút vừa nhả), **không** vẽ lại cả thanh tác vụ.
+2. **Thanh tiêu đề bay** (`XPOpen2`) — chỉ khi **khôi phục cửa sổ đang thu nhỏ** (có trong `windows.min`). Dải từ khung nút (71 + 30k, 217, 28×20) tới thanh tiêu đề (0, 0, 240×22), 4 bước t = 0,2 / 0,4 / 0,6 / 0,8 (x, y, w, h nội suy tuyến tính, làm tròn), mỗi bước 40 ms. Mỗi dải: nền xpTitle, hàng đầu xpTitleHi, hàng 2 xpTitleLight, hàng cuối xpTitleEdge. Không xóa dải trước (không có bộ đệm màn) — vệt nằm trong y 0–213 nên cửa sổ phủ hết. **Thu nhỏ** (cửa sổ vào `min`, desktop hiện): ngược lại t = 0,8 → 0,2 vẽ đè lên cửa sổ, rồi desktop vẽ phủ. Mở chương trình mới, chuyển sang cửa sổ đang mở phía sau, thẻ agent chen ngang: **không bay** (như XP thật), đi thẳng bước 3.
+3. **Khung trước** (`XPOpen3`): thanh tiêu đề + khung + thân xpBody trống (+ thanh trạng thái trống nếu kênh có), giữ 200 ms (1 nhịp tick); con trỏ chờ hiện.
+4. **Nội dung**: có dữ liệu → vẽ nội dung, con trỏ mất (nội dung vẽ đè). Chưa có dữ liệu → màn đang tải mới (dưới), con trỏ giữ tới khi có số liệu.
+
+**Con trỏ chờ** (mũi tên + đồng hồ cát): mũi tên 12×19 mũi tại (132, 160); đồng hồ cát 9×12 tại (142, 169), 4 khung × 200 ms (cát trên → chảy → dưới → nằm ngang 12×9 tại (140, 171)), lặp. Chỉ vẽ lại ô 21×22 của đồng hồ cát mỗi khung, nền xpBody. Không có trên desktop.
+
+**Đang tải** (`XPLoad`, thay mục "Đang tải" ở trên cho Claude / Codex / Thời tiết / AI khi cả cửa sổ chưa có số liệu):
+
+| khối | tọa độ | màu / font | chữ, rộng đo (VLW) |
+|---|---|---|---|
+| quả địa cầu | 24×24 tại (30, 36) | xpTitleEdge / xpIconInfo / xpGreen | — |
+| thư mục | 24×20 tại (186, 38) | xpAmber / xpUserPic | — |
+| tờ giấy | 10×11, 6 vị trí x 60 / 80 / 100 / 120 / 140 / 160, y 48 / 43 / 40 / 40 / 43 / 48; 1 vị trí / 200 ms; xóa ô cũ bằng xpBody | xpFieldBorder / white / xpDim | — |
+| nhãn | TC (120, 92) | `JBMono-12B` black | `Đang tải...` 77 px |
+| thanh chạy | (50, 116, 140×14), khối x 53 + 15i, y 119, 13×8; 3 khối sáng chạy, 1 ô / 200 ms | xpFieldBorder, white, xpBar | — |
+| nguồn | TC (120, 140) | `JBMono-11` xpMuted | `từ claude.ai` 84 · `từ chatgpt.com` 98 · `từ open-meteo.com` 119 px |
+| con trỏ chờ | như trên | — | — |
+
+Đồng hồ khay: XP thật **không** nhấp nháy dấu `:` — giữ như hiện tại, chỉ đổi theo phút.
+
+**Mũi tên (X black, W white)** (12×19):
+
+```
+X...........
+XX..........
+XWX.........
+XWWX........
+XWWWX.......
+XWWWWX......
+XWWWWWX.....
+XWWWWWWX....
+XWWWWWWWX...
+XWWWWWWWWX..
+XWWWWWWWWWX.
+XWWWWWWXXXXX
+XWWWXWWX....
+XWWXXWWX....
+XWX..XWWX...
+XX...XWWX...
+X.....XWWX..
+......XWWX..
+.......XX...
+```
+
+**Đồng hồ cát khung 0 (S xpAmber)** (9×12):
+
+```
+XXXXXXXXX
+.XSSSSSX.
+.XSSSSSX.
+..XSSSX..
+...XSX...
+...XWX...
+..XWWWX..
+.XWWWWWX.
+.XWWWWWX.
+.XWWWWWX.
+.XWWWWWX.
+XXXXXXXXX
+```
+
+**Đồng hồ cát khung 1 (S xpAmber)** (9×12):
+
+```
+XXXXXXXXX
+.XWWWWWX.
+.XWWWWWX.
+..XSSSX..
+...XSX...
+...XSX...
+..XWSWX..
+.XWWSWWX.
+.XWWWWWX.
+.XWWSWWX.
+.XSSSSSX.
+XXXXXXXXX
+```
+
+**Đồng hồ cát khung 2 (S xpAmber)** (9×12):
+
+```
+XXXXXXXXX
+.XWWWWWX.
+.XWWWWWX.
+..XWWWX..
+...XWX...
+...XWX...
+..XWWWX..
+.XWWWWWX.
+.XWSSSWX.
+.XSSSSSX.
+.XSSSSSX.
+XXXXXXXXX
+```
+
+**Đồng hồ cát khung 3 (S xpAmber)** (12×9):
+
+```
+X..........X
+XXX....XXXXX
+XWWX..XWWSSX
+XWWWXXWWSSSX
+XWWWWWWWSSSX
+XWWWXXWWSSSX
+XWWX..XWWSSX
+XXX....XXXXX
+X..........X
+```
+
+**Quả địa cầu (E xpTitleEdge, B xpIconInfo, L xpGreen)** (24×24):
+
+```
+........................
+.......EEEEEEEEEE.......
+......EEBBBBBBBBEE......
+....EELLLBBBBBBBBBEE....
+...EELLLLLLBBBBBBBBEE...
+...ELLLLLLLBBBBBLLLLE...
+..ELLLLLLLLLBBBBLLLLBE..
+.EELLLLLLLLLBBBBLLLLBEE.
+.EBLLLLLLLLLBBBBBBBBBBE.
+.EBLLLLLLLLLBBBBBBBBBBE.
+.EBLLLLLLLLLBBBBBBBBBBE.
+.EBBLLLLLLLBBBBBBBBBBBE.
+.EBBLLLLLLLBBBLLLBBBBBE.
+.EBBBBLLLBBBBLLLLLBBBBE.
+.EBBBBBBBBBBLLLLLLLBBBE.
+.EBBBBBBBBBBLLLLLLLBBBE.
+.EEBBBBBBBBBLLLLLLLBBEE.
+..EBBBBBBBBBLLLLLLLBBE..
+...EBBBBBBBBLLLLLLLBE...
+...EEBBBBBBBBLLLLLBEE...
+....EEBBBBBBBBLLLBEE....
+......EEBBBBBBBBEE......
+.......EEEEEEEEEE.......
+........................
+```
+
+**Thư mục (D xpAmber, F xpUserPic)** (24×20):
+
+```
+DDDDDDDD................
+DFFFFFFFD...............
+DFFFFFFFFDDDDDDDDDDDDDD.
+DFFFFFFFFFFFFFFFFFFFFFFD
+DFFFFFFFFFFFFFFFFFFFFFFD
+DFFFFFFFFFFFFFFFFFFFFFFD
+DFFFFFFFFFFFFFFFFFFFFFFD
+DFFFFFFFFFFFFFFFFFFFFFFD
+DFFFFFFFFFFFFFFFFFFFFFFD
+DFFFFFFFFFFFFFFFFFFFFFFD
+DFFFFFFFFFFFFFFFFFFFFFFD
+DFFFFFFFFFFFFFFFFFFFFFFD
+DFFFFFFFFFFFFFFFFFFFFFFD
+DFFFFFFFFFFFFFFFFFFFFFFD
+DFFFFFFFFFFFFFFFFFFFFFFD
+DFFFFFFFFFFFFFFFFFFFFFFD
+DFFFFFFFFFFFFFFFFFFFFFFD
+DFFFFFFFFFFFFFFFFFFFFFFD
+DDDDDDDDDDDDDDDDDDDDDDDD
+........................
+```
+
+**Tờ giấy (B xpFieldBorder, W white, L xpDim)** (10×11):
+
+```
+BBBBBBB...
+BWWWWWBB..
+BWLLLWWBB.
+BWWWWWWWB.
+BWLLLLLWB.
+BWWWWWWWB.
+BWLLLLLWB.
+BWWWWWWWB.
+BWLLLLLWB.
+BWWWWWWWB.
+BBBBBBBBB.
+```
+
