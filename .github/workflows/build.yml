@@ -12,12 +12,10 @@ name: build
 #   curl -L -O https://github.com/<owner>/glimmer/releases/download/latest/littlefs.bin
 #   curl -L -O https://github.com/<owner>/glimmer/releases/download/latest/firmware.bin
 
+# Automatic runs (push / tag / pull request) are off — only a manual run from
+# the Actions tab ("Run workflow") builds now, so `latest` is no longer
+# refreshed on every push.
 on:
-  push:
-    branches: [main]
-    tags: ['v*']
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -67,7 +65,7 @@ jobs:
         working-directory: app
         run: |
           flutter pub get
-          flutter test test/logic_test.dart
+          flutter test
           flutter build apk --release
 
       - name: Stage binaries
