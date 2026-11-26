@@ -70,6 +70,9 @@ enum AppErrorKind {
   /// DELETE /api/photos: no photo named [AppError.detail] on the device (HTTP 404).
   photoNotFound,
 
+  /// The firmware has no command for remote button [AppError.detail] (R-DK-3); nothing was sent.
+  controlUnsupported,
+
   /// The user cancelled the upload.
   cancelled,
 

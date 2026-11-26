@@ -97,7 +97,7 @@ void main() {
           GlobalCupertinoLocalizations.delegate,
         ],
         home: Scaffold(
-          body: dashboardScreen(onOpenSettings: () {}, onCropPhoto: (a) async => cropped.add(a)),
+          body: dashboardScreen(onBack: () {}, onOpenSettings: () {}, onCropPhoto: (a) async => cropped.add(a)),
         ),
       ),
     ));

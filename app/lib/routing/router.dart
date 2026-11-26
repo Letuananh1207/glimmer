@@ -5,12 +5,12 @@ import '../data/repositories/device/device_repository.dart';
 import 'routes.dart';
 import 'screens.dart';
 
-/// R-KN-3: not connected → Kết nối; connected → the 4-tab shell, on tab 1 (Màn hình). Cài Wi-Fi is allowed either way (its
+/// R-KN-3: not connected → Kết nối; connected → the 4-tab shell, on tab 1 (Điều khiển). Cài Wi-Fi is allowed either way (its
 /// flow forgets and finds the device again), above the shell.
 String? redirectFor(bool connected, String location) {
   if (location.endsWith('/${Routes.wifiSetupName}')) return null;
   if (!connected) return location == Routes.connect ? null : Routes.connect;
-  return location == Routes.connect ? Routes.dashboard : null;
+  return location == Routes.connect ? Routes.control : null;
 }
 
 /// Tab switches are instant cuts, like the old app; each visit builds the screen (and its ViewModel)
@@ -33,26 +33,44 @@ GoRouter buildRouter(DeviceRepository device) {
       ShellRoute(
         builder: (context, s, child) => homeShell(
           index: Routes.tabOf(s.matchedLocation),
-          onSelect: (i) => context.go(i == 0 ? Routes.dashboard : Routes.sharedTabs[i - 1]),
+          onSelect: (i) => context.go(i == 0 ? Routes.control : Routes.sharedTabs[i - 1]),
           child: child,
         ),
         routes: [
           GoRoute(
-            path: Routes.dashboard,
+            path: Routes.control,
             pageBuilder: (context, s) => _tab(
               s,
-              dashboardScreen(
-                onOpenSettings: () => context.go(Routes.settings),
-                onCropPhoto: (args) => context.push(Routes.photoCrop, extra: args),
+              controlScreen(
+                onOpenDetails: (skill) => context.push(Routes.detailsAt(skill)),
+                onUpdateFirmware: () => context.go(Routes.device),
+                onSetupWifi: () => context.push(Routes.deviceWifi),
               ),
             ),
             routes: [
+              // Số liệu: pushed above the tabs (no bottom bar), opens at `?tab=`.
               GoRoute(
-                path: Routes.photoCropName,
+                path: Routes.detailsName,
                 parentNavigatorKey: root,
-                // Needs the picked image: opened any other way (restored, deep link) → back to the tab.
-                redirect: (_, s) => s.extra is PhotoCropArgs ? null : Routes.dashboard,
-                builder: (context, s) => photoCropScreen(s.extra! as PhotoCropArgs, onClose: () => context.pop()),
+                builder: (context, s) => Scaffold(
+                  body: SafeArea(
+                    child: dashboardScreen(
+                      initialTab: s.uri.queryParameters['tab'],
+                      onBack: () => context.pop(),
+                      onOpenSettings: () => context.go(Routes.settings),
+                      onCropPhoto: (args) => context.push(Routes.photoCrop, extra: args),
+                    ),
+                  ),
+                ),
+                routes: [
+                  GoRoute(
+                    path: Routes.photoCropName,
+                    parentNavigatorKey: root,
+                    // Needs the picked image: opened any other way (restored, deep link) → back to Số liệu.
+                    redirect: (_, s) => s.extra is PhotoCropArgs ? null : Routes.dashboard,
+                    builder: (context, s) => photoCropScreen(s.extra! as PhotoCropArgs, onClose: () => context.pop()),
+                  ),
+                ],
               ),
             ],
           ),

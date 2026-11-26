@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import '../../../domain/models/app_error.dart';
 import '../../../domain/models/attention_card.dart';
+import '../../../domain/models/control.dart';
 import '../../../domain/models/device_photo.dart';
 import '../../../domain/models/device_state.dart';
 import '../../../domain/rules/photo_rules.dart';
@@ -15,11 +16,13 @@ import '../../services/local_store_service.dart';
 import '../../services/wifi_service.dart';
 import 'device_repository.dart';
 
+part 'device_control_calls.dart';
+
 typedef Delay = Future<void> Function(Duration);
 
 Future<void> _realDelay(Duration d) => Future<void>.delayed(d);
 
-class DeviceRepositoryLocal extends DeviceRepository {
+class DeviceRepositoryLocal extends DeviceRepository with _ControlCalls {
   DeviceRepositoryLocal({
     required DeviceApiService api,
     required DiscoveryService discovery,
@@ -42,6 +45,7 @@ class DeviceRepositoryLocal extends DeviceRepository {
   final Duration _pollEvery;
 
   String _url = '';
+  @override
   DeviceState? _state;
   List<AttentionCard> _cards = const [];
   AppError? _error;
@@ -81,6 +85,7 @@ class DeviceRepositoryLocal extends DeviceRepository {
     return AppError.from(e);
   }
 
+  @override
   Future<Result<T>> _call<T>(Future<T> Function() f) async {
     try {
       return Result.ok(await f());
@@ -89,6 +94,7 @@ class DeviceRepositoryLocal extends DeviceRepository {
     }
   }
 
+  @override
   Future<Map<String, dynamic>> _json(String method, String path,
           {Object? body, String? at, Duration timeout = const Duration(seconds: 6), int tries = 2}) =>
       _api.json(at ?? _url, method, path, token: _store.token, body: body, timeout: timeout, tries: tries);

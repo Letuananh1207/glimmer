@@ -19,6 +19,7 @@ import '../data/services/photo_picker_service.dart';
 import '../data/services/photo_store_service.dart';
 import '../data/services/releases_service.dart';
 import '../data/services/wifi_service.dart';
+import '../domain/use_cases/control_device_use_case.dart';
 import '../domain/use_cases/delete_photo_use_case.dart';
 import '../domain/use_cases/load_photos_use_case.dart';
 import '../domain/use_cases/send_photo_use_case.dart';
@@ -65,6 +66,7 @@ class Dependencies {
         Provider<PhotoRepository>.value(value: photos),
         Provider<LoadPhotosUseCase>(create: (_) => LoadPhotosUseCase(device: device, photos: photos)),
         Provider<SendPhotoUseCase>(create: (_) => SendPhotoUseCase(device: device, photos: photos)),
+        Provider<ControlDeviceUseCase>(create: (_) => ControlDeviceUseCase(device: device)),
         Provider<DeletePhotoUseCase>(create: (_) => DeletePhotoUseCase(device: device, photos: photos)),
       ];
 }

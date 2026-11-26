@@ -17,7 +17,7 @@ Các quy tắc dưới đây ghi lại hành vi app đang có lúc chuyển sang
 | --- | --- | --- | --- |
 | R-KN-1 | Tìm thiết bị theo thứ tự: địa chỉ lần trước → NSD (`_http._tcp` tên glimmer*) → `glimmer.local` → AP cài đặt `192.168.4.1`. Địa chỉ trả lời được lưu lại, trừ AP cài đặt. | Lần trước 10.0.0.9 không trả lời, NSD thấy 10.0.0.5 → thử 10.0.0.5 | ok |
 | R-KN-2 | Đã kết nối thì tự làm mới mỗi 5 s, chỉ khi app đang mở; mở lại app → làm mới ngay. | App xuống nền → ngừng hỏi thiết bị | ok |
-| R-KN-3 | Chưa kết nối → màn Kết nối; kết nối được → khung 4 tab, mở ở tab 1 (màn chính của skill đang dùng; Agent → Tổng quan). "Kết nối thiết bị khác" quên thiết bị → về Kết nối. | Bấm "Kết nối thiết bị khác" → màn Kết nối | ok |
+| R-KN-3 | Chưa kết nối → màn Kết nối; kết nối được → khung 4 tab, mở ở tab 1 (Điều khiển, từ thiết kế 2026-11-26.5; Số liệu là màn phụ đẩy từ đó). "Kết nối thiết bị khác" quên thiết bị → về Kết nối. | Bấm "Kết nối thiết bị khác" → màn Kết nối | ok |
 | R-KN-4 | Thiết bị có API token mà app chưa có → vẫn hiện trạng thái, thẻ để trống, báo cần nhập token trong Cài đặt. | `/push` trả 401 → "Thiết bị có API token — …" | ok |
 
 ## 2. Mức dùng Claude (Tổng quan)
@@ -76,4 +76,19 @@ Kênh hệ thống (Thông báo, Ban đêm, Thông tin) hiện ở mọi skill.
 | R-SK-3 | Thẻ cần duyệt / chờ trả lời vẫn chen ngang ở mọi skill. | Skill Nhạc, Claude Code xin duyệt → thẻ amber hiện | ok · miễn test (luật firmware: kênh Attention là kênh hệ thống, `test/test_logic` `test_skill_filter_and_default`) |
 | R-SK-4 | Thiết bị không báo danh sách skill bật (`skills_on`, firmware cũ) → app chỉ có skill Agent, không cho bật / tắt, không gửi gì. | Firmware 0.22 → Agent ổ khoá, Thời tiết / Đồng hồ "Luôn có" | ok |
 | R-SK-5 | Danh sách skill bật trên thiết bị khác danh sách app lưu (đổi từ trang web thiết bị) → app theo thiết bị và lưu lại. | Web tắt Đồng hồ, app lưu cả ba → app thành Agent, Thời tiết | ok |
-| R-SK-6 | Tab Ảnh trên Màn hình chỉ có khi skill Ảnh bật; quản lý ảnh khi skill tắt = bật skill trước (màn Skill gợi ý "N ảnh đã có trên thiết bị. Bật để xoay." khi thiết bị đã có ảnh). Firmware chưa có ảnh (`/api/state` không có `photos`) → dòng Ảnh "Cần firmware mới" + nút Cập nhật, không bật được. | Ảnh tắt, thiết bị có 5 ảnh → mô tả mint "5 ảnh đã có…"; bật Ảnh → tab Ảnh thứ 2 | ok |
+| R-SK-6 | Tab Ảnh trên Số liệu chỉ có khi skill Ảnh bật; quản lý ảnh khi skill tắt = bật skill trước (màn Skill gợi ý "N ảnh đã có trên thiết bị. Bật để xoay." khi thiết bị đã có ảnh). Firmware chưa có ảnh (`/api/state` không có `photos`) → dòng Ảnh "Cần firmware mới" + nút Cập nhật, không bật được. | Ảnh tắt, thiết bị có 5 ảnh → mô tả mint "5 ảnh đã có…"; bật Ảnh → tab Ảnh thứ 2 | ok |
+
+## 8. Điều khiển thiết bị (tab 1)
+
+Từ thiết kế 2026-11-26.5 (`docs/tasks/2026-11-26-thiet-ke-2026-11-26.5.md`): tab 1 là remote của thiết bị — ô màn vẽ
+lại màn thiết bị, nút kênh trước / sau, dừng xoay, nhảy tới skill, độ sáng, tắt màn, chế độ đêm. Người dùng chốt
+2026-11-26.
+
+| Mã | Quy tắc | Ví dụ | App |
+| --- | --- | --- | --- |
+| R-DK-1 | Bấm nút điều khiển → ô màn đổi ngay theo lệnh (lạc quan) + chip "Đang gửi…", rồi gửi lệnh. Thiết bị trả kênh / trạng thái khác điều app chờ, hoặc không trả lời → ô màn về theo thiết bị và báo (thanh báo có Thử lại do người dùng bấm); app không tự gửi lại. | Bấm Thời tiết, thiết bị trả `active: Claude` → ô màn về Claude, báo "Thiết bị không nhận lệnh"; không có lệnh thứ hai | ok |
+| R-DK-2 | "Bỏ thẻ khỏi màn" chỉ gỡ thẻ đó khỏi màn thiết bị (`/push/clear {id}`); app không duyệt / trả lời hộ agent, không có nút duyệt. | Thẻ Bash cần duyệt giữ màn → bấm Bỏ thẻ → gửi `{id}` của thẻ, không gửi gì cho agent | ok |
+| R-DK-3 | Lệnh firmware chưa có (biết từ `/api/state`: không có `paused` → kênh trước, dừng xoay, bỏ một thẻ; không có `screen_on` → tắt màn) → nút khoá (mờ + ổ khoá) + thanh báo gợi ý cập nhật firmware; bấm không gửi gì. | Firmware 0.24 không báo `paused` → Kênh trước khoá, bấm không có `POST` | ok |
+| R-DK-4 | Dừng xoay là tạm (`/api/channel {"action":"pause"}`), không đổi `autoRotate` đã lưu; thiết bị khởi động lại thì xoay tiếp. | Dừng xoay → không có `POST /api/settings`; `paused` mất sau khởi động lại | ok |
+| R-DK-5 | Độ sáng chỉ gửi khi thả tay (`brightness` qua `/api/settings`, như Cài đặt); đang kéo chỉ đổi trên app. | Kéo 50 → 80 rồi thả → đúng một lệnh `brightness: 80` | ok |
+| R-DK-6 | Ô màn vẽ theo `/api/state`; mở app / về tab 1 (cả khi quay lại từ Số liệu) thì đọc lại trạng thái ngay. | Mở tab Điều khiển → `GET /api/state` ngay, không đợi lượt 5 s | ok |

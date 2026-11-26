@@ -8,6 +8,7 @@ import 'package:glimmer_app/data/repositories/photo/photo_repository_local.dart'
 import 'package:glimmer_app/data/repositories/release/release_repository.dart';
 import 'package:glimmer_app/data/repositories/skill/skill_repository.dart';
 import 'package:glimmer_app/data/repositories/skill/skill_repository_local.dart';
+import 'package:glimmer_app/domain/use_cases/control_device_use_case.dart';
 import 'package:glimmer_app/domain/use_cases/delete_photo_use_case.dart';
 import 'package:glimmer_app/domain/use_cases/load_photos_use_case.dart';
 import 'package:glimmer_app/domain/use_cases/send_photo_use_case.dart';
@@ -112,7 +113,7 @@ void main() {
 
   group('Tổng quan', () {
     testWidgets('loading while there is no state yet', (t) async {
-      await t.pumpWidget(_app(rig, dashboardScreen(onOpenSettings: () {}, onCropPhoto: (_) async {})));
+      await t.pumpWidget(_app(rig, dashboardScreen(onBack: () {}, onOpenSettings: () {}, onCropPhoto: (_) async {})));
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
@@ -120,7 +121,7 @@ void main() {
       await t.runAsync(() => rig.connect(_url, _state(projects: [
             {'project': 'glimmer', 'agent': 'claude', 'state': 'approval', 'detail': 'Bash', 'shown': true},
           ])));
-      await t.pumpWidget(_app(rig, dashboardScreen(onOpenSettings: () {}, onCropPhoto: (_) async {})));
+      await t.pumpWidget(_app(rig, dashboardScreen(onBack: () {}, onOpenSettings: () {}, onCropPhoto: (_) async {})));
       await _frames(t);
       expect(find.text(_vi.dashboardUsageTitle), findsOneWidget);
       expect(find.text('66'), findsOneWidget);
@@ -130,7 +131,7 @@ void main() {
 
     testWidgets('empty: no key, empty board text', (t) async {
       await t.runAsync(() => rig.connect(_url, _state(key: false)));
-      await t.pumpWidget(_app(rig, dashboardScreen(onOpenSettings: () {}, onCropPhoto: (_) async {})));
+      await t.pumpWidget(_app(rig, dashboardScreen(onBack: () {}, onOpenSettings: () {}, onCropPhoto: (_) async {})));
       await _frames(t);
       expect(find.text(_vi.dashboardUsageNoKey), findsOneWidget);
       expect(find.text(_vi.dashboardProjectsEmpty), findsOneWidget);
@@ -138,17 +139,17 @@ void main() {
 
     testWidgets('R-DUNG-2 stale: "số liệu cũ (25m trước)"', (t) async {
       await t.runAsync(() => rig.connect(_url, _state(stale: true)));
-      await t.pumpWidget(_app(rig, dashboardScreen(onOpenSettings: () {}, onCropPhoto: (_) async {})));
+      await t.pumpWidget(_app(rig, dashboardScreen(onBack: () {}, onOpenSettings: () {}, onCropPhoto: (_) async {})));
       await _frames(t);
       expect(find.text(_vi.dashboardUsageStale('25m')), findsOneWidget);
     });
 
-    testWidgets('setup mode: amber note and setup line', (t) async {
+    testWidgets('setup mode: amber note (the header line went with the Số liệu top bar)', (t) async {
       await t.runAsync(() => rig.connect(DeviceRepository.setupApUrl, _state(wifi: 'ap')));
-      await t.pumpWidget(_app(rig, dashboardScreen(onOpenSettings: () {}, onCropPhoto: (_) async {})));
+      await t.pumpWidget(_app(rig, dashboardScreen(onBack: () {}, onOpenSettings: () {}, onCropPhoto: (_) async {})));
       await _frames(t);
       expect(find.text(_vi.dashboardSetupNote), findsOneWidget);
-      expect(find.text(_vi.dashboardSetupMode('192.168.4.1')), findsOneWidget);
+      expect(find.text(_vi.detailsTitle), findsOneWidget);
     });
   });
 
@@ -190,7 +191,7 @@ void main() {
         await rig.repo.connectTo(_url);
         await rig.repo.refresh();
       });
-      await t.pumpWidget(_app(rig, dashboardScreen(onOpenSettings: onOpenSettings ?? () {}, onCropPhoto: (_) async {})));
+      await t.pumpWidget(_app(rig, dashboardScreen(onBack: () {}, onOpenSettings: onOpenSettings ?? () {}, onCropPhoto: (_) async {})));
       await _frames(t);
     }
 
@@ -350,7 +351,7 @@ void main() {
     test('R-KN-3 redirect: Kết nối until connected, then the tabs; Cài Wi-Fi always allowed', () {
       expect(redirectFor(false, Routes.dashboard), Routes.connect);
       expect(redirectFor(false, Routes.connect), isNull);
-      expect(redirectFor(true, Routes.connect), Routes.dashboard);
+      expect(redirectFor(true, Routes.connect), Routes.control);
       expect(redirectFor(true, Routes.settings), isNull);
       expect(redirectFor(false, Routes.deviceWifi), isNull);
       expect(redirectFor(true, Routes.connectWifi), isNull);
@@ -366,6 +367,7 @@ void main() {
           Provider<BackupRepository>.value(value: FakeBackupRepository()),
           ChangeNotifierProvider<SkillRepository>.value(value: skills),
           Provider<ToggleSkillUseCase>.value(value: ToggleSkillUseCase(skills: skills, device: rig.repo)),
+          Provider<ControlDeviceUseCase>.value(value: ControlDeviceUseCase(device: rig.repo)),
           ...photoProviders(rig),
         ],
         child: MaterialApp.router(
@@ -384,10 +386,10 @@ void main() {
       expect(find.text(_vi.connectRetry), findsOneWidget);
       await t.runAsync(() => rig.connect(_url, _state()));
       await _frames(t);
-      // 4 tabs, opened on tab 1 = Màn hình.
-      expect(find.text(_vi.navHome), findsOneWidget);
+      // 4 tabs, opened on tab 1 = Điều khiển.
+      expect(find.text(_vi.navControl), findsOneWidget);
       expect(find.text(_vi.navSkills), findsOneWidget);
-      expect(find.text(_vi.dashboardUsageTitle), findsOneWidget);
+      expect(find.byTooltip(_vi.controlRefreshA11y), findsOneWidget);
       rig.repo.forget();
       for (var i = 0; i < 10; i++) {
         await t.pump(const Duration(milliseconds: 100));

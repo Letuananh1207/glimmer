@@ -254,10 +254,10 @@ void main() {
     });
   });
 
-  testWidgets('4 tabs: tab 1 is Màn hình with the agents-waiting badge', (t) async {
+  testWidgets('4 tabs: tab 1 is Điều khiển with the agents-waiting badge', (t) async {
     await t.pumpWidget(_app(HomeShell(waiting: 2, badge: '2', index: 1, onSelect: (_) {}, child: const SizedBox())));
     await _frames(t);
-    for (final label in [_vi.navHome, _vi.navSkills, _vi.navSettings, _vi.navDevice]) {
+    for (final label in [_vi.navControl, _vi.navSkills, _vi.navSettings, _vi.navDevice]) {
       expect(find.text(label), findsOneWidget, reason: label);
     }
     expect(find.text('2'), findsOneWidget);

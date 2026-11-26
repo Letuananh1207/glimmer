@@ -1109,4 +1109,843 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get devPhotoLoadErrorTitle => 'Chưa tải được danh sách ảnh';
+
+  @override
+  String get navControl => 'Điều khiển';
+
+  @override
+  String get controlRefreshA11y => 'Làm mới số liệu';
+
+  @override
+  String controlScreenA11y(String channel) {
+    return 'Màn thiết bị đang hiện $channel. Chạm để xem số liệu, vuốt để đổi kênh';
+  }
+
+  @override
+  String controlNextIn(int seconds) {
+    return '· đổi kênh sau $seconds s';
+  }
+
+  @override
+  String get controlJustSwitched => '· vừa chuyển';
+
+  @override
+  String get controlPausedNote => '· đã dừng xoay, giữ kênh này';
+
+  @override
+  String get controlScreenOffTitle => 'Màn đang tắt';
+
+  @override
+  String get controlScreenOffNote => '· bấm Bật màn để mở lại';
+
+  @override
+  String get controlScreenOffOverlay => 'MÀN ĐANG TẮT';
+
+  @override
+  String get controlNightTitle => 'Chế độ đêm';
+
+  @override
+  String controlNightNote(String time) {
+    return '· tới $time, không xoay kênh';
+  }
+
+  @override
+  String get controlPrev => 'Kênh trước';
+
+  @override
+  String get controlNext => 'Kênh sau';
+
+  @override
+  String get controlPause => 'Dừng xoay';
+
+  @override
+  String get controlResume => 'Tiếp tục xoay';
+
+  @override
+  String get controlJumpGroupA11y => 'Nhảy tới tab';
+
+  @override
+  String controlJumpA11y(String skill) {
+    return 'Hiện $skill trên thiết bị';
+  }
+
+  @override
+  String get controlBrightness => 'Độ sáng';
+
+  @override
+  String get controlScreenOff => 'Tắt màn';
+
+  @override
+  String get controlScreenOn => 'Bật màn';
+
+  @override
+  String get controlNight => 'Chế độ đêm';
+
+  @override
+  String get controlDetails => 'Số liệu';
+
+  @override
+  String get controlSending => 'Đang gửi…';
+
+  @override
+  String controlFailed(String command) {
+    return 'Thiết bị không nhận lệnh \"$command\".';
+  }
+
+  @override
+  String get controlCardLabel => 'THẺ AGENT ĐANG CHIẾM MÀN';
+
+  @override
+  String controlCardBody(String agent, String project, String tool) {
+    return '$agent · $project cần bạn duyệt $tool';
+  }
+
+  @override
+  String controlCardBodyInput(String agent, String project) {
+    return '$agent · $project đang chờ bạn trả lời';
+  }
+
+  @override
+  String get controlCardNote =>
+      'Duyệt trên máy tính. Bỏ thẻ chỉ gỡ nó khỏi màn thiết bị.';
+
+  @override
+  String get controlDismissCard => 'Bỏ thẻ khỏi màn';
+
+  @override
+  String controlSingleNote(String skill) {
+    return 'Chỉ skill $skill đang bật — ‹ › đi qua các kênh của skill này và Thông tin.';
+  }
+
+  @override
+  String get controlOldFwTitle => 'Firmware chưa có đủ nút';
+
+  @override
+  String controlOldFwBody(String version, String missing) {
+    return 'Thiết bị đang chạy $version: chưa có $missing.';
+  }
+
+  @override
+  String get controlUpdateFirmware => 'Cập nhật firmware';
+
+  @override
+  String get controlSetupTitle => 'Thiết bị đang ở glimmer-setup';
+
+  @override
+  String get controlSetupBody =>
+      'Thiết bị chưa vào được Wi-Fi nên chưa điều khiển được.';
+
+  @override
+  String get controlSetupAction => 'Cài Wi-Fi';
+
+  @override
+  String get controlOfflineTitle => 'Không thấy thiết bị';
+
+  @override
+  String controlOfflineBody(String ip, String ago) {
+    return 'Không trả lời ở $ip từ $ago trước.';
+  }
+
+  @override
+  String get controlOfflineOverlay => 'Mất kết nối';
+
+  @override
+  String get controlOfflineOverlayNote => 'hình cuối cùng app nhận được';
+
+  @override
+  String get detailsTitle => 'Số liệu';
+
+  @override
+  String get detailsBackA11y => 'Về Điều khiển';
+
+  @override
+  String get devErrControlUnsupported =>
+      'Firmware chưa có lệnh này — cập nhật firmware.';
+
+  @override
+  String get devControlMissingPrev => 'kênh trước';
+
+  @override
+  String get devControlMissingPause => 'dừng xoay';
+
+  @override
+  String get devControlMissingScreen => 'tắt màn';
+
+  @override
+  String devXpWeekday(String day) {
+    String _temp0 = intl.Intl.selectLogic(day, {
+      '1': 'Thứ Hai',
+      '2': 'Thứ Ba',
+      '3': 'Thứ Tư',
+      '4': 'Thứ Năm',
+      '5': 'Thứ Sáu',
+      '6': 'Thứ Bảy',
+      'other': 'Chủ Nhật',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get devXpTitleAi => 'AI hôm nay';
+
+  @override
+  String get devXpTitleAgents => 'Tác tử';
+
+  @override
+  String get devXpTitleClock => 'Đồng hồ';
+
+  @override
+  String get devXpTitleForecast => 'Dự báo';
+
+  @override
+  String get devXpTitleInfo => 'Thông tin';
+
+  @override
+  String get devXpTitlePhoto => 'Ảnh';
+
+  @override
+  String get devXpTitleSetup => 'Cài đặt';
+
+  @override
+  String get devXpTitleTrend => 'Xu hướng';
+
+  @override
+  String get devXpTitleWeather => 'Thời tiết';
+
+  @override
+  String get devXpCardNeedApproval => 'Cần bạn duyệt';
+
+  @override
+  String get devXpCardDoneTitle => 'Xong rồi!';
+
+  @override
+  String devXpCardRunningPct(int pct) {
+    return 'Đang chạy $pct%';
+  }
+
+  @override
+  String devXpCardFinished(String name) {
+    return '$name đã xong';
+  }
+
+  @override
+  String devXpCardWaitingAnswer(String name) {
+    return '$name đang chờ câu trả lời';
+  }
+
+  @override
+  String devXpCardWaitStatus(String age) {
+    return 'chờ bạn · $age';
+  }
+
+  @override
+  String devXpSeconds(int n) {
+    return '$n giây';
+  }
+
+  @override
+  String devXpShortDur(int n, String unit) {
+    String _temp0 = intl.Intl.selectLogic(unit, {
+      'minutes': 'P',
+      'hours': 'G',
+      'other': 'NG',
+    });
+    return '$n$_temp0';
+  }
+
+  @override
+  String get devXpRowNeedYou => 'Cần bạn';
+
+  @override
+  String get devXpRowWaitingYou => 'Đang chờ bạn';
+
+  @override
+  String devXpKindWord(String kind) {
+    String _temp0 = intl.Intl.selectLogic(kind, {
+      'approval': 'Phê duyệt',
+      'error': 'Lỗi',
+      'input': 'Chờ bạn',
+      'progress': 'Tiến độ',
+      'warning': 'Cảnh báo',
+      'success': 'Xong',
+      'other': 'Thông tin',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String devXpMoreItems(int n) {
+    return '+ $n mục khác';
+  }
+
+  @override
+  String devXpItems(int n) {
+    return '$n mục';
+  }
+
+  @override
+  String devXpNApprovals(int n) {
+    return '$n cần duyệt';
+  }
+
+  @override
+  String devXpNInputs(int n) {
+    return '$n lượt bạn';
+  }
+
+  @override
+  String get devXpNoneWaiting => 'không mục nào chờ';
+
+  @override
+  String get devXpDeskTrash => 'Thùng rác';
+
+  @override
+  String devXpDeskNow(int temp, String desc) {
+    return '$temp° · $desc';
+  }
+
+  @override
+  String devXpDeskFeels(int temp) {
+    return 'cảm giác $temp°';
+  }
+
+  @override
+  String get devXpDeskNoWeather => 'chưa có thời tiết';
+
+  @override
+  String get devXpSetupHead => 'Hoàn tất cài đặt';
+
+  @override
+  String devXpSetupLeft(int n) {
+    return 'Còn $n bước nữa là xong.';
+  }
+
+  @override
+  String get devXpSetupClaude => 'Khóa Claude';
+
+  @override
+  String get devXpSetupCodex => 'Token Codex';
+
+  @override
+  String get devXpSetupWeather => 'Thời tiết, vị trí, giờ';
+
+  @override
+  String get devXpSetupOpen => 'Mở trong trình duyệt';
+
+  @override
+  String get devXpPhotoEmpty => 'Chưa có ảnh';
+
+  @override
+  String get devXpPhotoSend => 'Gửi ảnh từ app glimmer';
+
+  @override
+  String get devXpPhotoOr => 'hoặc';
+
+  @override
+  String get devXpWeatherLoading => 'Đang tải thời tiết...';
+
+  @override
+  String get devXpWeatherErrorHead => 'Chưa có thời tiết';
+
+  @override
+  String devXpWeatherErrHttp(int code) {
+    return 'Máy chủ trả lỗi $code.';
+  }
+
+  @override
+  String get devXpWeatherErrConnect => 'Không kết nối được.';
+
+  @override
+  String get devXpWeatherErrBegin => 'Không mở được kết nối.';
+
+  @override
+  String get devXpWeatherErrJson => 'Dữ liệu lỗi.';
+
+  @override
+  String get devXpWeatherErrNoCurrent => 'Thiếu số liệu hiện tại.';
+
+  @override
+  String get devXpWeatherErrUnknown => 'Không rõ lỗi.';
+
+  @override
+  String get devXpWeatherRetrying => 'Đang tự thử lại...';
+
+  @override
+  String devXpWeatherFeels(int t) {
+    return 'cảm giác $t°';
+  }
+
+  @override
+  String devXpWeatherHumidity(int n) {
+    return 'ẩm $n%';
+  }
+
+  @override
+  String devXpWeatherWind(int n) {
+    return 'gió ${n}km';
+  }
+
+  @override
+  String get devXpDayToday => 'Nay';
+
+  @override
+  String get devXpDayTomorrow => 'Mai';
+
+  @override
+  String get devXpDayAfter => 'Kia';
+
+  @override
+  String devXpWeatherSun(String event, String time) {
+    String _temp0 = intl.Intl.selectLogic(event, {
+      'set': 'Mặt trời lặn',
+      'other': 'Mặt trời mọc',
+    });
+    return '$_temp0 $time';
+  }
+
+  @override
+  String devXpWeatherUpdated(String age) {
+    return 'Cập nhật $age trước';
+  }
+
+  @override
+  String devXpStaleMeta(String age) {
+    return 'cũ $age';
+  }
+
+  @override
+  String devXpSpanShort(String unit, int n) {
+    String _temp0 = intl.Intl.selectLogic(unit, {
+      'minutes': '${n}P',
+      'hours': '${n}G',
+      'other': '${n}NG',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String devXpSpanLong(String unit, int n) {
+    String _temp0 = intl.Intl.selectLogic(unit, {
+      'minutes': '$n phút',
+      'hours': '$n giờ',
+      'other': '$n ngày',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get devXpForecastEmpty => 'Chưa có dự báo';
+
+  @override
+  String get devXpForecastNext3 => '3 ngày tới';
+
+  @override
+  String devXpClockGreeting(String slot, String name) {
+    String _temp0 = intl.Intl.selectLogic(slot, {
+      'night': 'ngủ ngon nhé',
+      'morning': 'chào buổi sáng',
+      'afternoon': 'chào buổi chiều',
+      'evening': 'chào buổi tối',
+      'other': 'nghỉ ngơi thôi',
+    });
+    return '$_temp0, $name';
+  }
+
+  @override
+  String get devXpClockYou => 'bạn';
+
+  @override
+  String devXpClockWeek(int n) {
+    return 'Tuần $n';
+  }
+
+  @override
+  String devXpInfoLabels(String row) {
+    String _temp0 = intl.Intl.selectLogic(row, {
+      'ip': 'IP',
+      'ssid': 'SSID',
+      'rssi': 'Sóng',
+      'up': 'Đã chạy',
+      'heap': 'Bộ nhớ',
+      'block': 'Khối lớn',
+      'fw': 'Firmware',
+      'channels': 'Kênh',
+      'updated': 'Cập nhật',
+      'other': 'Lần tới',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String devXpInfoMinutes(int n) {
+    return '${n}P';
+  }
+
+  @override
+  String devXpInfoHeap(int n) {
+    return '${n}K trống';
+  }
+
+  @override
+  String devXpInfoAgo(int n) {
+    return '${n}P trước';
+  }
+
+  @override
+  String devXpInfoNext(int n) {
+    return 'sau ${n}P';
+  }
+
+  @override
+  String get devXpSetupLine1 => 'Để bắt đầu,';
+
+  @override
+  String get devXpSetupLine2 => 'kết nối Wi-Fi';
+
+  @override
+  String get devXpSetupPower => 'Cài đặt Wi-Fi';
+
+  @override
+  String get devXpOtaWarn => 'Đừng tắt hay rút điện máy.';
+
+  @override
+  String get devXpNoChannelsHead => 'Chưa có kênh';
+
+  @override
+  String get devXpNoChannelsLine => 'Bật kênh trên trang web:';
+
+  @override
+  String get devXpCardApproval => 'Cần duyệt';
+
+  @override
+  String get devXpCardInput => 'Lượt bạn';
+
+  @override
+  String get devXpCardDone => 'Xong';
+
+  @override
+  String get devXpCardError => 'Lỗi';
+
+  @override
+  String get devXpCardProgress => 'Đang chạy';
+
+  @override
+  String get devXpCardWarning => 'Cảnh báo';
+
+  @override
+  String get devXpCardInfo => 'Thông tin';
+
+  @override
+  String devXpSpanHourMin(int h, int m) {
+    return '${h}G ${m}P';
+  }
+
+  @override
+  String devXpMeta(String kind) {
+    String _temp0 = intl.Intl.selectLogic(kind, {
+      'keyBad': 'khóa lỗi',
+      'blocked': 'bị chặn',
+      'maintenance': 'bảo trì',
+      'minor': 'chập chờn',
+      'other': 'sự cố',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String devXpMetaExpiring(String left) {
+    return 'hạn $left';
+  }
+
+  @override
+  String get devXpLoading => 'Đang tải...';
+
+  @override
+  String devXpWindow(String kind, int n) {
+    String _temp0 = intl.Intl.selectLogic(kind, {
+      'week': 'Hạn mức tuần',
+      'day': 'Hạn mức ngày',
+      'hours': 'Phiên $n giờ',
+      'minutes': 'Phiên $n phút',
+      'other': 'Hạn mức',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String devXpProjState(String state) {
+    String _temp0 = intl.Intl.selectLogic(state, {
+      'approval': 'Cần duyệt',
+      'input': 'Chờ bạn',
+      'error': 'Lỗi',
+      'working': 'Đang chạy',
+      'other': 'Xong',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get devXpNoProject => 'Chưa có hoạt động project';
+
+  @override
+  String devXpCredNoun(String kind) {
+    String _temp0 = intl.Intl.selectLogic(kind, {
+      'claude': 'khóa',
+      'other': 'token',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String devXpCredNounCap(String kind) {
+    String _temp0 = intl.Intl.selectLogic(kind, {
+      'claude': 'Khóa',
+      'other': 'Token',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String devXpCredWho(String kind) {
+    String _temp0 = intl.Intl.selectLogic(kind, {
+      'claude': 'Khóa Claude',
+      'other': 'Token Codex',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String devXpCredWhoLower(String kind) {
+    String _temp0 = intl.Intl.selectLogic(kind, {
+      'claude': 'khóa Claude',
+      'other': 'token Codex',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String devXpBanner(String noun, String state, String host) {
+    String _temp0 = intl.Intl.selectLogic(state, {
+      'expired': 'hết hạn',
+      'other': 'bị từ chối',
+    });
+    return '$noun $_temp0 · $host';
+  }
+
+  @override
+  String devXpBannerShort(String state, String host) {
+    String _temp0 = intl.Intl.selectLogic(state, {
+      'expired': 'Hết hạn',
+      'other': 'Bị từ chối',
+    });
+    return '$_temp0 · $host';
+  }
+
+  @override
+  String devXpBannerBlocked(String noun) {
+    return 'Bị chặn · $noun vẫn tốt · thử lại';
+  }
+
+  @override
+  String devXpBannerBlockedShort(String noun) {
+    return 'Bị chặn · $noun vẫn tốt';
+  }
+
+  @override
+  String devXpCredHeadRejected(String noun) {
+    return '$noun bị từ chối';
+  }
+
+  @override
+  String devXpCredRejectedLine(String host, String noun) {
+    return '$host từ chối $noun.';
+  }
+
+  @override
+  String devXpCredEnterNew(String noun) {
+    return 'Nhập $noun mới tại:';
+  }
+
+  @override
+  String devXpCredHeadExpired(String noun) {
+    return '$noun hết hạn';
+  }
+
+  @override
+  String devXpCredExpiredOn(String date) {
+    return 'Hết hạn ngày $date.';
+  }
+
+  @override
+  String get devXpCredExpired => 'Đã hết hạn.';
+
+  @override
+  String get devXpCredHeadBlocked => 'Bị chặn';
+
+  @override
+  String devXpCredBlockedLine(String host) {
+    return '$host chặn máy này.';
+  }
+
+  @override
+  String devXpCredStillGood(String noun) {
+    return '$noun vẫn tốt.';
+  }
+
+  @override
+  String get devXpCredRetry15 => 'Thử lại mỗi 15 phút.';
+
+  @override
+  String devXpCredHeadNotSet(String noun) {
+    return 'Chưa có $noun';
+  }
+
+  @override
+  String devXpCredEnter(String noun) {
+    return 'Nhập $noun tại:';
+  }
+
+  @override
+  String get devXpCredHeadOffline => 'Mất mạng';
+
+  @override
+  String devXpCredUnreachable(String host) {
+    return 'Không tới được $host.';
+  }
+
+  @override
+  String devXpCredUnreachableShort(String host) {
+    return 'Không tới $host.';
+  }
+
+  @override
+  String get devXpCredCheckWifi => 'Kiểm tra Wi-Fi.';
+
+  @override
+  String get devXpCredHeadUpstream => 'Không đọc được';
+
+  @override
+  String devXpCredUpstreamLine(String host) {
+    return '$host trả lỗi:';
+  }
+
+  @override
+  String get devXpCredAutoRetry => 'Đang tự động thử lại...';
+
+  @override
+  String devXpCredStatusNotSet(String who) {
+    return 'Chưa có $who';
+  }
+
+  @override
+  String devXpCredStatusExpired(String who) {
+    return '$who hết hạn';
+  }
+
+  @override
+  String devXpCredStatusRejected(String who) {
+    return '$who bị từ chối';
+  }
+
+  @override
+  String devXpCredStatusBlocked(String host) {
+    return '$host chặn máy này';
+  }
+
+  @override
+  String get devXpResetIn => 'đặt lại sau';
+
+  @override
+  String get devXpCredits => 'tín dụng';
+
+  @override
+  String get devXpUsed => 'Đã dùng';
+
+  @override
+  String get devXpNone => 'Không có';
+
+  @override
+  String get devXpWeekResets => 'Đặt lại tuần';
+
+  @override
+  String get devXpNoResets => 'Chưa có lượt';
+
+  @override
+  String devXpResetsLeft(int n) {
+    return 'còn $n';
+  }
+
+  @override
+  String devXpResetsLeftIn(int n, String span) {
+    return 'còn $n · $span';
+  }
+
+  @override
+  String devXpResetsLeftUntil(int n, String date) {
+    return 'còn $n · đến $date';
+  }
+
+  @override
+  String devXpPaceEmpty(String span) {
+    return 'hết sau $span';
+  }
+
+  @override
+  String devXpPaceAtReset(int pct) {
+    return '~$pct% khi đặt lại';
+  }
+
+  @override
+  String get devXpAiHero => 'Tín dụng Codex còn';
+
+  @override
+  String devXpAiBad(String kind) {
+    String _temp0 = intl.Intl.selectLogic(kind, {
+      'blocked': 'Chặn',
+      'other': 'Khóa',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String devXpAiResets(String cl, String cx) {
+    return 'CL $cl · CX $cx';
+  }
+
+  @override
+  String devXpAdviceUse(String name) {
+    return 'Dùng $name';
+  }
+
+  @override
+  String devXpAdviceResets(String name, int n) {
+    return '$name có $n lượt đặt lại';
+  }
+
+  @override
+  String get devXpAdviceBothLow => 'Cả hai sắp hết';
+
+  @override
+  String get devXpTrendLabel => '7 ngày · % hạn mức tuần';
+
+  @override
+  String get devXpTrendToday => 'Hôm nay';
+
+  @override
+  String devXpTrendPeak(String day) {
+    return 'Đỉnh $day';
+  }
+
+  @override
+  String devXpTrendHave(int n) {
+    return 'Có $n / 7 ngày';
+  }
+
+  @override
+  String get devXpTrendCollecting => 'Đang thu thập...';
+
+  @override
+  String devXpTrendLast(int d, int m) {
+    return 'cuối $d/$m';
+  }
 }

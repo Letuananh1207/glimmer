@@ -1,9 +1,11 @@
 // Shapes of the display's JSON API (see src/core/web.cpp in the firmware).
 import '../../utils/json.dart';
+import 'device_sources.dart';
 import 'device_weather.dart';
 import 'project.dart';
 import 'usage.dart';
 
+export 'device_sources.dart';
 export 'device_weather.dart';
 
 /// GET /api/state.
@@ -34,6 +36,14 @@ class DeviceState {
     this.weatherConfigured = false,
     this.weather,
     this.photos,
+    this.nightFace = false,
+    this.paused,
+    this.screenOn,
+    this.slideMs = 0,
+    this.slideLeftMs,
+    this.wallpaper,
+    this.codexConfigured = false,
+    this.sources = const DeviceSources(),
   });
 
   factory DeviceState.fromJson(Map<String, dynamic> j) => DeviceState(
@@ -68,6 +78,51 @@ class DeviceState {
             ? DeviceWeather.fromJson(j['weather'] as Map<String, dynamic>)
             : null,
         photos: j['photos'] is num ? (j['photos'] as num).toInt() : null,
+        nightFace: jsonBool(j['night_face']),
+        paused: j['paused'] is bool ? j['paused'] as bool : null,
+        screenOn: j['screen_on'] is bool ? j['screen_on'] as bool : null,
+        slideMs: jsonInt(j['slide_ms']),
+        slideLeftMs: j['slide_left_ms'] is num ? (j['slide_left_ms'] as num).toInt() : null,
+        wallpaper: j['wallpaper'] is bool ? j['wallpaper'] as bool : null,
+        codexConfigured: jsonBool(j['codex_configured']),
+        sources: DeviceSources.fromJson(j),
+      );
+
+  /// The same state with what a control command changed (answer of `/api/channel`, `/api/screen`).
+  DeviceState withControl({String? activeChannel, bool? paused, bool? screenOn, int? slideLeftMs}) => DeviceState(
+        fw: fw,
+        build: build,
+        wifi: wifi,
+        ip: ip,
+        ssid: ssid,
+        activeChannel: activeChannel ?? this.activeChannel,
+        resetReason: resetReason,
+        rssi: rssi,
+        uptimeS: uptimeS,
+        heap: heap,
+        maxBlock: maxBlock,
+        heapRefusals: heapRefusals,
+        nextFetchS: nextFetchS,
+        time: time,
+        claudeConfigured: claudeConfigured,
+        claudeValid: claudeValid,
+        claudeErr: claudeErr,
+        usage: usage,
+        projects: projects,
+        skill: skill,
+        skills: skills,
+        skillsOn: skillsOn,
+        weatherConfigured: weatherConfigured,
+        weather: weather,
+        photos: photos,
+        nightFace: nightFace,
+        paused: paused ?? this.paused,
+        screenOn: screenOn ?? this.screenOn,
+        slideMs: slideMs,
+        slideLeftMs: slideLeftMs ?? this.slideLeftMs,
+        wallpaper: wallpaper,
+        codexConfigured: codexConfigured,
+        sources: sources,
       );
 
   final String fw, build, wifi, ip, ssid, activeChannel, resetReason;
@@ -95,6 +150,30 @@ class DeviceState {
   /// Photos stored on the device (skill `photo`); null = firmware without photos (no `photos` in /api/state).
   final int? photos;
 
+  /// The device shows its night face (`night_face`).
+  final bool nightFace;
+
+  /// Rotation held by the app remote (R-DK-4); null = firmware without the command (R-DK-3).
+  final bool? paused;
+
+  /// Backlight on; null = firmware without `/api/screen` (R-DK-3).
+  final bool? screenOn;
+
+  /// Length of the current slide (ms); 0 = not rotating.
+  final int slideMs;
+
+  /// Time left of the current slide (ms, at the moment of the read); 0 = not rotating; null = firmware without it.
+  final int? slideLeftMs;
+
+  /// A desktop wallpaper JPEG is stored on the device; null = firmware without it.
+  final bool? wallpaper;
+
+  /// A Codex token is set (`codex_configured`).
+  final bool codexConfigured;
+
+  /// Per-source fetch health + vendor status (`sources`, `vendor_status`).
+  final DeviceSources sources;
+
   /// In setup-AP mode the device reports wifi "ap".
   bool get inSetupMode => wifi == 'ap';
   bool get clockSynced => time > 1000000000;
@@ -107,7 +186,13 @@ class DeviceState {
     final m = months.indexOf(p[0]);
     final t = p[3].split(':');
     if (m < 0 || t.length < 3) return null;
-    return DateTime(int.tryParse(p[2]) ?? 0, m + 1, int.tryParse(p[1]) ?? 1,
-        int.tryParse(t[0]) ?? 0, int.tryParse(t[1]) ?? 0, int.tryParse(t[2]) ?? 0);
+    return DateTime(
+      int.tryParse(p[2]) ?? 0,
+      m + 1,
+      int.tryParse(p[1]) ?? 1,
+      int.tryParse(t[0]) ?? 0,
+      int.tryParse(t[1]) ?? 0,
+      int.tryParse(t[2]) ?? 0,
+    );
   }
 }

@@ -61,4 +61,12 @@ abstract final class AppColors {
   static const Color skillPhoto = Color(0xFF8FE574);
   /// Nền ô icon skill Ảnh; nền ô "+ Thêm ảnh" dùng mint 8 %
   static const Color skillPhotoTint = Color(0x298FE574);
+  /// Vỏ máy quanh ô màn (gradient 160°, trên)
+  static const Color deviceShellTop = Color(0xFF26232B);
+  /// Vỏ máy quanh ô màn (gradient 160°, dưới)
+  static const Color deviceShellBottom = Color(0xFF141217);
+  /// Thanh báo nổi (lệnh không nhận)
+  static const Color snackbar = Color(0xFF3A3048);
+  /// Ô màn khi màn thiết bị tắt
+  static const Color screenOff = Color(0xFF050507);
 }

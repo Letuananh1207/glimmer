@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../core/widgets/count_badge.dart';
-import '../../core/widgets/nav_home_icon.dart';
 
-/// Khung 4 tab (components.md "Thanh điều hướng dưới", 2026-11-25.3): Màn hình (huy hiệu agent chờ) · Skill ·
+/// Khung 4 tab (components.md "Thanh điều hướng dưới", 2026-11-26.5): Điều khiển (huy hiệu agent chờ) · Skill ·
 /// Cài đặt · Thiết bị.
 class HomeShell extends StatelessWidget {
   const HomeShell({
@@ -39,7 +38,7 @@ class HomeShell extends StatelessWidget {
             icon: badge == null
                 ? home
                 : Semantics(label: l.navHomeBadgeA11y('$waiting'), child: home),
-            label: l.navHome,
+            label: l.navControl,
           ),
           NavigationDestination(icon: const Icon(Icons.apps), label: l.navSkills),
           NavigationDestination(icon: const Icon(Icons.tune), label: l.navSettings),
@@ -50,7 +49,7 @@ class HomeShell extends StatelessWidget {
   }
 }
 
-/// nav-home icon 24 with the amber badge at the icon's top right: top −2, left 38 in the 64 × 32 pill → (−6, 18)
+/// nav-control icon 24 (`icons/nav-control.svg` = Material settings_remote) with the amber badge at the icon's top right: top −2, left 38 in the 64 × 32 pill → (−6, 18)
 /// from the icon's corner (icon centred: left 20, top 4).
 class _HomeIcon extends StatelessWidget {
   const _HomeIcon({required this.badge});
@@ -63,7 +62,7 @@ class _HomeIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Stack(clipBehavior: Clip.none, children: [
-        const NavHomeIcon(size: _icon),
+        const Icon(Icons.settings_remote, size: _icon),
         if (badge != null) Positioned(top: _badgeTop, left: _badgeLeft, child: CountBadge(badge!, small: true)),
       ]);
 }

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../../domain/models/app_error.dart';
 import '../../../domain/models/attention_card.dart';
+import '../../../domain/models/control.dart';
 import '../../../domain/models/device_photo.dart';
 import '../../../domain/models/device_state.dart';
 import '../../../utils/cancel_token.dart';
@@ -74,7 +75,17 @@ abstract class DeviceRepository extends ChangeNotifier {
   Future<Result<void>> reboot();
   Future<Result<void>> refreshNow();
   Future<Result<void>> showChannel(String name);
+  /// Remove one card from the device screen (`/push/clear {id}`; R-DK-2: never answers the agent).
   Future<Result<void>> clearCard(String id);
+
+  // ── remote (tab Điều khiển, R-DK-*) — one try each, no automatic retry (R-DK-1) ──
+
+  /// `POST /api/channel`: show channel [name], or [action] next / prev / pause / resume. On success [state] takes
+  /// the answer (active channel, paused) at once. 404 = no enabled channel [name].
+  Future<Result<ChannelAnswer>> channel({String? name, String? action});
+
+  /// `POST /api/screen {on}`: backlight off / on now (RAM only); [state] takes the answer. Returns `screen_on`.
+  Future<Result<bool>> setScreen(bool on);
   Future<Result<void>> clearAllCards();
   Future<Result<void>> clearProjects();
 

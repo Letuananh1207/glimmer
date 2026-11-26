@@ -74,6 +74,10 @@ flutter:
         - asset: assets/fonts/JetBrainsMono-Regular.ttf
         - asset: assets/fonts/JetBrainsMono-Bold.ttf
           weight: 700
+    # Màn thiết bị trong DeviceMirror (số VT323 như firmware data/fonts/VT323-*.vlw).
+    - family: VT323
+      fonts:
+        - asset: assets/fonts/VT323-Regular.ttf
   assets:
     - assets/icons/
 

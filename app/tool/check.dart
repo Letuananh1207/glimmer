@@ -210,7 +210,8 @@ void _checkFile(String path) {
         _contextRe.hasMatch(code)) {
       _add('E-context', at);
     }
-    if (_colorRe.hasMatch(code) && !path.endsWith('/app_colors.dart')) {
+    // xp_colors.dart: bảng màu màn thiết bị chép từ design/panel/tokens (DeviceMirror), như app_colors.dart.
+    if (_colorRe.hasMatch(code) && !path.endsWith('/app_colors.dart') && !path.endsWith('/xp_colors.dart')) {
       _add('W-mau', at);
     }
     if (_fontSizeRe.hasMatch(code)) _add('W-co-chu', at);

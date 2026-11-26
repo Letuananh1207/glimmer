@@ -22,7 +22,7 @@ import 'dashboard_usage.dart';
 import 'photo_tab.dart';
 import 'weather_tab.dart';
 
-/// Màn hình (screen_specs §2, 2026-11-25.3): đầu màn gọn, `DockTabBar` theo skill đang bật (≥ 2), thân tab đang chọn
+/// Số liệu (screen_specs §2; màn phụ đẩy từ Điều khiển từ 2026-11-26.5): thanh trên "← Số liệu" + refresh, `DockTabBar` theo skill đang bật (≥ 2), thân tab đang chọn
 /// + `ShowOnDeviceButton`.
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({
@@ -31,6 +31,7 @@ class DashboardScreen extends StatelessWidget {
     required this.photos,
     required this.onOpenSettings,
     required this.onCropPhoto,
+    required this.onBack,
   });
 
   final DashboardViewModel viewModel;
@@ -43,6 +44,9 @@ class DashboardScreen extends StatelessWidget {
 
   /// Tab Ảnh: open PhotoCrop (push, above the tabs); completes when it closes.
   final Future<void> Function(PhotoCropArgs args) onCropPhoto;
+
+  /// Back to Điều khiển (Số liệu is pushed from it, 2026-11-26.5).
+  final VoidCallback onBack;
 
   Future<void> _crop(Uint8List image, PhotoInfo info) => onCropPhoto((image: image, info: info));
 
@@ -77,10 +81,8 @@ class DashboardScreen extends StatelessWidget {
         return RefreshIndicator(
           onRefresh: () => Future.wait([viewModel.refresh(), if (selected == 'photo') photos.load()]),
           child: ListView(padding: EdgeInsets.zero, children: [
-            DashboardHeader(
-              state: s,
-              mood: viewModel.mood,
-              walking: viewModel.walking,
+            DetailsTopBar(
+              onBack: onBack,
               onRefresh: () => _act(context, viewModel.refreshNow, l.dashboardDoneRefresh),
             ),
             if (errorLine != null)

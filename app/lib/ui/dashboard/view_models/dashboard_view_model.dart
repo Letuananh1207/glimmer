@@ -38,9 +38,11 @@ class DashboardViewModel extends ChangeNotifier with SafeNotifier {
     required DeviceRepository device,
     required ToggleSkillUseCase toggleSkill,
     DateTime Function() now = DateTime.now,
+    String? initialTab,
   })  : _device = device,
         _toggle = toggleSkill,
-        _now = now {
+        _now = now,
+        _picked = initialTab {
     _device.addListener(_update);
     _update();
     _loadSettings();

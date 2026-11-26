@@ -33,6 +33,8 @@ class DockTabBar extends StatelessWidget {
     required this.selected,
     required this.onSelect,
     required this.semanticLabel,
+    this.margin = _margin,
+    this.alwaysStacked = false,
   });
 
   final List<DockTabItem> tabs;
@@ -41,6 +43,12 @@ class DockTabBar extends StatelessWidget {
 
   /// `homeTabsA11y`.
   final String semanticLabel;
+
+  /// Outer margin (Màn hình 4 16 6; `JumpTabBar` 12 16 0).
+  final EdgeInsets margin;
+
+  /// Label under the icon whatever the tab count (`JumpTabBar`).
+  final bool alwaysStacked;
 
   static const _margin = EdgeInsets.fromLTRB(AppSpace.l, AppSpace.xs, AppSpace.l, 6);
 
@@ -52,7 +60,7 @@ class DockTabBar extends StatelessWidget {
         container: true,
         label: semanticLabel,
         child: Container(
-          margin: _margin,
+          margin: margin,
           padding: const EdgeInsets.all(AppSpace.xs),
           decoration: BoxDecoration(
             color: AppColors.panel,
@@ -64,7 +72,7 @@ class DockTabBar extends StatelessWidget {
               Expanded(
                 child: _DockTab(
                   item: tabs[i],
-                  stacked: tabs.length >= stackedFrom,
+                  stacked: alwaysStacked || tabs.length >= stackedFrom,
                   selected: tabs[i].id == selected,
                   onTap: () => onSelect(tabs[i].id),
                 ),

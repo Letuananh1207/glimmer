@@ -6,12 +6,15 @@ import '../data/repositories/backup/backup_repository.dart';
 import '../data/repositories/device/device_repository.dart';
 import '../data/repositories/photo/photo_repository.dart';
 import '../data/repositories/release/release_repository.dart';
+import '../domain/use_cases/control_device_use_case.dart';
 import '../domain/use_cases/delete_photo_use_case.dart';
 import '../domain/use_cases/load_photos_use_case.dart';
 import '../domain/use_cases/send_photo_use_case.dart';
 import '../domain/use_cases/toggle_skill_use_case.dart';
 import '../ui/connect/view_models/connect_view_model.dart';
 import '../ui/connect/widgets/connect_screen.dart';
+import '../ui/control/view_models/control_view_model.dart';
+import '../ui/control/widgets/control_screen.dart';
 import '../ui/core/widgets/view_model_host.dart';
 import '../ui/dashboard/view_models/dashboard_view_model.dart';
 import '../ui/dashboard/widgets/dashboard_screen.dart';
@@ -40,14 +43,41 @@ Widget wifiSetupScreen() => ViewModelHost(
       builder: (_, vm) => WifiSetupScreen(viewModel: vm),
     );
 
-/// [onCropPhoto] opens PhotoCrop and completes when it closes (the Ảnh tab then reloads).
+/// Điều khiển (tab 1, screen_specs §8). [onOpenDetails] pushes Số liệu at a skill's tab and completes when it closes.
+Widget controlScreen({
+  required Future<void> Function(String? skill) onOpenDetails,
+  required VoidCallback onUpdateFirmware,
+  required VoidCallback onSetupWifi,
+}) =>
+    ViewModelHost(
+      create: (c) => ControlViewModel(
+        device: c.read<DeviceRepository>(),
+        control: c.read<ControlDeviceUseCase>(),
+        toggleSkill: c.read<ToggleSkillUseCase>(),
+        loadPhotos: c.read<LoadPhotosUseCase>(),
+      ),
+      builder: (_, vm) => ControlScreen(
+        viewModel: vm,
+        onOpenDetails: onOpenDetails,
+        onUpdateFirmware: onUpdateFirmware,
+        onSetupWifi: onSetupWifi,
+      ),
+    );
+
+/// Số liệu (screen_specs §2, pushed from Điều khiển) at [initialTab]. [onCropPhoto] opens PhotoCrop and completes
+/// when it closes (the Ảnh tab then reloads).
 Widget dashboardScreen({
+  String? initialTab,
+  required VoidCallback onBack,
   required VoidCallback onOpenSettings,
   required Future<void> Function(PhotoCropArgs args) onCropPhoto,
 }) =>
     ViewModelHost(
-      create: (c) =>
-          DashboardViewModel(device: c.read<DeviceRepository>(), toggleSkill: c.read<ToggleSkillUseCase>()),
+      create: (c) => DashboardViewModel(
+        device: c.read<DeviceRepository>(),
+        toggleSkill: c.read<ToggleSkillUseCase>(),
+        initialTab: initialTab,
+      ),
       builder: (_, vm) => ViewModelHost(
         create: (c) => PhotoTabViewModel(
           loadPhotos: c.read<LoadPhotosUseCase>(),
@@ -59,6 +89,7 @@ Widget dashboardScreen({
           photos: photos,
           onOpenSettings: onOpenSettings,
           onCropPhoto: onCropPhoto,
+          onBack: onBack,
         ),
       ),
     );
@@ -93,7 +124,7 @@ Widget skillsScreen({required VoidCallback onOpenDevice}) => ViewModelHost(
       builder: (_, vm) => SkillsScreen(viewModel: vm, onOpenDevice: onOpenDevice),
     );
 
-/// Khung 4 tab (tab 1 = Màn hình); [onSelect] nhận chỉ số tab.
+/// Khung 4 tab (tab 1 = Điều khiển); [onSelect] nhận chỉ số tab.
 Widget homeShell({required int index, required ValueChanged<int> onSelect, required Widget child}) => ViewModelHost(
       create: (c) => HomeViewModel(toggleSkill: c.read<ToggleSkillUseCase>(), device: c.read<DeviceRepository>()),
       builder: (_, vm) => ListenableBuilder(

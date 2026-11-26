@@ -56,6 +56,7 @@ extension Labels on AppLocalizations {
         AppErrorKind.photoNoSpace => photoCropErrorNoSpaceTitle,
         AppErrorKind.photoRejected => photoCropErrorRejectedTitle,
         AppErrorKind.photoNotFound => devErrHttp(e.status),
+        AppErrorKind.controlUnsupported => devErrControlUnsupported,
         AppErrorKind.cancelled => commonCancel,
         AppErrorKind.other => e.detail,
       };

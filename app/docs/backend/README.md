@@ -57,3 +57,11 @@ thu nhỏ. Backend (nếu có) không cần đồng bộ.
 Model đọc từ thiết bị (không lưu): `DeviceState.photos` (`photos` của `/api/state`, null = firmware chưa có ảnh),
 `PhotoInfo` / `DevicePhoto` (`GET /api/photos`), `SentPhoto` (`POST /api/photos`), `PhotoGallery` / `GalleryPhoto`
 (danh sách + bản sao), `PhotoPixels` (vùng cắt RGBA đưa vào `SendPhotoUseCase`) — `lib/domain/models/device_photo.dart`.
+
+## Điều khiển thiết bị (2026-11-26.5)
+
+Không lưu gì mới trên máy. Model đọc từ thiết bị (không lưu): `DeviceState.paused` / `screenOn` / `slideLeftMs` /
+`wallpaper` (null = firmware chưa có → nút khoá, R-DK-3), `slideMs`, `nightFace`; `ChannelAnswer` (`POST /api/channel`
+→ `{active, paused}`), `ControlOutcome`, `ControlCaps` (`lib/domain/models/control.dart`). Lệnh: `DeviceRepository.channel`
+/ `setScreen` (vá `state` ngay theo câu trả lời), `clearCard` (`/push/clear {id}`), `saveSettings` (`brightness`,
+`nightMode`), `refreshNow`.
