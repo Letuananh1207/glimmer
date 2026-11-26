@@ -140,4 +140,55 @@ void main() {
       expect(menuItemAt(d, 100, 145), MenuItem.properties);
     });
   });
+
+  group('R-DK-13 tray balloon (panel P-2026-11-26.15)', () {
+    MirrorFrame frame(String channel, {bool? balloon, List<String> skills = const ['agent', 'weather', 'clock'],
+        WindowStack windows = WindowStack.empty}) => mirrorFrameOf(
+      DeviceState.fromJson({
+        'fw': '1.0',
+        'wifi': 'connected',
+        'active_channel': channel,
+        'skills_on': skills,
+        'weather_configured': true,
+        'balloon': ?balloon,
+      }),
+      now: DateTime(2026, 11, 26),
+      windows: windows,
+    );
+
+    test('weather skill + firmware with the balloon → tray icon at x 176+, 3 buttons at most', () {
+      final w = WindowStack.empty.opened('Claude').opened('Codex').opened('Weather').opened('Clock');
+      final f = frame('Clock', balloon: false, windows: w);
+      expect(f.taskbar.trayWeather, isTrue);
+      expect(f.taskbar.programs, ['Codex', 'Weather', 'Clock']);
+      expect(touchTargetAt(188, 227, f).kind, TouchKind.tray);
+      expect(touchTargetAt(176, 230, f).kind, TouchKind.tray);
+      expect(touchTargetAt(145, 227, f), const TouchTarget(TouchKind.taskbar, program: 'Clock'));
+      expect(holdMenuAt(188, 227, f), isNull, reason: 'the tray has no context menu');
+    });
+
+    test('old firmware (no balloon) or weather off → old tray, 4 buttons, no tray target', () {
+      final w = WindowStack.empty.opened('Claude').opened('Codex').opened('Weather').opened('Clock');
+      final old = frame('Clock', windows: w);
+      expect(old.taskbar.trayWeather, isFalse);
+      expect(old.taskbar.programs.length, 4);
+      expect(touchTargetAt(188, 227, old), const TouchTarget(TouchKind.taskbar, program: 'Clock'));
+      expect(touchTargetAt(225, 227, old).kind, TouchKind.none, reason: 'the clock is not a target');
+      expect(frame('Home', balloon: false, skills: const ['agent']).taskbar.trayWeather, isFalse);
+    });
+
+    test('the balloon follows the device; its × is a target while it is up', () {
+      final up = frame('Home', balloon: true);
+      expect(up.agents.desktop.balloon, isTrue);
+      expect(up.agents.desktop.tipBalloon, isTrue);
+      expect(touchTargetAt(226, 149, up).kind, TouchKind.balloonClose);
+      final down = frame('Home', balloon: false);
+      expect(down.agents.desktop.balloon, isFalse);
+      expect(touchTargetAt(226, 149, down).kind, TouchKind.none);
+      final old = frame('Home');
+      expect((old.agents.desktop.balloon, old.agents.desktop.tipBalloon), (true, false),
+          reason: 'old firmware: the always-on balloon');
+      expect(touchTargetAt(226, 149, old).kind, TouchKind.none);
+    });
+  });
 }

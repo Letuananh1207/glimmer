@@ -39,6 +39,7 @@ class DeviceState {
     this.nightFace = false,
     this.paused,
     this.screenOn,
+    this.balloon,
     this.slideMs = 0,
     this.slideLeftMs,
     this.wallpaper,
@@ -80,6 +81,7 @@ class DeviceState {
     nightFace: jsonBool(j['night_face']),
     paused: j['paused'] is bool ? j['paused'] as bool : null,
     screenOn: j['screen_on'] is bool ? j['screen_on'] as bool : null,
+    balloon: j['balloon'] is bool ? j['balloon'] as bool : null,
     slideMs: jsonInt(j['slide_ms']),
     slideLeftMs: j['slide_left_ms'] is num ? (j['slide_left_ms'] as num).toInt() : null,
     wallpaper: j['wallpaper'] is bool ? j['wallpaper'] as bool : null,
@@ -89,7 +91,8 @@ class DeviceState {
   );
 
   /// The same state with what a control command changed (answer of `/api/channel`, `/api/screen`).
-  DeviceState withControl({String? activeChannel, bool? paused, bool? screenOn, int? slideLeftMs}) => DeviceState(
+  DeviceState withControl({String? activeChannel, bool? paused, bool? screenOn, int? slideLeftMs, bool? balloon}) =>
+      DeviceState(
     fw: fw,
     build: build,
     wifi: wifi,
@@ -118,6 +121,7 @@ class DeviceState {
     nightFace: nightFace,
     paused: paused ?? this.paused,
     screenOn: screenOn ?? this.screenOn,
+    balloon: balloon ?? this.balloon,
     slideMs: slideMs,
     slideLeftMs: slideLeftMs ?? this.slideLeftMs,
     wallpaper: wallpaper,
@@ -163,6 +167,10 @@ class DeviceState {
 
   /// Backlight on; null = firmware without `/api/screen` (R-DK-3).
   final bool? screenOn;
+
+  /// The desktop's weather balloon is up (panel P-2026-11-26.15, R-DK-13); null = firmware before it (the
+  /// balloon was always up then).
+  final bool? balloon;
 
   /// Length of the current slide (ms); 0 = not rotating.
   final int slideMs;

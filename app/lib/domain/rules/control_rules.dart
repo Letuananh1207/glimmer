@@ -85,6 +85,7 @@ ControlCaps controlCaps(DeviceState? s) => s == null
         dismissCard: s.paused != null,
         screen: s.screenOn != null,
         windows: s.windowsApi,
+        balloon: s.balloon != null,
       );
 
 /// The agent card holding the device screen (approval / input on the Attention channel), or null.

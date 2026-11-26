@@ -14,6 +14,8 @@ const _taskbarY = 214;
 const _startRight = 68;
 const _buttonX0 = 71, _buttonStep = 30, _buttonW = 28, _buttonCy = 227;
 const _iconHalfW = 40, _iconCell = 48;
+// R-DK-13 (panel P-2026-11-26.15): the tray's weather icon 16×14 at (180, 220), the balloon's × 12×12 at (220, 143).
+const _trayIconCx = 188, _closeCx = 226, _closeCy = 149;
 
 /// Channels drawn as an XP window with the title bar buttons (not the desktop, the night face, cards, setup).
 bool hasWindowButtons(String channel) =>
@@ -24,9 +26,19 @@ TouchTarget touchTargetAt(double x, double y, MirrorFrame frame) {
   final ch = frame.channel;
   if (frame.screenOff || ch == 'Night' || ch == MirrorFrame.setupScreen) return TouchTarget.none;
 
-  // Taskbar: start, then the open windows' buttons.
+  // The balloon's × (desktop, balloon up) — it lies over the icons.
+  final desk = frame.agents.desktop;
+  if (ch == 'Home' && desk.balloon && desk.tipBalloon &&
+      (x - _closeCx).abs() <= touchReach && (y - _closeCy).abs() <= touchReach) {
+    return const TouchTarget(TouchKind.balloonClose);
+  }
+
+  // Taskbar: start, then the open windows' buttons, then the tray's weather icon.
   if (y >= _buttonCy - touchReach) {
     if (y >= _taskbarY && x < _startRight) return const TouchTarget(TouchKind.start);
+    if (frame.taskbar.trayWeather && y >= _taskbarY && (x - _trayIconCx).abs() <= touchReach) {
+      return const TouchTarget(TouchKind.tray);
+    }
     final programs = frame.taskbar.programs;
     for (var i = 0; i < programs.length; i++) {
       final cx = _buttonX0 + _buttonStep * i + _buttonW / 2;

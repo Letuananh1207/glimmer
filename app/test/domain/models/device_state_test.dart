@@ -82,4 +82,10 @@ void main() {
     final none = DeviceState.fromJson({'fw': '0.22.0'});
     expect((none.weather, none.weatherConfigured, none.skillsOn.length), (null, false, 0));
   });
+
+  test('R-DK-13 balloon: reported → bool, missing (older firmware) → null', () {
+    expect(DeviceState.fromJson({'fw': 'x', 'balloon': true}).balloon, isTrue);
+    expect(DeviceState.fromJson({'fw': 'x'}).balloon, isNull);
+    expect(DeviceState.fromJson({'fw': 'x', 'balloon': false}).withControl(balloon: true).balloon, isTrue);
+  });
 }

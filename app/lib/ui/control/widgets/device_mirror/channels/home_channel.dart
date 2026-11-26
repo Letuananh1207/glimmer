@@ -9,7 +9,8 @@ import 'desk_wallpaper.dart';
 /// Home — the XP desktop (`ch_home.cpp`, XP-Desktop, panel P-2026-11-26.14 XP-Desk): wallpaper 240×214, no window;
 /// one icon ×2 per program of the enabled skills (`DesktopView.icons`: column x 40 then x 120, cells 48 tall from
 /// y 8) with white labels + black shadow ("Claude 38%", "Codex", "Ảnh", "Thùng rác", "Thời tiết", "Đồng hồ"); the
-/// weather balloon 136×50 at (100, 150) pointing at the tray clock (weather skill on, a location set).
+/// weather balloon: P-2026-11-26.15 the XP notification balloon 140×62 at (96, 138) with × and a tail to the tray icon,
+/// only while the device reports it up (R-DK-13); older firmware the always-on 136×50 at (100, 150).
 ///
 /// The user's wallpaper JPEG (`/api/state.wallpaper`) cannot be read back from the device, so the mirror always
 /// draws the fallback wallpaper.
@@ -82,6 +83,44 @@ class HomeChannel extends MirrorChannel {
     c.text(label, cx, y, XpFont.jb11, XpColors.white, align: XpAlign.center, maxWidth: _labelMax);
   }
 
+  /// P-2026-11-26.15 (`ch_home.cpp` paintBalloon): stepped corners, tail from the bottom x 178..190 to (190, 211),
+  /// × 12×12 at (220, 143), title (122, 144), lines (102, 164) / (102, 178).
+  void _tipBalloon(XpCanvas c, DesktopView d, AppLocalizations l) {
+    const x = 96, y = 138, w = 140, h = 62, y1 = y + h - 1;
+    c.hLine(x + 2, y, w - 4, XpColors.black);
+    c.hLine(x + 1, y + 1, w - 2, XpColors.black);
+    c.hLine(x + 2, y + 1, w - 4, XpColors.infoBar);
+    c.fill(x, y + 2, w, h - 4, XpColors.black);
+    c.fill(x + 1, y + 2, w - 2, h - 4, XpColors.infoBar);
+    c.hLine(x + 1, y1 - 1, w - 2, XpColors.black);
+    c.hLine(x + 2, y1 - 1, w - 4, XpColors.infoBar);
+    c.hLine(x + 2, y1, w - 4, XpColors.black);
+    c.hLine(179, y1, 11, XpColors.infoBar);
+    for (var row = y1 + 1; row <= 211; row++) {
+      final x0 = 178 + (row - y1 - 1);
+      c.hLine(x0, row, 190 - x0 + 1, XpColors.infoBar);
+      c.pixel(x0, row, XpColors.black);
+      c.pixel(190, row, XpColors.black);
+    }
+    Xp.drawIcon(c, XpIcon.weather, 102, 144, XpColors.amber);
+    c.text(l.devXpTitleWeather, 122, 144, XpFont.jb12b, XpColors.black);
+    c.fill(220, 143, 12, 12, XpColors.dim);
+    c.fill(221, 144, 10, 10, XpColors.white);
+    for (var k = 0; k < 6; k++) {
+      c.pixel(223 + k, 146 + k, XpColors.black);
+      c.pixel(228 - k, 146 + k, XpColors.black);
+    }
+    const lineW = 132.0;
+    final t = d.temp;
+    if (t == null) {
+      c.text(l.devXpDeskNoWeather, 102, 164, XpFont.jb11, XpColors.dim, maxWidth: lineW);
+      return;
+    }
+    c.text(l.devXpDeskNow(t, d.desc), 102, 164, XpFont.jb11, XpColors.black, maxWidth: lineW);
+    final fl = d.feels;
+    if (fl != null) c.text(l.devXpDeskFeels(fl), 102, 178, XpFont.jb11, XpColors.label, maxWidth: lineW);
+  }
+
   void _balloon(XpCanvas c, DesktopView d, AppLocalizations l) {
     c.fill(_balX, _balY, _balW, _balH, XpColors.black);
     c.fill(_balX + 1, _balY + 1, _balW - 2, _balH - 2, XpColors.infoBar);
@@ -133,6 +172,6 @@ class HomeChannel extends MirrorChannel {
         shadow: XpColors.black,
       );
     }
-    if (d.balloon) _balloon(c, d, l);
+    if (d.balloon) d.tipBalloon ? _tipBalloon(c, d, l) : _balloon(c, d, l);
   }
 }

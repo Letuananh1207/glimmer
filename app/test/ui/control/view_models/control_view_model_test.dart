@@ -379,4 +379,34 @@ void main() {
     vm.tap(200, 60);
     expect(vm.windows.sel, isNull);
   });
+
+  group('R-DK-13 tray balloon', () {
+    Map<String, dynamic> withBalloon({String channel = 'Home', bool up = false}) =>
+        {..._state(channel: channel), 'balloon': up, 'weather_configured': true};
+
+    test('desktop: tap the tray icon → show; tap × → hide; the mirror follows the answer', () async {
+      vm = await make(state: withBalloon());
+      rig.api.on(_url, 'POST', '/api/balloon', {'ok': true, 'balloon': true});
+      expect(vm.tap(188, 227).kind, TouchKind.tray);
+      await pumpEventQueue();
+      expect(rig.posts('/api/balloon').single.body, {'show': true});
+      expect(vm.frame!.agents.desktop.balloon, isTrue);
+      rig.api.on(_url, 'POST', '/api/balloon', {'ok': true, 'balloon': false});
+      expect(vm.tap(226, 149).kind, TouchKind.balloonClose);
+      await pumpEventQueue();
+      expect(rig.posts('/api/balloon').last.body, {'show': false});
+      expect(vm.frame!.agents.desktop.balloon, isFalse);
+    });
+
+    test('over a window the tray sends nothing; old firmware has no tray target', () async {
+      vm = await make(state: withBalloon(channel: 'Clock'));
+      vm.tap(188, 227);
+      await pumpEventQueue();
+      expect(rig.posts('/api/balloon'), isEmpty);
+      vm.dispose();
+      vm = await make(state: _state());
+      expect(vm.tap(188, 227).kind, TouchKind.none);
+      expect(rig.posts('/api/balloon'), isEmpty);
+    });
+  });
 }

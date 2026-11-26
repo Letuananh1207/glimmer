@@ -48,7 +48,10 @@ MirrorFrame mirrorFrameOf(
 /// on a card that needs the user.
 TaskbarModel taskbarOf(DeviceState state, String channel, List<AttentionCard> cards, WindowStack windows) {
   final open = windows.open;
-  final programs = open.length > TaskbarModel.max ? open.sublist(open.length - TaskbarModel.max) : open;
+  // R-DK-13: firmware with the tray balloon + weather skill on → weather icon in the tray, 3 buttons.
+  final tray = state.balloon != null && state.skillsOn.contains(SkillIds.weather);
+  final max = tray ? TaskbarModel.maxWithTray : TaskbarModel.max;
+  final programs = open.length > max ? open.sublist(open.length - max) : open;
   final buttons = [
     for (final p in programs)
       switch (channelSkill(p)) {
@@ -70,5 +73,6 @@ TaskbarModel taskbarOf(DeviceState state, String channel, List<AttentionCard> ca
     active: i < 0 ? null : i,
     flash: flash,
     badge: agentsWaiting(cards),
+    trayWeather: tray,
   );
 }

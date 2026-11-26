@@ -2,7 +2,7 @@
 // Worked out by domain/rules/touch_rules.dart and control_rules.dart.
 
 /// What a touch hits.
-enum TouchKind { none, minimize, maximize, close, start, taskbar, icon }
+enum TouchKind { none, minimize, maximize, close, start, taskbar, icon, tray, balloonClose }
 
 class TouchTarget {
   const TouchTarget(this.kind, {this.skill, this.program});

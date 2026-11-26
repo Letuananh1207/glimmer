@@ -6,7 +6,8 @@ import 'xp_paint.dart';
 
 /// The taskbar, y 214–239 (`src/channels/taskbar.cpp`, token themeXP.taskbar, panel P-2026-11-26.14 XP-Win-Open):
 /// start button with flag + italic "start", one 28-px button per open window from x 71 (step 30), the top window's
-/// pressed (no slide progress), amber badge / orange on the Claude button, tray clock.
+/// pressed (no slide progress), amber badge / orange on the Claude button, tray clock — from x 176 with the weather
+/// icon at (180, 220) when [TaskbarModel.trayWeather] (panel P-2026-11-26.15).
 abstract final class XpTaskbar {
   static const y = 214, h = 26;
 
@@ -33,7 +34,7 @@ abstract final class XpTaskbar {
     for (var slot = 0; slot < m.buttons.length; slot++) {
       _button(c, m.buttons[slot], 71 + 30 * slot, slot == m.active, m.programs[slot] == 'Claude', m);
     }
-    _tray(c, clock);
+    _tray(c, clock, weather: m.trayWeather);
   }
 
   static void _start(XpCanvas c) {
@@ -77,10 +78,12 @@ abstract final class XpTaskbar {
     }
   }
 
-  static void _tray(XpCanvas c, String clock) {
-    c.fill(196, y, 44, h, XpColors.tray);
-    c.vLine(196, y, h, XpColors.trayEdge);
-    c.hLine(197, y, 43, XpColors.trayHi);
+  static void _tray(XpCanvas c, String clock, {bool weather = false}) {
+    final x = weather ? 176 : 196;
+    c.fill(x, y, 240 - x, h, XpColors.tray);
+    c.vLine(x, y, h, XpColors.trayEdge);
+    c.hLine(x + 1, y, 239 - x, XpColors.trayHi);
+    if (weather) Xp.drawIcon(c, XpIcon.weather, 180, 220, XpColors.iconWarn);
     c.text(clock, 218, 221, XpFont.jb11, XpColors.white, align: XpAlign.center);
   }
 }

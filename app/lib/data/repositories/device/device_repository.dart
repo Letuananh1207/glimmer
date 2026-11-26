@@ -88,6 +88,9 @@ abstract class DeviceRepository extends ChangeNotifier {
   /// `POST /api/screen {on}`: backlight off / on now (RAM only); [state] takes the answer. Returns `screen_on`.
   Future<Result<bool>> setScreen(bool on);
 
+  /// R-DK-13: the desktop's tray balloon — show for 10 s / hide now (`POST /api/balloon`); Ok(up after).
+  Future<Result<bool>> setBalloon(bool show);
+
   /// `POST /api/windows`: the app's open windows (panel P-2026-11-26.14), RAM only on the device.
   Future<Result<void>> setWindows(Map<String, Object?> body);
 

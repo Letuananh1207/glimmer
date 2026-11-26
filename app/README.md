@@ -64,6 +64,8 @@ reserve: 65536, side: 188}`; `POST /api/photos` multipart, trường `photo` = J
 - `POST /api/menu {"kind":"desktop"|"window"|"none","x","y","minimized"}` → `{ok}` (R-DK-11): vẽ / đóng menu chuột phải
   (góc trên trái, máy giữ trong y ≤ 213); `409` khi màn không có menu (đêm, thẻ). Máy không tự làm theo mục: app chọn
   mục rồi gửi lệnh. Mọi `/api/channel` đóng menu.
+- `POST /api/balloon {"show": true|false}` → `{ok, balloon}` (R-DK-13, firmware P-2026-11-26.15): bong bóng thời
+  tiết của desktop — hiện 10 s / ẩn ngay; 409 khi không ở desktop hoặc skill Thời tiết tắt. `/api/state.balloon`.
 - `POST /api/screen {"on":false|true}` → `{ok, screen_on}`. Tắt / bật đèn nền ngay, không theo giờ đêm, RAM. Thẻ urgent /
   cần duyệt / câu hỏi / lỗi của người dùng vẫn làm sáng màn lúc nó giữ màn; `screen_on` vẫn là `false` (lệnh của app).
 - `/api/state`: `paused` (bool), `screen_on` (bool), `windows {open, top, min, sel}` + `menu` (`desktop` / `window` /

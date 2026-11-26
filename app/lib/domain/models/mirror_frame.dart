@@ -23,9 +23,16 @@ class TaskbarModel {
     this.active,
     this.flash = false,
     this.badge = 0,
+    this.trayWeather = false,
   });
 
   static const max = 4;
+
+  /// With the weather tray (panel P-2026-11-26.15) only 3 window buttons fit.
+  static const maxWithTray = 3;
+
+  /// Weather icon in the tray (x 176..239): weather skill on, firmware with the tray balloon (R-DK-13).
+  final bool trayWeather;
 
   /// The window of each button (program / channel name), in opening order.
   final List<String> programs;

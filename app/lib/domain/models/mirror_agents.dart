@@ -140,6 +140,7 @@ class DesktopView {
     this.claudePct,
     this.codexPct,
     this.balloon = false,
+    this.tipBalloon = false,
     this.temp,
     this.feels,
     this.desc = '',
@@ -152,8 +153,12 @@ class DesktopView {
   /// % used shown under the Claude / Codex icon; null = the bare name (no key, loading, a key problem).
   final int? claudePct, codexPct;
 
-  /// Weather balloon over the tray (a location is set).
+  /// Weather balloon over the tray: up now.
   final bool balloon;
+
+  /// It is the XP notification balloon of panel P-2026-11-26.15 (box at (96, 138), × button, tail to the tray icon),
+  /// up only while the device says so; false = firmware before it (the always-on balloon at (100, 150)).
+  final bool tipBalloon;
 
   /// Temperature now / feels like in the unit of the settings; [temp] null = "chưa có thời tiết".
   final int? temp, feels;

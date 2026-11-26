@@ -31,13 +31,22 @@ class ControlOutcome {
 
 /// Commands the connected firmware has (R-DK-3), known from the fields of `/api/state`.
 class ControlCaps {
-  const ControlCaps({this.touch = false, this.screen = false, this.dismissCard = false, this.windows = false});
+  const ControlCaps({
+    this.touch = false,
+    this.screen = false,
+    this.dismissCard = false,
+    this.windows = false,
+    this.balloon = false,
+  });
 
   /// Everything (current firmware).
-  static const all = ControlCaps(touch: true, screen: true, dismissCard: true, windows: true);
+  static const all = ControlCaps(touch: true, screen: true, dismissCard: true, windows: true, balloon: true);
 
   /// The device draws the app's open windows on its taskbar and context menus (R-DK-11).
   final bool windows;
+
+  /// The desktop's tray balloon comes and goes, the app shows / hides it (R-DK-13, `balloon` reported).
+  final bool balloon;
 
   /// Touches on the device screen (R-DK-10): the firmware of the app remote (`paused` reported).
   final bool touch;

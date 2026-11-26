@@ -46,4 +46,16 @@ mixin _ControlCalls on DeviceRepository {
     }
     return shown;
   });
+
+  @override
+  Future<Result<bool>> setBalloon(bool show) => _call(() async {
+    final j = await _json('POST', '/api/balloon', body: {'show': show}, tries: 1);
+    final up = j['balloon'] is bool ? j['balloon'] as bool : show;
+    final s = _state;
+    if (s != null) {
+      _state = s.withControl(balloon: up);
+      notifyListeners();
+    }
+    return up;
+  });
 }

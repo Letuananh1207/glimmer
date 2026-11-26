@@ -179,7 +179,9 @@ DesktopView desktopOf(DeviceState s, Map<String, dynamic>? settings) {
   final on = s.skillsOn.isEmpty ? const [SkillIds.agent] : s.skillsOn;
   return DesktopView(
     claudePct: credOk && used >= 0 ? used : null,
-    balloon: s.weatherConfigured && on.contains(SkillIds.weather),
+    // R-DK-13: the device reports whether its balloon is up; older firmware kept it up with a location set.
+    balloon: on.contains(SkillIds.weather) && (s.balloon ?? s.weatherConfigured),
+    tipBalloon: s.balloon != null,
     icons: deskIconsOf(on),
     temp: valid ? _toDisplay(w.tempC!, f) : null,
     feels: valid && w.feelsC != null ? _toDisplay(w.feelsC!, f) : null,

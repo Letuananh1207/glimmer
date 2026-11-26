@@ -67,6 +67,12 @@ class ControlDeviceUseCase {
     return _device.setMenu(m == null ? const {'kind': 'none'} : m.toJson());
   }
 
+  /// R-DK-13: the desktop's tray balloon (tray icon → show 10 s, × → hide). Refused without the firmware for it.
+  Future<Result<bool>> balloon(bool show) async {
+    if (!caps.balloon) return Result.error(AppError(AppErrorKind.controlUnsupported, detail: 'balloon'));
+    return _device.setBalloon(show);
+  }
+
   /// Start → Khởi động lại (asked again by the screen first).
   Future<Result<void>> restart() => _device.reboot();
 

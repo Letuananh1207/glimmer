@@ -385,6 +385,12 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
         unawaited(taskbar(t.program!));
       case TouchKind.icon:
         unawaited(openProgram(t.program!));
+      case TouchKind.tray when f.channel == 'Home':
+        unawaited(balloon(true));
+      case TouchKind.balloonClose:
+        unawaited(balloon(false));
+      case TouchKind.tray:
+        break; // the balloon belongs to the desktop (R-DK-13)
       case TouchKind.none when f.channel == 'Home' && _windows.sel != null:
         _windows = _windows.select(null); // a tap on an empty spot drops the selection (XP)
         _pushWindows();
@@ -393,6 +399,13 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
         break; // □: windows on the device are always full screen
     }
     return t;
+  }
+
+  /// R-DK-13: the desktop's tray balloon. The mirror follows the answer (the repository patches `balloon`); a refusal
+  /// changes nothing on screen.
+  Future<void> balloon(bool show) async {
+    if (!caps.balloon) return;
+    await _control.balloon(show);
   }
 
   // ── context menus (R-DK-11) ──
