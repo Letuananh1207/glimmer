@@ -1289,5 +1289,293 @@
         "type": "String"
       }
     }
+  },
+  "skillPhotoName": "Ảnh",
+  "@skillPhotoName": {
+    "description": "Tên skill / tab dock Ảnh"
+  },
+  "skillPhotoDesc": "Ảnh của bạn, gửi từ điện thoại",
+  "@skillPhotoDesc": {
+    "description": "Mô tả dòng skill Ảnh"
+  },
+  "skillsPhotoHint": "{count} ảnh đã có trên thiết bị. Bật để xoay.",
+  "@skillsPhotoHint": {
+    "description": "Thay mô tả dòng Ảnh khi skill tắt mà thiết bị có ảnh, màu mint",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "skillsNeedFirmware": "Cần firmware mới",
+  "@skillsNeedFirmware": {
+    "description": "Mô tả dòng skill khi firmware chưa có skill đó, amber"
+  },
+  "skillsUpdateFirmware": "Cập nhật",
+  "@skillsUpdateFirmware": {
+    "description": "Nút nhỏ trên dòng skill cần firmware → tab Thiết bị"
+  },
+  "photoOnDevice": "ẢNH TRÊN THIẾT BỊ",
+  "@photoOnDevice": {
+    "description": "Nhãn thẻ tab Ảnh"
+  },
+  "photoCount": "{count}/{max} · còn {free} chỗ",
+  "@photoCount": {
+    "description": "Meta thẻ tab Ảnh",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      },
+      "free": {
+        "type": "int"
+      }
+    }
+  },
+  "photoCountFull": "{max}/{max} · hết chỗ",
+  "@photoCountFull": {
+    "description": "Meta thẻ tab Ảnh khi đủ, amber",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "photoCountEmpty": "0/{max}",
+  "@photoCountEmpty": {
+    "description": "Meta thẻ tab Ảnh khi chưa có ảnh",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "photoAdd": "Thêm ảnh",
+  "@photoAdd": {
+    "description": "Ô cuối lưới, nút ở trạng thái chưa có ảnh, tiêu đề bảng chọn nguồn"
+  },
+  "photoFullTile": "Đủ {max} ảnh",
+  "@photoFullTile": {
+    "description": "Ô thêm ảnh khi đã đủ (khoá)",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "photoFullBody": "Thiết bị giữ tối đa {max} ảnh. Xoá bớt một ảnh để thêm ảnh mới.",
+  "@photoFullBody": {
+    "description": "Dòng dưới lưới khi đủ ảnh",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "photoTileA11y": "Ảnh {index}, bấm để xoá",
+  "@photoTileA11y": {
+    "description": "Nhãn đọc màn hình của ô ảnh",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "photoUnknownA11y": "Ảnh {name}, gửi từ nơi khác, bấm để xoá",
+  "@photoUnknownA11y": {
+    "description": "Nhãn đọc màn hình ô ảnh không có bản xem",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "photoNoPreview": "không có bản xem",
+  "@photoNoPreview": {
+    "description": "Dòng nhỏ trong ô ảnh app không giữ bản sao"
+  },
+  "photoNote": "Bấm vào ảnh để xoá. Cập nhật đầy đủ ở tab Thiết bị sẽ xoá hết ảnh trên thiết bị.",
+  "@photoNote": {
+    "description": "Chú thích dưới thẻ tab Ảnh"
+  },
+  "photoEmptyTitle": "Chưa có ảnh",
+  "@photoEmptyTitle": {
+    "description": "Tab Ảnh chưa có ảnh"
+  },
+  "photoEmptyBody": "Chọn ảnh trong máy, cắt vuông rồi gửi lên. Thiết bị xoay từng ảnh, tối đa {max} ảnh.",
+  "@photoEmptyBody": {
+    "description": "Tab Ảnh chưa có ảnh",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "photoAddHint": "Ảnh sẽ được cắt vuông 188 × 188 trước khi gửi.",
+  "@photoAddHint": {
+    "description": "Dòng phụ bảng chọn nguồn ảnh"
+  },
+  "photoFromGallery": "Chọn trong thư viện",
+  "@photoFromGallery": {
+    "description": "Bảng chọn nguồn ảnh"
+  },
+  "photoFromCamera": "Chụp ảnh",
+  "@photoFromCamera": {
+    "description": "Bảng chọn nguồn ảnh"
+  },
+  "photoDeleteTitle": "Xoá ảnh này?",
+  "@photoDeleteTitle": {
+    "description": "Hộp thoại xoá ảnh"
+  },
+  "photoDeleteBody": "Ảnh bị xoá khỏi thiết bị, không lấy lại được.",
+  "@photoDeleteBody": {
+    "description": "Hộp thoại xoá ảnh"
+  },
+  "photoDelete": "Xoá",
+  "@photoDelete": {
+    "description": "Nút xoá (coral) trong hộp thoại"
+  },
+  "photoDeleting": "Đang xoá",
+  "@photoDeleting": {
+    "description": "Lớp phủ trên ô ảnh đang xoá"
+  },
+  "photoDeleteErrorTitle": "Chưa xoá được ảnh",
+  "@photoDeleteErrorTitle": {
+    "description": "Thanh báo xoá lỗi"
+  },
+  "photoDeleteErrorBody": "Thiết bị không trả lời. Ảnh vẫn còn trên thiết bị.",
+  "@photoDeleteErrorBody": {
+    "description": "Thanh báo xoá lỗi"
+  },
+  "photoCropTitle": "Cắt ảnh",
+  "@photoCropTitle": {
+    "description": "Tiêu đề màn cắt ảnh"
+  },
+  "photoCropAreaA11y": "Vùng cắt, kéo để dời, chụm để phóng",
+  "@photoCropAreaA11y": {
+    "description": "Nhãn đọc màn hình vùng cắt"
+  },
+  "photoCropHint": "Kéo để dời · chụm hai ngón để phóng",
+  "@photoCropHint": {
+    "description": "Dòng hướng dẫn dưới vùng cắt"
+  },
+  "photoCropPreview": "XEM TRƯỚC TRÊN THIẾT BỊ",
+  "@photoCropPreview": {
+    "description": "Nhãn phần xem trước"
+  },
+  "photoCropPreviewBody": "Ảnh 188 × 188, đúng như màn thiết bị hiện.",
+  "@photoCropPreviewBody": {
+    "description": "Cạnh ô xem trước"
+  },
+  "photoCropPreviewNote": "App tự thu nhỏ và nén dưới 40 KB trước khi gửi.",
+  "@photoCropPreviewNote": {
+    "description": "Cạnh ô xem trước, muted"
+  },
+  "photoCropPickOther": "Chọn ảnh khác",
+  "@photoCropPickOther": {
+    "description": "Nút phụ màn cắt ảnh"
+  },
+  "photoCropSend": "Gửi ảnh",
+  "@photoCropSend": {
+    "description": "Nút chính màn cắt ảnh"
+  },
+  "photoCropSending": "Đang gửi ảnh…",
+  "@photoCropSending": {
+    "description": "Thẻ tiến độ khi gửi"
+  },
+  "photoCropKeepOpen": "Giữ app mở tới khi xong.",
+  "@photoCropKeepOpen": {
+    "description": "Thẻ tiến độ khi gửi"
+  },
+  "photoCropDoneTitle": "Đã gửi lên thiết bị",
+  "@photoCropDoneTitle": {
+    "description": "Thẻ gửi xong"
+  },
+  "photoCropDoneBody": "Ảnh {count}/{max}. Thiết bị hiện ảnh này ở lượt xoay tới.",
+  "@photoCropDoneBody": {
+    "description": "Thẻ gửi xong",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "photoCropAddAnother": "Thêm ảnh khác",
+  "@photoCropAddAnother": {
+    "description": "Nút phụ khi gửi xong"
+  },
+  "photoCropDone": "Xong",
+  "@photoCropDone": {
+    "description": "Nút chính khi gửi xong → tab Ảnh"
+  },
+  "photoCropBackToList": "Về danh sách ảnh",
+  "@photoCropBackToList": {
+    "description": "Nút khi lỗi đủ ảnh / hết chỗ → tab Ảnh"
+  },
+  "photoCropRecrop": "Cắt lại",
+  "@photoCropRecrop": {
+    "description": "Nút chính khi ảnh quá lớn"
+  },
+  "photoCropErrorFullTitle": "Thiết bị đã đủ {max} ảnh",
+  "@photoCropErrorFullTitle": {
+    "description": "Lỗi full",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "photoCropErrorFullBody": "Xoá bớt một ảnh rồi gửi lại. Vùng cắt này được giữ.",
+  "@photoCropErrorFullBody": {
+    "description": "Lỗi full"
+  },
+  "photoCropErrorTooBigTitle": "Ảnh vẫn quá lớn",
+  "@photoCropErrorTooBigTitle": {
+    "description": "Lỗi too_big sau khi app đã tự giảm chất lượng"
+  },
+  "photoCropErrorTooBigBody": "Đã giảm chất lượng mà ảnh vẫn trên 40 KB. Chọn vùng ít chi tiết hơn, hoặc ảnh khác.",
+  "@photoCropErrorTooBigBody": {
+    "description": "Lỗi too_big"
+  },
+  "photoCropErrorNoSpaceTitle": "Thiết bị hết chỗ lưu",
+  "@photoCropErrorNoSpaceTitle": {
+    "description": "Lỗi no_space"
+  },
+  "photoCropErrorNoSpaceBody": "Bộ nhớ thiết bị gần đầy. Xoá bớt ảnh rồi thử lại.",
+  "@photoCropErrorNoSpaceBody": {
+    "description": "Lỗi no_space"
+  },
+  "photoCropErrorRejectedTitle": "Thiết bị không nhận ảnh",
+  "@photoCropErrorRejectedTitle": {
+    "description": "Lỗi not_jpeg / progressive / bad_size / truncated / empty"
+  },
+  "photoCropErrorRejectedBody": "Ảnh app tạo ra bị lỗi. Thử lại; nếu vẫn lỗi, hãy báo lỗi app.",
+  "@photoCropErrorRejectedBody": {
+    "description": "Lỗi thiết bị từ chối ảnh"
+  },
+  "photoCropErrorOfflineTitle": "Mất kết nối với thiết bị",
+  "@photoCropErrorOfflineTitle": {
+    "description": "Lỗi mạng khi gửi"
+  },
+  "photoCropErrorOfflineBody": "Kiểm tra thiết bị còn bật và cùng mạng Wi-Fi với điện thoại.",
+  "@photoCropErrorOfflineBody": {
+    "description": "Lỗi mạng khi gửi"
+  },
+  "devPhotoUnreadableTitle": "Không mở được ảnh này",
+  "@devPhotoUnreadableTitle": {
+    "description": "PhotoCrop: điện thoại không giải mã được ảnh vừa chọn (thiết kế chưa vẽ)"
+  },
+  "devPhotoUnreadableBody": "Chọn ảnh khác (JPEG, PNG hoặc HEIC).",
+  "@devPhotoUnreadableBody": {
+    "description": "PhotoCrop: nội dung thanh báo ảnh không mở được"
+  },
+  "devPhotoLoadErrorTitle": "Chưa tải được danh sách ảnh",
+  "@devPhotoLoadErrorTitle": {
+    "description": "Tab Ảnh: GET /api/photos lỗi (thiết kế chưa vẽ)"
   }
 }

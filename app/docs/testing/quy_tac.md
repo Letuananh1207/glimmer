@@ -65,13 +65,15 @@ Các quy tắc dưới đây ghi lại hành vi app đang có lúc chuyển sang
 
 Một skill = các màn của nó trong app + một tab trên dock thiết bị (bộ kênh của nó). Kế hoạch
 `docs/tasks/2026-11-25-he-sinh-thai-skill.md`; từ thiết kế 2026-11-25.3 (`docs/tasks/2026-11-25-thiet-ke-2026-11-25.3.md`)
-skill là danh sách bật / tắt: Agent, Thời tiết (Weather + Forecast), Đồng hồ (Clock). Kênh hệ thống (Thông báo,
-Ban đêm, Thông tin) hiện ở mọi skill.
+skill là danh sách bật / tắt: Agent, Thời tiết (Weather + Forecast), Đồng hồ (Clock); từ thiết kế 2026-11-25.4
+(`docs/tasks/2026-11-25-thiet-ke-2026-11-25.4.md`) thêm Ảnh (Photo) — thứ tự dock Agent, Ảnh, Thời tiết, Đồng hồ.
+Kênh hệ thống (Thông báo, Ban đêm, Thông tin) hiện ở mọi skill.
 
 | Mã | Quy tắc | Ví dụ | App |
 | --- | --- | --- | --- |
-| R-SK-1 | Nhiều skill bật cùng lúc, ít nhất một; mặc định Agent + Thời tiết + Đồng hồ. Không tắt được skill bật cuối cùng. Danh sách lưu trên máy bỏ id không còn trong danh mục, rỗng → mặc định. | Mới cài app → Agent, Thời tiết, Đồng hồ bật; chỉ còn Agent → công tắc Agent khoá | ok |
-| R-SK-2 | Bật / tắt trên app → gửi thiết bị danh sách skill bật (`skillsOn` trong `/api/settings`, theo thứ tự dock), thiết bị nhận rồi mới lưu máy; skill thiết bị đang bật mà app chưa có gói (vd `photo`) gửi kèm, giữ nguyên; thiết bị xoay mọi tab dock đang bật + Thông tin, Ban đêm. | Tắt Thời tiết → gửi `[agent, clock]`; thiết bị xoay Agent, Đồng hồ + Thông tin | ok |
+| R-SK-1 | Nhiều skill bật cùng lúc, ít nhất một; mặc định Agent + Thời tiết + Đồng hồ (Ảnh mặc định tắt). Không tắt được skill bật cuối cùng. Danh sách lưu trên máy bỏ id không còn trong danh mục, rỗng → mặc định. | Mới cài app → Agent, Thời tiết, Đồng hồ bật; chỉ còn Agent → công tắc Agent khoá | ok |
+| R-SK-2 | Bật / tắt trên app → gửi thiết bị danh sách skill bật (`skillsOn` trong `/api/settings`, theo thứ tự dock), thiết bị nhận rồi mới lưu máy; skill thiết bị đang bật mà app chưa có gói (vd `music`) gửi kèm, giữ nguyên; thiết bị xoay mọi tab dock đang bật + Thông tin, Ban đêm. | Tắt Thời tiết → gửi `[agent, clock]`; thiết bị xoay Agent, Đồng hồ + Thông tin | ok |
 | R-SK-3 | Thẻ cần duyệt / chờ trả lời vẫn chen ngang ở mọi skill. | Skill Nhạc, Claude Code xin duyệt → thẻ amber hiện | ok · miễn test (luật firmware: kênh Attention là kênh hệ thống, `test/test_logic` `test_skill_filter_and_default`) |
 | R-SK-4 | Thiết bị không báo danh sách skill bật (`skills_on`, firmware cũ) → app chỉ có skill Agent, không cho bật / tắt, không gửi gì. | Firmware 0.22 → Agent ổ khoá, Thời tiết / Đồng hồ "Luôn có" | ok |
 | R-SK-5 | Danh sách skill bật trên thiết bị khác danh sách app lưu (đổi từ trang web thiết bị) → app theo thiết bị và lưu lại. | Web tắt Đồng hồ, app lưu cả ba → app thành Agent, Thời tiết | ok |
+| R-SK-6 | Tab Ảnh trên Màn hình chỉ có khi skill Ảnh bật; quản lý ảnh khi skill tắt = bật skill trước (màn Skill gợi ý "N ảnh đã có trên thiết bị. Bật để xoay." khi thiết bị đã có ảnh). Firmware chưa có ảnh (`/api/state` không có `photos`) → dòng Ảnh "Cần firmware mới" + nút Cập nhật, không bật được. | Ảnh tắt, thiết bị có 5 ảnh → mô tả mint "5 ảnh đã có…"; bật Ảnh → tab Ảnh thứ 2 | ok |

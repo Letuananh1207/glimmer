@@ -1,3 +1,10 @@
+import 'dart:typed_data';
+
+import '../domain/models/device_photo.dart';
+
+/// What the Ảnh tab hands PhotoCrop: the picked image file and the device's limits.
+typedef PhotoCropArgs = ({Uint8List image, PhotoInfo info});
+
 /// Đường dẫn trong app (design/docs/navigation.json).
 abstract final class Routes {
   static const connect = '/connect';
@@ -10,6 +17,10 @@ abstract final class Routes {
   static const wifiSetupName = 'wifi';
   static const connectWifi = '$connect/$wifiSetupName';
   static const deviceWifi = '$device/$wifiSetupName';
+
+  /// Cắt ảnh: push từ tab Ảnh của Màn hình, nằm trên khung tab; `extra` = [PhotoCropArgs].
+  static const photoCropName = 'photo';
+  static const photoCrop = '$dashboard/$photoCropName';
 
   /// Tab 2–4, dùng chung mọi skill.
   static const sharedTabs = [skills, settings, device];

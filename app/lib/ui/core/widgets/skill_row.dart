@@ -14,6 +14,7 @@ class SkillRow extends StatelessWidget {
     required this.name,
     required this.description,
     this.descriptionColor = AppColors.muted,
+    this.descriptionLines = 1,
     required this.trailing,
   });
 
@@ -26,6 +27,9 @@ class SkillRow extends StatelessWidget {
   final String name;
   final String description;
   final Color descriptionColor;
+
+  /// Lines the description may take (one; the Ảnh hint wraps to two).
+  final int descriptionLines;
   final Widget trailing;
 
   static const _pad = EdgeInsets.symmetric(vertical: 10);
@@ -59,7 +63,7 @@ class SkillRow extends StatelessWidget {
                         fontSize: _nameSize, fontWeight: FontWeight.w700, color: on ? AppColors.ink : AppColors.inkDim)),
                 const SizedBox(height: 2),
                 Text(description,
-                    maxLines: 1,
+                    maxLines: descriptionLines,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(fontSize: _descSize, height: _descLine, color: descriptionColor)),
               ]),

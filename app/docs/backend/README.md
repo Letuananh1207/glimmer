@@ -41,3 +41,19 @@ Id `music` / `social` / `fun` là ô "Sắp có" — không bao giờ được l
 
 `AttentionCard.showsInS` (2026-11-25.3, đọc từ `shows_in_s` của `GET /push`, không lưu): thẻ còn ẩn trên thiết bị
 (Codex "tới lượt bạn" chờ 60 s) — không đếm vào huy hiệu agent chờ.
+
+## Skill Ảnh (2026-11-25.4)
+
+`skills_on` nhận thêm id `photo` (thứ tự dock `agent`, `photo`, `weather`, `clock`; mặc định vẫn không có `photo`,
+R-SK-1). Không di trú.
+
+**Bản sao ảnh đã gửi** — `<thư mục tài liệu của app>/photos/<tên tệp trên thiết bị>` (`PhotoStoreService`,
+`PhotoRepositoryLocal`): đúng tệp JPEG baseline 188 × 188 ≤ 40 KB app đã gửi `POST /api/photos`, đặt theo tên thiết bị
+trả về (`p3.jpg`; ký tự ngoài `A-Za-z0-9._-` đổi thành `_`). Chỉ dùng làm hình thu nhỏ ở tab Ảnh: khớp khi thiết bị còn
+ảnh **cùng tên và cùng kích thước** (thiết bị khác / ảnh gửi từ nơi khác có thể trùng tên); tải danh sách thì xoá bản
+sao của ảnh thiết bị không còn; xoá ảnh trên app xoá luôn bản sao. Không phải dữ liệu gốc — mất thì chỉ thiếu hình
+thu nhỏ. Backend (nếu có) không cần đồng bộ.
+
+Model đọc từ thiết bị (không lưu): `DeviceState.photos` (`photos` của `/api/state`, null = firmware chưa có ảnh),
+`PhotoInfo` / `DevicePhoto` (`GET /api/photos`), `SentPhoto` (`POST /api/photos`), `PhotoGallery` / `GalleryPhoto`
+(danh sách + bản sao), `PhotoPixels` (vùng cắt RGBA đưa vào `SendPhotoUseCase`) — `lib/domain/models/device_photo.dart`.

@@ -54,6 +54,25 @@ enum AppErrorKind {
   /// Turning off [AppError.detail] would leave no skill on (R-SK-1).
   skillLastOne,
 
+  /// The device already holds its maximum of photos (`full`, HTTP 413).
+  photoFull,
+
+  /// The photo stays over the device's byte limit even at the lowest JPEG quality (`too_big`).
+  photoTooBig,
+
+  /// The device filesystem has no room left (`no_space`, HTTP 507).
+  photoNoSpace,
+
+  /// The device refused the file (`not_jpeg` / `progressive` / `bad_size` / `truncated` / `empty` / `field`);
+  /// [AppError.detail] = the device's code. Also: the picked image could not be read.
+  photoRejected,
+
+  /// DELETE /api/photos: no photo named [AppError.detail] on the device (HTTP 404).
+  photoNotFound,
+
+  /// The user cancelled the upload.
+  cancelled,
+
   /// Anything else; [AppError.detail] = the error.
   other,
 }

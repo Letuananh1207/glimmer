@@ -18,10 +18,12 @@ import '../../testing/fakes/fake_services.dart';
 
 const _url = 'http://192.168.1.50';
 const _all = ['agent', 'weather', 'clock'];
+const _kinds = ['agent', 'photo', 'weather', 'clock'];
 final _vi = lookupAppLocalizations(const Locale('vi'));
 
-Map<String, dynamic> _state(List<String> on) =>
-    {'fw': '0.23.0', 'skill': on.first, 'skills': _all, 'skills_on': on};
+/// Firmware with the dock and skill Ảnh ([photos] on the device).
+Map<String, dynamic> _state(List<String> on, {int photos = 0}) =>
+    {'fw': '0.24.0', 'skill': on.first, 'skills': _kinds, 'skills_on': on, 'photos': photos};
 
 class _Rig {
   _Rig(this.device, this.vm);
@@ -72,6 +74,7 @@ void main() {
       final r = await _rig();
       expect(r.vm.rows.map((x) => (x.id, x.on, x.mode, x.enabled)), [
         ('agent', true, SkillRowMode.toggle, true),
+        ('photo', false, SkillRowMode.toggle, true),
         ('weather', true, SkillRowMode.toggle, true),
         ('clock', true, SkillRowMode.toggle, true),
       ]);
@@ -93,7 +96,7 @@ void main() {
     test('R-SK-2 toggling: the row sends (device state kept), others locked; then follows the device', () async {
       final r = await _rig();
       final run = r.vm.toggle('weather', enable: false);
-      final weather = r.vm.rows[1];
+      final weather = r.vm.rows[2];
       expect((weather.mode, weather.on), (SkillRowMode.sending, true));
       expect(r.vm.rows.every((x) => !x.enabled), isTrue, reason: 'nothing tappable while sending');
       expect(r.vm.banner, isNull, reason: 'no banner while sending');
@@ -102,7 +105,7 @@ void main() {
         'skillsOn': ['agent', 'clock'],
       });
       expect(r.vm.enabled, ['agent', 'clock']);
-      expect(r.vm.rows[1].on, isFalse);
+      expect(r.vm.rows[2].on, isFalse);
       r.vm.dispose();
       r.device.repo.dispose();
     });
@@ -112,7 +115,7 @@ void main() {
       await r.vm.toggle('weather', enable: false);
       expect(r.vm.banner, SkillsBanner.error);
       expect((r.vm.failed?.id, r.vm.failed?.enable), ('weather', false));
-      expect(r.vm.rows[1].on, isTrue);
+      expect(r.vm.rows[2].on, isTrue);
       await r.vm.retry();
       expect(r.device.posts('/api/settings').length, 2);
       expect(r.vm.banner, SkillsBanner.error);
@@ -128,6 +131,24 @@ void main() {
         ('weather', true, SkillRowMode.alwaysOn),
         ('clock', true, SkillRowMode.alwaysOn),
       ]);
+      r.vm.dispose();
+      r.device.repo.dispose();
+    });
+
+    test('R-SK-6 Ảnh off and the device holds photos → hint with the count; on → no hint', () async {
+      final r = await _rig(state: _state(_all, photos: 5));
+      expect(r.vm.rows[1].photoHint, 5);
+      r.device.api.on(_url, 'GET', '/api/state', _state(_kinds, photos: 5));
+      await r.device.repo.refresh();
+      expect((r.vm.rows[1].on, r.vm.rows[1].photoHint), (true, 0));
+      r.vm.dispose();
+      r.device.repo.dispose();
+    });
+
+    test('R-SK-6 firmware without photos → Ảnh "needs firmware", not toggleable', () async {
+      final r = await _rig(state: {'fw': '0.23.0', 'skills': _all, 'skills_on': _all});
+      expect((r.vm.rows[1].id, r.vm.rows[1].mode, r.vm.rows[1].enabled), ('photo', SkillRowMode.needsFirmware, false));
+      expect(r.vm.rows.where((x) => x.mode == SkillRowMode.toggle).length, 3);
       r.vm.dispose();
       r.device.repo.dispose();
     });
@@ -171,14 +192,16 @@ void main() {
       ]) {
         expect(find.text(s), findsOneWidget, reason: s);
       }
-      expect(find.byType(SkillSwitch), findsNWidgets(3));
+      expect(find.text(_vi.skillPhotoName), findsOneWidget);
+      expect(find.text(_vi.skillPhotoDesc), findsOneWidget, reason: 'no photos on the device → plain description');
+      expect(find.byType(SkillSwitch), findsNWidgets(4));
       expect(find.bySemanticsLabel(_vi.skillsToggleA11y(_vi.skillClockName)), findsOneWidget);
     });
 
     testWidgets('sending then error: spinner on the row, then banner + retry', (t) async {
       final r = await pump(t, deviceTakes: false);
       r.device.api.holdPosts = Completer<void>();
-      await t.tap(find.byType(SkillSwitch).at(1));
+      await t.tap(find.byType(SkillSwitch).at(2));
       await _frames(t);
       expect(find.text(_vi.skillsSending), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -197,6 +220,27 @@ void main() {
       expect(find.text(_vi.skillAgentDesc), findsNothing);
     });
 
+    testWidgets('photoHint: mint "N ảnh đã có trên thiết bị"', (t) async {
+      await pump(t, state: _state(_all, photos: 5));
+      expect(find.text(_vi.skillsPhotoHint(5)), findsOneWidget);
+      expect(find.text(_vi.skillPhotoDesc), findsNothing);
+    });
+
+    testWidgets('photoFw: "Cần firmware mới" + Cập nhật → tab Thiết bị', (t) async {
+      var opened = 0;
+      final r = (await t.runAsync(() => _rig(state: {'fw': '0.23.0', 'skills': _all, 'skills_on': _all})))!;
+      addTearDown(() {
+        r.vm.dispose();
+        r.device.repo.dispose();
+      });
+      await t.pumpWidget(_app(SkillsScreen(viewModel: r.vm, onOpenDevice: () => opened++)));
+      await _frames(t);
+      expect(find.text(_vi.skillsNeedFirmware), findsOneWidget);
+      expect(find.byType(SkillSwitch), findsNWidgets(3));
+      await t.tap(find.text(_vi.skillsUpdateFirmware));
+      expect(opened, 1);
+    });
+
     testWidgets('legacy: amber banner, padlock, "Luôn có", no order note', (t) async {
       await pump(t, state: {'fw': '0.22.0'});
       expect(find.text(_vi.skillsLegacyTitle), findsOneWidget);
@@ -206,6 +250,7 @@ void main() {
       expect(find.text(_vi.skillsAlwaysOn), findsNWidgets(2));
       expect(find.byType(SkillSwitch), findsNothing);
       expect(find.text(_vi.skillsOrderNote), findsNothing);
+      expect(find.text(_vi.skillPhotoName), findsNothing, reason: 'no Ảnh row on old firmware');
     });
   });
 

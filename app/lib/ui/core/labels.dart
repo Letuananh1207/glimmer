@@ -1,5 +1,6 @@
 // Words for values that come from the device or the domain layer.
 import '../../domain/models/app_error.dart';
+import '../../domain/models/device_photo.dart';
 import '../../l10n/app_localizations.dart';
 import '../../utils/durations.dart';
 
@@ -50,6 +51,12 @@ extension Labels on AppLocalizations {
         AppErrorKind.invalidBackup => devErrInvalidBackup,
         AppErrorKind.skillUnsupported => devErrSkillUnsupported,
         AppErrorKind.skillLastOne => skillsLastOne,
+        AppErrorKind.photoFull => photoCropErrorFullTitle(PhotoInfo.defaultMaxCount),
+        AppErrorKind.photoTooBig => photoCropErrorTooBigTitle,
+        AppErrorKind.photoNoSpace => photoCropErrorNoSpaceTitle,
+        AppErrorKind.photoRejected => photoCropErrorRejectedTitle,
+        AppErrorKind.photoNotFound => devErrHttp(e.status),
+        AppErrorKind.cancelled => commonCancel,
         AppErrorKind.other => e.detail,
       };
 }

@@ -88,6 +88,11 @@ abstract final class AppSize {
   static const double switchH = 32;
   static const double chip = 36;
   static const double headerClawd = 44;
+  static const double dockTabStacked = 56;
+  static const double cropStage = 340;
+  static const double cropFrame = 260;
+  static const double devicePreview = 180;
+  static const double devicePreviewPhoto = 141;
 
   static const double radiusCard = 14;
   static const double radiusButton = 20;
@@ -101,6 +106,8 @@ abstract final class AppSize {
   static const double radiusDockTab = 10;
   static const double radiusChip = 18;
   static const double radiusBadge = 4;
+  static const double radiusPhotoTile = 10;
+  static const double radiusSheet = 20;
 
   static const double hairline = 1;
 }

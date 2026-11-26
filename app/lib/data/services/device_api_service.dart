@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import '../../utils/cancel_token.dart';
+
 /// HTTP error from the display; [status] 0 = no answer (timeout / unreachable).
 class DeviceHttpException implements Exception {
   const DeviceHttpException(this.status, [this.detail = '']);
@@ -58,6 +60,60 @@ class DeviceApiService {
       }
     }
     throw DeviceHttpException(0, '${last.runtimeType}');
+  }
+
+  /// Multipart upload of one file to [path] (e.g. POST /api/photos, field "photo"); returns the JSON answer.
+  /// An HTTP error throws [DeviceHttpException] with the answer body as `detail` (the device's `{"error": …}`);
+  /// [cancel] aborts the request (status -1). [onProgress] gets the share of bytes written, 0…1.
+  Future<Map<String, dynamic>> uploadFile(
+    String baseUrl,
+    String path, {
+    required String field,
+    required String filename,
+    required String contentType,
+    required Uint8List bytes,
+    String token = '',
+    void Function(double)? onProgress,
+    CancelToken? cancel,
+    Duration timeout = const Duration(seconds: 30),
+  }) async {
+    const boundary = '----glimmer-app-boundary';
+    final head = utf8.encode('--$boundary\r\n'
+        'Content-Disposition: form-data; name="$field"; filename="$filename"\r\n'
+        'Content-Type: $contentType\r\n\r\n');
+    final tail = utf8.encode('\r\n--$boundary--\r\n');
+    HttpClientRequest? req;
+    cancel?.onCancel = () => req?.abort(const DeviceHttpException(-1, 'cancelled'));
+    try {
+      if (cancel?.cancelled ?? false) throw const DeviceHttpException(-1, 'cancelled');
+      req = await _client.postUrl(Uri.parse('$baseUrl$path')).timeout(timeout);
+      if (token.isNotEmpty) req.headers.set(HttpHeaders.authorizationHeader, 'Bearer $token');
+      req.headers.set(HttpHeaders.contentTypeHeader, 'multipart/form-data; boundary=$boundary');
+      req.contentLength = head.length + bytes.length + tail.length;
+      req.add(head);
+      const chunk = 2048;
+      for (var o = 0; o < bytes.length; o += chunk) {
+        if (cancel?.cancelled ?? false) throw const DeviceHttpException(-1, 'cancelled');
+        final end = o + chunk > bytes.length ? bytes.length : o + chunk;
+        req.add(bytes.sublist(o, end));
+        await req.flush().timeout(timeout);
+        onProgress?.call(end / bytes.length);
+      }
+      req.add(tail);
+      final res = await req.close().timeout(timeout);
+      final text = await res.transform(utf8.decoder).join().timeout(timeout);
+      if (res.statusCode >= 400) throw DeviceHttpException(res.statusCode, text.trim());
+      if (text.trim().isEmpty) return {};
+      final decoded = jsonDecode(text);
+      return decoded is Map<String, dynamic> ? decoded : {'value': decoded};
+    } on DeviceHttpException {
+      rethrow;
+    } catch (e) {
+      if (cancel?.cancelled ?? false) throw const DeviceHttpException(-1, 'cancelled');
+      throw DeviceHttpException(0, '${e.runtimeType}');
+    } finally {
+      cancel?.onCancel = null;
+    }
   }
 
   /// OTA upload to POST /update. [field] is "firmware" or "filesystem" (ESP8266HTTPUpdateServer).

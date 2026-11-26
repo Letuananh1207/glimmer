@@ -165,6 +165,9 @@ const _packageOwners = <String, Set<String>>{
   'package:permission_handler/': {'service'},
   'package:file_picker/': {'service'},
   'package:share_plus/': {'service'},
+  'package:image_picker/': {'service'},
+  // Mã hoá JPEG thuần (không IO) cho skill Ảnh — chỉ quy tắc thuần `domain/rules/photo_rules.dart`.
+  'package:image/': {'rules'},
   'package:dio/': {'service'},
   'package:supabase_flutter/': {'service', 'config', 'main'},
   'package:supabase/': {'service'},

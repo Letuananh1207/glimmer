@@ -33,6 +33,7 @@ class DeviceState {
     this.skillsOn = const [],
     this.weatherConfigured = false,
     this.weather,
+    this.photos,
   });
 
   factory DeviceState.fromJson(Map<String, dynamic> j) => DeviceState(
@@ -66,6 +67,7 @@ class DeviceState {
         weather: j['weather'] is Map<String, dynamic>
             ? DeviceWeather.fromJson(j['weather'] as Map<String, dynamic>)
             : null,
+        photos: j['photos'] is num ? (j['photos'] as num).toInt() : null,
       );
 
   final String fw, build, wifi, ip, ssid, activeChannel, resetReason;
@@ -89,6 +91,9 @@ class DeviceState {
 
   /// Weather now + today and 3 days; null when the device has no location or the firmware has none.
   final DeviceWeather? weather;
+
+  /// Photos stored on the device (skill `photo`); null = firmware without photos (no `photos` in /api/state).
+  final int? photos;
 
   /// In setup-AP mode the device reports wifi "ap".
   bool get inSetupMode => wifi == 'ap';

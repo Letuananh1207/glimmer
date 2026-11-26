@@ -3,7 +3,7 @@
 part of 'dashboard_view_model.dart';
 
 /// Device channel each dock tab's `ShowOnDeviceButton` brings up (`POST /api/channel`).
-const showChannelOf = {'agent': 'Claude', 'weather': 'Weather', 'clock': 'Clock'};
+const showChannelOf = {'agent': 'Claude', 'photo': 'Photo', 'weather': 'Weather', 'clock': 'Clock'};
 
 enum WeatherStatus {
   /// Device has no `weatherLat/Lon` (`weatherNoLoc`).

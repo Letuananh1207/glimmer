@@ -910,4 +910,203 @@ class AppLocalizationsVi extends AppLocalizations {
   String devShowOnDeviceDone(String skill) {
     return 'Đã chuyển sang màn $skill';
   }
+
+  @override
+  String get skillPhotoName => 'Ảnh';
+
+  @override
+  String get skillPhotoDesc => 'Ảnh của bạn, gửi từ điện thoại';
+
+  @override
+  String skillsPhotoHint(int count) {
+    return '$count ảnh đã có trên thiết bị. Bật để xoay.';
+  }
+
+  @override
+  String get skillsNeedFirmware => 'Cần firmware mới';
+
+  @override
+  String get skillsUpdateFirmware => 'Cập nhật';
+
+  @override
+  String get photoOnDevice => 'ẢNH TRÊN THIẾT BỊ';
+
+  @override
+  String photoCount(int count, int max, int free) {
+    return '$count/$max · còn $free chỗ';
+  }
+
+  @override
+  String photoCountFull(int max) {
+    return '$max/$max · hết chỗ';
+  }
+
+  @override
+  String photoCountEmpty(int max) {
+    return '0/$max';
+  }
+
+  @override
+  String get photoAdd => 'Thêm ảnh';
+
+  @override
+  String photoFullTile(int max) {
+    return 'Đủ $max ảnh';
+  }
+
+  @override
+  String photoFullBody(int max) {
+    return 'Thiết bị giữ tối đa $max ảnh. Xoá bớt một ảnh để thêm ảnh mới.';
+  }
+
+  @override
+  String photoTileA11y(int index) {
+    return 'Ảnh $index, bấm để xoá';
+  }
+
+  @override
+  String photoUnknownA11y(String name) {
+    return 'Ảnh $name, gửi từ nơi khác, bấm để xoá';
+  }
+
+  @override
+  String get photoNoPreview => 'không có bản xem';
+
+  @override
+  String get photoNote =>
+      'Bấm vào ảnh để xoá. Cập nhật đầy đủ ở tab Thiết bị sẽ xoá hết ảnh trên thiết bị.';
+
+  @override
+  String get photoEmptyTitle => 'Chưa có ảnh';
+
+  @override
+  String photoEmptyBody(int max) {
+    return 'Chọn ảnh trong máy, cắt vuông rồi gửi lên. Thiết bị xoay từng ảnh, tối đa $max ảnh.';
+  }
+
+  @override
+  String get photoAddHint => 'Ảnh sẽ được cắt vuông 188 × 188 trước khi gửi.';
+
+  @override
+  String get photoFromGallery => 'Chọn trong thư viện';
+
+  @override
+  String get photoFromCamera => 'Chụp ảnh';
+
+  @override
+  String get photoDeleteTitle => 'Xoá ảnh này?';
+
+  @override
+  String get photoDeleteBody => 'Ảnh bị xoá khỏi thiết bị, không lấy lại được.';
+
+  @override
+  String get photoDelete => 'Xoá';
+
+  @override
+  String get photoDeleting => 'Đang xoá';
+
+  @override
+  String get photoDeleteErrorTitle => 'Chưa xoá được ảnh';
+
+  @override
+  String get photoDeleteErrorBody =>
+      'Thiết bị không trả lời. Ảnh vẫn còn trên thiết bị.';
+
+  @override
+  String get photoCropTitle => 'Cắt ảnh';
+
+  @override
+  String get photoCropAreaA11y => 'Vùng cắt, kéo để dời, chụm để phóng';
+
+  @override
+  String get photoCropHint => 'Kéo để dời · chụm hai ngón để phóng';
+
+  @override
+  String get photoCropPreview => 'XEM TRƯỚC TRÊN THIẾT BỊ';
+
+  @override
+  String get photoCropPreviewBody =>
+      'Ảnh 188 × 188, đúng như màn thiết bị hiện.';
+
+  @override
+  String get photoCropPreviewNote =>
+      'App tự thu nhỏ và nén dưới 40 KB trước khi gửi.';
+
+  @override
+  String get photoCropPickOther => 'Chọn ảnh khác';
+
+  @override
+  String get photoCropSend => 'Gửi ảnh';
+
+  @override
+  String get photoCropSending => 'Đang gửi ảnh…';
+
+  @override
+  String get photoCropKeepOpen => 'Giữ app mở tới khi xong.';
+
+  @override
+  String get photoCropDoneTitle => 'Đã gửi lên thiết bị';
+
+  @override
+  String photoCropDoneBody(int count, int max) {
+    return 'Ảnh $count/$max. Thiết bị hiện ảnh này ở lượt xoay tới.';
+  }
+
+  @override
+  String get photoCropAddAnother => 'Thêm ảnh khác';
+
+  @override
+  String get photoCropDone => 'Xong';
+
+  @override
+  String get photoCropBackToList => 'Về danh sách ảnh';
+
+  @override
+  String get photoCropRecrop => 'Cắt lại';
+
+  @override
+  String photoCropErrorFullTitle(int max) {
+    return 'Thiết bị đã đủ $max ảnh';
+  }
+
+  @override
+  String get photoCropErrorFullBody =>
+      'Xoá bớt một ảnh rồi gửi lại. Vùng cắt này được giữ.';
+
+  @override
+  String get photoCropErrorTooBigTitle => 'Ảnh vẫn quá lớn';
+
+  @override
+  String get photoCropErrorTooBigBody =>
+      'Đã giảm chất lượng mà ảnh vẫn trên 40 KB. Chọn vùng ít chi tiết hơn, hoặc ảnh khác.';
+
+  @override
+  String get photoCropErrorNoSpaceTitle => 'Thiết bị hết chỗ lưu';
+
+  @override
+  String get photoCropErrorNoSpaceBody =>
+      'Bộ nhớ thiết bị gần đầy. Xoá bớt ảnh rồi thử lại.';
+
+  @override
+  String get photoCropErrorRejectedTitle => 'Thiết bị không nhận ảnh';
+
+  @override
+  String get photoCropErrorRejectedBody =>
+      'Ảnh app tạo ra bị lỗi. Thử lại; nếu vẫn lỗi, hãy báo lỗi app.';
+
+  @override
+  String get photoCropErrorOfflineTitle => 'Mất kết nối với thiết bị';
+
+  @override
+  String get photoCropErrorOfflineBody =>
+      'Kiểm tra thiết bị còn bật và cùng mạng Wi-Fi với điện thoại.';
+
+  @override
+  String get devPhotoUnreadableTitle => 'Không mở được ảnh này';
+
+  @override
+  String get devPhotoUnreadableBody => 'Chọn ảnh khác (JPEG, PNG hoặc HEIC).';
+
+  @override
+  String get devPhotoLoadErrorTitle => 'Chưa tải được danh sách ảnh';
 }

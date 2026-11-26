@@ -3,7 +3,11 @@ import 'dart:typed_data';
 
 import '../../../domain/models/app_error.dart';
 import '../../../domain/models/attention_card.dart';
+import '../../../domain/models/device_photo.dart';
 import '../../../domain/models/device_state.dart';
+import '../../../domain/rules/photo_rules.dart';
+import '../../../utils/cancel_token.dart';
+import '../../../utils/json.dart';
 import '../../../utils/result.dart';
 import '../../services/device_api_service.dart';
 import '../../services/discovery_service.dart';
@@ -293,6 +297,46 @@ class DeviceRepositoryLocal extends DeviceRepository {
   @override
   Future<Result<void>> upload(String field, Uint8List image, {void Function(double)? onProgress}) =>
       _call(() => _api.upload(_url, field, image, onProgress: onProgress));
+
+  // ── photos (skill `photo`) ──
+  @override
+  Future<Result<PhotoInfo>> photos() => _call(() async => PhotoInfo.fromJson(await _json('GET', '/api/photos')));
+
+  @override
+  Future<Result<SentPhoto>> uploadPhoto(Uint8List jpeg, {void Function(double)? onProgress, CancelToken? cancel}) async {
+    final r = await _photoCall(() async {
+      final j = await _api.uploadFile(_url, '/api/photos',
+          field: 'photo', filename: 'photo.jpg', contentType: 'image/jpeg', bytes: jpeg,
+          token: _store.token, onProgress: onProgress, cancel: cancel);
+      return SentPhoto(jsonStr(j['name']), jsonInt(j['count']), jpeg.length);
+    });
+    if (r is Ok) unawaited(refresh()); // `photos` in /api/state
+    return r;
+  }
+
+  @override
+  Future<Result<int>> deletePhoto(String name) async {
+    final q = Uri(queryParameters: {'name': name}).query;
+    final r = await _photoCall(() async => jsonInt((await _json('DELETE', '/api/photos?$q', tries: 1))['count']),
+        name: name);
+    if (r is Ok) unawaited(refresh());
+    return r;
+  }
+
+  /// Photo calls: the device's `{"error": code}` → photo error kinds; 404 → [AppErrorKind.photoNotFound].
+  Future<Result<T>> _photoCall<T>(Future<T> Function() f, {String name = ''}) async {
+    try {
+      return Result.ok(await f());
+    } on DeviceHttpException catch (e) {
+      if (e.status == -1) return const Result.error(AppError(AppErrorKind.cancelled));
+      if (e.status == 404) return Result.error(AppError(AppErrorKind.photoNotFound, status: 404, detail: name));
+      if (e.status == 0 || e.status == 401) return Result.error(_map(e));
+      final code = photoErrorCode(e.detail);
+      return Result.error(AppError(photoErrorKind(code), status: e.status, detail: code));
+    } catch (e) {
+      return Result.error(_map(e));
+    }
+  }
 
   @override
   Future<DeviceState?> waitOnline({Duration max = const Duration(minutes: 3)}) async {

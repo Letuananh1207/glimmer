@@ -45,7 +45,11 @@ class SkillsScreen extends StatelessWidget {
             child: Column(children: [
               for (var i = 0; i < rows.length; i++) ...[
                 if (i > 0) const Divider(height: AppSize.hairline, thickness: AppSize.hairline, color: AppColors.line),
-                _Row(row: rows[i], onChanged: (v) => viewModel.toggle(rows[i].id, enable: v)),
+                _Row(
+                  row: rows[i],
+                  onChanged: (v) => viewModel.toggle(rows[i].id, enable: v),
+                  onOpenDevice: onOpenDevice,
+                ),
               ],
             ]),
           ),
@@ -87,10 +91,11 @@ class SkillsScreen extends StatelessWidget {
 
 /// One `SkillRow` with what its mode puts on the right and in the description.
 class _Row extends StatelessWidget {
-  const _Row({required this.row, required this.onChanged});
+  const _Row({required this.row, required this.onChanged, required this.onOpenDevice});
 
   final SkillRowData row;
   final ValueChanged<bool> onChanged;
+  final VoidCallback onOpenDevice;
 
   static const _spinner = 24.0;
   static const _spinnerStroke = 3.0;
@@ -105,6 +110,8 @@ class _Row extends StatelessWidget {
       SkillRowMode.sending => (l.skillsSending, AppColors.inkDim),
       SkillRowMode.lastOne => (l.skillsLastOne, AppColors.amber),
       SkillRowMode.alwaysOn => (l.skillsAlwaysOn, AppColors.muted),
+      SkillRowMode.needsFirmware => (l.skillsNeedFirmware, AppColors.amber),
+      _ when row.photoHint > 0 => (l.skillsPhotoHint(row.photoHint), AppColors.skillPhoto),
       _ => (SkillStyle.description(l, row.id), AppColors.muted),
     };
     final Widget trailing = switch (row.mode) {
@@ -126,6 +133,7 @@ class _Row extends StatelessWidget {
           child: Icon(Icons.lock_outline, size: _lock, color: AppColors.muted),
         ),
       SkillRowMode.alwaysOn => const SizedBox.shrink(),
+      SkillRowMode.needsFirmware => _UpdateFirmwareButton(onPressed: onOpenDevice),
       _ => SkillSwitch(
           value: row.on,
           accent: style.accent,
@@ -140,9 +148,42 @@ class _Row extends StatelessWidget {
       name: name,
       description: desc,
       descriptionColor: descColor,
+      descriptionLines: row.photoHint > 0 ? 2 : 1,
       trailing: trailing,
     );
   }
+}
+
+/// `photoFw`: nút viền ≥ 44 bo 22 (viền `line`, icon tải firmware 16 + `skillsUpdateFirmware` 13/500 `clawd`)
+/// → tab Thiết bị, thay công tắc.
+class _UpdateFirmwareButton extends StatelessWidget {
+  const _UpdateFirmwareButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  static const _pad = EdgeInsets.symmetric(horizontal: 14);
+  static const _radius = 22.0;
+  static const _icon = 16.0;
+  static const _gap = 6.0;
+  static const _text = 13.0;
+
+  @override
+  Widget build(BuildContext context) => OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size(AppSize.tapMin, AppSize.tapMin),
+          padding: _pad,
+          foregroundColor: AppColors.clawd,
+          side: const BorderSide(color: AppColors.line, width: AppSize.hairline),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(_radius)),
+          textStyle: const TextStyle(fontFamily: AppFonts.family, fontSize: _text, fontWeight: FontWeight.w500),
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          const Icon(Icons.system_update, size: _icon, color: AppColors.clawd),
+          const SizedBox(width: _gap),
+          Text(AppLocalizations.of(context).skillsUpdateFirmware),
+        ]),
+      );
 }
 
 /// Dưới thẻ: ô vuông 8 amber + `skillsOrderNote` (R-SK-3).

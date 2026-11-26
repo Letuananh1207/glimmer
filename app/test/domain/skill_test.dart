@@ -50,6 +50,31 @@ void main() {
       expect(availableSkills(fresh), _all, reason: 'music has no pack in the app yet');
     });
 
+    test('R-SK-1 Ảnh is off by default; dock order Agent, Ảnh, Thời tiết, Đồng hồ', () {
+      expect(appSkills, ['agent', 'photo', 'weather', 'clock']);
+      expect(defaultSkillsOn, isNot(contains('photo')));
+      expect(orderSkills(const ['clock', 'photo', 'agent']), ['agent', 'photo', 'clock']);
+    });
+
+    test('R-SK-6 Ảnh needs firmware with `photos`; hint only while off and the device holds photos', () {
+      final noPhotos = _dev(on: ['agent'], skills: ['agent', 'photo', 'weather', 'clock']);
+      expect(noPhotos.photos, isNull);
+      expect(skillNeedsFirmware(noPhotos, 'photo'), isTrue);
+      expect(skillNeedsFirmware(_dev(on: ['agent'], skills: ['agent', 'weather']), 'photo'), isTrue);
+      expect(skillNeedsFirmware(_dev(), 'photo'), isFalse, reason: 'old firmware is the legacy case (R-SK-4)');
+      final withPhotos = DeviceState.fromJson({
+        'skills': ['agent', 'photo', 'weather', 'clock'],
+        'skills_on': ['agent'],
+        'photos': 5,
+      });
+      expect(skillNeedsFirmware(withPhotos, 'photo'), isFalse);
+      expect(photoHintCount(withPhotos, const ['agent']), 5);
+      expect(photoHintCount(withPhotos, const ['agent', 'photo']), 0, reason: 'already on');
+      expect(photoHintCount(noPhotos, const ['agent']), 0);
+      final empty = DeviceState.fromJson({...{'skills': ['agent', 'photo'], 'skills_on': ['agent']}, 'photos': 0});
+      expect(photoHintCount(empty, const ['agent']), 0);
+    });
+
     test('R-SK-5 the device list wins when it reports skills the app has', () {
       expect(effectiveSkillsOn(stored: _all, device: _dev(on: ['clock', 'agent'])), ['agent', 'clock']);
       expect(effectiveSkillsOn(stored: const ['agent'], device: _dev(on: ['music'])), ['agent'],
@@ -93,15 +118,34 @@ void main() {
       expect(skills.enabled, ['agent', 'clock']);
     });
 
-    test('R-SK-2 a skill the app has no pack for (photo, on from the device web page) stays on', () async {
-      await rig.connect(_url, {..._state(const ['agent', 'photo', 'weather', 'clock']),
-        'skills': const ['agent', 'photo', 'weather', 'clock']});
+    test('R-SK-2 a skill the app has no pack for (music, on from the device web page) stays on', () async {
+      await rig.connect(_url, {..._state(const ['agent', 'weather', 'clock', 'music']),
+        'skills': const ['agent', 'weather', 'clock', 'music']});
       rig.api.on(_url, 'POST', '/api/settings', <String, dynamic>{});
       expect(await toggle('weather', enable: false), isA<Ok<void>>());
       expect(rig.posts('/api/settings').single.body, {
-        'skillsOn': ['agent', 'clock', 'photo'],
+        'skillsOn': ['agent', 'clock', 'music'],
       });
       expect(skills.enabled, ['agent', 'clock']);
+    });
+
+    test('R-SK-2 Ảnh is a pack: turning it on sends it second (dock order)', () async {
+      await rig.connect(_url, {..._state(_all), 'skills': const ['agent', 'photo', 'weather', 'clock'], 'photos': 2});
+      rig.api.on(_url, 'POST', '/api/settings', <String, dynamic>{});
+      expect(toggle.available, ['agent', 'photo', 'weather', 'clock']);
+      expect(await toggle('photo', enable: true), isA<Ok<void>>());
+      expect(rig.posts('/api/settings').single.body, {
+        'skillsOn': ['agent', 'photo', 'weather', 'clock'],
+      });
+      expect(skills.enabled, ['agent', 'photo', 'weather', 'clock']);
+    });
+
+    test('R-SK-6 firmware without photos → Ảnh cannot be turned on, nothing sent', () async {
+      await rig.connect(_url, {..._state(_all), 'skills': const ['agent', 'photo', 'weather', 'clock']});
+      expect(toggle.available, _all);
+      final r = await toggle('photo', enable: true);
+      expect(((r as Error).error as AppError).kind, AppErrorKind.skillUnsupported);
+      expect(rig.posts(), isEmpty);
     });
 
     test('R-SK-2 the device refusing → nothing stored', () async {
