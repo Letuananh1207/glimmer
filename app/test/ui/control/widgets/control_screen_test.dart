@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:glimmer_app/data/repositories/skill/skill_repository_local.dart';
 import 'package:glimmer_app/domain/models/device_state.dart';
 import 'package:glimmer_app/domain/use_cases/control_device_use_case.dart';
-import 'package:glimmer_app/domain/use_cases/toggle_skill_use_case.dart';
 import 'package:glimmer_app/l10n/app_localizations.dart';
 import 'package:glimmer_app/ui/control/view_models/control_view_model.dart';
 import 'package:glimmer_app/domain/rules/mirror_rules.dart';
 import 'package:glimmer_app/ui/control/widgets/control_screen.dart';
-import 'package:glimmer_app/ui/control/widgets/device_mirror/device_mirror.dart';
+import 'package:glimmer_app/ui/control/widgets/device_mirror/touch_mirror.dart';
 import 'package:glimmer_app/ui/control/widgets/device_mirror/mirror_channel.dart';
 import 'package:glimmer_app/ui/control/widgets/hold_card_panel.dart';
+import 'package:glimmer_app/ui/control/widgets/start_menu_sheet.dart';
+import 'package:glimmer_app/ui/control/widgets/touch_legend.dart';
 import 'package:glimmer_app/ui/core/themes/app_theme.dart';
 
 import '../../../../testing/fakes/fake_repositories.dart';
-import '../../../../testing/fakes/fake_services.dart';
 
 const _url = 'http://192.168.1.50';
 final _vi = lookupAppLocalizations(const Locale('vi'));
@@ -79,14 +78,9 @@ void main() {
       await rig.connect(_url, state);
       rig.api.on(_url, 'GET', '/push', {'cards': cards});
       rig.api.on(_url, 'GET', '/api/settings', {'brightness': 80, 'nightMode': 0});
-      final toggle = ToggleSkillUseCase(
-        skills: SkillRepositoryLocal(store: await fakeStore()),
-        device: rig.repo,
-      );
       vm = ControlViewModel(
         device: rig.repo,
         control: ControlDeviceUseCase(device: rig.repo),
-        toggleSkill: toggle,
       );
       await vm!.reload();
     });
@@ -97,23 +91,22 @@ void main() {
           onOpenDetails: (s) async => opened.add(s),
           onUpdateFirmware: () {},
           onSetupWifi: () {},
+          onOpenSettings: () => opened.add('settings'),
+          onOpenSkills: () => opened.add('skills'),
         ),
       ),
     );
     await _frames(t);
   }
 
-  testWidgets('normal: mirror, channel line, pad, jump tabs, brightness, toggles', (t) async {
+  testWidgets('normal: touch mirror, program line, legend, brightness, toggles; no rotation buttons', (t) async {
     await pump(t, _state());
-    expect(find.byType(DeviceMirror), findsOneWidget);
-    expect(
-      find.textContaining(_vi.controlNextIn(6), findRichText: true),
-      findsOneWidget,
-      reason: 'countdown from slide_left_ms',
-    );
-    expect(find.text(_vi.controlPrev), findsOneWidget);
-    expect(find.text(_vi.controlPause), findsOneWidget);
-    expect(find.text(_vi.skillWeatherName), findsWidgets);
+    expect(find.byType(TouchMirror), findsOneWidget);
+    expect(find.textContaining(_vi.controlOpenOnDevice, findRichText: true), findsOneWidget);
+    expect(find.byType(TouchLegend), findsOneWidget);
+    expect(find.text(_vi.controlLegendTitle), findsOneWidget);
+    expect(find.text(_vi.controlPrev), findsNothing);
+    expect(find.text(_vi.controlPause), findsNothing);
     expect(find.text('80%'), findsOneWidget);
     expect(find.text(_vi.controlDetails), findsOneWidget);
     expect(find.byIcon(Icons.lock_outline), findsNothing);
@@ -123,14 +116,37 @@ void main() {
     await t.binding.setSurfaceSize(null);
   });
 
-  testWidgets('R-DK-3 old firmware: banner + locks, tapping a lock sends nothing', (t) async {
+  testWidgets('R-DK-3 R-DK-10 old firmware: banner + lock, a touch on × sends nothing', (t) async {
     await pump(t, _state(current: false));
     expect(find.text(_vi.controlOldFwTitle), findsOneWidget);
-    expect(find.text(_vi.controlOldFwBody('0.24.0', 'kênh trước, dừng xoay, tắt màn')), findsOneWidget);
-    expect(find.byIcon(Icons.lock_outline), findsNWidgets(3));
-    await t.tap(find.text(_vi.controlPrev));
+    expect(find.text(_vi.controlOldFwBody('0.24.0')), findsOneWidget);
+    expect(find.byIcon(Icons.lock_outline), findsOneWidget);
+    final mirror = t.getTopLeft(find.byType(TouchMirror));
+    // × at device (228, 11) → shell pad 6 + screen pad 2 + × 1.5.
+    await t.tapAt(mirror + const Offset(8 + 228 * 1.5, 8 + 11 * 1.5));
     await _frames(t);
+    await t.pump(const Duration(milliseconds: 500)); // ripple gone
     expect(rig.posts(), isEmpty);
+    await t.binding.setSurfaceSize(null);
+  });
+
+  testWidgets('R-DK-8 start on the mirror opens Start; Bảng điều khiển → Cài đặt', (t) async {
+    await pump(t, _state());
+    final mirror = t.getTopLeft(find.byType(TouchMirror));
+    await t.tapAt(mirror + const Offset(8 + 30 * 1.5, 8 + 227 * 1.5));
+    await _frames(t);
+    await t.pump(const Duration(milliseconds: 500)); // ripple gone
+    expect(find.byType(StartMenuSheet), findsOneWidget);
+    expect(find.text(_vi.startAllPrograms), findsOneWidget);
+    await t.tap(find.text(_vi.startAllPrograms));
+    await _frames(t);
+    expect(find.text(_vi.allProgramsTitle), findsOneWidget);
+    expect(find.text(_vi.appForecast), findsOneWidget);
+    await t.tap(find.byTooltip(_vi.allProgramsBackA11y));
+    await _frames(t);
+    await t.tap(find.text(_vi.startControlPanel));
+    await _frames(t);
+    expect(opened, ['settings']);
     await t.binding.setSurfaceSize(null);
   });
 
@@ -184,9 +200,9 @@ void main() {
 
   testWidgets('R-DK-1 failed command: snackbar with Thử lại', (t) async {
     await pump(t, _state());
-    await t.runAsync(() => vm!.jump('clock'));
+    await t.runAsync(() => vm!.closeTop());
     await _frames(t);
-    expect(find.text(_vi.controlFailed(_vi.skillClockName)), findsOneWidget);
+    expect(find.text(_vi.controlFailed(_vi.devControlCmdClose(_vi.appClaude))), findsOneWidget);
     expect(find.text(_vi.commonRetry), findsOneWidget);
     await t.binding.setSurfaceSize(null);
   });
@@ -198,7 +214,7 @@ void main() {
       await t.pumpWidget(
         _app(
           Center(
-            child: DeviceMirror(frame: frame, semanticLabel: name),
+            child: TouchMirror(frame: frame, semanticLabel: name),
           ),
         ),
       );
@@ -209,7 +225,7 @@ void main() {
     await t.pumpWidget(
       _app(
         Center(
-          child: DeviceMirror(frame: unknown, semanticLabel: 'x', dim: 0.4, offline: true),
+          child: TouchMirror(frame: unknown, semanticLabel: 'x', dim: 0.4, offline: true),
         ),
       ),
     );

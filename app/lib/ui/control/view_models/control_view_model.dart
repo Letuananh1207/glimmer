@@ -10,34 +10,40 @@ import '../../../domain/models/control.dart';
 import '../../../domain/models/device_photo.dart';
 import '../../../domain/models/device_state.dart';
 import '../../../domain/models/mirror_frame.dart';
+import '../../../domain/models/touch.dart';
+import '../../../domain/models/windows.dart';
 import '../../../domain/rules/board_rules.dart';
 import '../../../domain/rules/control_rules.dart' as rules;
 import '../../../domain/rules/mirror_rules.dart';
+import '../../../domain/rules/touch_rules.dart';
 import '../../../domain/use_cases/control_device_use_case.dart';
 import '../../../domain/use_cases/load_photos_use_case.dart';
-import '../../../domain/use_cases/toggle_skill_use_case.dart';
 import '../../../utils/result.dart';
 import '../../../utils/safe_notifier.dart';
 
 /// Whole-screen situation of the remote (screen_specs §8 `setup` / `offline`).
 enum ControlMode { normal, setup, offline }
 
-/// Điều khiển (tab 1, screen_specs §8, design 2026-11-26.5): the device mirror + remote buttons.
-/// R-DK-1 optimistic: a button changes the mirror at once, the command goes out once; a different answer or none →
-/// the mirror follows the device and [failed] is set (the snackbar's Thử lại is the user's, never automatic).
+/// What the chip on the mirror's shell says while a command is on its way (`StatusChip`).
+enum ChipKind { sending, minimizing, closing, opening, openingApp }
+
+/// Note after the program name under the mirror.
+enum LineNote { openOnDevice, justOpened, minimized, tapIcon }
+
+/// Điều khiển (tab 1, screen_specs §8, design 2026-11-26.6): the device screen, touched like a mouse — the app is the
+/// computer (open windows, installed programs), the device its screen (R-DK-7…10).
+/// R-DK-1 optimistic: a touch changes the mirror at once, the command goes out once; a different answer or none →
+/// the mirror and the windows follow the device and [failed] is set (the snackbar's Thử lại is the user's).
 /// R-DK-6: the state is re-read when the screen opens and on [reload] (back from Số liệu).
 class ControlViewModel extends ChangeNotifier with SafeNotifier {
   ControlViewModel({
     required DeviceRepository device,
     required ControlDeviceUseCase control,
-    required ToggleSkillUseCase toggleSkill,
     LoadPhotosUseCase? loadPhotos,
     DateTime Function() now = DateTime.now,
     this.failureFor = const Duration(seconds: 6),
-    this.tickEvery = const Duration(milliseconds: 250),
   }) : _device = device,
        _control = control,
-       _toggle = toggleSkill,
        _loadPhotos = loadPhotos,
        _now = now {
     _device.addListener(_onDevice);
@@ -47,7 +53,6 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
 
   final DeviceRepository _device;
   final ControlDeviceUseCase _control;
-  final ToggleSkillUseCase _toggle;
 
   /// The device's photos + the app's copies (Photo channel of the mirror); null = not wired (tests).
   final LoadPhotosUseCase? _loadPhotos;
@@ -59,22 +64,27 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
   /// How long the "not done" snackbar stays.
   final Duration failureFor;
 
-  /// Countdown refresh of the channel line while rotating.
-  final Duration tickEvery;
-
   Map<String, dynamic>? _settings;
   String? _pendingChannel;
-  bool? _pendingPaused, _pendingScreen;
+  bool? _pendingScreen;
   int? _pendingNight;
   int? _brightness;
   double? _drag;
   ControlCommand? _sending;
+  ChipKind _chip = ChipKind.sending;
+  String _chipApp = '';
   ControlCommand? _failed;
-  String _failedSkill = '';
+  String _failedApp = '';
   Future<void> Function()? _retry;
-  Timer? _failureTimer, _ticker;
-  DateTime? _slideEnd, _lastOk;
+  Timer? _failureTimer;
+  DateTime? _lastOk;
   int _lastNight = 2;
+  bool _rotationStopped = false;
+
+  /// R-DK-7: the windows the app keeps for the device screen.
+  WindowStack _windows = WindowStack.empty;
+  LineNote _note = LineNote.openOnDevice;
+  String _minimizedApp = '';
 
   // ── what the device shows ──
 
@@ -95,17 +105,32 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
   /// Channel on the mirror: the optimistic one while a command is on its way, else the device's.
   String get channel => _pendingChannel ?? _device.state?.activeChannel ?? '';
 
-  /// Skill of [channel] (lit jump tab, accent of the channel line); null = system channel.
-  String? get channelSkill => channel.isEmpty ? null : rules.channelSkill(channel);
+  /// Skill of [channel] (accent of the program line); null = system channel / desktop.
+  String? get channelSkill => channel.isEmpty || channel == 'Home' ? null : rules.channelSkill(channel);
 
-  bool get paused => _pendingPaused ?? _device.state?.paused ?? false;
   bool get screenOff => !(_pendingScreen ?? _device.state?.screenOn ?? true);
   bool get nightFace => _device.state?.nightFace ?? false;
+
+  /// R-DK-7: open windows, the one on top, the minimized ones.
+  WindowStack get windows => _windows;
+
+  /// R-DK-9: programs of the enabled skills, by group (Start, Tất cả chương trình).
+  Map<ProgramGroup, List<String>> get programs => rules.programsOf(_device.state?.skillsOn ?? const [], _settings);
+
+  /// Note under the mirror; for [LineNote.minimized] the program that went down is [minimizedApp].
+  LineNote get note => channel == 'Home' ? (_note == LineNote.minimized ? _note : LineNote.tapIcon) : _note;
+  String get minimizedApp => _minimizedApp;
+
+  /// Commands can be sent at all: connected, screen on, not on the night face.
+  bool get usable => mode == ControlMode.normal && !screenOff && !nightFace;
+
+  /// Touches reach the device (R-DK-10: the firmware has them).
+  bool get touchable => usable && caps.touch;
 
   /// `nightMode` of Cài đặt ≠ 0 (the Chế độ đêm toggle).
   bool get nightOn => (_pendingNight ?? (_settings?['nightMode'] as num?)?.toInt() ?? 0) != 0;
 
-  /// Night window end "07:00" (night channel note).
+  /// Night window end "07:00" (night note).
   String get nightEnd {
     final m = (_settings?['nightEndMin'] as num?)?.toInt() ?? 0;
     return '${(m ~/ 60 % 24).toString().padLeft(2, '0')}:${(m % 60).toString().padLeft(2, '0')}';
@@ -114,39 +139,20 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
   /// The agent card holding the device screen (HoldCardPanel), or null.
   AttentionCard? get holding => rules.holdingCard(_device.state, _device.cards);
 
-  /// Enabled skills in dock order (JumpTabBar; one skill → the single-skill note instead).
-  List<String> get skills => _toggle.enabled;
   String? get badge => badgeText(agentsWaiting(_device.cards));
 
-  /// A command is on its way (chip "Đang gửi…").
+  /// A command is on its way (`StatusChip`).
   bool get sending => _sending != null;
+  ChipKind get chip => _chip;
 
-  /// A channel command is on its way (channel line "· vừa chuyển").
-  bool get switching =>
-      _sending == ControlCommand.next || _sending == ControlCommand.prev || _sending == ControlCommand.jump;
+  /// Program named by the chip ("Đang tắt Claude…").
+  String get chipApp => _chipApp;
 
   /// The last command the device did not take (snackbar), or null.
   ControlCommand? get failed => _failed;
 
-  /// Skill id of a failed jump (snackbar names its tab).
-  String get failedSkill => _failedSkill;
-
-  /// Rotation countdown: whole seconds left, null when not rotating / unknown (no `slide_left_ms`).
-  int? get secondsLeft {
-    final end = _slideEnd;
-    if (end == null || paused) return null;
-    return rules.secondsLeft(end.difference(_now()).inMilliseconds);
-  }
-
-  /// Share of the slide already shown, 0…1 (channel line bar; held where it stopped while paused).
-  double get progress {
-    final s = _device.state;
-    final end = _slideEnd;
-    if (s == null || end == null || s.slideMs <= 0) return paused ? _heldProgress : 0;
-    return rules.slideProgress(s.slideMs, end.difference(_now()).inMilliseconds);
-  }
-
-  double _heldProgress = 0;
+  /// Program of a failed open / close / minimize (the snackbar names it).
+  String get failedApp => _failedApp;
 
   /// Brightness shown (5…100): the dragged value while dragging, else the device's.
   int get brightness =>
@@ -156,11 +162,11 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
   /// Mirror veil while dragging (illustration): darker as brightness goes down.
   double get dim => _drag == null ? 0 : (1 - _drag! / 100) * 0.6;
 
-  /// Old firmware (R-DK-3): buttons this device lacks, and its version.
+  /// Old firmware (R-DK-3 / R-DK-10): what this device lacks, and its version.
   List<ControlCommand> get missing => caps.missing;
   String get firmware => _device.state?.fw ?? '';
 
-  /// The picture of the device screen.
+  /// The picture of the device screen (no slide progress: the device does not rotate, design 2026-11-26.6).
   MirrorFrame? get frame {
     final s = _device.state;
     if (s == null) return null;
@@ -170,7 +176,6 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
       cards: _device.cards,
       settings: _settings,
       now: _now(),
-      slideProgress: progress,
       gallery: _gallery,
     );
   }
@@ -180,26 +185,22 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
   void _onDevice() {
     final s = _device.state;
     if (s != null && _device.error == null) _lastOk = _now();
-    if (s != null && s.slideLeftMs != null && s.slideMs > 0 && s.paused != true) {
-      _slideEnd = _now().add(Duration(milliseconds: s.slideLeftMs!));
-    } else {
-      if (s?.paused == true && _slideEnd != null && s!.slideMs > 0) {
-        _heldProgress = rules.slideProgress(s.slideMs, _slideEnd!.difference(_now()).inMilliseconds);
-      }
-      _slideEnd = null;
-    }
-    _syncTicker();
+    if (s != null && _sending == null) _follow(s.activeChannel);
     notifyListeners();
   }
 
-  void _syncTicker() {
-    final run = _slideEnd != null && !paused;
-    if (run && _ticker == null) {
-      _ticker = Timer.periodic(tickEvery, (_) => notifyListeners());
-    } else if (!run) {
-      _ticker?.cancel();
-      _ticker = null;
+  /// R-DK-7: the device shows a program the app did not open → it is on top now; the desktop → the top one went down.
+  /// Cards, the night face and setup leave the windows alone. R-DK-9: windows of programs no longer installed go.
+  void _follow(String active) {
+    final installed = rules.programSet(_device.state?.skillsOn ?? const [], _settings);
+    var w = _windows.only(installed.contains);
+    if (rules.isProgram(active) && installed.contains(active) && w.top != active) {
+      w = w.opened(active);
+      _note = LineNote.openOnDevice;
+    } else if (active == 'Home' && w.top != null) {
+      w = w.minimize(w.top!);
     }
+    _windows = w;
   }
 
   /// R-DK-6: read the device state and its settings now.
@@ -210,9 +211,20 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
       _settings = r.value;
       final n = (r.value['nightMode'] as num?)?.toInt() ?? 0;
       if (n != 0) _lastNight = n;
+      await _stopRotation();
     }
+    final s = _device.state;
+    if (s != null && _sending == null) _follow(s.activeChannel);
     await _reloadPhotos();
     notifyListeners();
+  }
+
+  /// R-DK-7: the device never rotates on its own; `autoRotate` still on → off, once per screen.
+  Future<void> _stopRotation() async {
+    if (_rotationStopped || mode != ControlMode.normal || !rules.rotationOn(_settings)) return;
+    _rotationStopped = true;
+    final r = await _control.stopRotation(_settings);
+    if (r is Ok<ControlOutcome>) _settings = {...?_settings, 'autoRotate': false};
   }
 
   /// The app's copy of the photo the mirror's Photo channel draws, decoded; null = none.
@@ -244,15 +256,23 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
 
   // ── commands ──
 
-  /// Runs [send] with the optimistic values already set; clears them after and reports a miss (R-DK-1).
-  Future<void> _run(ControlCommand c, Future<Result<ControlOutcome>> Function() send, {String skill = ''}) async {
+  /// Runs [send] with the optimistic values already set; clears them after and reports a miss (R-DK-1). [undo] puts
+  /// the app's own state back on a miss, before the windows follow the device again.
+  Future<void> _run(
+    ControlCommand c,
+    Future<Result<ControlOutcome>> Function() send, {
+    String app = '',
+    ChipKind chip = ChipKind.sending,
+    void Function()? undo,
+  }) async {
     _sending = c;
+    _chip = chip;
+    _chipApp = app;
     _clearFailure();
     notifyListeners();
     final r = await send();
     _sending = null;
     _pendingChannel = null;
-    _pendingPaused = null;
     _pendingScreen = null;
     final miss = switch (r) {
       Ok(:final value) => !value.matched,
@@ -261,15 +281,17 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
     if (miss) {
       _pendingNight = null;
       _brightness = null;
-      _fail(c, skill, () => _run(c, send, skill: skill));
+      undo?.call();
+      _fail(c, app, () => _run(c, send, app: app, chip: chip, undo: undo));
     }
-    _syncTicker();
+    final s = _device.state;
+    if (s != null) _follow(s.activeChannel);
     notifyListeners();
   }
 
-  void _fail(ControlCommand c, String skill, Future<void> Function() retry) {
+  void _fail(ControlCommand c, String app, Future<void> Function() retry) {
     _failed = c;
-    _failedSkill = skill;
+    _failedApp = app;
     _retry = retry;
     _failureTimer?.cancel();
     _failureTimer = Timer(failureFor, () {
@@ -298,30 +320,126 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
 
   bool _can(ControlCommand c) => caps.supports(c) && !sending;
 
-  /// Kênh sau / trước (d-pad, swipe): the guessed neighbour shows at once.
-  Future<void> step(ControlCommand c) async {
-    final s = _device.state;
-    if (s == null || !_can(c)) return;
-    final from = s.activeChannel;
-    _pendingChannel = rules.stepChannel(rules.rotationGuess(s, _settings), from, c == ControlCommand.next ? 1 : -1);
-    await _run(c, () => _control.step(c, from: from));
+  // ── touches (R-DK-8) ──
+
+  /// A tap at ([x], [y]) in device pixels; returns what it hit. [TouchKind.start] is the screen's to handle (opens
+  /// Start, the app's own — also on firmware without touches). R-DK-10: nothing is sent while not [touchable].
+  TouchTarget tap(double x, double y) {
+    final f = frame;
+    if (f == null || !usable || sending) return TouchTarget.none;
+    final t = touchTargetAt(x, y, f);
+    if (!touchable) return t.kind == TouchKind.start ? t : TouchTarget.none;
+    switch (t.kind) {
+      case TouchKind.minimize:
+        unawaited(minimizeTop());
+      case TouchKind.close:
+        unawaited(closeTop());
+      case TouchKind.taskbar:
+        unawaited(taskbar(t.skill!));
+      case TouchKind.icon:
+        unawaited(openProgram(t.program!));
+      case TouchKind.none || TouchKind.maximize || TouchKind.start:
+        break; // □: windows on the device are always full screen
+    }
+    return t;
   }
 
-  /// Jump tab: the skill's first channel shows at once.
-  Future<void> jump(String skill) async {
-    if (_device.state == null || !_can(ControlCommand.jump)) return;
-    _pendingChannel = rules.jumpCandidates(skill, _settings).first;
-    await _run(ControlCommand.jump, () => _control.jump(skill, settings: _settings), skill: skill);
+  /// The window on the device screen: the program shown, if it is one.
+  String? get _shownWindow => rules.isProgram(channel) ? channel : null;
+
+  /// Open [program] (desktop icon, Start, Tất cả chương trình): it comes to the top.
+  Future<void> openProgram(String program, {LineNote note = LineNote.openOnDevice}) async {
+    if (_device.state == null || !usable || !_can(ControlCommand.open)) return;
+    final before = _windows;
+    _windows = _windows.opened(program);
+    _note = note;
+    _pendingChannel = program;
+    await _run(
+      ControlCommand.open,
+      () => _control.open(program),
+      app: program,
+      chip: ChipKind.openingApp,
+      undo: () => _windows = before,
+    );
   }
 
-  /// Dừng / tiếp tục xoay (R-DK-4, temporary).
-  Future<void> togglePause() async {
-    final hold = !paused;
-    final c = hold ? ControlCommand.pause : ControlCommand.resume;
-    if (!_can(c)) return;
-    if (hold) _heldProgress = progress;
-    _pendingPaused = hold;
-    await _run(c, () => _control.pause(hold));
+  /// `_`: the desktop shows, the window keeps its taskbar button.
+  Future<void> minimizeTop() async {
+    final w = _shownWindow;
+    if (w == null || !usable || !_can(ControlCommand.minimize)) return;
+    final before = _windows;
+    _windows = _windows.opened(w).minimize(w);
+    _note = LineNote.minimized;
+    _minimizedApp = w;
+    _pendingChannel = 'Home';
+    await _run(
+      ControlCommand.minimize,
+      () => _control.open('Home', c: ControlCommand.minimize),
+      app: w,
+      chip: ChipKind.minimizing,
+      undo: () => _windows = before,
+    );
+  }
+
+  /// `×`: the window is gone, the one before it comes up (none → the desktop).
+  Future<void> closeTop() async {
+    final w = _shownWindow;
+    if (w == null || !usable || !_can(ControlCommand.close)) return;
+    final before = _windows;
+    _windows = _windows.opened(w).close(w);
+    final next = _windows.top ?? 'Home';
+    _note = LineNote.openOnDevice;
+    _pendingChannel = next;
+    await _run(
+      ControlCommand.close,
+      () => _control.open(next, c: ControlCommand.close),
+      app: w,
+      chip: ChipKind.closing,
+      undo: () => _windows = before,
+    );
+  }
+
+  /// A taskbar button: the shown window of that skill goes down (as XP); else its latest window, else its first
+  /// program.
+  Future<void> taskbar(String skill) async {
+    final top = _shownWindow;
+    if (top != null && rules.channelSkill(top) == skill) return minimizeTop();
+    final w = rules.latestWindowOf(_windows.open, skill);
+    if (w != null) return openProgram(w, note: LineNote.justOpened);
+    if (_device.state == null || !usable || sending) return;
+    final first = rules.jumpCandidates(skill, _settings).first;
+    final before = _windows;
+    _windows = _windows.opened(first);
+    _note = LineNote.justOpened;
+    _pendingChannel = first;
+    await _run(
+      ControlCommand.open,
+      () => _control.jump(skill, settings: _settings),
+      app: first,
+      chip: ChipKind.opening,
+      undo: () => _windows = before,
+    );
+  }
+
+  /// Start → Desktop: every window down, the desktop shows (XP "Show desktop").
+  Future<void> desktop() async {
+    if (_device.state == null || !usable || !_can(ControlCommand.desktop)) return;
+    final before = _windows;
+    _windows = _windows.minimizeAll();
+    _note = LineNote.tapIcon;
+    _pendingChannel = 'Home';
+    await _run(
+      ControlCommand.desktop,
+      () => _control.open('Home', c: ControlCommand.desktop),
+      chip: ChipKind.opening,
+      undo: () => _windows = before,
+    );
+  }
+
+  /// Start → Khởi động lại (the screen asks first).
+  Future<void> restart() async {
+    if (sending) return;
+    await _control.restart();
   }
 
   /// Tắt / bật màn now.
@@ -388,7 +506,6 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
   void dispose() {
     _device.removeListener(_onDevice);
     _failureTimer?.cancel();
-    _ticker?.cancel();
     _photoImage?.dispose();
     super.dispose();
   }

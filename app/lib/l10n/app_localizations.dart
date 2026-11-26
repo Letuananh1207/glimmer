@@ -1960,25 +1960,25 @@ abstract class AppLocalizations {
   /// **'Làm mới số liệu'**
   String get controlRefreshA11y;
 
-  /// Nhãn đọc màn hình ô màn
+  /// Nhãn đọc màn hình ô màn chạm được
   ///
   /// In vi, this message translates to:
-  /// **'Màn thiết bị đang hiện {channel}. Chạm để xem số liệu, vuốt để đổi kênh'**
-  String controlScreenA11y(String channel);
+  /// **'Màn thiết bị đang hiện {app}. Chạm như chuột: nút cửa sổ, thanh tác vụ, start, biểu tượng'**
+  String controlScreenA11y(String app);
 
-  /// Dòng kênh dưới ô màn
+  /// Không dùng từ 2026-11-26.6. Dòng kênh dưới ô màn
   ///
   /// In vi, this message translates to:
   /// **'· đổi kênh sau {seconds} s'**
   String controlNextIn(int seconds);
 
-  /// Dòng kênh ngay sau khi đổi
+  /// Không dùng từ 2026-11-26.6. Dòng kênh ngay sau khi đổi
   ///
   /// In vi, this message translates to:
   /// **'· vừa chuyển'**
   String get controlJustSwitched;
 
-  /// Dòng kênh khi dừng xoay, amber
+  /// Không dùng từ 2026-11-26.6. Dòng kênh khi dừng xoay, amber
   ///
   /// In vi, this message translates to:
   /// **'· đã dừng xoay, giữ kênh này'**
@@ -2014,37 +2014,37 @@ abstract class AppLocalizations {
   /// **'· tới {time}, không xoay kênh'**
   String controlNightNote(String time);
 
-  /// Nút d-pad trái
+  /// Không dùng từ 2026-11-26.6. Nút d-pad trái
   ///
   /// In vi, this message translates to:
   /// **'Kênh trước'**
   String get controlPrev;
 
-  /// Nút d-pad phải
+  /// Không dùng từ 2026-11-26.6. Nút d-pad phải
   ///
   /// In vi, this message translates to:
   /// **'Kênh sau'**
   String get controlNext;
 
-  /// Nút d-pad giữa
+  /// Không dùng từ 2026-11-26.6. Nút d-pad giữa
   ///
   /// In vi, this message translates to:
   /// **'Dừng xoay'**
   String get controlPause;
 
-  /// Nút d-pad giữa khi đang dừng (amber)
+  /// Không dùng từ 2026-11-26.6. Nút d-pad giữa khi đang dừng (amber)
   ///
   /// In vi, this message translates to:
   /// **'Tiếp tục xoay'**
   String get controlResume;
 
-  /// Nhóm nút tab skill
+  /// Không dùng từ 2026-11-26.6. Nhóm nút tab skill
   ///
   /// In vi, this message translates to:
   /// **'Nhảy tới tab'**
   String get controlJumpGroupA11y;
 
-  /// Nhãn đọc màn hình nút tab skill
+  /// Không dùng từ 2026-11-26.6. Nhãn đọc màn hình nút tab skill
   ///
   /// In vi, this message translates to:
   /// **'Hiện {skill} trên thiết bị'**
@@ -2122,7 +2122,7 @@ abstract class AppLocalizations {
   /// **'Bỏ thẻ khỏi màn'**
   String get controlDismissCard;
 
-  /// Thay hàng nút tab khi một skill bật
+  /// Không dùng từ 2026-11-26.6. Thay hàng nút tab khi một skill bật
   ///
   /// In vi, this message translates to:
   /// **'Chỉ skill {skill} đang bật — ‹ › đi qua các kênh của skill này và Thông tin.'**
@@ -2131,14 +2131,14 @@ abstract class AppLocalizations {
   /// Thanh báo firmware cũ
   ///
   /// In vi, this message translates to:
-  /// **'Firmware chưa có đủ nút'**
+  /// **'Firmware chưa nhận chạm'**
   String get controlOldFwTitle;
 
-  /// Thanh báo firmware cũ; missing = danh sách nút thiếu
+  /// Thanh báo firmware cũ
   ///
   /// In vi, this message translates to:
-  /// **'Thiết bị đang chạy {version}: chưa có {missing}.'**
-  String controlOldFwBody(String version, String missing);
+  /// **'Thiết bị đang chạy {version}: chạm trên màn chưa dùng được, chỉ đổi app qua Start.'**
+  String controlOldFwBody(String version);
 
   /// Nút trong thanh báo → tab Thiết bị
   ///
@@ -2206,23 +2206,23 @@ abstract class AppLocalizations {
   /// **'Firmware chưa có lệnh này — cập nhật firmware.'**
   String get devErrControlUnsupported;
 
-  /// Điều khiển · thanh báo firmware cũ: tên nút thiếu trong controlOldFwBody
+  /// Điều khiển · tên lệnh trong controlFailed khi mở chương trình không được
   ///
   /// In vi, this message translates to:
-  /// **'kênh trước'**
-  String get devControlMissingPrev;
+  /// **'Mở {app}'**
+  String devControlCmdOpen(String app);
 
-  /// Điều khiển · thanh báo firmware cũ: tên nút thiếu
+  /// Điều khiển · tên lệnh trong controlFailed khi tắt app (×) không được
   ///
   /// In vi, this message translates to:
-  /// **'dừng xoay'**
-  String get devControlMissingPause;
+  /// **'Tắt {app}'**
+  String devControlCmdClose(String app);
 
-  /// Điều khiển · thanh báo firmware cũ: tên nút thiếu
+  /// Điều khiển · tên lệnh trong controlFailed khi thu nhỏ (_) không được
   ///
   /// In vi, this message translates to:
-  /// **'tắt màn'**
-  String get devControlMissingScreen;
+  /// **'Thu nhỏ {app}'**
+  String devControlCmdMinimize(String app);
 
   /// Ô màn thiết bị: thứ kiểu tiêu đề như firmware ClockFmt::weekdayTitle (day = DateTime.weekday)
   ///
@@ -3081,6 +3081,330 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'cuối {d}/{m}'**
   String devXpTrendLast(int d, int m);
+
+  /// Dòng dưới ô màn
+  ///
+  /// In vi, this message translates to:
+  /// **'· đang mở trên thiết bị'**
+  String get controlOpenOnDevice;
+
+  /// Dòng dưới ô màn sau khi chạm nút thanh tác vụ
+  ///
+  /// In vi, this message translates to:
+  /// **'· vừa chạm trên thanh tác vụ'**
+  String get controlJustOpened;
+
+  /// Tên màn chính trong dòng dưới ô màn
+  ///
+  /// In vi, this message translates to:
+  /// **'Desktop'**
+  String get controlDesktop;
+
+  /// Dòng dưới ô màn khi đang ở desktop sau thu nhỏ
+  ///
+  /// In vi, this message translates to:
+  /// **'· {app} đã thu nhỏ'**
+  String controlMinimizedNote(String app);
+
+  /// Dòng dưới ô màn khi vừa cài skill
+  ///
+  /// In vi, this message translates to:
+  /// **'· {skill} vừa cài'**
+  String controlInstalledNote(String skill);
+
+  /// Dòng dưới ô màn ở desktop
+  ///
+  /// In vi, this message translates to:
+  /// **'· chạm biểu tượng để mở'**
+  String get controlTapIconNote;
+
+  /// Chip trên ô màn khi vừa chạm _
+  ///
+  /// In vi, this message translates to:
+  /// **'Thu nhỏ…'**
+  String get controlMinimizing;
+
+  /// Chip khi vừa chạm ×
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tắt {app}…'**
+  String controlClosing(String app);
+
+  /// Chip khi vừa chạm nút thanh tác vụ
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang mở…'**
+  String get controlOpening;
+
+  /// Chip khi vừa chạm biểu tượng desktop
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang mở {app}…'**
+  String controlOpeningApp(String app);
+
+  /// Chip (dấu tích mint) khi vừa cài skill
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cài {skill}'**
+  String controlInstalled(String skill);
+
+  /// Thẻ hướng dẫn dưới ô màn
+  ///
+  /// In vi, this message translates to:
+  /// **'CHẠM MÀN NHƯ DÙNG CHUỘT'**
+  String get controlLegendTitle;
+
+  /// Thẻ hướng dẫn, ký hiệu _
+  ///
+  /// In vi, this message translates to:
+  /// **'thu nhỏ'**
+  String get controlLegendMin;
+
+  /// Thẻ hướng dẫn, ký hiệu □
+  ///
+  /// In vi, this message translates to:
+  /// **'phóng to'**
+  String get controlLegendMax;
+
+  /// Thẻ hướng dẫn, ký hiệu ×
+  ///
+  /// In vi, this message translates to:
+  /// **'tắt app'**
+  String get controlLegendClose;
+
+  /// Thẻ hướng dẫn, ký hiệu ▭
+  ///
+  /// In vi, this message translates to:
+  /// **'nút dưới: đổi app'**
+  String get controlLegendTaskbar;
+
+  /// Ký hiệu trong thẻ hướng dẫn
+  ///
+  /// In vi, this message translates to:
+  /// **'start'**
+  String get controlLegendStartKey;
+
+  /// Thẻ hướng dẫn
+  ///
+  /// In vi, this message translates to:
+  /// **'mở Start'**
+  String get controlLegendStart;
+
+  /// Ký hiệu trong thẻ hướng dẫn
+  ///
+  /// In vi, this message translates to:
+  /// **'giữ'**
+  String get controlLegendHoldKey;
+
+  /// Thẻ hướng dẫn
+  ///
+  /// In vi, this message translates to:
+  /// **'chuột phải'**
+  String get controlLegendHold;
+
+  /// Đầu Start menu, dưới "glimmer"
+  ///
+  /// In vi, this message translates to:
+  /// **'Start · mở chương trình trên thiết bị'**
+  String get startSubtitle;
+
+  /// Nhãn đọc màn hình nút / bảng Start
+  ///
+  /// In vi, this message translates to:
+  /// **'Start'**
+  String get startA11y;
+
+  /// Dòng phụ Claude trong Start
+  ///
+  /// In vi, this message translates to:
+  /// **'mức dùng, project'**
+  String get startClaudeSub;
+
+  /// Dòng phụ Codex trong Start
+  ///
+  /// In vi, this message translates to:
+  /// **'mức dùng'**
+  String get startCodexSub;
+
+  /// Start, cột phải
+  ///
+  /// In vi, this message translates to:
+  /// **'Desktop'**
+  String get startDesktop;
+
+  /// Start, cột phải → màn Số liệu
+  ///
+  /// In vi, this message translates to:
+  /// **'Số liệu'**
+  String get startDetails;
+
+  /// Start, cột phải → Cài đặt
+  ///
+  /// In vi, this message translates to:
+  /// **'Bảng điều khiển'**
+  String get startControlPanel;
+
+  /// Dòng phụ
+  ///
+  /// In vi, this message translates to:
+  /// **'Cài đặt'**
+  String get startControlPanelSub;
+
+  /// Start, cột phải → Skill
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm / gỡ'**
+  String get startAddRemove;
+
+  /// Dòng phụ
+  ///
+  /// In vi, this message translates to:
+  /// **'chương trình · Skill'**
+  String get startAddRemoveSub;
+
+  /// Start, cột phải → Thiết bị
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiết bị'**
+  String get startDevice;
+
+  /// Dòng phụ
+  ///
+  /// In vi, this message translates to:
+  /// **'firmware, sao lưu'**
+  String get startDeviceSub;
+
+  /// Hàng cuối Start → bảng Tất cả chương trình
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả chương trình'**
+  String get startAllPrograms;
+
+  /// Chân Start (amber)
+  ///
+  /// In vi, this message translates to:
+  /// **'Tắt màn'**
+  String get startTurnOff;
+
+  /// Chân Start (coral) → POST /api/reboot
+  ///
+  /// In vi, this message translates to:
+  /// **'Khởi động lại'**
+  String get startRestart;
+
+  /// Tiêu đề bảng
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả chương trình'**
+  String get allProgramsTitle;
+
+  /// Nút quay lại
+  ///
+  /// In vi, this message translates to:
+  /// **'Về Start'**
+  String get allProgramsBackA11y;
+
+  /// Nhóm
+  ///
+  /// In vi, this message translates to:
+  /// **'AGENT'**
+  String get allProgramsGroupAgent;
+
+  /// Nhóm
+  ///
+  /// In vi, this message translates to:
+  /// **'THỜI TIẾT · ĐỒNG HỒ · ẢNH'**
+  String get allProgramsGroupOther;
+
+  /// Nhóm
+  ///
+  /// In vi, this message translates to:
+  /// **'HỆ THỐNG'**
+  String get allProgramsGroupSystem;
+
+  /// Chú thích chấm mint
+  ///
+  /// In vi, this message translates to:
+  /// **'● = đang mở'**
+  String get allProgramsOpenLegend;
+
+  /// Hàng cuối bảng → Skill
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm / gỡ chương trình'**
+  String get allProgramsAddRemove;
+
+  /// Dòng phụ
+  ///
+  /// In vi, this message translates to:
+  /// **'bật skill mới: {names} sắp có'**
+  String allProgramsAddRemoveSub(String names);
+
+  /// Tên chương trình
+  ///
+  /// In vi, this message translates to:
+  /// **'Claude'**
+  String get appClaude;
+
+  /// Tên chương trình
+  ///
+  /// In vi, this message translates to:
+  /// **'Codex'**
+  String get appCodex;
+
+  /// Tên chương trình
+  ///
+  /// In vi, this message translates to:
+  /// **'AI'**
+  String get appAi;
+
+  /// Tên chương trình
+  ///
+  /// In vi, this message translates to:
+  /// **'Xu hướng'**
+  String get appTrend;
+
+  /// Tên chương trình
+  ///
+  /// In vi, this message translates to:
+  /// **'Agents'**
+  String get appAgents;
+
+  /// Tên chương trình
+  ///
+  /// In vi, this message translates to:
+  /// **'Ảnh'**
+  String get appPhoto;
+
+  /// Tên chương trình
+  ///
+  /// In vi, this message translates to:
+  /// **'Thời tiết'**
+  String get appWeather;
+
+  /// Tên chương trình
+  ///
+  /// In vi, this message translates to:
+  /// **'Dự báo'**
+  String get appForecast;
+
+  /// Tên chương trình
+  ///
+  /// In vi, this message translates to:
+  /// **'Đồng hồ'**
+  String get appClock;
+
+  /// Tên chương trình
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông tin'**
+  String get appInfo;
+
+  /// Tên chương trình (skill sắp có)
+  ///
+  /// In vi, this message translates to:
+  /// **'Tin nhắn'**
+  String get appChat;
 }
 
 class _AppLocalizationsDelegate

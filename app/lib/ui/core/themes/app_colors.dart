@@ -69,4 +69,12 @@ abstract final class AppColors {
   static const Color snackbar = Color(0xFF3A3048);
   /// Ô màn khi màn thiết bị tắt
   static const Color screenOff = Color(0xFF050507);
+  /// Nút start (Start menu) — gradient trên, như XP
+  static const Color xpStartTop = Color(0xFF4CB04C);
+  /// Nút start — gradient dưới
+  static const Color xpStartBottom = Color(0xFF2F8A2F);
+  /// Nền nhãn biểu tượng desktop đang chọn (XP)
+  static const Color xpSelect = Color(0xFF316AC5);
+  /// Viền ngoài vòng chạm trên ô màn
+  static const Color tapRing = Color(0x8CFFD23F);
 }

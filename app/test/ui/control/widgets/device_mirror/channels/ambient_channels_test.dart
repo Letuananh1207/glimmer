@@ -12,7 +12,7 @@ import 'package:glimmer_app/ui/control/widgets/device_mirror/channels/forecast_c
 import 'package:glimmer_app/ui/control/widgets/device_mirror/channels/info_channel.dart';
 import 'package:glimmer_app/ui/control/widgets/device_mirror/channels/system_channels.dart';
 import 'package:glimmer_app/ui/control/widgets/device_mirror/channels/weather_channel.dart';
-import 'package:glimmer_app/ui/control/widgets/device_mirror/device_mirror.dart';
+import 'package:glimmer_app/ui/control/widgets/device_mirror/touch_mirror.dart';
 import 'package:glimmer_app/ui/control/widgets/device_mirror/mirror_channel.dart';
 import 'package:glimmer_app/ui/control/widgets/device_mirror/xp_canvas.dart';
 
@@ -130,7 +130,7 @@ void main() {
           GlobalCupertinoLocalizations.delegate,
         ],
         home: Center(
-          child: DeviceMirror(frame: frame, semanticLabel: 'mirror'),
+          child: TouchMirror(frame: frame, semanticLabel: 'mirror'),
         ),
       ),
     );

@@ -1117,8 +1117,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get controlRefreshA11y => 'Làm mới số liệu';
 
   @override
-  String controlScreenA11y(String channel) {
-    return 'Màn thiết bị đang hiện $channel. Chạm để xem số liệu, vuốt để đổi kênh';
+  String controlScreenA11y(String app) {
+    return 'Màn thiết bị đang hiện $app. Chạm như chuột: nút cửa sổ, thanh tác vụ, start, biểu tượng';
   }
 
   @override
@@ -1218,11 +1218,11 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get controlOldFwTitle => 'Firmware chưa có đủ nút';
+  String get controlOldFwTitle => 'Firmware chưa nhận chạm';
 
   @override
-  String controlOldFwBody(String version, String missing) {
-    return 'Thiết bị đang chạy $version: chưa có $missing.';
+  String controlOldFwBody(String version) {
+    return 'Thiết bị đang chạy $version: chạm trên màn chưa dùng được, chỉ đổi app qua Start.';
   }
 
   @override
@@ -1263,13 +1263,19 @@ class AppLocalizationsVi extends AppLocalizations {
       'Firmware chưa có lệnh này — cập nhật firmware.';
 
   @override
-  String get devControlMissingPrev => 'kênh trước';
+  String devControlCmdOpen(String app) {
+    return 'Mở $app';
+  }
 
   @override
-  String get devControlMissingPause => 'dừng xoay';
+  String devControlCmdClose(String app) {
+    return 'Tắt $app';
+  }
 
   @override
-  String get devControlMissingScreen => 'tắt màn';
+  String devControlCmdMinimize(String app) {
+    return 'Thu nhỏ $app';
+  }
 
   @override
   String devXpWeekday(String day) {
@@ -1948,4 +1954,178 @@ class AppLocalizationsVi extends AppLocalizations {
   String devXpTrendLast(int d, int m) {
     return 'cuối $d/$m';
   }
+
+  @override
+  String get controlOpenOnDevice => '· đang mở trên thiết bị';
+
+  @override
+  String get controlJustOpened => '· vừa chạm trên thanh tác vụ';
+
+  @override
+  String get controlDesktop => 'Desktop';
+
+  @override
+  String controlMinimizedNote(String app) {
+    return '· $app đã thu nhỏ';
+  }
+
+  @override
+  String controlInstalledNote(String skill) {
+    return '· $skill vừa cài';
+  }
+
+  @override
+  String get controlTapIconNote => '· chạm biểu tượng để mở';
+
+  @override
+  String get controlMinimizing => 'Thu nhỏ…';
+
+  @override
+  String controlClosing(String app) {
+    return 'Đang tắt $app…';
+  }
+
+  @override
+  String get controlOpening => 'Đang mở…';
+
+  @override
+  String controlOpeningApp(String app) {
+    return 'Đang mở $app…';
+  }
+
+  @override
+  String controlInstalled(String skill) {
+    return 'Đã cài $skill';
+  }
+
+  @override
+  String get controlLegendTitle => 'CHẠM MÀN NHƯ DÙNG CHUỘT';
+
+  @override
+  String get controlLegendMin => 'thu nhỏ';
+
+  @override
+  String get controlLegendMax => 'phóng to';
+
+  @override
+  String get controlLegendClose => 'tắt app';
+
+  @override
+  String get controlLegendTaskbar => 'nút dưới: đổi app';
+
+  @override
+  String get controlLegendStartKey => 'start';
+
+  @override
+  String get controlLegendStart => 'mở Start';
+
+  @override
+  String get controlLegendHoldKey => 'giữ';
+
+  @override
+  String get controlLegendHold => 'chuột phải';
+
+  @override
+  String get startSubtitle => 'Start · mở chương trình trên thiết bị';
+
+  @override
+  String get startA11y => 'Start';
+
+  @override
+  String get startClaudeSub => 'mức dùng, project';
+
+  @override
+  String get startCodexSub => 'mức dùng';
+
+  @override
+  String get startDesktop => 'Desktop';
+
+  @override
+  String get startDetails => 'Số liệu';
+
+  @override
+  String get startControlPanel => 'Bảng điều khiển';
+
+  @override
+  String get startControlPanelSub => 'Cài đặt';
+
+  @override
+  String get startAddRemove => 'Thêm / gỡ';
+
+  @override
+  String get startAddRemoveSub => 'chương trình · Skill';
+
+  @override
+  String get startDevice => 'Thiết bị';
+
+  @override
+  String get startDeviceSub => 'firmware, sao lưu';
+
+  @override
+  String get startAllPrograms => 'Tất cả chương trình';
+
+  @override
+  String get startTurnOff => 'Tắt màn';
+
+  @override
+  String get startRestart => 'Khởi động lại';
+
+  @override
+  String get allProgramsTitle => 'Tất cả chương trình';
+
+  @override
+  String get allProgramsBackA11y => 'Về Start';
+
+  @override
+  String get allProgramsGroupAgent => 'AGENT';
+
+  @override
+  String get allProgramsGroupOther => 'THỜI TIẾT · ĐỒNG HỒ · ẢNH';
+
+  @override
+  String get allProgramsGroupSystem => 'HỆ THỐNG';
+
+  @override
+  String get allProgramsOpenLegend => '● = đang mở';
+
+  @override
+  String get allProgramsAddRemove => 'Thêm / gỡ chương trình';
+
+  @override
+  String allProgramsAddRemoveSub(String names) {
+    return 'bật skill mới: $names sắp có';
+  }
+
+  @override
+  String get appClaude => 'Claude';
+
+  @override
+  String get appCodex => 'Codex';
+
+  @override
+  String get appAi => 'AI';
+
+  @override
+  String get appTrend => 'Xu hướng';
+
+  @override
+  String get appAgents => 'Agents';
+
+  @override
+  String get appPhoto => 'Ảnh';
+
+  @override
+  String get appWeather => 'Thời tiết';
+
+  @override
+  String get appForecast => 'Dự báo';
+
+  @override
+  String get appClock => 'Đồng hồ';
+
+  @override
+  String get appInfo => 'Thông tin';
+
+  @override
+  String get appChat => 'Tin nhắn';
 }

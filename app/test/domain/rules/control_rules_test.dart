@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:glimmer_app/domain/models/attention_card.dart';
 import 'package:glimmer_app/domain/models/control.dart';
 import 'package:glimmer_app/domain/models/device_state.dart';
+import 'package:glimmer_app/domain/models/touch.dart';
 import 'package:glimmer_app/domain/rules/control_rules.dart';
 
 DeviceState _s(Map<String, dynamic> extra) => DeviceState.fromJson({'fw': '1.0', 'wifi': 'connected', ...extra});
@@ -11,18 +12,19 @@ AttentionCard _card(String id, String kind, {int showsIn = 0}) =>
 
 void main() {
   group('R-DK-3 firmware capabilities from /api/state', () {
-    test('old firmware (no paused / screen_on / slide_left_ms) lacks prev, pause, screen, dismiss', () {
+    test('R-DK-10 old firmware (no paused / screen_on) lacks touches, screen, dismiss; opening still works', () {
       final c = controlCaps(_s({}));
-      expect(c.prev || c.pause || c.screen || c.dismissCard || c.slide, isFalse);
-      expect(c.supports(ControlCommand.next), isTrue);
-      expect(c.supports(ControlCommand.jump), isTrue);
-      expect(c.missing, [ControlCommand.prev, ControlCommand.pause, ControlCommand.screenOff]);
+      expect(c.touch || c.screen || c.dismissCard, isFalse);
+      expect(c.supports(ControlCommand.open), isTrue);
+      expect(c.supports(ControlCommand.close), isFalse);
+      expect(c.supports(ControlCommand.minimize), isFalse);
+      expect(c.missing, [ControlCommand.minimize, ControlCommand.screenOff]);
     });
 
     test('current firmware has everything', () {
-      final c = controlCaps(_s({'paused': false, 'screen_on': true, 'slide_ms': 8000, 'slide_left_ms': 3000}));
+      final c = controlCaps(_s({'paused': false, 'screen_on': true}));
       expect(c.missing, isEmpty);
-      expect(c.supports(ControlCommand.resume), isTrue);
+      expect(c.supports(ControlCommand.desktop), isTrue);
       expect(c.supports(ControlCommand.screenOn), isTrue);
     });
   });
@@ -42,15 +44,28 @@ void main() {
       expect(jumpCandidates('weather', null), ['Weather', 'Forecast']);
     });
 
-    test('rotation guess and next / previous step', () {
-      final s = _s({
-        'skills_on': ['agent', 'weather', 'clock'],
-      });
-      final order = rotationGuess(s, {'showClaude': true, 'showInfo': true});
-      expect(order, ['Claude', 'Weather', 'Forecast', 'Clock', 'Info']);
-      expect(stepChannel(order, 'Clock', 1), 'Info');
-      expect(stepChannel(order, 'Claude', -1), 'Info');
-      expect(stepChannel(order, 'Night', 1), isNull);
+    test('R-DK-9 programs follow the enabled skills and the show* flags', () {
+      final all = programsOf(['agent', 'weather', 'clock'], null);
+      expect(all[ProgramGroup.agent], ['Claude', 'Codex', 'AI', 'Trend', 'Agents']);
+      expect(all[ProgramGroup.other], ['Weather', 'Forecast', 'Clock']);
+      expect(all[ProgramGroup.system], isEmpty);
+      final some = programsOf(['agent', 'photo'], {'showCodex': false, 'showInfo': true});
+      expect(some[ProgramGroup.agent], ['Claude', 'AI', 'Trend', 'Agents']);
+      expect(some[ProgramGroup.other], ['Photo']);
+      expect(some[ProgramGroup.system], ['Info']);
+      expect(programSet(['weather'], null), {'Weather', 'Forecast'});
+    });
+
+    test('R-DK-8 a taskbar button opens the latest window of its skill', () {
+      expect(latestWindowOf(['Forecast', 'Claude', 'Weather', 'Codex'], 'weather'), 'Weather');
+      expect(latestWindowOf(['Forecast', 'Claude', 'Weather', 'Codex'], 'agent'), 'Codex');
+      expect(latestWindowOf(['Claude'], 'clock'), isNull);
+    });
+
+    test('R-DK-7 rotation must be off', () {
+      expect(rotationOn({'autoRotate': true}), isTrue);
+      expect(rotationOn({'autoRotate': false}), isFalse);
+      expect(rotationOn(null), isFalse);
     });
   });
 
@@ -58,12 +73,5 @@ void main() {
     final cards = [_card('a', 'info'), _card('b', 'input', showsIn: 30), _card('c', 'approval')];
     expect(holdingCard(_s({'active_channel': 'Attention'}), cards)?.id, 'c');
     expect(holdingCard(_s({'active_channel': 'Claude'}), cards), isNull);
-  });
-
-  test('slide progress and seconds left', () {
-    expect(slideProgress(8000, 6000), 0.25);
-    expect(slideProgress(0, 0), 0);
-    expect(secondsLeft(4001), 5);
-    expect(secondsLeft(0), 0);
   });
 }

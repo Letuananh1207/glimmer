@@ -93,14 +93,15 @@ abstract final class AppSize {
   static const double cropFrame = 260;
   static const double devicePreview = 180;
   static const double devicePreviewPhoto = 141;
-  static const double deviceShell = 312;
-  static const double deviceScreen = 288;
+  static const double deviceShell = 376;
+  static const double deviceScreen = 360;
 
-  /// Màn thiết bị 240 px × 1.2 = 288 (DeviceMirror).
-  static const double deviceScale = 1.2;
-  static const double padButton = 64;
+  /// Màn thiết bị 240 px × 1.5 = 360 (TouchMirror, design 2026-11-26.6).
+  static const double deviceScale = 1.5;
   static const double roundButton = 56;
-  static const double controlTab = 56;
+
+  /// Vòng phản hồi chạm trên ô màn (TapRipple) = vùng trúng tối thiểu của nút nhỏ.
+  static const double tapRipple = 44;
 
   static const double radiusCard = 14;
   static const double radiusButton = 20;
@@ -116,8 +117,7 @@ abstract final class AppSize {
   static const double radiusBadge = 4;
   static const double radiusPhotoTile = 10;
   static const double radiusSheet = 20;
-  static const double radiusDeviceShell = 22;
-  static const double radiusPadButton = 18;
+  static const double radiusDeviceShell = 20;
   static const double radiusSnackbar = 12;
 
   static const double hairline = 1;

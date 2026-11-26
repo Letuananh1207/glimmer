@@ -3,6 +3,7 @@
 import '../models/attention_card.dart';
 import '../models/control.dart';
 import '../models/device_state.dart';
+import '../models/touch.dart';
 import 'skill_rules.dart';
 
 /// Every channel of the firmware, in its rotation order (`kChannels[]`).
@@ -75,23 +76,11 @@ List<String> rotationGuess(DeviceState s, Map<String, dynamic>? settings) {
   ];
 }
 
-/// The channel [step] places after [current] in [order] (−1 = previous); null when [current] is not in it.
-String? stepChannel(List<String> order, String current, int step) {
-  final i = order.indexOf(current);
-  if (i < 0 || order.isEmpty) return null;
-  return order[(i + step) % order.length];
-}
-
 /// R-DK-3: commands this firmware has, from the fields `/api/state` reports.
+/// Touches (R-DK-10) come with the firmware of the app remote, which reports `paused`.
 ControlCaps controlCaps(DeviceState? s) => s == null
     ? ControlCaps.all
-    : ControlCaps(
-        prev: s.paused != null,
-        pause: s.paused != null,
-        dismissCard: s.paused != null,
-        screen: s.screenOn != null,
-        slide: s.slideLeftMs != null,
-      );
+    : ControlCaps(touch: s.paused != null, dismissCard: s.paused != null, screen: s.screenOn != null);
 
 /// The agent card holding the device screen (approval / input on the Attention channel), or null.
 AttentionCard? holdingCard(DeviceState? s, List<AttentionCard> cards) {
@@ -102,12 +91,48 @@ AttentionCard? holdingCard(DeviceState? s, List<AttentionCard> cards) {
   return null;
 }
 
-/// Share 0…1 of the current slide already shown; [leftMs] = time left now, [slideMs] its length. 0 when unknown.
-double slideProgress(int slideMs, int leftMs) {
-  if (slideMs <= 0) return 0;
-  final done = (slideMs - leftMs.clamp(0, slideMs)) / slideMs;
-  return done.clamp(0.0, 1.0);
+/// Programs (windows) of the device: the channels that are neither the desktop nor a system screen.
+const programChannels = {'Claude', 'Codex', 'AI', 'Trend', 'Agents', 'Photo', 'Weather', 'Forecast', 'Clock', 'Info'};
+
+bool isProgram(String channel) => programChannels.contains(channel);
+
+/// R-DK-9: programs of the enabled [skillsOn], by group, in the sheet's order. Channels whose `show*` flag is off in
+/// [settings] are left out (the device answers 404 for them); Info only when `showInfo` is on.
+Map<ProgramGroup, List<String>> programsOf(List<String> skillsOn, Map<String, dynamic>? settings) {
+  final on = skillsOn.isEmpty ? const [SkillIds.agent] : skillsOn;
+  bool shown(String c) {
+    final flag = _agentFlag[c] ?? _otherFlag[c];
+    return flag == null || settings == null || settings[flag] != false;
+  }
+
+  return {
+    ProgramGroup.agent: [
+      if (on.contains(SkillIds.agent))
+        for (final c in const ['Claude', 'Codex', 'AI', 'Trend', 'Agents'])
+          if (shown(c)) c,
+    ],
+    ProgramGroup.other: [
+      for (final c in const ['Weather', 'Forecast', 'Clock', 'Photo'])
+        if (on.contains(channelSkill(c)) && shown(c)) c,
+    ],
+    ProgramGroup.system: [if (settings?['showInfo'] == true) 'Info'],
+  };
 }
 
-/// Whole seconds left, rounded up (the channel line "đổi kênh sau N s").
-int secondsLeft(int leftMs) => leftMs <= 0 ? 0 : (leftMs + 999) ~/ 1000;
+const _otherFlag = {'Weather': 'showWeather', 'Forecast': 'showForecast', 'Clock': 'showClock'};
+
+/// Every program of [programsOf], flat.
+Set<String> programSet(List<String> skillsOn, Map<String, dynamic>? settings) => {
+  for (final l in programsOf(skillsOn, settings).values) ...l,
+};
+
+/// R-DK-8: the most recently opened window of [skill] in [open] (taskbar button → that window), or null.
+String? latestWindowOf(List<String> open, String skill) {
+  for (final p in open.reversed) {
+    if (channelSkill(p) == skill && p != 'Info') return p;
+  }
+  return null;
+}
+
+/// R-DK-7: the device's `autoRotate` must be off (the device shows what the user opened, never rotates).
+bool rotationOn(Map<String, dynamic>? settings) => settings?['autoRotate'] == true;

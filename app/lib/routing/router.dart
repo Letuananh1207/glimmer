@@ -45,6 +45,8 @@ GoRouter buildRouter(DeviceRepository device) {
                 onOpenDetails: (skill) => context.push(Routes.detailsAt(skill)),
                 onUpdateFirmware: () => context.go(Routes.device),
                 onSetupWifi: () => context.push(Routes.deviceWifi),
+                onOpenSettings: () => context.go(Routes.settings),
+                onOpenSkills: () => context.go(Routes.skills),
               ),
             ),
             routes: [

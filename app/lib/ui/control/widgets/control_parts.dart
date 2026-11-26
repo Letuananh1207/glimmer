@@ -138,11 +138,13 @@ class ControlBanner extends StatelessWidget {
   );
 }
 
-/// Chip "Đang gửi…" trên góc vỏ: cao 28 bo 14 `panel2` viền `line`, vòng xoay 16 + chữ 12, đệm 0 12 0 8, cách 6.
-class SendingChip extends StatelessWidget {
-  const SendingChip({super.key, required this.label});
+/// `StatusChip` (§8, design 2026-11-26.6) trên góc trái vỏ: cao 28 bo 14 `panel2` viền `line`, đệm 0 12 0 8, cách 6 —
+/// vòng xoay 16 (hoặc dấu tích mint khi [done]) + chữ 12 ink.
+class StatusChip extends StatelessWidget {
+  const StatusChip({super.key, required this.label, this.done = false});
 
   final String label;
+  final bool done;
 
   static const _h = 28.0;
   static const _spinner = 16.0;
@@ -161,9 +163,11 @@ class SendingChip extends StatelessWidget {
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const SizedBox.square(
+        SizedBox.square(
           dimension: _spinner,
-          child: CircularProgressIndicator(strokeWidth: _stroke, color: AppColors.ink),
+          child: done
+              ? const Icon(Icons.check, size: _spinner, color: AppColors.mint)
+              : const CircularProgressIndicator(strokeWidth: _stroke, color: AppColors.ink),
         ),
         const SizedBox(width: _gap),
         Text(label, style: AppFonts.label.copyWith(color: AppColors.ink, letterSpacing: 0)),
@@ -172,60 +176,53 @@ class SendingChip extends StatelessWidget {
   );
 }
 
-/// `ChannelProgress` (§8): đệm 12 24 0, cách 8 — tên kênh 13/700 ink + ghi chú 13 (muted / amber / lilac); thanh 3
-/// bo 2 nền `panel2`, phần chạy = [progress] màu [accent].
-class ChannelProgress extends StatelessWidget {
-  const ChannelProgress({
+/// Dòng dưới ô màn (§8, design 2026-11-26.6): đệm 12 24 0, cách 8 — ô 8 bo 2 màu [accent] + tên app 13/700 ink + ghi
+/// chú 13 ([noteColor], muted / amber / lilac). Không có thanh (thiết bị không xoay).
+class ChannelLine extends StatelessWidget {
+  const ChannelLine({
     super.key,
     required this.title,
     required this.note,
-    required this.noteColor,
-    required this.progress,
     required this.accent,
+    this.noteColor = AppColors.muted,
   });
 
   final String title, note;
-  final Color noteColor, accent;
-  final double progress;
+  final Color accent, noteColor;
 
   static const _size = 13.0;
-  static const _bar = 3.0;
-  static const _barRadius = 2.0;
+  static const _box = 8.0;
+  static const _boxRadius = 2.0;
 
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.fromLTRB(AppSpace.xxl, AppSpace.m, AppSpace.xxl, 0),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    child: Row(
       children: [
-        Text.rich(
-          TextSpan(
-            children: [
-              TextSpan(
-                text: title,
-                style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.ink),
-              ),
-              if (note.isNotEmpty)
-                TextSpan(
-                  text: ' $note',
-                  style: TextStyle(color: noteColor),
-                ),
-            ],
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontFamily: AppFonts.family, fontSize: _size),
+        Container(
+          width: _box,
+          height: _box,
+          decoration: BoxDecoration(color: accent, borderRadius: BorderRadius.circular(_boxRadius)),
         ),
-        const SizedBox(height: AppSpace.s),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(_barRadius),
-          child: SizedBox(
-            height: _bar,
-            child: LinearProgressIndicator(
-              value: progress.clamp(0.0, 1.0),
-              backgroundColor: AppColors.panel2,
-              color: accent,
+        const SizedBox(width: AppSpace.s),
+        Expanded(
+          child: Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: title,
+                  style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.ink),
+                ),
+                if (note.isNotEmpty)
+                  TextSpan(
+                    text: ' $note',
+                    style: TextStyle(color: noteColor),
+                  ),
+              ],
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontFamily: AppFonts.family, fontSize: _size),
           ),
         ),
       ],

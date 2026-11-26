@@ -4,7 +4,7 @@ import '../models/app_error.dart';
 import '../models/control.dart';
 import '../rules/control_rules.dart';
 
-/// The app remote (tab Điều khiển, R-DK-1…5): sends one command, once, and says whether the device did what was
+/// The app remote (tab Điều khiển, R-DK-1…10): sends one command, once, and says whether the device did what was
 /// asked. Optimistic display is the caller's; this only reconciles (R-DK-1: no automatic retry). A command the
 /// firmware lacks is refused without sending (R-DK-3).
 class ControlDeviceUseCase {
@@ -18,21 +18,14 @@ class ControlDeviceUseCase {
   Result<ControlOutcome>? _refuse(ControlCommand c) =>
       caps.supports(c) ? null : Result.error(AppError(AppErrorKind.controlUnsupported, detail: c.name));
 
-  /// Next / previous channel. [expected] = the channel the app showed at once (a guess: any answer is followed,
-  /// only "nothing moved" counts as not done).
-  Future<Result<ControlOutcome>> step(ControlCommand c, {required String from}) async {
-    assert(c == ControlCommand.next || c == ControlCommand.prev);
+  /// R-DK-7/8: show [program] (or `Home`, the desktop) now — `/api/channel {name}`. [c] = the touch it comes from
+  /// (minimize / close / desktop need the touch firmware, R-DK-10; opening works on any firmware with the remote).
+  Future<Result<ControlOutcome>> open(String program, {ControlCommand c = ControlCommand.open}) async {
     final refused = _refuse(c);
     if (refused != null) return refused;
-    final r = await _device.channel(action: c == ControlCommand.next ? 'next' : 'prev');
+    final r = await _device.channel(name: program);
     return switch (r) {
-      Ok(:final value) => Result.ok(
-        ControlOutcome(
-          active: value.active,
-          paused: value.paused,
-          matched: value.active.isNotEmpty && value.active != from,
-        ),
-      ),
+      Ok(:final value) => Result.ok(ControlOutcome(active: value.active, matched: value.active == program)),
       Error(:final error) => Result.error(error),
     };
   }
@@ -50,25 +43,20 @@ class ControlDeviceUseCase {
     }
     return switch (last!) {
       Ok(:final value) => Result.ok(
-        ControlOutcome(active: value.active, paused: value.paused, matched: channelSkill(value.active) == skill),
+        ControlOutcome(active: value.active, matched: channelSkill(value.active) == skill),
       ),
       Error(:final error) => Result.error(error),
     };
   }
 
-  /// R-DK-4: hold / release the rotation for now (never `autoRotate`).
-  Future<Result<ControlOutcome>> pause(bool hold) async {
-    final c = hold ? ControlCommand.pause : ControlCommand.resume;
-    final refused = _refuse(c);
-    if (refused != null) return refused;
-    final r = await _device.channel(action: c.name);
-    return switch (r) {
-      Ok(:final value) => Result.ok(
-        ControlOutcome(active: value.active, paused: value.paused, matched: value.paused == hold),
-      ),
-      Error(:final error) => Result.error(error),
-    };
+  /// R-DK-7: the device never rotates — `autoRotate` off (sent only when [settings] still have it on).
+  Future<Result<ControlOutcome>> stopRotation(Map<String, dynamic>? settings) async {
+    if (!rotationOn(settings)) return const Result.ok(ControlOutcome());
+    return _setting({'autoRotate': false});
   }
+
+  /// Start → Khởi động lại (asked again by the screen first).
+  Future<Result<void>> restart() => _device.reboot();
 
   /// Backlight off / on now.
   Future<Result<ControlOutcome>> screen(bool on) async {

@@ -1,15 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:glimmer_app/data/repositories/skill/skill_repository_local.dart';
 import 'package:glimmer_app/domain/models/control.dart';
 import 'package:glimmer_app/domain/use_cases/control_device_use_case.dart';
-import 'package:glimmer_app/domain/use_cases/toggle_skill_use_case.dart';
+import 'package:glimmer_app/domain/models/touch.dart';
 import 'package:glimmer_app/ui/control/view_models/control_view_model.dart';
 import 'package:glimmer_app/domain/models/mirror_frame.dart';
 
 import '../../../../testing/fakes/fake_repositories.dart';
-import '../../../../testing/fakes/fake_services.dart';
 
 const _url = 'http://192.168.1.50';
 
@@ -29,17 +27,17 @@ void main() {
   late ControlViewModel vm;
   var now = DateTime(2026, 11, 26, 14, 32);
 
-  Future<ControlViewModel> make({Map<String, dynamic>? state}) async {
+  Future<ControlViewModel> make({Map<String, dynamic>? state, Map<String, dynamic>? settings}) async {
     await rig.connect(_url, state ?? _state());
-    rig.api.on(_url, 'GET', '/api/settings', {'brightness': 50, 'nightMode': 0, 'showClaude': true, 'tzMinutes': 420});
-    final toggle = ToggleSkillUseCase(
-      skills: SkillRepositoryLocal(store: await fakeStore()),
-      device: rig.repo,
+    rig.api.on(
+      _url,
+      'GET',
+      '/api/settings',
+      settings ?? {'brightness': 50, 'nightMode': 0, 'showClaude': true, 'tzMinutes': 420},
     );
     final v = ControlViewModel(
       device: rig.repo,
       control: ControlDeviceUseCase(device: rig.repo),
-      toggleSkill: toggle,
       now: () => now,
     );
     await v.reload();
@@ -64,70 +62,158 @@ void main() {
     expect(settings, greaterThanOrEqualTo(1));
     expect(vm.brightness, 50);
     expect(vm.frame!.channel, 'Claude');
-    expect(vm.secondsLeft, 6);
+    expect(vm.frame!.taskbar.progress, 0); // the device does not rotate: no slide progress
   });
 
-  test('R-DK-1 jump: the mirror shows the new channel at once, then the device answer', () async {
+  void answer(String active) =>
+      rig.api.on(_url, 'POST', '/api/channel', {'ok': true, 'active': active, 'paused': false});
+
+  test('R-DK-7 the device window is open from the start; autoRotate on → off, once', () async {
+    vm = await make(settings: {'brightness': 50, 'autoRotate': true});
+    rig.api.on(_url, 'POST', '/api/settings', {'ok': true});
+    expect(vm.windows.open, ['Claude']);
+    expect(vm.windows.top, 'Claude');
+    await vm.reload();
+    expect(rig.posts('/api/settings').map((c) => c.body), [
+      {'autoRotate': false},
+    ]);
+  });
+
+  test('R-DK-1 R-DK-7 a desktop icon / Start opens at once, then the device answer', () async {
     vm = await make();
     final hold = Completer<void>();
     rig.api.holdPosts = hold;
-    rig.api.on(_url, 'POST', '/api/channel', {'ok': true, 'active': 'Weather', 'paused': false});
-    final f = vm.jump('weather');
+    answer('Weather');
+    final f = vm.openProgram('Weather');
     await Future<void>.delayed(Duration.zero);
     expect(vm.channel, 'Weather');
     expect(vm.sending, isTrue);
-    expect(vm.switching, isTrue);
+    expect(vm.chip, ChipKind.openingApp);
+    expect(vm.windows.top, 'Weather');
     hold.complete();
     rig.api.holdPosts = null;
     await f;
     expect(vm.sending, isFalse);
     expect(vm.failed, isNull);
-    expect(vm.channel, 'Weather');
-    expect(vm.channelSkill, 'weather');
+    expect(vm.windows.open, ['Claude', 'Weather']);
+    expect(rig.posts('/api/channel').single.body, {'name': 'Weather'});
   });
 
   test('R-DK-1 device shows another channel → follow it, report, no second command', () async {
     vm = await make();
-    rig.api.on(_url, 'POST', '/api/channel', {'ok': true, 'active': 'Claude', 'paused': false});
-    await vm.jump('clock');
+    answer('Claude');
+    await vm.openProgram('Clock');
     expect(vm.channel, 'Claude');
-    expect(vm.failed, ControlCommand.jump);
-    expect(vm.failedSkill, 'clock');
+    expect(vm.failed, ControlCommand.open);
+    expect(vm.failedApp, 'Clock');
+    expect(vm.windows.open, ['Claude']);
     expect(rig.posts('/api/channel'), hasLength(1));
   });
 
   test('R-DK-1 no answer → back to the device channel, Thử lại is the only resend', () async {
     vm = await make();
-    await vm.step(ControlCommand.next);
+    await vm.openProgram('Weather');
     expect(vm.channel, 'Claude');
-    expect(vm.failed, ControlCommand.next);
+    expect(vm.failed, ControlCommand.open);
     expect(rig.posts('/api/channel'), hasLength(1));
-    rig.api.on(_url, 'POST', '/api/channel', {'ok': true, 'active': 'Weather', 'paused': false});
+    answer('Weather');
     await vm.retry();
     expect(rig.posts('/api/channel'), hasLength(2));
     expect(vm.failed, isNull);
     expect(vm.channel, 'Weather');
   });
 
-  test('R-DK-3 locked buttons send nothing', () async {
+  test('R-DK-8 tap _ → desktop, the window keeps its button; tap its button → back', () async {
+    vm = await make();
+    answer('Home');
+    expect(vm.tap(192, 11).kind, TouchKind.minimize);
+    await Future<void>.delayed(Duration.zero);
+    expect(vm.channel, 'Home');
+    expect(vm.chip, ChipKind.minimizing);
+    while (vm.sending) {
+      await Future<void>.delayed(Duration.zero);
+    }
+    expect(rig.posts('/api/channel').single.body, {'name': 'Home'});
+    expect(vm.windows.open, ['Claude']);
+    expect(vm.windows.minimized, {'Claude'});
+    expect(vm.note, LineNote.minimized);
+    expect(vm.minimizedApp, 'Claude');
+    answer('Claude');
+    await vm.taskbar('agent');
+    expect(rig.posts('/api/channel').last.body, {'name': 'Claude'});
+    expect(vm.windows.top, 'Claude');
+    expect(vm.note, LineNote.justOpened);
+  });
+
+  test('R-DK-8 × → the window before it; the last one → desktop', () async {
+    vm = await make();
+    answer('Weather');
+    await vm.openProgram('Weather');
+    answer('Claude');
+    await vm.closeTop();
+    expect(rig.posts('/api/channel').last.body, {'name': 'Claude'});
+    expect(vm.windows.open, ['Claude']);
+    answer('Home');
+    await vm.closeTop();
+    expect(rig.posts('/api/channel').last.body, {'name': 'Home'});
+    expect(vm.windows.open, isEmpty);
+    expect(vm.windows.top, isNull);
+  });
+
+  test('R-DK-8 the shown window\'s taskbar button minimizes it (as XP); □ and start send nothing', () async {
+    vm = await make();
+    answer('Home');
+    await vm.taskbar('agent');
+    expect(rig.posts('/api/channel').single.body, {'name': 'Home'});
+    expect(vm.windows.minimized, {'Claude'});
+    answer('Claude');
+    await vm.taskbar('agent');
+    final n = rig.posts('/api/channel').length;
+    expect(vm.tap(207, 11).kind, TouchKind.maximize);
+    expect(vm.tap(30, 227).kind, TouchKind.start);
+    await Future<void>.delayed(Duration.zero);
+    expect(rig.posts('/api/channel'), hasLength(n));
+  });
+
+  test('R-DK-8 a skill with no open window: its taskbar button opens its first program', () async {
+    vm = await make();
+    answer('Weather');
+    await vm.taskbar('weather');
+    expect(rig.posts('/api/channel').single.body, {'name': 'Weather'});
+    expect(vm.windows.top, 'Weather');
+  });
+
+  test('R-DK-9 a skill turned off takes its windows with it', () async {
+    vm = await make();
+    answer('Clock');
+    await vm.openProgram('Clock');
+    expect(vm.windows.open, ['Claude', 'Clock']);
+    rig.api.device(_url, {
+      ..._state(),
+      'skills_on': ['agent', 'weather'],
+    });
+    await rig.repo.refresh();
+    expect(vm.windows.open, ['Claude']);
+    expect(vm.programs.values.expand((l) => l), isNot(contains('Clock')));
+  });
+
+  test('R-DK-3 R-DK-10 old firmware: touches and locked buttons send nothing', () async {
     vm = await make(state: _state(current: false));
-    expect(vm.missing, [ControlCommand.prev, ControlCommand.pause, ControlCommand.screenOff]);
-    await vm.step(ControlCommand.prev);
-    await vm.togglePause();
+    expect(vm.missing, [ControlCommand.minimize, ControlCommand.screenOff]);
+    expect(vm.touchable, isFalse);
+    expect(vm.tap(228, 11).kind, TouchKind.none);
+    await vm.minimizeTop();
+    await vm.closeTop();
     await vm.toggleScreen();
     expect(rig.posts(), isEmpty);
     expect(vm.failed, isNull);
   });
 
-  test('R-DK-4 pause: the button flips at once, only /api/channel pause is sent', () async {
-    vm = await make();
-    rig.api.on(_url, 'POST', '/api/channel', {'ok': true, 'active': 'Claude', 'paused': true});
-    final f = vm.togglePause();
-    expect(vm.paused, isTrue);
-    await f;
-    expect(vm.paused, isTrue);
-    expect(vm.secondsLeft, isNull);
-    expect(rig.posts('/api/settings'), isEmpty);
+  test('R-DK-10 old firmware: Start still opens a program', () async {
+    vm = await make(state: _state(current: false));
+    answer('Weather');
+    await vm.openProgram('Weather');
+    expect(rig.posts('/api/channel').single.body, {'name': 'Weather'});
   });
 
   test('R-DK-5 brightness: dragging sends nothing, release sends once', () async {

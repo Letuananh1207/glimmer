@@ -48,12 +48,13 @@ Widget controlScreen({
   required Future<void> Function(String? skill) onOpenDetails,
   required VoidCallback onUpdateFirmware,
   required VoidCallback onSetupWifi,
+  required VoidCallback onOpenSettings,
+  required VoidCallback onOpenSkills,
 }) =>
     ViewModelHost(
       create: (c) => ControlViewModel(
         device: c.read<DeviceRepository>(),
         control: c.read<ControlDeviceUseCase>(),
-        toggleSkill: c.read<ToggleSkillUseCase>(),
         loadPhotos: c.read<LoadPhotosUseCase>(),
       ),
       builder: (_, vm) => ControlScreen(
@@ -61,6 +62,8 @@ Widget controlScreen({
         onOpenDetails: onOpenDetails,
         onUpdateFirmware: onUpdateFirmware,
         onSetupWifi: onSetupWifi,
+        onOpenSettings: onOpenSettings,
+        onOpenSkills: onOpenSkills,
       ),
     );
 

@@ -1,24 +1,27 @@
 import 'package:flutter/material.dart';
 
 import '../../../domain/models/control.dart';
+import '../../../domain/models/touch.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../core/labels.dart';
 import '../../core/skill_style.dart';
 import '../../core/themes/app_colors.dart';
-import '../../core/themes/app_text.dart';
 import '../../../utils/durations.dart';
 import '../view_models/control_view_model.dart';
-import 'control_pad.dart';
 import 'control_parts.dart';
 import 'control_toggles.dart';
-import 'device_mirror/device_mirror.dart';
 import 'device_mirror/channels/photo_channel.dart';
 import 'device_mirror/mirror_channel.dart';
+import 'device_mirror/touch_mirror.dart';
 import 'hold_card_panel.dart';
+import 'program_style.dart';
+import 'start_menu_sheet.dart';
+import 'touch_legend.dart';
 
-/// Điều khiển (tab 1, screen_specs §8, design 2026-11-26.5): đầu màn, thanh báo (firmware cũ / glimmer-setup / mất
-/// kết nối), `DeviceMirror`, dòng kênh hoặc `HoldCardPanel`, `ControlPad`, `JumpTabBar`, `BrightnessSlider`,
-/// `RoundToggle` (tắt màn, chế độ đêm, số liệu); `CommandSnackbar` nổi trên thanh dưới khi lệnh không được nhận.
+/// Điều khiển (tab 1, screen_specs §8, design 2026-11-26.6): đầu màn, thanh báo (firmware chưa nhận chạm /
+/// glimmer-setup / mất kết nối), `TouchMirror` chạm như chuột (+ `TapRipple`, `StatusChip`), dòng chương trình hoặc
+/// `HoldCardPanel`, `TouchLegend`, `BrightnessSlider`, `RoundToggle` (tắt màn, chế độ đêm, số liệu); chạm start →
+/// `StartMenuSheet`; `CommandSnackbar` nổi trên thanh dưới khi lệnh không được nhận.
 class ControlScreen extends StatelessWidget {
   const ControlScreen({
     super.key,
@@ -26,17 +29,21 @@ class ControlScreen extends StatelessWidget {
     required this.onOpenDetails,
     required this.onUpdateFirmware,
     required this.onSetupWifi,
+    required this.onOpenSettings,
+    required this.onOpenSkills,
   });
 
   final ControlViewModel viewModel;
 
   /// Số liệu (push), at the tab of skill (null = first); completes when it closes.
   final Future<void> Function(String? skill) onOpenDetails;
-  final VoidCallback onUpdateFirmware, onSetupWifi;
+
+  /// [onUpdateFirmware] = tab Thiết bị (also Start → Thiết bị).
+  final VoidCallback onUpdateFirmware, onSetupWifi, onOpenSettings, onOpenSkills;
 
   static const _snackSide = 12.0;
   static const _bottomPad = 16.0;
-  static const _mirrorTop = 4.0;
+  static const _mirrorTop = 6.0;
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
@@ -48,6 +55,7 @@ class ControlScreen extends StatelessWidget {
       final l = AppLocalizations.of(context);
       final mode = vm.mode;
       final failed = vm.failed;
+      final touches = vm.usable;
       return Stack(
         children: [
           ListView(
@@ -69,36 +77,20 @@ class ControlScreen extends StatelessWidget {
               ?_banner(l, vm),
               const SizedBox(height: _mirrorTop),
               Center(
-                child: DeviceMirror(
+                child: TouchMirror(
                   frame: vm.frame,
                   channels: withPhoto(mirrorChannels, vm.photoImage),
-                  semanticLabel: l.controlScreenA11y(_channelTitle(l, vm)),
+                  semanticLabel: l.controlScreenA11y(_title(l, vm)),
                   dim: vm.dim,
                   offline: mode == ControlMode.offline,
-                  chip: vm.sending ? SendingChip(label: l.controlSending) : null,
-                  onTap: () => _details(vm),
-                  onNext: _usable(vm) ? () => vm.step(ControlCommand.next) : null,
-                  onPrev: _usable(vm) && vm.caps.prev ? () => vm.step(ControlCommand.prev) : null,
+                  chip: vm.sending ? StatusChip(label: _chipText(l, vm)) : null,
+                  onTap: touches ? (x, y) => _tap(context, vm, x, y) : null,
+                  // R-DK-8: chuột phải — menu chưa có thiết kế (phiếu panel), chỉ phản hồi chạm.
+                  onHold: vm.touchable ? (_, _) {} : null,
                 ),
               ),
               _status(l, vm),
-              ControlPad(items: _pad(l, vm)),
-              if (vm.skills.length > 1)
-                JumpTabBar(
-                  skills: vm.skills,
-                  lit: vm.channelSkill,
-                  badge: vm.badge,
-                  onJump: vm.jump,
-                  enabled: _usable(vm),
-                )
-              else
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(AppSpace.xxl, 10, AppSpace.xxl, 0),
-                  child: Text(
-                    l.controlSingleNote(SkillStyle.name(l, vm.skills.isEmpty ? 'agent' : vm.skills.first)),
-                    style: AppFonts.label.copyWith(letterSpacing: 0),
-                  ),
-                ),
+              TouchLegend(enabled: vm.touchable),
               BrightnessSlider(
                 value: vm.brightness,
                 dragging: vm.dragging,
@@ -121,14 +113,49 @@ class ControlScreen extends StatelessWidget {
     },
   );
 
+  /// A touch on the mirror; start opens Start (R-DK-10: also on firmware without touches).
+  void _tap(BuildContext context, ControlViewModel vm, double x, double y) {
+    if (vm.tap(x, y).kind == TouchKind.start) _start(context, vm);
+  }
+
+  void _start(BuildContext context, ControlViewModel vm) => showStartMenu(
+    context,
+    StartActions(
+      programs: vm.programs,
+      open: {...vm.windows.open},
+      programsEnabled: vm.usable,
+      onOpen: vm.openProgram,
+      onDesktop: vm.desktop,
+      onDetails: () => _details(vm),
+      onControlPanel: onOpenSettings,
+      onAddRemove: onOpenSkills,
+      onDevice: onUpdateFirmware,
+      onTurnOff: vm.toggleScreen,
+      onRestart: () => _confirmRestart(context, vm),
+    ),
+  );
+
+  Future<void> _confirmRestart(BuildContext context, ControlViewModel vm) async {
+    final l = AppLocalizations.of(context);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text(l.deviceReboot),
+        content: Text(l.deviceRebootBody),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(c).pop(false), child: Text(l.commonCancel)),
+          TextButton(onPressed: () => Navigator.of(c).pop(true), child: Text(l.startRestart)),
+        ],
+      ),
+    );
+    if (ok == true) await vm.restart();
+  }
+
   /// R-DK-6: back from Số liệu → read the device again.
   Future<void> _details(ControlViewModel vm) async {
     await onOpenDetails(vm.channelSkill);
     await vm.reload();
   }
-
-  /// D-pad and jump tabs work: connected, screen on, not on the night face.
-  static bool _usable(ControlViewModel vm) => vm.mode == ControlMode.normal && !vm.screenOff && !vm.nightFace;
 
   Widget? _banner(AppLocalizations l, ControlViewModel vm) => switch (vm.mode) {
     ControlMode.setup => ControlBanner(
@@ -145,19 +172,9 @@ class ControlScreen extends StatelessWidget {
       action: l.commonRetry,
       onAction: vm.reload,
     ),
-    ControlMode.normal when vm.missing.isNotEmpty => ControlBanner(
+    ControlMode.normal when !vm.caps.touch => ControlBanner(
       title: l.controlOldFwTitle,
-      body: l.controlOldFwBody(
-        vm.firmware,
-        [
-          for (final c in vm.missing)
-            switch (c) {
-              ControlCommand.prev => l.devControlMissingPrev,
-              ControlCommand.pause => l.devControlMissingPause,
-              _ => l.devControlMissingScreen,
-            },
-        ].join(', '),
-      ),
+      body: l.controlOldFwBody(vm.firmware),
       color: AppColors.amber,
       action: l.controlUpdateFirmware,
       onAction: onUpdateFirmware,
@@ -165,7 +182,7 @@ class ControlScreen extends StatelessWidget {
     _ => null,
   };
 
-  /// Channel line, or the card that holds the screen.
+  /// Program line, or the card that holds the screen.
   Widget _status(AppLocalizations l, ControlViewModel vm) {
     if (vm.mode == ControlMode.setup) return const SizedBox.shrink();
     final card = vm.holding;
@@ -178,72 +195,42 @@ class ControlScreen extends StatelessWidget {
         onDismiss: vm.sending || !vm.caps.dismissCard ? null : vm.dismissCard,
       );
     }
-    final skill = vm.channelSkill;
-    final accent = skill == null ? AppColors.muted : SkillStyle.of(skill).accent;
     if (vm.screenOff) {
-      return ChannelProgress(
+      return ChannelLine(
         title: l.controlScreenOffTitle,
         note: l.controlScreenOffNote,
         noteColor: AppColors.amber,
-        progress: 0,
         accent: AppColors.muted,
       );
     }
     if (vm.nightFace) {
-      return ChannelProgress(
+      return ChannelLine(
         title: l.controlNightTitle,
         note: l.controlNightNote(vm.nightEnd),
         noteColor: AppColors.lilac,
-        progress: 0,
         accent: AppColors.lilac,
       );
     }
-    if (vm.paused) {
-      return ChannelProgress(
-        title: _channelTitle(l, vm),
-        note: l.controlPausedNote,
-        noteColor: AppColors.amber,
-        progress: vm.progress,
-        accent: AppColors.amber,
-      );
-    }
-    final left = vm.secondsLeft;
-    return ChannelProgress(
-      title: _channelTitle(l, vm),
-      note: vm.switching ? l.controlJustSwitched : (left == null ? '' : l.controlNextIn(left)),
-      noteColor: AppColors.muted,
-      progress: vm.switching ? 0 : vm.progress,
-      accent: accent,
+    final skill = vm.channelSkill;
+    return ChannelLine(
+      title: _title(l, vm),
+      note: switch (vm.note) {
+        LineNote.openOnDevice => l.controlOpenOnDevice,
+        LineNote.justOpened => l.controlJustOpened,
+        LineNote.minimized => l.controlMinimizedNote(ProgramStyle.name(l, vm.minimizedApp)),
+        LineNote.tapIcon => l.controlTapIconNote,
+      },
+      accent: skill == null ? AppColors.inkDim : SkillStyle.of(skill).accent,
     );
   }
 
-  List<PadItem> _pad(AppLocalizations l, ControlViewModel vm) {
-    final usable = _usable(vm);
-    PadLook look(ControlCommand c) =>
-        !vm.caps.supports(c) ? PadLook.locked : (usable ? PadLook.normal : PadLook.disabled);
-    final paused = vm.paused;
-    return [
-      PadItem(
-        icon: Icons.chevron_left,
-        label: l.controlPrev,
-        look: look(ControlCommand.prev),
-        onTap: () => vm.step(ControlCommand.prev),
-      ),
-      PadItem(
-        icon: paused ? Icons.play_arrow : Icons.pause,
-        label: paused ? l.controlResume : l.controlPause,
-        look: look(ControlCommand.pause),
-        lit: paused ? AppColors.amber : null,
-        onTap: vm.togglePause,
-      ),
-      PadItem(
-        icon: Icons.chevron_right,
-        label: l.controlNext,
-        look: look(ControlCommand.next),
-        onTap: () => vm.step(ControlCommand.next),
-      ),
-    ];
-  }
+  String _chipText(AppLocalizations l, ControlViewModel vm) => switch (vm.chip) {
+    ChipKind.minimizing => l.controlMinimizing,
+    ChipKind.closing => l.controlClosing(ProgramStyle.name(l, vm.chipApp)),
+    ChipKind.opening => l.controlOpening,
+    ChipKind.openingApp => l.controlOpeningApp(ProgramStyle.name(l, vm.chipApp)),
+    ChipKind.sending => l.controlSending,
+  };
 
   List<RoundItem> _toggles(AppLocalizations l, ControlViewModel vm) {
     final normal = vm.mode == ControlMode.normal;
@@ -274,35 +261,28 @@ class ControlScreen extends StatelessWidget {
 
   static String _agentName(String agent) => agent.isEmpty ? agent : '${agent[0].toUpperCase()}${agent.substring(1)}';
 
-  /// Name of the channel on the mirror ("Claude", "Thời tiết", card title…).
-  static String _channelTitle(AppLocalizations l, ControlViewModel vm) => switch (vm.channel) {
+  /// Name of what the mirror shows ("Claude", "Desktop", card title…).
+  static String _title(AppLocalizations l, ControlViewModel vm) => switch (vm.channel) {
     'Attention' => l.cardKind(vm.cards.isEmpty ? '' : vm.cards.first.kind),
     'Night' => l.controlNightTitle,
     'Setup' => l.devXpTitleSetup,
-    'Home' => 'glimmer',
-    'Agents' => l.devXpTitleAgents,
-    'AI' => l.devXpTitleAi,
-    'Trend' => l.devXpTitleTrend,
-    'Photo' => l.devXpTitlePhoto,
-    'Weather' => l.devXpTitleWeather,
-    'Forecast' => l.devXpTitleForecast,
-    'Clock' => l.devXpTitleClock,
-    'Info' => l.devXpTitleInfo,
-    final c => c,
+    final c => ProgramStyle.name(l, c),
   };
 
-  /// Button name in the "not done" snackbar.
-  static String _commandName(AppLocalizations l, ControlViewModel vm, ControlCommand c) => switch (c) {
-    ControlCommand.prev => l.controlPrev,
-    ControlCommand.next => l.controlNext,
-    ControlCommand.pause => l.controlPause,
-    ControlCommand.resume => l.controlResume,
-    ControlCommand.jump => SkillStyle.name(l, vm.failedSkill),
-    ControlCommand.screenOff => l.controlScreenOff,
-    ControlCommand.screenOn => l.controlScreenOn,
-    ControlCommand.dismissCard => l.controlDismissCard,
-    ControlCommand.brightness => l.controlBrightness,
-    ControlCommand.night => l.controlNight,
-    ControlCommand.refresh => l.controlRefreshA11y,
-  };
+  /// Command name in the "not done" snackbar.
+  static String _commandName(AppLocalizations l, ControlViewModel vm, ControlCommand c) {
+    final app = ProgramStyle.name(l, vm.failedApp);
+    return switch (c) {
+      ControlCommand.open => l.devControlCmdOpen(app),
+      ControlCommand.minimize => l.devControlCmdMinimize(app),
+      ControlCommand.close => l.devControlCmdClose(app),
+      ControlCommand.desktop => l.startDesktop,
+      ControlCommand.screenOff => l.controlScreenOff,
+      ControlCommand.screenOn => l.controlScreenOn,
+      ControlCommand.dismissCard => l.controlDismissCard,
+      ControlCommand.brightness => l.controlBrightness,
+      ControlCommand.night => l.controlNight,
+      ControlCommand.refresh => l.controlRefreshA11y,
+    };
+  }
 }

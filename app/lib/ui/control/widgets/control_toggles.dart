@@ -1,65 +1,22 @@
 import 'package:flutter/material.dart';
 
 import '../../../l10n/app_localizations.dart';
-import '../../core/skill_style.dart';
 import '../../core/themes/app_colors.dart';
 import '../../core/themes/app_text.dart';
-import '../../core/widgets/dock_tab_bar.dart';
-import 'control_pad.dart';
 
-/// `JumpTabBar` (§8): `DockTabBar` 4 tab xếp dọc (ô 56, icon dock ×1.25 + nhãn 12), lề 12 16 0; tab sáng = kênh
-/// đang hiện trên thiết bị ([lit]); huy hiệu amber trên Agent. Bấm → [onJump] (skill id).
-class JumpTabBar extends StatelessWidget {
-  const JumpTabBar({
-    super.key,
-    required this.skills,
-    required this.lit,
-    required this.badge,
-    required this.onJump,
-    this.enabled = true,
-  });
+/// How a remote button looks.
+enum PadLook {
+  normal,
 
-  final List<String> skills;
-  final String? lit;
-  final String? badge;
-  final ValueChanged<String> onJump;
-  final bool enabled;
+  /// Not usable now (screen off, night, offline): 38 %.
+  disabled,
 
-  static const _iconScale = 1.25;
-  static const _margin = EdgeInsets.fromLTRB(AppSpace.l, AppSpace.m, AppSpace.l, 0);
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    return Opacity(
-      opacity: enabled ? 1 : padDisabledOpacity,
-      child: IgnorePointer(
-        ignoring: !enabled,
-        child: DockTabBar(
-          semanticLabel: l.controlJumpGroupA11y,
-          margin: _margin,
-          alwaysStacked: true,
-          selected: lit ?? '',
-          onSelect: onJump,
-          tabs: [
-            for (final id in skills)
-              DockTabItem(
-                id: id,
-                label: SkillStyle.name(l, id),
-                icon: SkillStyle.dockIcon(
-                  id,
-                  color: id == 'agent' ? AppColors.clawd : AppColors.inkDim,
-                  scale: _iconScale,
-                ),
-                accent: SkillStyle.of(id).accent,
-                badge: id == 'agent' ? badge : null,
-              ),
-          ],
-        ),
-      ),
-    );
-  }
+  /// Firmware lacks the command (R-DK-3): 38 % + lock 14 top right.
+  locked,
 }
+
+/// Mờ của nút / chú thích không dùng được hoặc thiếu firmware.
+const padDisabledOpacity = 0.38;
 
 /// `BrightnessSlider` (§8): lề 12 16 0, thẻ ≥ 52 `panel` bo 14 đệm 0 16, cách 14 — mặt trời 20 inkDim, thanh trượt
 /// (rãnh 4 `panel2`, phần sáng amber, núm 20 ink có bóng; vùng chạm 44), số "80%" 13 ink rộng 40. Đang kéo: núm 28

@@ -65,3 +65,9 @@ Không lưu gì mới trên máy. Model đọc từ thiết bị (không lưu): 
 → `{active, paused}`), `ControlOutcome`, `ControlCaps` (`lib/domain/models/control.dart`). Lệnh: `DeviceRepository.channel`
 / `setScreen` (vá `state` ngay theo câu trả lời), `clearCard` (`/push/clear {id}`), `saveSettings` (`brightness`,
 `nightMode`), `refreshNow`.
+
+**2026-11-26.6** (màn thiết bị chạm được, thiết bị không tự xoay): vẫn không lưu gì trên máy. Trong RAM của
+`ControlViewModel`: `WindowStack` (`lib/domain/models/windows.dart` — cửa sổ đang mở theo thứ tự mở, cửa sổ trên cùng,
+cửa sổ thu nhỏ; R-DK-7/8), `TouchTarget` / `ProgramGroup` (`lib/domain/models/touch.dart`). `ControlCaps` còn `touch`
+(có `paused` → firmware nhận chạm), `screen`, `dismissCard`. Lệnh: `ControlDeviceUseCase.open(name)` (`/api/channel
+{name}`; `Home` = desktop), `stopRotation` (`saveSettings {autoRotate: false}` khi còn bật), `restart` (`/api/reboot`).

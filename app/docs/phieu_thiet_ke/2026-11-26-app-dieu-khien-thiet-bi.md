@@ -1,6 +1,6 @@
 # Phiếu thiết kế: App thành "điều khiển" thiết bị — màn thiết bị + nút điều khiển
 
-- Trạng thái: đã áp (2026-11-26.5)
+- Trạng thái: đã áp (2026-11-26.5, 2026-11-26.6 — màn chạm được kiểu XP; phần màn thiết bị chờ phiếu panel `docs/phieu_panel/2026-11-26-desktop-cua-so-xp.md`)
 - Đã vẽ: 2026-11-26.5
 - Ngày: 2026-11-26 · Nguồn: yêu cầu người dùng ("app giúp người dùng tương tác điều khiển thiết bị phần cứng, chứ không như
   hiện tại"); người dùng chọn: trung tâm là màn thiết bị + nút điều khiển; giữ phong cách app hiện tại (nền tối, chữ mono)

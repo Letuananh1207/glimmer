@@ -26,12 +26,12 @@ void main() {
   });
   tearDown(() => rig.repo.dispose());
 
-  test('R-DK-1 next: one POST, the device answer is adopted at once', () async {
+  test('R-DK-7 open: one POST {name}, the device answer is adopted at once', () async {
     await rig.connect(_url, _state());
     rig.api.on(_url, 'POST', '/api/channel', {'ok': true, 'active': 'Weather', 'paused': false});
-    final r = await control.step(ControlCommand.next, from: 'Claude');
+    final r = await control.open('Weather');
     expect((r as Ok<ControlOutcome>).value.matched, isTrue);
-    expect(rig.posts('/api/channel').single.body, {'action': 'next'});
+    expect(rig.posts('/api/channel').single.body, {'name': 'Weather'});
     expect(rig.repo.state!.activeChannel, 'Weather');
   });
 
@@ -43,7 +43,7 @@ void main() {
     expect(rig.repo.state!.activeChannel, 'Claude');
     rig.api.answers.remove('$_url POST /api/channel');
     final before = rig.posts('/api/channel').length;
-    final e = await control.step(ControlCommand.next, from: 'Claude');
+    final e = await control.open('Weather');
     expect(e, isA<Error<ControlOutcome>>());
     expect(rig.posts('/api/channel').length, before + 1);
   });
@@ -61,11 +61,11 @@ void main() {
     expect([for (final c in rig.posts('/api/channel')) (c.body as Map)['name']], ['Weather', 'Forecast']);
   });
 
-  test('R-DK-3 old firmware: prev / pause / screen / dismiss refused, nothing sent', () async {
+  test('R-DK-3 R-DK-10 old firmware: touches / screen / dismiss refused, nothing sent', () async {
     await rig.connect(_url, _state(current: false));
     final results = [
-      await control.step(ControlCommand.prev, from: 'Claude'),
-      await control.pause(true),
+      await control.open('Home', c: ControlCommand.minimize),
+      await control.open('Claude', c: ControlCommand.close),
       await control.screen(false),
       await control.dismissCard('c1'),
     ];
@@ -75,14 +75,21 @@ void main() {
     expect(rig.posts(), isEmpty);
   });
 
-  test('R-DK-4 pause is the channel action, never autoRotate', () async {
-    await rig.connect(_url, _state());
-    rig.api.on(_url, 'POST', '/api/channel', {'ok': true, 'active': 'Claude', 'paused': true});
-    final r = await control.pause(true);
+  test('R-DK-10 old firmware: opening from Start still goes out', () async {
+    await rig.connect(_url, _state(current: false));
+    rig.api.on(_url, 'POST', '/api/channel', {'ok': true, 'active': 'Weather'});
+    final r = await control.open('Weather');
     expect((r as Ok<ControlOutcome>).value.matched, isTrue);
-    expect(rig.posts('/api/channel').single.body, {'action': 'pause'});
+    expect(rig.posts('/api/channel').single.body, {'name': 'Weather'});
+  });
+
+  test('R-DK-7 stop rotation: autoRotate false only when it is still on', () async {
+    await rig.connect(_url, _state());
+    rig.api.on(_url, 'POST', '/api/settings', {'ok': true});
+    await control.stopRotation({'autoRotate': false});
     expect(rig.posts('/api/settings'), isEmpty);
-    expect(rig.repo.state!.paused, isTrue);
+    await control.stopRotation({'autoRotate': true});
+    expect(rig.posts('/api/settings').single.body, {'autoRotate': false});
   });
 
   test('R-DK-2 dismiss card: /push/clear with that id only', () async {
