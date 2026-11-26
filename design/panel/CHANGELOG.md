@@ -5,6 +5,25 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-26.15 — Thời tiết thành biểu tượng khay, bong bóng hiện tạm như XP
+
+- **Desktop + thanh tác vụ** (`source/XP-Desk-Tray.dc.html`, `XP-Desk-Balloon.dc.html`; `screen_specs.md` §17 mục XP-Desk-Tray;
+  ảnh `XPDeskTray.png`, `XPDeskBalloon.png`):
+  - Bỏ bong bóng thời tiết luôn mở trên desktop (XP thật không giữ bong bóng mãi).
+  - Khay hệ thống rộng thêm 20 px (x 176–239) với biểu tượng thời tiết 16×14 xpIconWarn tại (180, 220), khi skill Thời tiết bật.
+  - Bong bóng XP thật (góc bo, nút ×, đuôi chỉ vào biểu tượng khay) hiện ~10 s khi vào desktop và khi thời tiết đổi, rồi tự ẩn;
+    app chạm biểu tượng khay → hiện lại, × → ẩn.
+  - Thanh tác vụ còn tối đa 3 nút cửa sổ khi khay có biểu tượng; cột 1 của desktop xếp được 4 biểu tượng.
+- Phiếu: `docs/phieu_panel/2026-11-26-desktop-cua-so-xp.md` (người dùng hỏi thêm trong phiên thiết kế)
+- Đổi luật: thời tiết trên desktop không còn hiện thường trực — chỉ trong bong bóng tạm và cửa sổ Thời tiết.
+- Cần firmware: hẹn giờ ẩn bong bóng (10 s), nhận lệnh "hiện / ẩn bong bóng" từ app (chạm biểu tượng khay, ×).
+
+**Việc cần làm trong code:**
+- Thanh tác vụ: khay x 176 khi skill Thời tiết bật, vẽ biểu tượng thời tiết; giới hạn 3 nút cửa sổ.
+- Kênh `Home`: bỏ bong bóng thường trực; vẽ bong bóng mới khi vào desktop / thời tiết đổi / app yêu cầu, ẩn sau 10 s bằng cách vẽ lại
+  hình nền (giải mã một phần) + biểu tượng dưới vùng hộp và đuôi.
+- Bản xem trước màn trên máy tính vẽ theo.
+
 ## P-2026-11-26.14 — Desktop theo skill, thanh tác vụ theo cửa sổ đang mở, menu chuột phải
 
 - **Desktop (kênh Home kiểu XP)** (`source/XP-Desk-Agent.dc.html`, `XP-Desk-All.dc.html`, `XP-Desk-Selected.dc.html`, hình nền chung

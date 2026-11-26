@@ -1,7 +1,7 @@
 {
   "meta": {
     "name": "glimmer panel",
-    "version": "P-2026-11-26.14",
+    "version": "P-2026-11-26.15",
     "frame": {
       "width": 240,
       "height": 240,
@@ -1337,7 +1337,7 @@
         "w": 28,
         "h": 20,
         "y": 217,
-        "order": "cửa sổ đang mở theo thứ tự mở (app gửi xuống), tối đa 4 (x 71, 101, 131, 161)",
+        "order": "cửa sổ đang mở theo thứ tự mở, tối đa 3 khi khay có biểu tượng (x 71, 101, 131), 4 khi khay chỉ có giờ",
         "normal": [
           "xpBtnEdge",
           "xpBtn"
@@ -1357,18 +1357,22 @@
       },
       "tray": {
         "x": [
-          196,
+          176,
           239
         ],
+        "edge": "xpTrayEdge x 176",
+        "hi": "xpTrayHi hàng y 214 từ x 177",
         "fill": "xpTray",
-        "edge": "xpTrayEdge",
-        "hi": "xpTrayHi",
-        "clock": [
-          218,
-          221,
-          "TC",
-          "JBMono-11"
-        ]
+        "icons": [
+          [
+            "thời tiết",
+            "bitmap 16×14 tại (180, 220)",
+            "xpIconWarn",
+            "khi skill Thời tiết bật"
+          ]
+        ],
+        "clock": "JBMono-11 white TC tại (218, 221)",
+        "note": "không bật skill Thời tiết → khay như cũ x 196–239"
       }
     },
     "statusBar": {
@@ -1539,7 +1543,7 @@
       "icons": {
         "grid": "cột 0 tâm x 40, cột 1 tâm x 120; ô cao 48 từ y 8; xếp từ trên xuống rồi sang cột kế (XP Auto Arrange)",
         "column0": "tối đa 3 chương trình (y 8, 56, 104) + Thùng rác cố định ô y 152",
-        "column1": "tối đa 3 (y 8, 56, 104) — dừng trên bong bóng thời tiết (y 150)",
+        "column1": "tối đa 4 (y 8, 56, 104, 152) — bong bóng chỉ hiện tạm, đè lên",
         "order": [
           "Claude <x>%",
           "Codex <x>%",
@@ -1553,38 +1557,43 @@
         "selected": "XP icon đang chọn: icon trắng → xpSelectIcon, Clawd → xpSelectClawd; nhãn nền xpSelect (rộng chữ + 1 px mỗi bên), chữ white không bóng, viền chấm 1 px white quanh nền nhãn"
       },
       "balloon": {
+        "xp": "bong bóng khay (notification balloon tip) của XP",
+        "when": "hiện ~10 s khi vào desktop và khi thời tiết đổi (mô tả / nhiệt độ ±3°), rồi tự ẩn; app chạm biểu tượng khay → hiện lại; × → ẩn ngay",
         "box": [
-          100,
-          150,
-          136,
-          50
+          96,
+          138,
+          140,
+          62
         ],
-        "border": "bg",
+        "corner": "bo 2 px theo bậc (hàng 0/cuối thụt 2, hàng 1/kế cuối thụt 1)",
+        "border": "bg (#000000) 1 px",
         "fill": "xpInfoBar",
-        "tail": "đuôi 8→1 px tại x 206, chỉ xuống khay giờ",
+        "tail": "mở từ đáy hộp x 178–190 xuống đỉnh (190, 211): cạnh phải thẳng x 190, cạnh trái chéo 1 px/hàng — chỉ vào biểu tượng khay",
+        "close": "nút 12×12 tại (220, 143): viền xpDim, nền white, × 6×6 đen tại (+3, +3)",
         "content": [
           [
             "icon thời tiết",
-            "(106, 155)",
+            "(102, 144)",
             "xpAmber"
           ],
           [
             "Thời tiết",
             "JBMono-12B",
-            "(126, 155)"
+            "(122, 144)"
           ],
           [
             "29° · Ít mây",
             "JBMono-11",
-            "(106, 172)"
+            "(102, 164)"
           ],
           [
             "cảm giác 33°",
             "JBMono-11",
-            "(106, 185)",
+            "(102, 178)",
             "xpLabel"
           ]
-        ]
+        ],
+        "overlap": "vẽ đè lên biểu tượng desktop; ẩn thì vẽ lại hình nền + biểu tượng dưới hộp"
       },
       "taskbar": "nút = cửa sổ đang mở (không nút nào lõm khi desktop đang hiện)"
     },

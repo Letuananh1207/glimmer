@@ -1836,6 +1836,8 @@ Nguồn `source/Photo-Empty.dc.html` · ảnh `screens/@2x/PhotoEmpty.png`
 
 ## 17. Kiểu XP (Luna) — giao diện toàn máy
 
+> **P-2026-11-26.15 — Thời tiết thành biểu tượng khay, bong bóng hiện tạm như XP:** bỏ bong bóng luôn mở trên desktop; khay có biểu tượng thời tiết, bong bóng XP thật hiện ~10 s. Xem mục XP-Desk-Tray. Thay phần bong bóng của P-2026-11-26.12 / .14.
+
 > **P-2026-11-26.14 — Desktop theo skill, thanh tác vụ = cửa sổ đang mở:** biểu tượng desktop theo skill bật (2 cột), biểu tượng đang chọn; nút thanh tác vụ là cửa sổ đang mở, bỏ vạch tiến độ; menu chuột phải (desktop, cửa sổ); nút □ mờ. Xem mục XP-Desk / XP-Menu.
 
 > **P-2026-11-26.13 — Clawd làm việc theo GIF:** Đang chạy = lấy laptop ra (một lần) rồi gõ lặp; xong = ngủ ngay. Clawd ngủ nâng lên y 44, `4NG` không còn dời sang trái.
@@ -2683,3 +2685,12 @@ Nguồn `source/XP-Menu-Desktop.dc.html`, `XP-Menu-Window.dc.html` · ảnh `XPM
 - **Desktop** (giữ chỗ trống): mở tại điểm giữ (góc trên trái), dời vào trong y ≤ 213. Rộng 166, cao 129. Mục: Sắp xếp biểu tượng ▸ (126 px), Làm mới, —, Dán (mờ), Dán lối tắt (mờ, 77 px), —, Mới ▸ (mờ), —, Thuộc tính (70 px). Ảnh: mở tại (60, 30).
 - **Cửa sổ** (giữ nút thanh tác vụ: góc dưới trái tại (x nút, 213); giữ thanh tiêu đề: tại điểm giữ). Rộng 128, cao 113. Mục, ký hiệu 7×7 tại (x+5, mục+5): Khôi phục (mờ), Di chuyển (mờ), Kích thước (mờ, 70 px), Thu nhỏ, Phóng to (mờ), —, **Đóng** JBMono-12B (28 px) + `Alt+F4` JBMono-11 TR (x+w−17). Cửa sổ đang thu nhỏ: Khôi phục sáng, Thu nhỏ mờ.
 - Menu đóng khi chọn mục, chạm ngoài menu, hoặc một thẻ agent chen ngang. Thuộc tính → cửa sổ Thông tin; Làm mới → vẽ lại desktop; Sắp xếp biểu tượng ▸ (menu con chưa vẽ).
+
+### XP-Desk-Tray — thời tiết ở khay, bong bóng XP
+
+Nguồn `source/XP-Desk-Tray.dc.html`, `source/XP-Desk-Balloon.dc.html` · ảnh `XPDeskTray.png`, `XPDeskBalloon.png`. Token `themeXP.taskbar.tray`, `themeXP.desktop.balloon`.
+
+- **Khay** (mọi màn có thanh tác vụ, khi skill Thời tiết bật): x 176–239 (rộng thêm 20 px), viền trái xpTrayEdge x 176, hàng sáng xpTrayHi y 214; biểu tượng thời tiết 16×14 màu xpIconWarn `#F2C200` tại (180, 220); giờ JBMono-11 white TC (218, 221) như cũ. Skill Thời tiết tắt → khay như cũ (x 196). Thanh tác vụ khi đó chứa tối đa **3** nút cửa sổ (x 71 / 101 / 131).
+- **Desktop bình thường** (`XPDeskTray`): không có bong bóng; cột 1 xếp được tới 4 biểu tượng (y 8 / 56 / 104 / 152).
+- **Bong bóng** (`XPDeskBalloon`, XP notification balloon): hộp (96, 138, 140×62) viền đen 1 px, nền xpInfoBar, góc bo 2 px theo bậc; đuôi mở từ đáy x 178–190 xuống đỉnh (190, 211), cạnh phải thẳng, chỉ vào biểu tượng khay. Tiêu đề: icon thời tiết xpAmber (102, 144) + `Thời tiết` JBMono-12B (122, 144); nút × 12×12 tại (220, 143) (viền xpDim, nền white, × đen 6×6). Thân: `29° · Ít mây` JBMono-11 (102, 164), `cảm giác 33°` xpLabel (102, 178). Đè lên biểu tượng desktop.
+- **Khi hiện**: ~10 s khi vào desktop, và khi thời tiết đổi (mô tả khác hoặc nhiệt độ lệch ≥ 3°) lúc desktop đang hiện; rồi tự ẩn (vẽ lại hình nền + biểu tượng dưới hộp và đuôi). App chạm biểu tượng khay → hiện lại 10 s; chạm × → ẩn ngay. Thẻ agent chen ngang → ẩn. Mỗi lúc một bong bóng. Thời tiết chưa có / lỗi: thân `Chưa có thời tiết` xpDim.
