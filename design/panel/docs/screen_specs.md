@@ -1834,3 +1834,749 @@ Nguồn `source/Photo-Empty.dc.html` · ảnh `screens/@2x/PhotoEmpty.png`
 | 2, 34, 30×150 |  |  | PANEL / LINE | Dock (§15), tab `photo` đang hiện: ô PANEL2 + vạch MINT; Claude huy hiệu AMBER nếu có agent chờ |  |
 | 0, 230, 240×2 |  |  | MUTED | vạch liền MUTED (như Setup) — không có gì để xem |  |
 
+## 17. Kiểu XP (Luna) — giao diện toàn máy
+
+> **P-2026-11-26.8 — Kiểu XP bản A:** mọi kênh vẽ lại thành cửa sổ kiểu XP (thanh tiêu đề xanh, thân be, thanh tác vụ). Thay §1–16 khi phía code áp; bố cục cũ giữ làm tham chiếu dữ liệu.
+
+Chỉ lấy **dáng** XP: không logo, tên, ảnh nền hay font của Microsoft. Font giữ JetBrains Mono / VT323. Chuyển sắc vẽ bằng dải màu đặc. Màu: `tokens/panel_tokens.json` → `themeXP.color` (tên `xp*`, kèm RGB565).
+
+**Khung chung (mọi kênh có cửa sổ):**
+
+| phần | tọa độ | màu / font |
+|---|---|---|
+| thanh tiêu đề | y 0–21, 5 dải: y0 · y1–2 · y3–18 · y19–20 · y21 | xpTitleHi · xpTitleLight · xpTitle · xpTitleDark · xpTitleEdge |
+| icon tiêu đề | (4, 6) Clawd 18×10; icon skill 16 px căn tâm (13, 11) | CLAWD / white |
+| chữ tiêu đề | TL (24, 4), bóng (25, 5); tối đa 156 px | `JBMono-12B` white, bóng xpTitleShadow |
+| 3 nút | 16×16 tại x 184 / 202 / 220, y 3; viền 1 px white; ký hiệu white 2 px | thu nhỏ, phóng to xpTitleLight; đóng xpClose |
+| khung cửa sổ | x 0–1 và 238–239, y 22–213 | xpFrame |
+| thân | x 2–237, y 22–213 (nội dung x 10–229) | xpBody |
+| thanh trạng thái (tuỳ kênh) | y 196 đường xpStatusLine, y 197 white; chữ TL (8, 199), phải TR (231, 199) + vạch ngăn | `JBMono-11` black |
+| thanh tác vụ | y 214–239, 4 dải: y214 · y215–216 · y217–236 · y237–239 | xpTaskHi · xpTaskLight · xpTask · xpTaskDark |
+| nút bắt đầu | x 0–78, dải xpStartHi / xpStart / xpStartDark; Clawd white (5, 222); `glimmer` (26, 219) + bóng (27, 220) | `JBMono-12B` white |
+| nút skill | 26×20 tại x 82 + 28k, y 217 (Claude, Ảnh, Thời tiết, Đồng hồ); icon căn giữa | thường xpBtnEdge/xpBtn; đang hiện xpBtnPressedEdge/xpBtnPressed; thẻ cần bạn xpFlashEdge/xpFlash |
+| tiến độ slide | đáy nút đang hiện: (x+1, 234) cao 2, dài 24 × tiến độ (thay vạch y 230) | màu nhấn kênh |
+| huy hiệu agent chờ | 9×9 vạt góc tại (x+17, 215) trên nút Claude; chữ số 3×5 BG | AMBER |
+| khay giờ | x 196–239: viền trái xpTrayEdge, đường trên xpTrayHi; `14:32` TC (218, 221) | xpTray; `JBMono-11` white |
+
+**Thành phần:**
+
+- **Thanh tiến độ XP**: ô viền xpFieldBorder, nền white, 9 khối rời (khe 2 px; cao ≤ 6 px khe 1 px), khối sáng khi `pct > i·11.11`.
+- **Groupbox**: viền 1 px xpGroup, nhãn `JBMono-11` xpGroupLabel tại (x+7, y−6) trên nền thân.
+- **Ô trắng / danh sách**: viền xpFieldBorder, nền white; dòng chọn xpSelect chữ white; dòng kẻ xpRowLine; dòng hôm nay xpRowHi.
+- **Hộp thoại** (lỗi / cảnh báo / thông tin): icon 24×24 tại (14, 36) — tròn xpIconError dấu X white, tam giác xpIconWarn dấu ! đen, tròn xpIconInfo chữ i white; tiêu đề `JBMono-12B` (48, 38); dòng `JBMono-11` từ (48, 58) bước 16; link `JBMono-12B` xpLink gạch chân. Không nút.
+- **Đang tải**: chữ `JBMono-12B` TC (120, 92); ô 140×14 tại (50, 116), 3 khối xpBar sáng chạy qua 9 ô, 1 ô / 0,2 s.
+- **Dữ liệu cũ**: tiêu đề thêm ` · cũ 14P`; mọi số liệu xpDim.
+- **Dải thông báo**: nền xpInfoBar cao 14, đường dưới xpStatusLine, icon ! xpAmber, chữ xpRed.
+- **Thẻ agent**: cửa sổ tên theo loại; Clawd ô 6 (108×60) tại (66, 50); tiêu đề `JBMono-16B` TC (120, 120); chi tiết TC (120, 146); chân TC (120, 176) sau đường kẻ y 168. Thẻ cần bạn: nút Claude sáng cam, không huy hiệu.
+- **Clawd ngủ** (Claude chưa có project / xong hết): Clawd (156, 52); Zz động như §6 nhưng mọi khung dời (−2, −6) — khung 6 tại (196, 32); `4NG` TR (150, 84).
+- **Màn không cửa sổ**: Đêm (nền đen, chữ #4D4D4D), Khởi động / Cập nhật (nền đen), Wi-Fi / Cài đặt Wi-Fi (màn chào xpWelcome).
+
+**Các màn** (nguồn `source/<Màn>.dc.html`, ảnh `screens/@2x/<Màn bỏ gạch>.png`; bảng = chữ trên màn, đo bằng VLW thật):
+
+### XP-Claude-A — Kiểu XP · A: thân cửa sổ sáng (be như XP)
+
+Nguồn `source/XP-Claude-A.dc.html` · ảnh `screens/@2x/XPClaudeA.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Claude` | 42 |
+| 24, 4 | TL | `JBMono-12B` | `Claude` | 42 |
+| 10, 28 | TL | `JBMono-11` | `Hạn mức tuần` | 84 |
+| 10, 40 | TL | `VT323-86` | `38` | 68 |
+| 80, 70 | TL | `VT323-44` | `%` | 18 |
+| 229, 84 | TR | `JBMono-12B` | `4NG` | 21 |
+| 17, 122 | TL | `JBMono-11` | `Phiên 5 giờ` | 77 |
+| 224, 135 | TR | `JBMono-11` | `12% · 2G 14P` | 84 |
+| 225, 168 | TR | `JBMono-11` | `2P` | 14 |
+| 23, 168 | TL | `JBMono-11` | `glimmer` | 49 |
+| 79, 168 | TL | `JBMono-11` | `Cần duyệt · Bash` | 112 |
+| 225, 181 | TR | `JBMono-11` | `5P` | 14 |
+| 23, 181 | TL | `JBMono-11` | `TieuMac3d` | 63 |
+| 93, 181 | TL | `JBMono-11` | `Đang chạy` | 63 |
+| 225, 194 | TR | `JBMono-11` | `1G` | 14 |
+| 23, 194 | TL | `JBMono-11` | `api` | 21 |
+| 51, 194 | TL | `JBMono-11` | `Xong` | 28 |
+
+### XP-Home — Kiểu XP · Trang chủ
+
+Nguồn `source/XP-Home.dc.html` · ảnh `screens/@2x/XPHome.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Trang chủ` | 63 |
+| 24, 4 | TL | `JBMono-12B` | `Trang chủ` | 63 |
+| 10, 30 | TL | `VT323-86` | `14:32` | 170 |
+| 229, 66 | TR | `JBMono-12B` | `29°` | 21 |
+| 10, 100 | TL | `JBMono-11` | `Thứ Tư 25/11` | 84 |
+| 229, 100 | TR | `JBMono-11` | `Ít mây` | 42 |
+| 17, 118 | TL | `JBMono-11` | `Hạn mức` | 49 |
+| 18, 135 | TL | `JBMono-11` | `Claude` | 42 |
+| 222, 135 | TR | `JBMono-11` | `38%` | 21 |
+| 18, 159 | TL | `JBMono-11` | `Codex` | 35 |
+| 222, 159 | TR | `JBMono-11` | `71%` | 21 |
+| 8, 199 | TL | `JBMono-11` | `192.168.100.40` | 98 |
+| 231, 199 | TR | `JBMono-11` | `Còn 9G hôm nay` | 98 |
+
+### XP-Agents — Kiểu XP · Tác tử
+
+Nguồn `source/XP-Agents.dc.html` · ảnh `screens/@2x/XPAgents.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Tác tử` | 42 |
+| 24, 4 | TL | `JBMono-12B` | `Tác tử` | 42 |
+| 32, 36 | TL | `JBMono-12B` | `Cần bạn · Bash` | 98 |
+| 32, 56 | TL | `JBMono-11` | `claude · glimmer · 2p` | 147 |
+| 32, 88 | TL | `JBMono-12B` | `Tests · 64%` | 77 |
+| 32, 108 | TL | `JBMono-11` | `codex · api · 5p` | 112 |
+| 32, 140 | TL | `JBMono-12B` | `Xong` | 28 |
+| 32, 160 | TL | `JBMono-11` | `claude · TieuMac3d · 12p` | 168 |
+| 8, 199 | TL | `JBMono-11` | `3 mục` | 35 |
+| 231, 199 | TR | `JBMono-11` | `1 cần duyệt` | 77 |
+
+### XP-Codex — Kiểu XP · Codex
+
+Nguồn `source/XP-Codex.dc.html` · ảnh `screens/@2x/XPCodex.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Codex` | 35 |
+| 24, 4 | TL | `JBMono-12B` | `Codex` | 35 |
+| 10, 28 | TL | `JBMono-11` | `Hạn mức tuần` | 84 |
+| 10, 40 | TL | `VT323-86` | `41` | 68 |
+| 80, 70 | TL | `VT323-44` | `%` | 18 |
+| 229, 84 | TR | `JBMono-12B` | `3NG` | 21 |
+| 229, 68 | TR | `JBMono-11` | `đặt lại sau` | 77 |
+| 17, 122 | TL | `JBMono-11` | `Phiên 5 giờ` | 77 |
+| 18, 137 | TL | `JBMono-11` | `Spark` | 35 |
+| 222, 137 | TR | `JBMono-11` | `2G 14P` | 42 |
+| 17, 164 | TL | `JBMono-11` | `Đặt lại tuần` | 84 |
+| 18, 177 | TL | `JBMono-11` | `còn 2 · 3NG` | 77 |
+| 222, 177 | TR | `JBMono-11` | `~70% khi đặt lại` | 112 |
+
+### XP-AI — Kiểu XP · AI hôm nay
+
+Nguồn `source/XP-AI.dc.html` · ảnh `screens/@2x/XPAI.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `AI hôm nay` | 70 |
+| 24, 4 | TL | `JBMono-12B` | `AI hôm nay` | 70 |
+| 10, 28 | TL | `JBMono-11` | `Chi phí hôm nay` | 105 |
+| 10, 40 | TL | `VT323-86` | `$4.20` | 170 |
+| 17, 114 | TL | `JBMono-11` | `Claude` | 42 |
+| 18, 128 | TL | `VT323-44` | `38%` | 54 |
+| 131, 114 | TL | `JBMono-11` | `Codex` | 35 |
+| 132, 128 | TL | `VT323-44` | `71%` | 54 |
+| 8, 199 | TL | `JBMono-11` | `Dùng Claude` | 77 |
+| 231, 199 | TR | `JBMono-11` | `CL 2G 14P · CX 3NG` | 126 |
+
+### XP-Trend — Kiểu XP · Xu hướng
+
+Nguồn `source/XP-Trend.dc.html` · ảnh `screens/@2x/XPTrend.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Xu hướng` | 56 |
+| 24, 4 | TL | `JBMono-12B` | `Xu hướng` | 56 |
+| 10, 28 | TL | `JBMono-11` | `7 ngày · % hạn mức tuần` | 161 |
+| 28, 177 | TC | `JBMono-11` | `T5` | 14 |
+| 58, 177 | TC | `JBMono-11` | `T6` | 14 |
+| 88, 177 | TC | `JBMono-11` | `T7` | 14 |
+| 118, 177 | TC | `JBMono-11` | `CN` | 14 |
+| 148, 177 | TC | `JBMono-11` | `T2` | 14 |
+| 178, 177 | TC | `JBMono-11` | `T3` | 14 |
+| 208, 177 | TC | `JBMono-11` | `T4` | 14 |
+| 24, 46 | TL | `JBMono-11` | `Claude` | 42 |
+| 96, 46 | TL | `JBMono-11` | `Codex` | 35 |
+| 8, 199 | TL | `JBMono-11` | `Hôm nay CL 9 · CX 4` | 133 |
+| 231, 199 | TR | `JBMono-11` | `Đỉnh T2` | 49 |
+
+### XP-Weather — Kiểu XP · Thời tiết
+
+Nguồn `source/XP-Weather.dc.html` · ảnh `screens/@2x/XPWeather.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Thời tiết` | 63 |
+| 24, 4 | TL | `JBMono-12B` | `Thời tiết` | 63 |
+| 10, 28 | TL | `VT323-86` | `29°` | 102 |
+| 12, 100 | TL | `JBMono-13` | `Ít mây` | 48 |
+| 12, 118 | TL | `JBMono-11` | `31° / 24°` | 63 |
+| 229, 32 | TR | `JBMono-11` | `cảm giác 33°` | 84 |
+| 229, 50 | TR | `JBMono-11` | `ẩm 74%` | 42 |
+| 229, 68 | TR | `JBMono-11` | `gió 12km` | 56 |
+| 229, 86 | TR | `JBMono-11` | `UV 7` | 28 |
+| 17, 138 | TL | `JBMono-11` | `Mai` | 21 |
+| 63, 150 | TC | `VT323-32` | `30/24` | 65 |
+| 63, 175 | TC | `JBMono-11` | `Mưa rào` | 49 |
+| 131, 138 | TL | `JBMono-11` | `Kia` | 21 |
+| 177, 150 | TC | `VT323-32` | `28/23` | 65 |
+| 177, 175 | TC | `JBMono-11` | `Mưa` | 21 |
+| 8, 199 | TL | `JBMono-11` | `Mặt trời lặn 17:24` | 126 |
+
+### XP-Forecast — Kiểu XP · Dự báo
+
+Nguồn `source/XP-Forecast.dc.html` · ảnh `screens/@2x/XPForecast.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Dự báo` | 42 |
+| 24, 4 | TL | `JBMono-12B` | `Dự báo` | 42 |
+| 18, 36 | TL | `JBMono-12B` | `Nay` | 21 |
+| 18, 56 | TL | `JBMono-11` | `Ít mây` | 42 |
+| 112, 48 | TR | `JBMono-11` | `24°` | 21 |
+| 222, 48 | TR | `JBMono-11` | `31°` | 21 |
+| 18, 89 | TL | `JBMono-12B` | `Mai` | 21 |
+| 18, 109 | TL | `JBMono-11` | `Mưa rào` | 49 |
+| 112, 101 | TR | `JBMono-11` | `24°` | 21 |
+| 222, 101 | TR | `JBMono-11` | `30°` | 21 |
+| 18, 142 | TL | `JBMono-12B` | `Kia` | 21 |
+| 18, 162 | TL | `JBMono-11` | `Mưa` | 21 |
+| 112, 154 | TR | `JBMono-11` | `23°` | 21 |
+| 222, 154 | TR | `JBMono-11` | `28°` | 21 |
+| 8, 199 | TL | `JBMono-11` | `3 ngày tới` | 70 |
+
+### XP-Clock — Kiểu XP · Đồng hồ
+
+Nguồn `source/XP-Clock.dc.html` · ảnh `screens/@2x/XPClock.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Đồng hồ` | 49 |
+| 24, 4 | TL | `JBMono-12B` | `Đồng hồ` | 49 |
+| 120, 30 | TC | `JBMono-12B` | `Thứ Tư · 25/11` | 98 |
+| 120, 60 | TC | `VT323-86` | `14:32` | 170 |
+| 120, 152 | TC | `JBMono-13` | `chào buổi chiều, bạn` | 160 |
+| 8, 199 | TL | `JBMono-11` | `Tuần 48` | 49 |
+| 231, 199 | TR | `JBMono-11` | `GMT+7` | 35 |
+
+### XP-Info — Kiểu XP · Thông tin
+
+Nguồn `source/XP-Info.dc.html` · ảnh `screens/@2x/XPInfo.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Thông tin` | 63 |
+| 24, 4 | TL | `JBMono-12B` | `Thông tin` | 63 |
+| 16, 31 | TL | `JBMono-11` | `IP` | 14 |
+| 88, 31 | TL | `JBMono-11` | `192.168.100.40` | 98 |
+| 16, 48 | TL | `JBMono-11` | `SSID` | 28 |
+| 88, 48 | TL | `JBMono-11` | `Anh Viet` | 56 |
+| 16, 66 | TL | `JBMono-11` | `Sóng` | 28 |
+| 88, 66 | TL | `JBMono-11` | `-58 dBm` | 49 |
+| 16, 83 | TL | `JBMono-11` | `Đã chạy` | 49 |
+| 88, 83 | TL | `JBMono-11` | `312P` | 28 |
+| 16, 101 | TL | `JBMono-11` | `Bộ nhớ` | 42 |
+| 88, 101 | TL | `JBMono-11` | `27K trống` | 63 |
+| 16, 118 | TL | `JBMono-11` | `Khối lớn` | 56 |
+| 88, 118 | TL | `JBMono-11` | `21K` | 21 |
+| 16, 136 | TL | `JBMono-11` | `Firmware` | 56 |
+| 88, 136 | TL | `JBMono-11` | `v0.23.0-glimmer` | 105 |
+| 16, 153 | TL | `JBMono-11` | `Kênh` | 28 |
+| 88, 153 | TL | `JBMono-11` | `9 / 13` | 42 |
+| 16, 171 | TL | `JBMono-11` | `Cập nhật` | 56 |
+| 88, 171 | TL | `JBMono-11` | `1P trước` | 56 |
+| 16, 188 | TL | `JBMono-11` | `Lần tới` | 49 |
+| 88, 188 | TL | `JBMono-11` | `sau 4P` | 42 |
+
+### XP-Setup — Kiểu XP · Cài đặt
+
+Nguồn `source/XP-Setup.dc.html` · ảnh `screens/@2x/XPSetup.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Cài đặt` | 49 |
+| 24, 4 | TL | `JBMono-12B` | `Cài đặt` | 49 |
+| 12, 30 | TL | `JBMono-12B` | `Hoàn tất cài đặt` | 112 |
+| 12, 48 | TL | `JBMono-11` | `Còn 2 bước nữa là xong.` | 161 |
+| 34, 72 | TL | `JBMono-11` | `Khóa Claude` | 77 |
+| 34, 94 | TL | `JBMono-11` | `Token Codex` | 77 |
+| 34, 116 | TL | `JBMono-11` | `Thời tiết, vị trí, giờ` | 154 |
+| 17, 144 | TL | `JBMono-11` | `Mở trong trình duyệt` | 140 |
+| 18, 159 | TL | `JBMono-12B` | `glimmer.local` | 91 |
+| 222, 176 | TR | `JBMono-11` | `192.168.100.40` | 98 |
+
+### XP-Photo — Kiểu XP · Ảnh
+
+Nguồn `source/XP-Photo.dc.html` · ảnh `screens/@2x/XPPhoto.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Ảnh · 2/5` | 63 |
+| 24, 4 | TL | `JBMono-12B` | `Ảnh · 2/5` | 63 |
+
+### XP-Attention — Kiểu XP · thẻ cần duyệt
+
+Nguồn `source/XP-Attention.dc.html` · ảnh `screens/@2x/XPAttention.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Cần duyệt` | 63 |
+| 24, 4 | TL | `JBMono-12B` | `Cần duyệt` | 63 |
+| 120, 30 | TC | `JBMono-11` | `CLAUDE · glimmer` | 112 |
+| 120, 120 | TC | `JBMono-16B` | `Cần bạn duyệt` | 130 |
+| 120, 146 | TC | `JBMono-11` | `Bash · pio run -e nodemcuv2` | 189 |
+| 120, 176 | TC | `JBMono-11` | `chờ bạn · 2P` | 84 |
+
+### XP-Claude-Loading — XP · Claude · đang tải
+
+Nguồn `source/XP-Claude-Loading.dc.html` · ảnh `screens/@2x/XPClaudeLoading.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Claude` | 42 |
+| 24, 4 | TL | `JBMono-12B` | `Claude` | 42 |
+| 120, 92 | TC | `JBMono-12B` | `Đang tải...` | 77 |
+
+### XP-Claude-Stale — XP · Claude · dữ liệu cũ
+
+Nguồn `source/XP-Claude-Stale.dc.html` · ảnh `screens/@2x/XPClaudeStale.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Claude · cũ 14P` | 105 |
+| 24, 4 | TL | `JBMono-12B` | `Claude · cũ 14P` | 105 |
+| 10, 28 | TL | `JBMono-11` | `Hạn mức tuần` | 84 |
+| 10, 40 | TL | `VT323-86` | `38` | 68 |
+| 80, 70 | TL | `VT323-44` | `%` | 18 |
+| 229, 84 | TR | `JBMono-12B` | `4NG` | 21 |
+| 17, 122 | TL | `JBMono-11` | `Phiên 5 giờ` | 77 |
+| 224, 135 | TR | `JBMono-11` | `12% · 2G 14P` | 84 |
+| 225, 168 | TR | `JBMono-11` | `2P` | 14 |
+| 23, 168 | TL | `JBMono-11` | `glimmer` | 49 |
+| 79, 168 | TL | `JBMono-11` | `Cần duyệt · Bash` | 112 |
+| 225, 181 | TR | `JBMono-11` | `5P` | 14 |
+| 23, 181 | TL | `JBMono-11` | `TieuMac3d` | 63 |
+| 93, 181 | TL | `JBMono-11` | `Đang chạy` | 63 |
+| 225, 194 | TR | `JBMono-11` | `1G` | 14 |
+| 23, 194 | TL | `JBMono-11` | `api` | 21 |
+| 51, 194 | TL | `JBMono-11` | `Xong` | 28 |
+
+### XP-Claude-KeyExpired — XP · Claude · khóa hết hạn (còn số cũ)
+
+Nguồn `source/XP-Claude-KeyExpired.dc.html` · ảnh `screens/@2x/XPClaudeKeyExpired.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Claude · khóa lỗi` | 119 |
+| 24, 4 | TL | `JBMono-12B` | `Claude · khóa lỗi` | 119 |
+| 10, 28 | TL | `JBMono-11` | `Hạn mức tuần` | 84 |
+| 10, 40 | TL | `VT323-86` | `38` | 68 |
+| 80, 70 | TL | `VT323-44` | `%` | 18 |
+| 229, 84 | TR | `JBMono-12B` | `4NG` | 21 |
+| 17, 122 | TL | `JBMono-11` | `Phiên 5 giờ` | 77 |
+| 224, 135 | TR | `JBMono-11` | `12% · 2G 14P` | 84 |
+| 24, 168 | TL | `JBMono-11` | `Khóa hết hạn · glimmer.local` | 196 |
+| 225, 182 | TR | `JBMono-11` | `2P` | 14 |
+| 23, 182 | TL | `JBMono-11` | `glimmer` | 49 |
+| 79, 182 | TL | `JBMono-11` | `Cần duyệt · Bash` | 112 |
+| 225, 195 | TR | `JBMono-11` | `5P` | 14 |
+| 23, 195 | TL | `JBMono-11` | `TieuMac3d` | 63 |
+| 93, 195 | TL | `JBMono-11` | `Đang chạy` | 63 |
+
+### XP-Claude-Rejected — XP · Claude · khóa bị từ chối
+
+Nguồn `source/XP-Claude-Rejected.dc.html` · ảnh `screens/@2x/XPClaudeRejected.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Claude · khóa lỗi` | 119 |
+| 24, 4 | TL | `JBMono-12B` | `Claude · khóa lỗi` | 119 |
+| 48, 38 | TL | `JBMono-12B` | `Khóa bị từ chối` | 105 |
+| 48, 58 | TL | `JBMono-11` | `claude.ai từ chối khóa.` | 161 |
+| 48, 74 | TL | `JBMono-11` | `Nhập khóa mới tại:` | 126 |
+| 48, 96 | TL | `JBMono-12B` | `glimmer.local` | 91 |
+| 48, 116 | TL | `JBMono-11` | `192.168.100.40` | 98 |
+
+### XP-Claude-Offline — XP · Claude · mất mạng
+
+Nguồn `source/XP-Claude-Offline.dc.html` · ảnh `screens/@2x/XPClaudeOffline.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Claude` | 42 |
+| 24, 4 | TL | `JBMono-12B` | `Claude` | 42 |
+| 48, 38 | TL | `JBMono-12B` | `Mất mạng` | 56 |
+| 48, 58 | TL | `JBMono-11` | `Không tới được claude.ai.` | 175 |
+| 48, 74 | TL | `JBMono-11` | `Kiểm tra Wi-Fi.` | 105 |
+| 48, 90 | TL | `JBMono-11` | `` | 0 |
+| 48, 106 | TL | `JBMono-11` | `Đang tự động thử lại...` | 161 |
+
+### XP-Claude-NoProject — XP · Claude · chưa có project (Clawd ngủ)
+
+Nguồn `source/XP-Claude-NoProject.dc.html` · ảnh `screens/@2x/XPClaudeNoProject.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Claude` | 42 |
+| 24, 4 | TL | `JBMono-12B` | `Claude` | 42 |
+| 10, 28 | TL | `JBMono-11` | `Hạn mức tuần` | 84 |
+| 10, 40 | TL | `VT323-86` | `38` | 68 |
+| 80, 70 | TL | `VT323-44` | `%` | 18 |
+| 150, 84 | TR | `JBMono-12B` | `4NG` | 21 |
+| 17, 122 | TL | `JBMono-11` | `Phiên 5 giờ` | 77 |
+| 224, 135 | TR | `JBMono-11` | `12% · 2G 14P` | 84 |
+| 120, 182 | TC | `JBMono-11` | `Chưa có hoạt động project` | 175 |
+
+### XP-Claude-Done — XP · Claude · đã xong hết (Clawd ngủ)
+
+Nguồn `source/XP-Claude-Done.dc.html` · ảnh `screens/@2x/XPClaudeDone.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Claude` | 42 |
+| 24, 4 | TL | `JBMono-12B` | `Claude` | 42 |
+| 10, 28 | TL | `JBMono-11` | `Hạn mức tuần` | 84 |
+| 10, 40 | TL | `VT323-86` | `38` | 68 |
+| 80, 70 | TL | `VT323-44` | `%` | 18 |
+| 150, 84 | TR | `JBMono-12B` | `4NG` | 21 |
+| 17, 122 | TL | `JBMono-11` | `Phiên 5 giờ` | 77 |
+| 224, 135 | TR | `JBMono-11` | `12% · 2G 14P` | 84 |
+| 225, 168 | TR | `JBMono-11` | `2P` | 14 |
+| 23, 168 | TL | `JBMono-11` | `glimmer` | 49 |
+| 79, 168 | TL | `JBMono-11` | `Xong` | 28 |
+| 225, 181 | TR | `JBMono-11` | `40P` | 21 |
+| 23, 181 | TL | `JBMono-11` | `TieuMac3d` | 63 |
+| 93, 181 | TL | `JBMono-11` | `Xong` | 28 |
+| 225, 194 | TR | `JBMono-11` | `1G` | 14 |
+| 23, 194 | TL | `JBMono-11` | `api` | 21 |
+| 51, 194 | TL | `JBMono-11` | `Xong` | 28 |
+
+### XP-Codex-Loading — XP · Codex · đang tải
+
+Nguồn `source/XP-Codex-Loading.dc.html` · ảnh `screens/@2x/XPCodexLoading.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Codex` | 35 |
+| 24, 4 | TL | `JBMono-12B` | `Codex` | 35 |
+| 120, 92 | TC | `JBMono-12B` | `Đang tải...` | 77 |
+
+### XP-Codex-Stale — XP · Codex · dữ liệu cũ
+
+Nguồn `source/XP-Codex-Stale.dc.html` · ảnh `screens/@2x/XPCodexStale.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Codex · cũ 18P` | 98 |
+| 24, 4 | TL | `JBMono-12B` | `Codex · cũ 18P` | 98 |
+| 10, 28 | TL | `JBMono-11` | `Hạn mức tuần` | 84 |
+| 10, 40 | TL | `VT323-86` | `41` | 68 |
+| 80, 70 | TL | `VT323-44` | `%` | 18 |
+| 229, 68 | TR | `JBMono-11` | `đặt lại sau` | 77 |
+| 229, 84 | TR | `JBMono-12B` | `3NG` | 21 |
+| 17, 122 | TL | `JBMono-11` | `Phiên 5 giờ` | 77 |
+| 18, 137 | TL | `JBMono-11` | `Spark` | 35 |
+| 222, 137 | TR | `JBMono-11` | `2G 14P` | 42 |
+| 17, 164 | TL | `JBMono-11` | `Đặt lại tuần` | 84 |
+| 18, 177 | TL | `JBMono-11` | `còn 2 · 3NG` | 77 |
+| 222, 177 | TR | `JBMono-11` | `~70% khi đặt lại` | 112 |
+
+### XP-Codex-Expired — XP · Codex · token hết hạn
+
+Nguồn `source/XP-Codex-Expired.dc.html` · ảnh `screens/@2x/XPCodexExpired.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Codex · khóa lỗi` | 112 |
+| 24, 4 | TL | `JBMono-12B` | `Codex · khóa lỗi` | 112 |
+| 48, 38 | TL | `JBMono-12B` | `Token hết hạn` | 91 |
+| 48, 58 | TL | `JBMono-11` | `Hết hạn ngày 20/11.` | 133 |
+| 48, 74 | TL | `JBMono-11` | `Nhập token mới tại:` | 133 |
+| 48, 96 | TL | `JBMono-12B` | `glimmer.local` | 91 |
+| 48, 116 | TL | `JBMono-11` | `192.168.100.40` | 98 |
+
+### XP-AI-Loading — XP · AI · đang tải
+
+Nguồn `source/XP-AI-Loading.dc.html` · ảnh `screens/@2x/XPAILoading.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `AI hôm nay` | 70 |
+| 24, 4 | TL | `JBMono-12B` | `AI hôm nay` | 70 |
+| 10, 28 | TL | `JBMono-11` | `Chi phí hôm nay` | 105 |
+| 10, 40 | TL | `VT323-86` | `--` | 68 |
+| 17, 114 | TL | `JBMono-11` | `Claude` | 42 |
+| 18, 128 | TL | `VT323-44` | `--` | 36 |
+| 131, 114 | TL | `JBMono-11` | `Codex` | 35 |
+| 132, 128 | TL | `VT323-44` | `--` | 36 |
+| 8, 199 | TL | `JBMono-11` | `Đang tải...` | 77 |
+| 231, 199 | TR | `JBMono-11` | `CL -- · CX --` | 91 |
+
+### XP-AI-KeyBad — XP · AI · khóa Claude lỗi
+
+Nguồn `source/XP-AI-KeyBad.dc.html` · ảnh `screens/@2x/XPAIKeyBad.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `AI hôm nay` | 70 |
+| 24, 4 | TL | `JBMono-12B` | `AI hôm nay` | 70 |
+| 10, 28 | TL | `JBMono-11` | `Chi phí hôm nay` | 105 |
+| 10, 40 | TL | `VT323-86` | `$4.20` | 170 |
+| 17, 114 | TL | `JBMono-11` | `Claude` | 42 |
+| 18, 128 | TL | `VT323-44` | `Khóa` | 72 |
+| 131, 114 | TL | `JBMono-11` | `Codex` | 35 |
+| 132, 128 | TL | `VT323-44` | `71%` | 54 |
+| 8, 199 | TL | `JBMono-11` | `Khóa Claude bị từ chối` | 154 |
+
+### XP-Home-KeyBad — XP · Trang chủ · khóa Claude lỗi
+
+Nguồn `source/XP-Home-KeyBad.dc.html` · ảnh `screens/@2x/XPHomeKeyBad.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Trang chủ` | 63 |
+| 24, 4 | TL | `JBMono-12B` | `Trang chủ` | 63 |
+| 10, 30 | TL | `VT323-86` | `14:32` | 170 |
+| 229, 66 | TR | `JBMono-12B` | `29°` | 21 |
+| 10, 100 | TL | `JBMono-11` | `Thứ Tư 25/11` | 84 |
+| 229, 100 | TR | `JBMono-11` | `Ít mây` | 42 |
+| 17, 118 | TL | `JBMono-11` | `Hạn mức` | 49 |
+| 18, 135 | TL | `JBMono-11` | `Claude` | 42 |
+| 70, 135 | TL | `JBMono-11` | `Khóa bị từ chối` | 105 |
+| 18, 159 | TL | `JBMono-11` | `Codex` | 35 |
+| 222, 159 | TR | `JBMono-11` | `71%` | 21 |
+| 8, 199 | TL | `JBMono-11` | `192.168.100.40` | 98 |
+| 231, 199 | TR | `JBMono-11` | `Còn 9G hôm nay` | 98 |
+
+### XP-Home-NoWeather — XP · Trang chủ · chưa có thời tiết
+
+Nguồn `source/XP-Home-NoWeather.dc.html` · ảnh `screens/@2x/XPHomeNoWeather.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Trang chủ` | 63 |
+| 24, 4 | TL | `JBMono-12B` | `Trang chủ` | 63 |
+| 10, 30 | TL | `VT323-86` | `14:32` | 170 |
+| 229, 66 | TR | `JBMono-12B` | `--°` | 21 |
+| 10, 100 | TL | `JBMono-11` | `Thứ Tư 25/11` | 84 |
+| 229, 100 | TR | `JBMono-11` | `chưa có thời tiết` | 119 |
+| 17, 118 | TL | `JBMono-11` | `Hạn mức` | 49 |
+| 18, 135 | TL | `JBMono-11` | `Claude` | 42 |
+| 222, 135 | TR | `JBMono-11` | `38%` | 21 |
+| 18, 159 | TL | `JBMono-11` | `Codex` | 35 |
+| 222, 159 | TR | `JBMono-11` | `71%` | 21 |
+| 8, 199 | TL | `JBMono-11` | `192.168.100.40` | 98 |
+| 231, 199 | TR | `JBMono-11` | `Còn 9G hôm nay` | 98 |
+
+### XP-Weather-Loading — XP · Thời tiết · đang tải
+
+Nguồn `source/XP-Weather-Loading.dc.html` · ảnh `screens/@2x/XPWeatherLoading.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Thời tiết` | 63 |
+| 24, 4 | TL | `JBMono-12B` | `Thời tiết` | 63 |
+| 120, 92 | TC | `JBMono-12B` | `Đang tải thời tiết...` | 147 |
+
+### XP-Weather-Error — XP · Thời tiết · lỗi
+
+Nguồn `source/XP-Weather-Error.dc.html` · ảnh `screens/@2x/XPWeatherError.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Thời tiết` | 63 |
+| 24, 4 | TL | `JBMono-12B` | `Thời tiết` | 63 |
+| 48, 38 | TL | `JBMono-12B` | `Chưa có thời tiết` | 119 |
+| 48, 58 | TL | `JBMono-11` | `Máy chủ trả lỗi 500.` | 140 |
+| 48, 74 | TL | `JBMono-11` | `` | 0 |
+| 48, 90 | TL | `JBMono-11` | `Đang tự thử lại...` | 126 |
+
+### XP-Weather-Stale — XP · Thời tiết · dữ liệu cũ
+
+Nguồn `source/XP-Weather-Stale.dc.html` · ảnh `screens/@2x/XPWeatherStale.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Thời tiết · cũ 2G` | 119 |
+| 24, 4 | TL | `JBMono-12B` | `Thời tiết · cũ 2G` | 119 |
+| 10, 28 | TL | `VT323-86` | `29°` | 102 |
+| 12, 100 | TL | `JBMono-13` | `Ít mây` | 48 |
+| 12, 118 | TL | `JBMono-11` | `31° / 24°` | 63 |
+| 229, 32 | TR | `JBMono-11` | `cảm giác 33°` | 84 |
+| 229, 50 | TR | `JBMono-11` | `ẩm 74%` | 42 |
+| 229, 68 | TR | `JBMono-11` | `gió 12km` | 56 |
+| 229, 86 | TR | `JBMono-11` | `UV 7` | 28 |
+| 17, 138 | TL | `JBMono-11` | `Mai` | 21 |
+| 63, 150 | TC | `VT323-32` | `30/24` | 65 |
+| 63, 175 | TC | `JBMono-11` | `Mưa rào` | 49 |
+| 131, 138 | TL | `JBMono-11` | `Kia` | 21 |
+| 177, 150 | TC | `VT323-32` | `28/23` | 65 |
+| 177, 175 | TC | `JBMono-11` | `Mưa` | 21 |
+| 8, 199 | TL | `JBMono-11` | `Cập nhật 2 giờ trước` | 140 |
+
+### XP-Forecast-Empty — XP · Dự báo · chưa có
+
+Nguồn `source/XP-Forecast-Empty.dc.html` · ảnh `screens/@2x/XPForecastEmpty.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Dự báo` | 42 |
+| 24, 4 | TL | `JBMono-12B` | `Dự báo` | 42 |
+| 120, 110 | TC | `JBMono-12B` | `Chưa có dự báo` | 98 |
+| 8, 199 | TL | `JBMono-11` | `3 ngày tới` | 70 |
+
+### XP-Trend-Collecting — XP · Xu hướng · đang thu thập
+
+Nguồn `source/XP-Trend-Collecting.dc.html` · ảnh `screens/@2x/XPTrendCollecting.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Xu hướng` | 56 |
+| 24, 4 | TL | `JBMono-12B` | `Xu hướng` | 56 |
+| 10, 28 | TL | `JBMono-11` | `7 ngày · % hạn mức tuần` | 161 |
+| 90, 100 | TC | `JBMono-11` | `Đang thu thập...` | 112 |
+| 28, 177 | TC | `JBMono-11` | `T5` | 14 |
+| 58, 177 | TC | `JBMono-11` | `T6` | 14 |
+| 88, 177 | TC | `JBMono-11` | `T7` | 14 |
+| 118, 177 | TC | `JBMono-11` | `CN` | 14 |
+| 148, 177 | TC | `JBMono-11` | `T2` | 14 |
+| 178, 177 | TC | `JBMono-11` | `T3` | 14 |
+| 208, 177 | TC | `JBMono-11` | `T4` | 14 |
+| 8, 199 | TL | `JBMono-11` | `Có 2 / 7 ngày` | 91 |
+
+### XP-Agents-Idle — XP · Tác tử · không mục nào chờ
+
+Nguồn `source/XP-Agents-Idle.dc.html` · ảnh `screens/@2x/XPAgentsIdle.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Tác tử` | 42 |
+| 24, 4 | TL | `JBMono-12B` | `Tác tử` | 42 |
+| 32, 36 | TL | `JBMono-12B` | `Tests · 64%` | 77 |
+| 32, 56 | TL | `JBMono-11` | `codex · api · 5p` | 112 |
+| 32, 88 | TL | `JBMono-12B` | `Xong` | 28 |
+| 32, 108 | TL | `JBMono-11` | `claude · TieuMac3d · 12p` | 168 |
+| 8, 199 | TL | `JBMono-11` | `2 mục` | 35 |
+| 231, 199 | TR | `JBMono-11` | `không mục nào chờ` | 119 |
+
+### XP-Photo-Empty — XP · Ảnh · chưa có ảnh
+
+Nguồn `source/XP-Photo-Empty.dc.html` · ảnh `screens/@2x/XPPhotoEmpty.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Ảnh` | 21 |
+| 24, 4 | TL | `JBMono-12B` | `Ảnh` | 21 |
+| 120, 100 | TC | `JBMono-16B` | `Chưa có ảnh` | 110 |
+| 120, 128 | TC | `JBMono-11` | `Gửi ảnh từ app glimmer` | 154 |
+| 120, 146 | TC | `JBMono-11` | `hoặc` | 28 |
+| 120, 162 | TC | `JBMono-12B` | `glimmer.local` | 91 |
+
+### XP-Attention-Input — XP · thẻ lượt bạn
+
+Nguồn `source/XP-Attention-Input.dc.html` · ảnh `screens/@2x/XPAttentionInput.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Lượt bạn` | 56 |
+| 24, 4 | TL | `JBMono-12B` | `Lượt bạn` | 56 |
+| 120, 30 | TC | `JBMono-11` | `CLAUDE · glimmer` | 112 |
+| 120, 120 | TC | `JBMono-16B` | `Lượt bạn` | 80 |
+| 120, 146 | TC | `JBMono-11` | `Claude đang chờ câu trả lời` | 189 |
+| 120, 176 | TC | `JBMono-11` | `chờ bạn · 45 giây` | 119 |
+
+### XP-Attention-Done — XP · thẻ xong
+
+Nguồn `source/XP-Attention-Done.dc.html` · ảnh `screens/@2x/XPAttentionDone.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Xong` | 28 |
+| 24, 4 | TL | `JBMono-12B` | `Xong` | 28 |
+| 120, 30 | TC | `JBMono-11` | `CLAUDE · glimmer` | 112 |
+| 120, 120 | TC | `JBMono-16B` | `Xong rồi!` | 90 |
+| 120, 146 | TC | `JBMono-11` | `Claude đã xong` | 98 |
+
+### XP-Attention-Error — XP · thẻ lỗi
+
+Nguồn `source/XP-Attention-Error.dc.html` · ảnh `screens/@2x/XPAttentionError.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Lỗi` | 21 |
+| 24, 4 | TL | `JBMono-12B` | `Lỗi` | 21 |
+| 120, 30 | TC | `JBMono-11` | `CLAUDE · glimmer` | 112 |
+| 120, 120 | TC | `JBMono-16B` | `build failed` | 120 |
+| 120, 146 | TC | `JBMono-11` | `3 lỗi · ch_claude.cpp:120` | 175 |
+
+### XP-Attention-Progress — XP · thẻ tiến độ
+
+Nguồn `source/XP-Attention-Progress.dc.html` · ảnh `screens/@2x/XPAttentionProgress.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `Đang chạy` | 63 |
+| 24, 4 | TL | `JBMono-12B` | `Đang chạy` | 63 |
+| 120, 30 | TC | `JBMono-11` | `CLAUDE · api` | 84 |
+| 120, 120 | TC | `JBMono-16B` | `tests 64%` | 90 |
+| 120, 146 | TC | `JBMono-11` | `main · 4 phút` | 91 |
+
+### XP-Night — XP · mặt đồng hồ đêm (giữ đen)
+
+Nguồn `source/XP-Night.dc.html` · ảnh `screens/@2x/XPNight.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 120, 70 | TC | `VT323-86` | `23:47` | 170 |
+| 120, 150 | TC | `JBMono-11` | `Thứ Tư 25/11` | 84 |
+
+### XP-Splash — XP · khởi động
+
+Nguồn `source/XP-Splash.dc.html` · ảnh `screens/@2x/XPSplash.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 120, 112 | TC | `JBMono-16B` | `glimmer` | 70 |
+| 120, 176 | TC | `JBMono-11` | `đang khởi động...` | 119 |
+| 120, 218 | TC | `JBMono-11` | `v0.23.0-glimmer` | 105 |
+
+### XP-Connecting — XP · đang kết nối Wi-Fi
+
+Nguồn `source/XP-Connecting.dc.html` · ảnh `screens/@2x/XPConnecting.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 130, 70 | TL | `JBMono-16B` | `Wi-Fi` | 50 |
+| 130, 98 | TL | `JBMono-11` | `Đang kết nối` | 84 |
+| 130, 114 | TL | `JBMono-11` | `Anh Viet` | 56 |
+| 130, 130 | TL | `JBMono-11` | `lần thử 1` | 63 |
+| 230, 216 | TR | `JBMono-11` | `v0.23.0-glimmer` | 105 |
+
+### XP-SetupMode — XP · chế độ cài đặt Wi-Fi
+
+Nguồn `source/XP-SetupMode.dc.html` · ảnh `screens/@2x/XPSetupMode.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 130, 70 | TL | `JBMono-16B` | `Cài đặt` | 70 |
+| 130, 98 | TL | `JBMono-11` | `Kết nối Wi-Fi` | 91 |
+| 130, 114 | TL | `JBMono-11` | `glimmer-setup` | 91 |
+| 130, 130 | TL | `JBMono-11` | `rồi mở` | 42 |
+| 130, 150 | TL | `JBMono-12B` | `192.168.4.1` | 77 |
+| 230, 216 | TR | `JBMono-11` | `v0.23.0-glimmer` | 105 |
+
+### XP-OtaProgress — XP · đang cập nhật
+
+Nguồn `source/XP-OtaProgress.dc.html` · ảnh `screens/@2x/XPOtaProgress.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 120, 70 | TC | `JBMono-16B` | `Đang cập nhật` | 130 |
+| 120, 132 | TC | `VT323-44` | `42%` | 54 |
+| 120, 178 | TC | `JBMono-11` | `Đừng rút điện.` | 98 |
+| 120, 218 | TC | `JBMono-11` | `v0.23.0-glimmer` | 105 |
+
+### XP-NoChannels — XP · chưa có kênh
+
+Nguồn `source/XP-NoChannels.dc.html` · ảnh `screens/@2x/XPNoChannels.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 25, 5 | TL | `JBMono-12B` | `glimmer` | 49 |
+| 24, 4 | TL | `JBMono-12B` | `glimmer` | 49 |
+| 48, 38 | TL | `JBMono-12B` | `Chưa có kênh` | 84 |
+| 48, 58 | TL | `JBMono-11` | `Bật kênh trên trang web:` | 168 |
+| 48, 80 | TL | `JBMono-12B` | `glimmer.local` | 91 |
+

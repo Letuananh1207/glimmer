@@ -5,6 +5,34 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-26.8 — Giao diện kiểu XP (bản A, thân be)
+
+- **Toàn máy** (`source/XP-*.dc.html`, `screen_specs.md` §17, token `themeXP`; ảnh `XP*.png`, 44 màn):
+  - Mỗi kênh là một cửa sổ kiểu XP: thanh tiêu đề xanh 5 dải (y 0–21) có icon + tên kênh + 3 nút, khung xanh 2 px, thân be
+    xpBody (x 2–237, y 22–213), thanh trạng thái tuỳ kênh (y 196–213).
+  - Thanh tác vụ y 214–239 thay dock dọc: nút bắt đầu xanh lá (Clawd + `glimmer`), 4 nút skill Claude / Ảnh / Thời tiết /
+    Đồng hồ (nút đang hiện lõm), huy hiệu agent chờ trên nút Claude, khay giờ. Tiến độ slide = vạch 2 px ở đáy nút đang hiện.
+  - Thành phần: thanh tiến độ khối xanh lá (9 khối), groupbox, ô trắng / danh sách, hộp thoại lỗi / cảnh báo / thông tin,
+    thanh chạy "đang tải", dải thông báo vàng, tiêu đề `· cũ 14P` cho dữ liệu cũ.
+  - Kênh: Claude, Codex, AI, Tác tử, Trang chủ, Xu hướng, Thời tiết, Dự báo, Đồng hồ, Thông tin, Cài đặt, Ảnh + mọi trạng
+    thái phụ; 4 thẻ agent (nút Claude sáng cam khi cần bạn); Clawd ngủ dời xuống y 52 (Zz dời theo).
+  - Màn hệ thống: khởi động (nền đen, thanh 3 khối xanh chạy), Wi-Fi / cài đặt Wi-Fi (màn chào xanh), cập nhật (thanh
+    khối xanh lá), chưa có kênh (hộp thoại). Đêm giữ nền đen, chữ xám tối.
+  - Chỉ lấy dáng XP: không logo, tên, ảnh nền hay font của Microsoft.
+- Đổi luật: bỏ dock dọc (§15) và vạch chỉ báo y 230; vùng nội dung thành x 2–237, y 22–213 (thân cửa sổ), thanh tác vụ
+  y 214–239 vẽ bởi khung chung (không phải kênh). Thẻ agent cần bạn: nút Claude sáng cam thay vạch vàng / xanh liền.
+  Nền thân là xpBody (be), không còn `#000000` — trừ màn Đêm và màn hệ thống.
+- Cần firmware: 60 màu mới (token `themeXP.color`, có RGB565). Không font mới.
+
+**Việc cần làm trong code:**
+- Khung chung: vẽ thanh tiêu đề (tên + icon kênh), khung, thân be, thanh tác vụ (nút skill bật, nút đang hiện lõm, huy
+  hiệu agent chờ, giờ ở khay, tiến độ slide ở đáy nút) — vẽ một lần khi đổi kênh; giờ ở khay cập nhật mỗi phút.
+- Mọi kênh: bố cục theo §17 (tọa độ trong bảng từng màn); mọi dải xoá của `tick()` tô xpBody, không tô BG.
+- Thành phần mới: thanh tiến độ XP, groupbox, ô trắng, hộp thoại 3 loại, thanh chạy đang tải, dải thông báo.
+- Thẻ agent: cửa sổ theo loại thẻ; nút Claude sáng cam khi thẻ cần bạn.
+- Màn hệ thống: khởi động, Wi-Fi, cài đặt Wi-Fi, cập nhật, chưa có kênh theo §17. Đêm: chữ #4D4D4D trên đen.
+- Bản xem trước màn trên máy tính vẽ theo kiểu XP.
+
 ## P-2026-11-25.7 — Skill Ảnh: hiện ảnh của người dùng
 
 - **Kênh Ảnh** — mới (`source/Photo.dc.html`, `source/Photo-Empty.dc.html`, `screen_specs.md` §16; ảnh `Photo.png`,

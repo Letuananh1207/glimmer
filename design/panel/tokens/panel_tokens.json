@@ -1,7 +1,7 @@
 {
   "meta": {
     "name": "glimmer panel",
-    "version": "P-2026-11-25.7",
+    "version": "P-2026-11-26.8",
     "frame": {
       "width": 240,
       "height": 240,
@@ -686,6 +686,521 @@
       },
       "meta": "<thứ tự>/<tổng>",
       "empty": "Photo-Empty"
+    }
+  },
+  "themeXP": {
+    "note": "Kiểu XP (Luna) bản A — thân cửa sổ be. Thay giao diện tối cũ; màu chỉ dùng trong kiểu XP.",
+    "color": {
+      "xpWelcomeBand": {
+        "value": "#00309C",
+        "rgb565": "0x0193"
+      },
+      "xpLink": {
+        "value": "#0033CC",
+        "rgb565": "0x0199"
+      },
+      "xpTitleEdge": {
+        "value": "#003DB5",
+        "rgb565": "0x01F6"
+      },
+      "xpGroupLabel": {
+        "value": "#0046D5",
+        "rgb565": "0x023A"
+      },
+      "xpFrame": {
+        "value": "#0047D3",
+        "rgb565": "0x023A"
+      },
+      "xpTitleDark": {
+        "value": "#0049D6",
+        "rgb565": "0x025A"
+      },
+      "xpTitle": {
+        "value": "#0058EE",
+        "rgb565": "0x02DD"
+      },
+      "xpTitleShadow": {
+        "value": "#0A246A",
+        "rgb565": "0x092D"
+      },
+      "xpSky": {
+        "value": "#0A6ACF",
+        "rgb565": "0x0B59"
+      },
+      "xpTray": {
+        "value": "#0F8BE8",
+        "rgb565": "0x0C5D"
+      },
+      "xpTrayEdge": {
+        "value": "#1042AF",
+        "rgb565": "0x1215"
+      },
+      "xpBtnPressedEdge": {
+        "value": "#163E91",
+        "rgb565": "0x11F2"
+      },
+      "xpBtnEdge": {
+        "value": "#1A50C8",
+        "rgb565": "0x1A99"
+      },
+      "xpTaskDark": {
+        "value": "#1C4FBF",
+        "rgb565": "0x1A77"
+      },
+      "xpCheckBox": {
+        "value": "#1C5180",
+        "rgb565": "0x1A90"
+      },
+      "xpBtnPressed": {
+        "value": "#1E4FB5",
+        "rgb565": "0x1A76"
+      },
+      "xpStartShadow": {
+        "value": "#1E5E1E",
+        "rgb565": "0x1AE3"
+      },
+      "xpIconInfo": {
+        "value": "#1F6FE0",
+        "rgb565": "0x1B7C"
+      },
+      "xpCheck": {
+        "value": "#21A121",
+        "rgb565": "0x2504"
+      },
+      "xpTask": {
+        "value": "#245EDC",
+        "rgb565": "0x22FB"
+      },
+      "xpTitleLight": {
+        "value": "#2B80F5",
+        "rgb565": "0x2C1E"
+      },
+      "xpStartDark": {
+        "value": "#2E7D2E",
+        "rgb565": "0x2BE5"
+      },
+      "xpGreen": {
+        "value": "#2E8A2E",
+        "rgb565": "0x2C45"
+      },
+      "xpBootBlock": {
+        "value": "#2F6FE6",
+        "rgb565": "0x2B7C"
+      },
+      "xpSelect": {
+        "value": "#316AC5",
+        "rgb565": "0x3358"
+      },
+      "xpTaskLight": {
+        "value": "#3A7DEB",
+        "rgb565": "0x3BFD"
+      },
+      "xpStart": {
+        "value": "#3A9E3A",
+        "rgb565": "0x3CE7"
+      },
+      "xpBtn": {
+        "value": "#3C81F3",
+        "rgb565": "0x3C1E"
+      },
+      "xpBar": {
+        "value": "#3CC63C",
+        "rgb565": "0x3E27"
+      },
+      "xpTitleHi": {
+        "value": "#3D95FF",
+        "rgb565": "0x3CBF"
+      },
+      "xpTrayHi": {
+        "value": "#3FA9F5",
+        "rgb565": "0x3D5E"
+      },
+      "xpLabel": {
+        "value": "#4D4D4D",
+        "rgb565": "0x4A69"
+      },
+      "xpWelcome": {
+        "value": "#5A7EDC",
+        "rgb565": "0x5BFB"
+      },
+      "xpTaskHi": {
+        "value": "#5A9BF6",
+        "rgb565": "0x5CDE"
+      },
+      "xpStartHi": {
+        "value": "#5CC15C",
+        "rgb565": "0x5E0B"
+      },
+      "xpMuted": {
+        "value": "#6F6F6F",
+        "rgb565": "0x6B6D"
+      },
+      "xpBootBlockHi": {
+        "value": "#6FA0F5",
+        "rgb565": "0x6D1E"
+      },
+      "xpLilac": {
+        "value": "#7A44C8",
+        "rgb565": "0x7A39"
+      },
+      "xpFieldBorder": {
+        "value": "#7F9DB9",
+        "rgb565": "0x7CF7"
+      },
+      "xpWelcomeLine": {
+        "value": "#7FA4F0",
+        "rgb565": "0x7D3E"
+      },
+      "xpWelcomeDivider": {
+        "value": "#99B4EE",
+        "rgb565": "0x9DBD"
+      },
+      "xpDim": {
+        "value": "#A0A0A0",
+        "rgb565": "0xA514"
+      },
+      "xpStatusLine": {
+        "value": "#ACA899",
+        "rgb565": "0xAD53"
+      },
+      "xpBootGrey": {
+        "value": "#B2B2B2",
+        "rgb565": "0xB596"
+      },
+      "xpFlashEdge": {
+        "value": "#B8661E",
+        "rgb565": "0xBB23"
+      },
+      "xpEmptyIcon": {
+        "value": "#B8B4A0",
+        "rgb565": "0xBDB4"
+      },
+      "xpRed": {
+        "value": "#C1272D",
+        "rgb565": "0xC125"
+      },
+      "xpAmber": {
+        "value": "#C98A00",
+        "rgb565": "0xCC40"
+      },
+      "xpGroup": {
+        "value": "#D0D0BF",
+        "rgb565": "0xD697"
+      },
+      "xpIconError": {
+        "value": "#D8341E",
+        "rgb565": "0xD9A3"
+      },
+      "xpRowHi": {
+        "value": "#DCE6F8",
+        "rgb565": "0xDF3F"
+      },
+      "xpClose": {
+        "value": "#E0523C",
+        "rgb565": "0xE287"
+      },
+      "xpRowLine": {
+        "value": "#E4E4E4",
+        "rgb565": "0xE73C"
+      },
+      "xpBody": {
+        "value": "#ECE9D8",
+        "rgb565": "0xEF5B"
+      },
+      "xpFlash": {
+        "value": "#F0A030",
+        "rgb565": "0xF506"
+      },
+      "xpWelcomeOrange": {
+        "value": "#F28F2E",
+        "rgb565": "0xF465"
+      },
+      "xpIconWarn": {
+        "value": "#F2C200",
+        "rgb565": "0xF600"
+      },
+      "xpWelcomeHi": {
+        "value": "#FFE680",
+        "rgb565": "0xFF30"
+      },
+      "xpInfoBar": {
+        "value": "#FFFFE1",
+        "rgb565": "0xFFFC"
+      },
+      "white": {
+        "value": "#FFFFFF",
+        "rgb565": "0xFFFF"
+      }
+    },
+    "zone": {
+      "titleBar": [
+        0,
+        21
+      ],
+      "frame": {
+        "x": [
+          0,
+          1,
+          238,
+          239
+        ],
+        "y": [
+          22,
+          213
+        ]
+      },
+      "body": {
+        "x": [
+          2,
+          237
+        ],
+        "y": [
+          22,
+          213
+        ]
+      },
+      "statusBar": [
+        196,
+        213
+      ],
+      "taskbar": [
+        214,
+        239
+      ]
+    },
+    "titleBar": {
+      "bands": [
+        [
+          0,
+          0,
+          "xpTitleHi"
+        ],
+        [
+          1,
+          2,
+          "xpTitleLight"
+        ],
+        [
+          3,
+          18,
+          "xpTitle"
+        ],
+        [
+          19,
+          20,
+          "xpTitleDark"
+        ],
+        [
+          21,
+          21,
+          "xpTitleEdge"
+        ]
+      ],
+      "icon": [
+        4,
+        6
+      ],
+      "title": {
+        "x": 24,
+        "y": 4,
+        "font": "JBMono-12B",
+        "color": "white",
+        "shadow": [
+          25,
+          5,
+          "xpTitleShadow"
+        ],
+        "maxWidth": 156
+      },
+      "buttons": {
+        "x": [
+          184,
+          202,
+          220
+        ],
+        "y": 3,
+        "size": 16,
+        "border": "white",
+        "fill": {
+          "min": "xpTitleLight",
+          "max": "xpTitleLight",
+          "close": "xpClose"
+        }
+      }
+    },
+    "taskbar": {
+      "bands": [
+        [
+          214,
+          214,
+          "xpTaskHi"
+        ],
+        [
+          215,
+          216,
+          "xpTaskLight"
+        ],
+        [
+          217,
+          236,
+          "xpTask"
+        ],
+        [
+          237,
+          239,
+          "xpTaskDark"
+        ]
+      ],
+      "start": {
+        "x": [
+          0,
+          78
+        ],
+        "bands": [
+          [
+            214,
+            215,
+            "xpStartHi"
+          ],
+          [
+            216,
+            236,
+            "xpStart"
+          ],
+          [
+            237,
+            239,
+            "xpStartDark"
+          ]
+        ],
+        "icon": [
+          5,
+          222
+        ],
+        "label": {
+          "text": "glimmer",
+          "x": 26,
+          "y": 219,
+          "font": "JBMono-12B",
+          "shadow": "xpStartShadow"
+        }
+      },
+      "buttons": {
+        "x": 82,
+        "step": 28,
+        "w": 26,
+        "h": 20,
+        "y": 217,
+        "order": [
+          "claude",
+          "photo",
+          "weather",
+          "clock"
+        ],
+        "normal": [
+          "xpBtnEdge",
+          "xpBtn"
+        ],
+        "pressed": [
+          "xpBtnPressedEdge",
+          "xpBtnPressed"
+        ],
+        "flash": [
+          "xpFlashEdge",
+          "xpFlash"
+        ],
+        "progress": "đáy nút đang hiện: x+1, y 234, cao 2, dài 24 × tiến độ, màu nhấn kênh",
+        "badge": "huy hiệu AMBER 9×9 tại (x+17, 215)"
+      },
+      "tray": {
+        "x": [
+          196,
+          239
+        ],
+        "fill": "xpTray",
+        "edge": "xpTrayEdge",
+        "hi": "xpTrayHi",
+        "clock": [
+          218,
+          221,
+          "TC",
+          "JBMono-11"
+        ]
+      }
+    },
+    "statusBar": {
+      "line": [
+        196,
+        "xpStatusLine"
+      ],
+      "hi": [
+        197,
+        "white"
+      ],
+      "text": [
+        8,
+        199,
+        "JBMono-11"
+      ],
+      "right": [
+        231,
+        199,
+        "TR"
+      ]
+    },
+    "progress": {
+      "border": "xpFieldBorder",
+      "field": "white",
+      "on": "xpBar",
+      "segments": 9,
+      "gap": "2 (cao > 6) / 1"
+    },
+    "groupBox": {
+      "border": "xpGroup",
+      "label": "xpGroupLabel",
+      "labelOffset": [
+        7,
+        -6
+      ]
+    },
+    "messageBox": {
+      "icon": [
+        14,
+        36,
+        24
+      ],
+      "head": [
+        48,
+        38,
+        "JBMono-12B"
+      ],
+      "lines": [
+        48,
+        58,
+        16,
+        "JBMono-11"
+      ],
+      "kinds": [
+        "error",
+        "warn",
+        "info"
+      ]
+    },
+    "loading": {
+      "label": [
+        120,
+        92,
+        "TC",
+        "JBMono-12B"
+      ],
+      "bar": [
+        50,
+        116,
+        140,
+        14
+      ],
+      "lit": 3,
+      "stepMs": 200
     }
   }
 }
