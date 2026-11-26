@@ -246,7 +246,45 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
 - Gửi: thu nhỏ vùng cắt về 188 × 188, JPEG **baseline**, ≤ 40 KB — quá thì giảm chất lượng dần, chỉ báo `tooBig` khi đã hết bậc.
   Gửi xong app giữ bản sao (làm hình thu nhỏ ở tab Ảnh).
 
-## 8. Điều khiển — `ControlScreen` (Control.png, ControlSending.png, ControlFailed.png, ControlCard.png, ControlPaused.png, ControlScreenOff.png, ControlNight.png, ControlBrightness.png, ControlSingle.png, ControlOldFw.png, ControlSetup.png, ControlOffline.png)
+## 8. Điều khiển — `ControlScreen` (Control.png, ControlTapMin.png, ControlMinimized.png, ControlInstalled.png, ControlTapIcon.png, ControlTapClose.png, ControlSending.png, ControlStart.png, ControlAllPrograms.png, ControlFailed.png, ControlCard.png, ControlScreenOff.png, ControlNight.png, ControlBrightness.png, ControlOldFw.png, ControlSetup.png, ControlOffline.png)
+
+> **2026-11-26.6 — Màn thiết bị chạm được, mô hình Windows XP.** App là "máy tính" (xử lý, nhớ cửa sổ đang mở, chương trình đã
+> cài), thiết bị là màn hình. **Không tự xoay, không có nút kênh trước / sau / dừng xoay, không có `JumpTabBar`, không thanh
+> tiến độ slide** — các mục đó và `paused` / `single` bên dưới **bỏ**. Prop `state`: `normal`, `tapMin`, `minimized`, `installed`, `tapIcon`, `tapClose`, `sending`, `start`, `allPrograms`, `failed`, `card`, `screenOff`, `night`, `brightness`, `oldFw`, `setup`, `offline`.
+> 844, trừ `card` / `oldFw` / `setup` / `offline` 960. Ảnh `Control*.png` (17); `ControlPaused.png`, `ControlSingle.png` bỏ.
+> - **`TouchMirror`** (thay `DeviceMirror` ×1.2): vỏ 376 × 376 (`deviceShell`), lề trên 6, đệm 6, bo 20, gradient như cũ; màn
+>   364 nền đen bo 6 đệm 2; vùng vẽ **360 = 240 px × 1.5** (`deviceScale`). Vẽ đúng px theo `design/panel` (§17). Cả vùng là
+>   bề mặt chạm (`controlScreenA11y`): chạm = chuột trái tại điểm đó (đổi toạ độ ÷ 1.5), giữ ≥ 500 ms = chuột phải. Vùng
+>   chạm nhỏ của XP (nút cửa sổ 15 px ≈ 22 dp, nút thanh tác vụ 28 px ≈ 42 dp) được nới ra **44 × 44** quanh tâm khi tính trúng.
+>   - Nút cửa sổ `_` (tâm 192, 11) thu nhỏ → desktop, nút app vẫn ở thanh tác vụ; `□` (207, 11) phóng to; `×` (228, 11) tắt app
+>     → bỏ khỏi thanh tác vụ, thiết bị về cửa sổ trước đó (hết thì desktop).
+>   - Thanh tác vụ y 214–239: start (0–65) → bảng `Start` của app; nút app (28 px từ x 71) → đưa app lên màn.
+>   - Desktop: chạm biểu tượng → mở app.
+> - **Phản hồi chạm** (`TapRipple` + `StatusChip`): vòng 44 (`tapRipple`) viền 2 trắng, nền trắng 28 %, viền ngoài 4 `tapRing`, tại
+>   điểm chạm; chip trên góc trái vỏ (trên −12, trái 14): cao 28 bo 14 `panel2` viền `line`, vòng xoay 16 (hoặc dấu tích mint khi
+>   xong) + chữ 12: `controlMinimizing`, `controlClosing`, `controlOpening`, `controlOpeningApp`, `controlInstalled`. Ô màn đổi ngay
+>   theo kết quả dự kiến; thiết bị không nhận → về như máy + `CommandSnackbar` (`controlFailed`, vd. "Tắt Claude").
+> - **Dòng dưới ô màn** (đệm 12 24 0): ô 8 bo 2 màu nhấn app + tên app 13/700 + ghi chú 13 muted (`controlOpenOnDevice`,
+>   `controlJustOpened`, `controlMinimizedNote`, `controlInstalledNote`, `controlTapIconNote`). Không có thanh.
+> - **`TouchLegend`** (lề 10 16 0, đệm 10 14, bo 14 `panel`): `controlLegendTitle` 12 muted, lưới 2 cột cách 6 12: ô ký hiệu
+>   (≥ 22 × 20 bo 4 `panel2`, chữ 11/700 ink) + nhãn 12 inkDim — `_` thu nhỏ, `□` phóng to, `×` tắt app, `▭` nút dưới: đổi app,
+>   `start` mở Start, `giữ` chuột phải. Mờ 38 % khi không dùng được.
+> - Độ sáng, ba nút tròn (Tắt màn · Chế độ đêm · Số liệu), thẻ agent, màn tắt, đêm, thanh báo: như dưới.
+> - **Desktop** (`minimized`, `installed`, `tapIcon`): **mỗi skill đã cài = một biểu tượng** (`DesktopIcon`): icon dock ×1.6 trắng
+>   bóng đen 1 px + nhãn 11 trắng bóng đen, xếp cột 1 (tâm x 40) rồi cột 2 (tâm x 122), bước 46, từ trên xuống, tránh bong bóng
+>   thời tiết. Vừa cài (`installed`): biểu tượng mới ở trạng thái chọn — nhãn nền `xpSelect`, viền chấm trắng — + chip
+>   `controlInstalled`. Bố cục chính xác của desktop do `design/panel` vẽ (đang là lớp minh hoạ chồng lên).
+> - **`StartMenuSheet`** (`start`; lớp phủ đen 60 % trên cả màn, cả thanh dưới): bảng `panel` bo trên 20 đệm 10 12 20, tay nắm.
+>   Đầu: ô 44 bo 10 nền `skillAgentTint` + Clawd ×1.75, "glimmer" 16/700, `startSubtitle` 11 muted. Lưới 2 cột cách 8: trái nền
+>   `panel2` bo 14 — Claude (`startClaudeSub`), Codex (`startCodexSub`) đậm; kẻ; Thời tiết, Ảnh, Đồng hồ (ghim / hay dùng); phải
+>   nền `bg` bo 14 — `startDesktop`, `startDetails`; kẻ; `startControlPanel` (`startControlPanelSub`) → Cài đặt, `startAddRemove`
+>   (`startAddRemoveSub`, icon + `clawd`) → Skill, `startDevice` (`startDeviceSub`) → Thiết bị. Hàng ≥ 48: icon 20–22 trong ô 28,
+>   chữ 13 (đậm 700 / thường 500), phụ 11 muted. Dưới lưới hàng `startAllPrograms` (nền `panel2`, icon lưới mint, mũi tên mint).
+>   Chân (kẻ `line` trên): nút chữ `startTurnOff` (power, amber) và `startRestart` (restart, coral), cao 44.
+> - **`AllProgramsSheet`** (`allPrograms`): cùng khung; đầu nút quay lại 44 (`allProgramsBackA11y`) + `allProgramsTitle` 16/700.
+>   Nhóm (`allProgramsGroup*` 12 muted) lưới 4 cột cách 8: ô ≥ 76 bo 14 `panel2`, icon 24 + tên 12 (`app*`), chấm mint 6 góc trên
+>   phải = đang mở (`allProgramsOpenLegend`). Cuối: hàng viền đứt `allProgramsAddRemove` (+ `allProgramsAddRemoveSub`) → Skill.
+> - `oldFw`: `controlOldFwTitle` / `controlOldFwBody`; ô màn vẫn hiện, chạm không gửi; Start vẫn dùng được.
 
 > **2026-11-26.5 — Màn mới, tab 1** (phiếu `app/docs/phieu_thiet_ke/2026-11-26-app-dieu-khien-thiet-bi.md`). App thành remote của thiết bị. Prop `state`: `normal`, `sending`, `failed`,
 > `card`, `paused`, `screenOff`, `night`, `brightness`, `single`, `oldFw`, `setup`, `offline`. 844, trừ `card` / `oldFw` /

@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-26.5",
+  "version": "2026-11-26.6",
   "start": "Connect",
   "rule": "Chưa kết nối được thiết bị → Connect. Kết nối được → khung 4 tab: tab 1 = Control (điều khiển: ô màn thiết bị + nút), tab 2 = Skills, tab 3 = Settings, tab 4 = Device. Dashboard (Số liệu) là màn phụ đẩy từ Control, mở đúng tab của kênh đang hiện. Settings và Device dùng chung; Connect, WifiSetup, PhotoCrop ngoài khung tab.",
   "screens": {
@@ -8,40 +8,55 @@
       "tab": 0,
       "states": [
         "normal",
+        "tapMin",
+        "minimized",
+        "installed",
+        "tapIcon",
+        "tapClose",
         "sending",
+        "start",
+        "allPrograms",
         "failed",
         "card",
-        "paused",
         "screenOff",
         "night",
         "brightness",
-        "single",
         "oldFw",
         "setup",
         "offline"
       ],
-      "mirror": "Ô màn vẽ lại màn thiết bị theo design/panel (source/DeviceXP*.dc.html = bản chép XP-*.dc.html của panel), từ /api/state; ×1.2",
+      "mirror": "Ô màn ×1.5 (360 dp) vẽ lại màn thiết bị theo design/panel (source/DeviceXP*.dc.html), chạm được như chuột",
       "actions": {
-        "prev": "POST /api/channel {\"action\":\"prev\"} (cần firmware)",
-        "next": "POST /api/channel {\"action\":\"next\"}",
-        "jump": "POST /api/channel {\"name\":\"<kênh đầu của skill>\"}",
-        "pause": "POST /api/channel {\"action\":\"pause\"|\"resume\"} (cần firmware)",
+        "touch": "gửi chạm theo toạ độ màn {x, y, hold} hoặc lệnh theo nghĩa (min / max / close / open app) — cần firmware",
         "brightness": "POST /api/settings {brightness} khi thả tay",
-        "screen": "tắt / bật màn ngay (cần firmware)",
+        "screen": "POST /api/screen {on}",
         "night": "POST /api/settings nightMode",
         "refresh": "POST /api/refresh",
-        "dismissCard": "bỏ thẻ theo id (cần firmware HTTP; /push/clear xoá hết)"
-      },
-      "gestures": {
-        "tapScreen": "Dashboard ở tab của kênh đang hiện",
-        "swipeLeft": "next",
-        "swipeRight": "prev"
+        "restart": "POST /api/reboot",
+        "dismissCard": "bỏ thẻ theo id"
       },
       "to": {
-        "Dashboard": "Chạm ô màn / nút 'Số liệu' (push)",
-        "Device": "'Cập nhật firmware' (oldFw)",
+        "Dashboard": "Start → 'Số liệu' / nút tròn 'Số liệu'",
+        "Settings": "Start → 'Bảng điều khiển'",
+        "Skills": "Start / Tất cả chương trình → 'Thêm / gỡ'",
+        "Device": "Start → 'Thiết bị'; 'Cập nhật firmware' (oldFw)",
         "WifiSetup": "'Cài Wi-Fi' (setup)"
-      }
+      },
+      "model": "App = máy tính (xử lý, nhớ cửa sổ đang mở, chương trình đã cài); thiết bị = màn hình. Không tự xoay: thiết bị giữ cửa sổ người dùng mở.",
+      "touch": {
+        "windowMin": "thu nhỏ cửa sổ → desktop, nút vẫn trên thanh tác vụ",
+        "windowMax": "phóng to / thu về",
+        "windowClose": "tắt app → bỏ khỏi thanh tác vụ, về cửa sổ trước đó",
+        "taskbarButton": "đưa app đó lên màn",
+        "start": "mở Start (bảng của app)",
+        "desktopIcon": "mở app của biểu tượng",
+        "hold": "chuột phải (menu — chưa vẽ)"
+      },
+      "sheets": {
+        "Start": "chạm start trên ô màn",
+        "AllPrograms": "Start → 'Tất cả chương trình'"
+      },
+      "desktop": "Mỗi skill đã cài = một biểu tượng desktop (cột 1 rồi cột 2, từ trên xuống); cài mới → thêm biểu tượng ở trạng thái chọn; gỡ → bỏ"
     },
     "Connect": {
       "source": "source/Connect.dc.html",

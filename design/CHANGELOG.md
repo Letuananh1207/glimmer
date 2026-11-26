@@ -5,6 +5,40 @@ widget và việc cần làm — không ghi đường dẫn file hay cách code.
 
 ---
 
+## 2026-11-26.6 — Màn thiết bị chạm được như Windows XP, không tự xoay, desktop theo skill
+
+- **Điều khiển · `ControlScreen`** (`source/Control.dc.html`, `screen_specs.md` §8; ảnh 17 `Control*.png`, mới `ControlTapMin.png`,
+  `ControlMinimized.png`, `ControlInstalled.png`, `ControlTapIcon.png`, `ControlTapClose.png`, `ControlStart.png`, `ControlAllPrograms.png`;
+  bỏ `ControlPaused.png`, `ControlSingle.png`):
+  - Mô hình XP: app = máy tính (xử lý, nhớ cửa sổ đang mở, chương trình đã cài), thiết bị = màn hình.
+  - `TouchMirror`: ô màn ×1.5 (360 dp) **chạm được như chuột** — `_` thu nhỏ, `□` phóng to, `×` tắt app, nút thanh tác vụ = đổi
+    app, start = Start menu, biểu tượng desktop = mở app, giữ = chuột phải. Vùng trúng nới 44 × 44. Phản hồi `TapRipple` + `StatusChip`.
+  - **Bỏ** nút kênh trước / sau, dừng / tiếp tục xoay, hàng nút tab (`JumpTabBar`), thanh tiến độ slide; thay bằng `TouchLegend`.
+  - `StartMenuSheet` (ghim, Desktop, Số liệu, Bảng điều khiển → Cài đặt, Thêm / gỡ → Skill, Thiết bị, Tắt màn, Khởi động lại)
+    và `AllProgramsSheet` (chương trình theo skill, chấm = đang mở, Thêm / gỡ chương trình).
+  - Desktop: mỗi skill đã cài = một `DesktopIcon`; vừa cài → biểu tượng mới ở trạng thái chọn + chip "Đã cài …".
+- **Token:** `xpStartTop/Bottom`, `xpSelect`, `tapRing`; size `deviceShell` 376, `deviceScreen` 360, `deviceScale` 1.5, `tapRipple` 44;
+  radius `deviceShell` 20; bỏ `padButton`, `controlTab`. **Chuỗi:** 57 khoá mới / đổi (`control…`, `start…`, `allPrograms…`, `app…`);
+  10 khoá của nút kênh / xoay đánh dấu không dùng.
+- Phiếu: `app/docs/phieu_thiet_ke/2026-11-26-app-dieu-khien-thiet-bi.md` (yêu cầu thêm trong phiên thiết kế)
+- Đổi luật (phía code chốt): **bỏ xoay vòng** — thiết bị hiện đúng cửa sổ người dùng mở tới khi mở cái khác (thẻ agent vẫn chen
+  ngang, R-SK-3). R-SK-2 "thiết bị xoay mọi tab dock đang bật" → "mỗi skill bật có biểu tượng desktop + mục trong Tất cả chương
+  trình". R-DK-4 (dừng xoay tạm) bỏ. Luật mới đề xuất: R-DK-7 app giữ danh sách cửa sổ đang mở + cửa sổ trên cùng, gửi xuống
+  thiết bị; R-DK-8 `×` bỏ cửa sổ khỏi thanh tác vụ, về cửa sổ trước đó (hết → desktop), `_` giữ nút; R-DK-9 cài skill → thêm
+  biểu tượng desktop + mục Tất cả chương trình, gỡ → bỏ; R-DK-10 chạm khi firmware chưa nhận chạm → không gửi, báo cập nhật.
+- Cần firmware: tắt tự xoay; nhận chạm theo toạ độ màn (`x, y`, chạm / giữ) hoặc lệnh theo nghĩa (thu nhỏ / phóng to / đóng /
+  mở app); danh sách cửa sổ đang mở + cửa sổ trên cùng + trạng thái thu nhỏ trong `/api/state`; desktop vẽ biểu tượng mọi skill
+  đã cài; khởi động lại = `/api/reboot` (có sẵn).
+- Cần thiết kế màn thiết bị (`/panel-design`): desktop có biểu tượng cho mọi skill đã cài (cột, trạng thái chọn); cửa sổ thu nhỏ /
+  phóng to; menu chuột phải; bỏ vạch tiến độ slide trên thanh tác vụ (không xoay nữa). Start menu chỉ ở app.
+
+**Việc cần làm trong code:**
+- `ControlScreen`: thay d-pad, hàng tab, thanh tiến độ bằng `TouchMirror` + `TouchLegend`; đổi toạ độ chạm ÷ 1.5 → lệnh thiết bị;
+  phản hồi lạc quan + `StatusChip`, lỗi → về như máy + `CommandSnackbar`.
+- `StartMenuSheet`, `AllProgramsSheet` (mới) với điều hướng như đặc tả; Khởi động lại → `/api/reboot` (hỏi lại trước).
+- Trạng thái cửa sổ đang mở / thu nhỏ do app giữ; desktop theo danh sách skill đã cài.
+- Chuỗi, token theo trên.
+
 ## 2026-11-26.5 — App thành điều khiển thiết bị: tab 1 là remote có màn thiết bị
 
 - **Điều khiển · `ControlScreen`** — màn mới, tab 1 (`source/Control.dc.html`, `screen_specs.md` §8; ảnh `Control.png` +

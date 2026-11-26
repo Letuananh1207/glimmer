@@ -33,11 +33,18 @@
 | `DeletePhotoDialog` | **2026-11-25.4:** hộp thoại 312 hỏi xoá ảnh, có hình ảnh 96; nút Xoá coral. §2. |
 | `CropFrame` | **2026-11-25.4:** vùng cắt vuông kéo / phóng: khung 260 trong vùng 340, phủ ngoài 60 %, lưới chia ba, 4 góc L. §7. |
 | `DevicePhotoPreview` | **2026-11-25.4:** ô 180 vẽ lại màn Ảnh của thiết bị (×0.75): tiêu đề, dock, ảnh 141 tại (30, 21), vạch mint. §7. |
-| `DeviceMirror` | **2026-11-26.5:** ô màn thiết bị trên app: vỏ 312 bo 22 gradient, màn 288 = 240 px × 1.2, vẽ đúng từng px màn XP của `design/panel`; chạm / vuốt. `screen_specs.md` §8. |
-| `ChannelProgress` | **2026-11-26.5:** tên kênh + ghi chú + thanh 3 px màu nhấn kênh (thời gian slide). §8. |
-| `ControlPad` | **2026-11-26.5:** 3 nút ≥ 64 bo 18 (kênh trước / dừng–tiếp tục / kênh sau), trạng thái sáng amber, mờ, ổ khoá. §8. |
-| `JumpTabBar` | **2026-11-26.5:** `DockTabBar` kiểu xếp dọc dùng làm nút nhảy kênh; sáng theo kênh thiết bị đang hiện. §8. |
+| `DeviceMirror` | **2026-11-26.6:** thay bằng `TouchMirror` (×1.5, chạm được). **2026-11-26.5:** ô màn thiết bị trên app: vỏ 312 bo 22 gradient, màn 288 = 240 px × 1.2, vẽ đúng từng px màn XP của `design/panel`; chạm / vuốt. `screen_specs.md` §8. |
+| `ChannelProgress` | **2026-11-26.6: bỏ.** **2026-11-26.5:** tên kênh + ghi chú + thanh 3 px màu nhấn kênh (thời gian slide). §8. |
+| `ControlPad` | **2026-11-26.6: bỏ.** **2026-11-26.5:** 3 nút ≥ 64 bo 18 (kênh trước / dừng–tiếp tục / kênh sau), trạng thái sáng amber, mờ, ổ khoá. §8. |
+| `JumpTabBar` | **2026-11-26.6: bỏ.** **2026-11-26.5:** `DockTabBar` kiểu xếp dọc dùng làm nút nhảy kênh; sáng theo kênh thiết bị đang hiện. §8. |
 | `BrightnessSlider` | **2026-11-26.5:** thẻ độ sáng, núm 20 (kéo 28 + bong bóng %), phần sáng amber. §8. |
 | `RoundToggle` | **2026-11-26.5:** nút tròn 56 + nhãn; bật = tint + viền màu nhấn. §8. |
 | `HoldCardPanel` | **2026-11-26.5:** thẻ amber "thẻ agent đang chiếm màn" + nút "Bỏ thẻ khỏi màn"; không duyệt hộ. §8. |
 | `CommandSnackbar` | **2026-11-26.5:** thanh báo nổi trên thanh dưới khi thiết bị không nhận lệnh, có Thử lại. §8. |
+| `TouchMirror` | **2026-11-26.6:** ô màn thiết bị 360 dp (240 px × 1.5) chạm được như chuột: nút cửa sổ, thanh tác vụ, start, biểu tượng desktop; giữ = chuột phải; vùng trúng nới 44. `screen_specs.md` §8. |
+| `TapRipple` | **2026-11-26.6:** vòng 44 tại điểm chạm, viền trắng + viền ngoài `tapRing`. §8. |
+| `StatusChip` | **2026-11-26.6:** chip 28 trên góc trái vỏ máy: vòng xoay / dấu tích + chữ trạng thái lệnh. §8. |
+| `TouchLegend` | **2026-11-26.6:** thẻ "Chạm màn như dùng chuột", 6 ký hiệu 2 cột. §8. |
+| `DesktopIcon` | **2026-11-26.6:** biểu tượng skill trên desktop (icon dock trắng ×1.6 + nhãn bóng đen); chọn = nhãn nền `xpSelect` + viền chấm. §8. |
+| `StartMenuSheet` | **2026-11-26.6:** Start menu kiểu XP trong bảng dưới: đầu Clawd, 2 cột (ghim / hệ thống), Tất cả chương trình, Tắt màn · Khởi động lại. §8. |
+| `AllProgramsSheet` | **2026-11-26.6:** lưới chương trình theo skill, chấm mint = đang mở, cuối là Thêm / gỡ chương trình. §8. |

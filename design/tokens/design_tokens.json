@@ -141,6 +141,22 @@
     "screenOff": {
       "value": "#050507",
       "use": "Ô màn khi màn thiết bị tắt"
+    },
+    "xpStartTop": {
+      "value": "#4CB04C",
+      "use": "Nút start (Start menu) — gradient trên, như XP"
+    },
+    "xpStartBottom": {
+      "value": "#2F8A2F",
+      "use": "Nút start — gradient dưới"
+    },
+    "xpSelect": {
+      "value": "#316AC5",
+      "use": "Nền nhãn biểu tượng desktop đang chọn (XP)"
+    },
+    "tapRing": {
+      "value": "rgba(255, 210, 63, 0.55)",
+      "use": "Viền ngoài vòng chạm trên ô màn"
     }
   },
   "font": {
@@ -267,12 +283,11 @@
     "cropFrame": 260,
     "devicePreview": 180,
     "devicePreviewPhoto": 141,
-    "deviceShell": 312,
-    "deviceScreen": 288,
-    "deviceScale": 1.2,
-    "padButton": 64,
+    "deviceShell": 376,
+    "deviceScreen": 360,
+    "deviceScale": 1.5,
     "roundButton": 56,
-    "controlTab": 56
+    "tapRipple": 44
   },
   "radius": {
     "card": 14,
@@ -289,8 +304,7 @@
     "badge": 4,
     "photoTile": 10,
     "sheet": 20,
-    "deviceShell": 22,
-    "padButton": 18,
+    "deviceShell": 20,
     "snackbar": 12
   },
   "border": {
