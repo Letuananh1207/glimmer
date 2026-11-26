@@ -71,3 +71,10 @@ Không lưu gì mới trên máy. Model đọc từ thiết bị (không lưu): 
 cửa sổ thu nhỏ; R-DK-7/8), `TouchTarget` / `ProgramGroup` (`lib/domain/models/touch.dart`). `ControlCaps` còn `touch`
 (có `paused` → firmware nhận chạm), `screen`, `dismissCard`. Lệnh: `ControlDeviceUseCase.open(name)` (`/api/channel
 {name}`; `Home` = desktop), `stopRotation` (`saveSettings {autoRotate: false}` khi còn bật), `restart` (`/api/reboot`).
+
+**2026-11-26.7 / .8**: `TaskbarModel` của ô màn = cửa sổ đang mở (`programs`, `buttons`, `active` = chỉ số nút lõm;
+bỏ `progress` / `accent`); `DesktopView.icons` (`DeskIcon`: chương trình, tâm cột, đỉnh ô — theo skill bật, panel
+P-2026-11-26.14). Mở app lần đầu: thiết bị đang hiện chương trình → `/api/channel {name: Home}` một lần.
+`WindowStack` thêm `z` (thứ tự kích hoạt, để `×` biết cửa sổ trước đó) và `sel` (biểu tượng desktop đang chọn), gửi
+xuống bằng `POST /api/windows` (`toJson`); `MenuView` / `MenuItem` (`touch.dart`) = menu chuột phải, gửi `POST /api/menu`.
+`DeviceState.windowsApi` (có `windows` trong `/api/state`) → `ControlCaps.windows`.

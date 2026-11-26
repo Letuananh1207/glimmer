@@ -24,15 +24,10 @@ import '../../../utils/safe_notifier.dart';
 /// Whole-screen situation of the remote (screen_specs §8 `setup` / `offline`).
 enum ControlMode { normal, setup, offline }
 
-/// What the chip on the mirror's shell says while a command is on its way (`StatusChip`).
-enum ChipKind { sending, minimizing, closing, opening, openingApp }
-
-/// Note after the program name under the mirror.
-enum LineNote { openOnDevice, justOpened, minimized, tapIcon }
-
-/// Điều khiển (tab 1, screen_specs §8, design 2026-11-26.6): the device screen, touched like a mouse — the app is the
+/// Điều khiển (tab 1, screen_specs §8, design 2026-11-26.6 / .7 / .8): the device screen, touched like a mouse — the app is the
 /// computer (open windows, installed programs), the device its screen (R-DK-7…10).
-/// R-DK-1 optimistic: a touch changes the mirror at once, the command goes out once; a different answer or none →
+/// R-DK-1 optimistic: a touch changes the mirror at once (that is the feedback: no ripple, no chip), the command goes
+/// out once; a different answer or none →
 /// the mirror and the windows follow the device and [failed] is set (the snackbar's Thử lại is the user's).
 /// R-DK-6: the state is re-read when the screen opens and on [reload] (back from Số liệu).
 class ControlViewModel extends ChangeNotifier with SafeNotifier {
@@ -71,8 +66,6 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
   int? _brightness;
   double? _drag;
   ControlCommand? _sending;
-  ChipKind _chip = ChipKind.sending;
-  String _chipApp = '';
   ControlCommand? _failed;
   String _failedApp = '';
   Future<void> Function()? _retry;
@@ -81,10 +74,20 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
   int _lastNight = 2;
   bool _rotationStopped = false;
 
-  /// R-DK-7: the windows the app keeps for the device screen.
+  /// R-DK-7: the windows the app keeps for the device screen; empty when the app opens (the desktop shows).
   WindowStack _windows = WindowStack.empty;
-  LineNote _note = LineNote.openOnDevice;
-  String _minimizedApp = '';
+
+  /// R-DK-7: the first state read decided the start (desktop sent, or already there); before it nothing is adopted.
+  bool _started = false;
+
+  /// What the device last took from `POST /api/windows` (sent again only when it changes).
+  WindowStack? _sentWindows;
+
+  /// R-DK-11: the context menu over the device screen (optimistic), or null.
+  MenuView? _menu;
+
+  /// Skills on at the last state read (R-DK-9: a skill turned on → its desktop icon selected).
+  List<String>? _skillsBefore;
 
   // ── what the device shows ──
 
@@ -117,10 +120,6 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
   /// R-DK-9: programs of the enabled skills, by group (Start, Tất cả chương trình).
   Map<ProgramGroup, List<String>> get programs => rules.programsOf(_device.state?.skillsOn ?? const [], _settings);
 
-  /// Note under the mirror; for [LineNote.minimized] the program that went down is [minimizedApp].
-  LineNote get note => channel == 'Home' ? (_note == LineNote.minimized ? _note : LineNote.tapIcon) : _note;
-  String get minimizedApp => _minimizedApp;
-
   /// Commands can be sent at all: connected, screen on, not on the night face.
   bool get usable => mode == ControlMode.normal && !screenOff && !nightFace;
 
@@ -141,12 +140,8 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
 
   String? get badge => badgeText(agentsWaiting(_device.cards));
 
-  /// A command is on its way (`StatusChip`).
+  /// A command is on its way.
   bool get sending => _sending != null;
-  ChipKind get chip => _chip;
-
-  /// Program named by the chip ("Đang tắt Claude…").
-  String get chipApp => _chipApp;
 
   /// The last command the device did not take (snackbar), or null.
   ControlCommand? get failed => _failed;
@@ -176,6 +171,8 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
       cards: _device.cards,
       settings: _settings,
       now: _now(),
+      windows: _windows,
+      menu: _menu,
       gallery: _gallery,
     );
   }
@@ -185,9 +182,39 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
   void _onDevice() {
     final s = _device.state;
     if (s != null && _device.error == null) _lastOk = _now();
-    if (s != null && _sending == null) _follow(s.activeChannel);
+    if (s != null) _noticeInstalled(s.skillsOn);
+    if (s != null && _sending == null && _started) _follow(s.activeChannel);
+    _pushWindows();
     notifyListeners();
   }
+
+  /// R-DK-9: a skill just turned on (Skill tab, web) → its first desktop icon is selected, as XP shows a new program.
+  void _noticeInstalled(List<String> on) {
+    final before = _skillsBefore;
+    _skillsBefore = on;
+    if (before == null) return;
+    for (final k in on) {
+      if (before.contains(k)) continue;
+      final icon = rules.deskProgramOf(k);
+      if (icon != null) _windows = _windows.select(icon);
+    }
+  }
+
+  /// The open windows down to the device whenever they change (panel P-2026-11-26.14); a miss is tried again on
+  /// the next change or state read — the screen still follows the app's own list.
+  void _pushWindows() {
+    if (!_started || !caps.windows || _windows == _sentWindows) return;
+    final w = _windows;
+    _sentWindows = w;
+    unawaited(
+      _control.sendWindows(w).then((r) {
+        if (r is Error<void> && identical(_sentWindows, w)) _sentWindows = null;
+      }),
+    );
+  }
+
+  /// R-DK-11: the menu on screen.
+  MenuView? get menu => _menu;
 
   /// R-DK-7: the device shows a program the app did not open → it is on top now; the desktop → the top one went down.
   /// Cards, the night face and setup leave the windows alone. R-DK-9: windows of programs no longer installed go.
@@ -196,7 +223,6 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
     var w = _windows.only(installed.contains);
     if (rules.isProgram(active) && installed.contains(active) && w.top != active) {
       w = w.opened(active);
-      _note = LineNote.openOnDevice;
     } else if (active == 'Home' && w.top != null) {
       w = w.minimize(w.top!);
     }
@@ -214,9 +240,26 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
       await _stopRotation();
     }
     final s = _device.state;
-    if (s != null && _sending == null) _follow(s.activeChannel);
+    if (!_started && s != null && mode == ControlMode.normal) {
+      _started = true;
+      await _startAtDesktop(s.activeChannel);
+    } else if (s != null && _sending == null && _started) {
+      _follow(s.activeChannel);
+    }
+    _pushWindows();
     await _reloadPhotos();
     notifyListeners();
+  }
+
+  /// R-DK-7: the app opens on the desktop with no windows; a program on the device screen is sent back to `Home`
+  /// once (a refusal leaves the device as it is and adopts what it shows).
+  Future<void> _startAtDesktop(String active) async {
+    if (!rules.isProgram(active) || !caps.touch) {
+      if (rules.isProgram(active)) _follow(active);
+      return;
+    }
+    _pendingChannel = 'Home';
+    await _run(ControlCommand.desktop, () => _control.open('Home', c: ControlCommand.desktop));
   }
 
   /// R-DK-7: the device never rotates on its own; `autoRotate` still on → off, once per screen.
@@ -262,12 +305,9 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
     ControlCommand c,
     Future<Result<ControlOutcome>> Function() send, {
     String app = '',
-    ChipKind chip = ChipKind.sending,
     void Function()? undo,
   }) async {
     _sending = c;
-    _chip = chip;
-    _chipApp = app;
     _clearFailure();
     notifyListeners();
     final r = await send();
@@ -282,10 +322,12 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
       _pendingNight = null;
       _brightness = null;
       undo?.call();
-      _fail(c, app, () => _run(c, send, app: app, chip: chip, undo: undo));
+      _fail(c, app, () => _run(c, send, app: app, undo: undo));
     }
     final s = _device.state;
     if (s != null) _follow(s.activeChannel);
+    _menu = null; // any channel command closes the device's menu
+    _pushWindows();
     notifyListeners();
   }
 
@@ -327,6 +369,11 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
   TouchTarget tap(double x, double y) {
     final f = frame;
     if (f == null || !usable || sending) return TouchTarget.none;
+    final m = _menu;
+    if (m != null) {
+      _menuTap(m, x, y);
+      return TouchTarget.none;
+    }
     final t = touchTargetAt(x, y, f);
     if (!touchable) return t.kind == TouchKind.start ? t : TouchTarget.none;
     switch (t.kind) {
@@ -335,32 +382,88 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
       case TouchKind.close:
         unawaited(closeTop());
       case TouchKind.taskbar:
-        unawaited(taskbar(t.skill!));
+        unawaited(taskbar(t.program!));
       case TouchKind.icon:
         unawaited(openProgram(t.program!));
+      case TouchKind.none when f.channel == 'Home' && _windows.sel != null:
+        _windows = _windows.select(null); // a tap on an empty spot drops the selection (XP)
+        _pushWindows();
+        notifyListeners();
       case TouchKind.none || TouchKind.maximize || TouchKind.start:
         break; // □: windows on the device are always full screen
     }
     return t;
   }
 
+  // ── context menus (R-DK-11) ──
+
+  /// A hold (≥ 500 ms) at ([x], [y]): the XP right-click menu of what is under the finger, drawn on the device.
+  Future<void> hold(double x, double y) async {
+    final f = frame;
+    if (f == null || !touchable || !caps.windows || sending) return;
+    if (_menu != null) return closeMenu();
+    final m = holdMenuAt(x, y, f, minimized: _windows.minimized);
+    if (m == null) return;
+    _menu = m;
+    notifyListeners();
+    final r = await _control.menu(m);
+    if (r is Error<void> && _menu == m) {
+      _menu = null;
+      notifyListeners();
+    }
+  }
+
+  /// Close the menu without choosing (a tap outside it, XP).
+  Future<void> closeMenu() async {
+    if (_menu == null) return;
+    _menu = null;
+    notifyListeners();
+    await _control.menu(null);
+  }
+
+  /// A tap while the menu is open: outside → close; a lit item → do it (the command closes the device's menu).
+  void _menuTap(MenuView m, double x, double y) {
+    if (!menuContains(m, x, y)) {
+      unawaited(closeMenu());
+      return;
+    }
+    final item = menuItemAt(m, x, y);
+    if (item == null || !m.enabled(item)) return;
+    final p = m.program;
+    switch (item) {
+      case MenuItem.refresh:
+        unawaited(closeMenu()); // the device repaints the desktop when the menu closes
+      case MenuItem.properties:
+        unawaited(openProgram('Info'));
+      case MenuItem.restore when p != null:
+        unawaited(openProgram(p));
+      case MenuItem.minimize when p != null:
+        unawaited(p == _shownWindow ? minimizeTop() : _windowOff(p, close: false));
+      case MenuItem.close when p != null:
+        unawaited(p == _shownWindow ? closeTop() : _windowOff(p, close: true));
+      default:
+        break; // Sắp xếp biểu tượng ▸: its sub-menu is not drawn yet
+    }
+  }
+
+  /// Minimize / close a window that is not on screen: only the list (and the device's taskbar) changes.
+  Future<void> _windowOff(String program, {required bool close}) async {
+    _windows = close ? _windows.close(program) : _windows.minimize(program);
+    await closeMenu();
+    _pushWindows();
+    notifyListeners();
+  }
+
   /// The window on the device screen: the program shown, if it is one.
   String? get _shownWindow => rules.isProgram(channel) ? channel : null;
 
   /// Open [program] (desktop icon, Start, Tất cả chương trình): it comes to the top.
-  Future<void> openProgram(String program, {LineNote note = LineNote.openOnDevice}) async {
+  Future<void> openProgram(String program) async {
     if (_device.state == null || !usable || !_can(ControlCommand.open)) return;
     final before = _windows;
     _windows = _windows.opened(program);
-    _note = note;
     _pendingChannel = program;
-    await _run(
-      ControlCommand.open,
-      () => _control.open(program),
-      app: program,
-      chip: ChipKind.openingApp,
-      undo: () => _windows = before,
-    );
+    await _run(ControlCommand.open, () => _control.open(program), app: program, undo: () => _windows = before);
   }
 
   /// `_`: the desktop shows, the window keeps its taskbar button.
@@ -369,14 +472,11 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
     if (w == null || !usable || !_can(ControlCommand.minimize)) return;
     final before = _windows;
     _windows = _windows.opened(w).minimize(w);
-    _note = LineNote.minimized;
-    _minimizedApp = w;
     _pendingChannel = 'Home';
     await _run(
       ControlCommand.minimize,
       () => _control.open('Home', c: ControlCommand.minimize),
       app: w,
-      chip: ChipKind.minimizing,
       undo: () => _windows = before,
     );
   }
@@ -388,37 +488,19 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
     final before = _windows;
     _windows = _windows.opened(w).close(w);
     final next = _windows.top ?? 'Home';
-    _note = LineNote.openOnDevice;
     _pendingChannel = next;
     await _run(
       ControlCommand.close,
       () => _control.open(next, c: ControlCommand.close),
       app: w,
-      chip: ChipKind.closing,
       undo: () => _windows = before,
     );
   }
 
-  /// A taskbar button: the shown window of that skill goes down (as XP); else its latest window, else its first
-  /// program.
-  Future<void> taskbar(String skill) async {
-    final top = _shownWindow;
-    if (top != null && rules.channelSkill(top) == skill) return minimizeTop();
-    final w = rules.latestWindowOf(_windows.open, skill);
-    if (w != null) return openProgram(w, note: LineNote.justOpened);
-    if (_device.state == null || !usable || sending) return;
-    final first = rules.jumpCandidates(skill, _settings).first;
-    final before = _windows;
-    _windows = _windows.opened(first);
-    _note = LineNote.justOpened;
-    _pendingChannel = first;
-    await _run(
-      ControlCommand.open,
-      () => _control.jump(skill, settings: _settings),
-      app: first,
-      chip: ChipKind.opening,
-      undo: () => _windows = before,
-    );
+  /// A taskbar button = an open window (R-DK-8): the one on screen goes down (as XP); another comes to the top.
+  Future<void> taskbar(String program) async {
+    if (program == _shownWindow) return minimizeTop();
+    return openProgram(program);
   }
 
   /// Start → Desktop: every window down, the desktop shows (XP "Show desktop").
@@ -426,12 +508,10 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
     if (_device.state == null || !usable || !_can(ControlCommand.desktop)) return;
     final before = _windows;
     _windows = _windows.minimizeAll();
-    _note = LineNote.tapIcon;
     _pendingChannel = 'Home';
     await _run(
       ControlCommand.desktop,
       () => _control.open('Home', c: ControlCommand.desktop),
-      chip: ChipKind.opening,
       undo: () => _windows = before,
     );
   }

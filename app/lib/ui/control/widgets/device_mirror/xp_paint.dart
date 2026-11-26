@@ -66,9 +66,9 @@ abstract final class Xp {
     switch (kind) {
       case '_':
         c.fill(x + 4, y + 10, 6, 2, XpColors.white);
-      case 'o':
-        c.outline(x + 4, y + 3, 8, 8, XpColors.white);
-        c.hLine(x + 4, y + 4, 8, XpColors.white);
+      case 'o': // □ off: windows are full screen and never resize (panel P-2026-11-26.14, xpCaptionOff)
+        c.outline(x + 4, y + 3, 8, 8, XpColors.welcomeLine);
+        c.hLine(x + 4, y + 4, 8, XpColors.welcomeLine);
       default:
         for (var r = 0; r < 7; r++) {
           c.fill(x + 4 + r, y + 4 + r, 2, 1, XpColors.white);

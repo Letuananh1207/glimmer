@@ -2,6 +2,8 @@ import '../models/attention_card.dart';
 import '../models/device_photo.dart';
 import '../models/device_state.dart';
 import '../models/mirror_frame.dart';
+import '../models/touch.dart';
+import '../models/windows.dart';
 import 'ambient_rules.dart';
 import 'board_rules.dart';
 import 'control_rules.dart';
@@ -17,7 +19,8 @@ MirrorFrame mirrorFrameOf(
   List<AttentionCard> cards = const [],
   Map<String, dynamic>? settings,
   required DateTime now,
-  double slideProgress = 0,
+  WindowStack windows = WindowStack.empty,
+  MenuView? menu,
   PhotoGallery? gallery,
 }) {
   final shown = state.inSetupMode ? MirrorFrame.setupScreen : (channel ?? state.activeChannel);
@@ -30,47 +33,42 @@ MirrorFrame mirrorFrameOf(
     settings: settings,
     deviceNow: epoch > 0 ? deviceLocal(epoch, tz) : DateTime(1970),
     h24: settings?['clock24h'] != false,
-    taskbar: taskbarOf(state, shown, cards, slideProgress),
+    taskbar: taskbarOf(state, shown, cards, windows),
     screenOff: state.screenOn == false,
     ambient: ambientOf(state, settings, epoch, epoch > 0 ? deviceLocal(epoch, tz) : DateTime.utc(1970)),
     usage: usageMirrorOf(state, settings),
     agents: agentsMirrorOf(state, cards, settings, gallery: gallery),
+    windows: windows,
+    menu: menu,
   );
 }
 
-/// Taskbar of [state] while [channel] shows (firmware `barState`).
-TaskbarModel taskbarOf(DeviceState state, String channel, List<AttentionCard> cards, double slideProgress) {
-  final on = state.skillsOn.isEmpty ? const [SkillIds.agent] : state.skillsOn;
+/// Taskbar while [channel] shows (design 2026-11-26.7): the open [windows] in opening order (the last
+/// [TaskbarModel.max]), the top one pressed when it is on screen; the Claude button carries the badge and lights orange
+/// on a card that needs the user.
+TaskbarModel taskbarOf(DeviceState state, String channel, List<AttentionCard> cards, WindowStack windows) {
+  final open = windows.open;
+  final programs = open.length > TaskbarModel.max ? open.sublist(open.length - TaskbarModel.max) : open;
   final buttons = [
-    if (on.contains(SkillIds.agent)) TaskButton.claude,
-    if (on.contains(SkillIds.photo)) TaskButton.photo,
-    if (on.contains(SkillIds.weather)) TaskButton.weather,
-    if (on.contains(SkillIds.clock)) TaskButton.clock,
+    for (final p in programs)
+      switch (channelSkill(p)) {
+        _ when p == 'Info' => TaskButton.info,
+        SkillIds.photo => TaskButton.photo,
+        SkillIds.weather => TaskButton.weather,
+        SkillIds.clock => TaskButton.clock,
+        _ => TaskButton.claude,
+      },
   ];
-  final active = switch (channelSkill(channel)) {
-    _ when channel == 'Info' || channel == 'Home' || channel == 'Night' => null,
-    SkillIds.photo => TaskButton.photo,
-    SkillIds.weather => TaskButton.weather,
-    SkillIds.clock => TaskButton.clock,
-    _ => TaskButton.claude,
-  };
+  final top = windows.top;
+  final i = top != null && top == channel ? programs.indexOf(top) : -1;
   final flash =
       channel == 'Attention' &&
       cards.any((c) => c.showsInS <= 0 && (c.kind == 'approval' || c.kind == 'input' || c.kind == 'error'));
-  final accent = channel == 'Codex'
-      ? TaskAccent.lilac
-      : switch (active) {
-          TaskButton.photo => TaskAccent.mint,
-          TaskButton.weather => TaskAccent.sky,
-          TaskButton.clock => TaskAccent.amber,
-          _ => TaskAccent.coral,
-        };
   return TaskbarModel(
+    programs: programs,
     buttons: buttons,
-    active: active,
+    active: i < 0 ? null : i,
     flash: flash,
     badge: agentsWaiting(cards),
-    progress: flash ? 0 : slideProgress,
-    accent: accent,
   );
 }

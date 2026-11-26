@@ -80,7 +80,12 @@ List<String> rotationGuess(DeviceState s, Map<String, dynamic>? settings) {
 /// Touches (R-DK-10) come with the firmware of the app remote, which reports `paused`.
 ControlCaps controlCaps(DeviceState? s) => s == null
     ? ControlCaps.all
-    : ControlCaps(touch: s.paused != null, dismissCard: s.paused != null, screen: s.screenOn != null);
+    : ControlCaps(
+        touch: s.paused != null,
+        dismissCard: s.paused != null,
+        screen: s.screenOn != null,
+        windows: s.windowsApi,
+      );
 
 /// The agent card holding the device screen (approval / input on the Attention channel), or null.
 AttentionCard? holdingCard(DeviceState? s, List<AttentionCard> cards) {
@@ -126,13 +131,14 @@ Set<String> programSet(List<String> skillsOn, Map<String, dynamic>? settings) =>
   for (final l in programsOf(skillsOn, settings).values) ...l,
 };
 
-/// R-DK-8: the most recently opened window of [skill] in [open] (taskbar button → that window), or null.
-String? latestWindowOf(List<String> open, String skill) {
-  for (final p in open.reversed) {
-    if (channelSkill(p) == skill && p != 'Info') return p;
-  }
-  return null;
-}
+/// R-DK-9: the desktop icon a newly installed skill shows selected (its first program).
+String? deskProgramOf(String skill) => switch (skill) {
+  SkillIds.agent => 'Claude',
+  SkillIds.photo => 'Photo',
+  SkillIds.weather => 'Weather',
+  SkillIds.clock => 'Clock',
+  _ => null,
+};
 
 /// R-DK-7: the device's `autoRotate` must be off (the device shows what the user opened, never rotates).
 bool rotationOn(Map<String, dynamic>? settings) => settings?['autoRotate'] == true;

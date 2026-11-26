@@ -56,12 +56,6 @@ void main() {
       expect(programSet(['weather'], null), {'Weather', 'Forecast'});
     });
 
-    test('R-DK-8 a taskbar button opens the latest window of its skill', () {
-      expect(latestWindowOf(['Forecast', 'Claude', 'Weather', 'Codex'], 'weather'), 'Weather');
-      expect(latestWindowOf(['Forecast', 'Claude', 'Weather', 'Codex'], 'agent'), 'Codex');
-      expect(latestWindowOf(['Claude'], 'clock'), isNull);
-    });
-
     test('R-DK-7 rotation must be off', () {
       expect(rotationOn({'autoRotate': true}), isTrue);
       expect(rotationOn({'autoRotate': false}), isFalse);

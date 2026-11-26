@@ -38,15 +38,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get connectSearchingTitle => 'Đang tìm thiết bị…';
 
   @override
-  String get connectSearchingBody =>
-      'Tìm glimmer trên mạng Wi-Fi của điện thoại.';
+  String get connectSearchingBody => 'Tìm glimmer trên mạng Wi-Fi của điện thoại.';
 
   @override
   String get connectIdleTitle => 'Chưa kết nối';
 
   @override
-  String get connectIdleBody =>
-      'Điện thoại cần ở cùng mạng Wi-Fi với thiết bị.';
+  String get connectIdleBody => 'Điện thoại cần ở cùng mạng Wi-Fi với thiết bị.';
 
   @override
   String get connectNotFound => 'Không tìm thấy thiết bị trên mạng này.';
@@ -69,8 +67,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get connectManualTitle => 'Nhập địa chỉ thiết bị';
 
   @override
-  String get connectManualHint =>
-      'IP hiện trên kênh Thông tin của thiết bị, ví dụ 192.168.1.50.';
+  String get connectManualHint => 'IP hiện trên kênh Thông tin của thiết bị, ví dụ 192.168.1.50.';
 
   @override
   String get connectManualIp => 'Địa chỉ IP';
@@ -87,8 +84,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get dashboardSetupNote =>
-      'Thiết bị đang ở chế độ cài đặt Wi-Fi (glimmer-setup). Vào tab Thiết bị → Wi-Fi.';
+  String get dashboardSetupNote => 'Thiết bị đang ở chế độ cài đặt Wi-Fi (glimmer-setup). Vào tab Thiết bị → Wi-Fi.';
 
   @override
   String get dashboardUsageTitle => 'MỨC DÙNG CLAUDE';
@@ -100,8 +96,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get dashboardUsageKeyBad => 'khóa Claude lỗi — cập nhật trong Cài đặt';
 
   @override
-  String get dashboardUsageBlocked =>
-      'claude.ai đang chặn thiết bị — tự thử lại';
+  String get dashboardUsageBlocked => 'claude.ai đang chặn thiết bị — tự thử lại';
 
   @override
   String dashboardUsageStale(String time) {
@@ -126,8 +121,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get dashboardProjectsClear => 'Xóa bảng';
 
   @override
-  String get dashboardProjectsEmpty =>
-      'Chưa có hoạt động. Hook của Claude Code sẽ gửi trạng thái lên đây.';
+  String get dashboardProjectsEmpty => 'Chưa có hoạt động. Hook của Claude Code sẽ gửi trạng thái lên đây.';
 
   @override
   String get dashboardCards => 'THẺ TRÊN MÀN HÌNH';
@@ -235,8 +229,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsClaudeKey => 'Khóa Claude (sessionKey)';
 
   @override
-  String get settingsClaudeKeyHint =>
-      'Dán sessionKey của claude.ai (bắt đầu bằng sk-ant-…).';
+  String get settingsClaudeKeyHint => 'Dán sessionKey của claude.ai (bắt đầu bằng sk-ant-…).';
 
   @override
   String get settingsRefresh => 'Tải số liệu mỗi';
@@ -277,8 +270,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsApiToken => 'API token của thiết bị';
 
   @override
-  String get settingsApiTokenHint =>
-      'Nếu đặt, hook / app phải gửi kèm token này. Để trống để bỏ.';
+  String get settingsApiTokenHint => 'Nếu đặt, hook / app phải gửi kèm token này. Để trống để bỏ.';
 
   @override
   String get settingsAppToken => 'Token app đang dùng';
@@ -351,8 +343,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get deviceReboot => 'Khởi động lại';
 
   @override
-  String get deviceRebootBody =>
-      'Thiết bị sẽ tắt màn hình vài giây rồi bật lại.';
+  String get deviceRebootBody => 'Thiết bị sẽ tắt màn hình vài giây rồi bật lại.';
 
   @override
   String get deviceForget => 'Kết nối thiết bị khác';
@@ -392,8 +383,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get deviceUpdateFull => 'Cập nhật đầy đủ';
 
   @override
-  String get deviceUpdateFullSub =>
-      'Kèm font + giao diện web; tự sao lưu và khôi phục cấu hình';
+  String get deviceUpdateFullSub => 'Kèm font + giao diện web; tự sao lưu và khôi phục cấu hình';
 
   @override
   String get deviceUpdateFullBody =>
@@ -409,8 +399,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get deviceBackupSub => 'Có mật khẩu Wi-Fi và khóa — giữ kín';
 
   @override
-  String get deviceBackupBody =>
-      'Tệp chứa mật khẩu Wi-Fi và khóa Claude ở dạng chữ thường. Chỉ lưu ở nơi an toàn.';
+  String get deviceBackupBody => 'Tệp chứa mật khẩu Wi-Fi và khóa Claude ở dạng chữ thường. Chỉ lưu ở nơi an toàn.';
 
   @override
   String get deviceRestore => 'Khôi phục cấu hình';
@@ -483,8 +472,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get wifiStepWaitDetail =>
-      'Có thể mất tới 4 phút. Điện thoại cần ở cùng mạng này.';
+  String get wifiStepWaitDetail => 'Có thể mất tới 4 phút. Điện thoại cần ở cùng mạng này.';
 
   @override
   String wifiDone(String ssid) {
@@ -526,8 +514,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get devErrRateLimited =>
-      'GitHub đang giới hạn lượt gọi, thử lại sau ít phút.';
+  String get devErrRateLimited => 'GitHub đang giới hạn lượt gọi, thử lại sau ít phút.';
 
   @override
   String devErrReleaseHttp(int status) {
@@ -545,27 +532,22 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get devErrWifiPermission =>
-      'Cần quyền vị trí / thiết bị Wi-Fi lân cận để vào glimmer-setup.';
+  String get devErrWifiPermission => 'Cần quyền vị trí / thiết bị Wi-Fi lân cận để vào glimmer-setup.';
 
   @override
-  String get devErrSetupAp =>
-      'Không vào được glimmer-setup. Thiết bị có đang hiện màn cài đặt Wi-Fi không?';
+  String get devErrSetupAp => 'Không vào được glimmer-setup. Thiết bị có đang hiện màn cài đặt Wi-Fi không?';
 
   @override
-  String get devErrNoAnswerAfterFlash =>
-      'thiết bị không trả lời sau khi nạp firmware';
+  String get devErrNoAnswerAfterFlash => 'thiết bị không trả lời sau khi nạp firmware';
 
   @override
   String get devErrConfigUnreadable => 'không đọc được cấu hình để sao lưu';
 
   @override
-  String get devErrInvalidBackup =>
-      'Tệp không hợp lệ: không phải tệp cấu hình glimmer';
+  String get devErrInvalidBackup => 'Tệp không hợp lệ: không phải tệp cấu hình glimmer';
 
   @override
-  String get devCardsNeedToken =>
-      'Thiết bị có API token — nhập token trong Cài đặt để xem thẻ.';
+  String get devCardsNeedToken => 'Thiết bị có API token — nhập token trong Cài đặt để xem thẻ.';
 
   @override
   String get devNow => 'ngay';
@@ -604,8 +586,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get devRestoreDone => 'Đã khôi phục cấu hình';
 
   @override
-  String get devRestoreSentNotFound =>
-      'Đã gửi cấu hình; chưa thấy thiết bị trên mạng';
+  String get devRestoreSentNotFound => 'Đã gửi cấu hình; chưa thấy thiết bị trên mạng';
 
   @override
   String devRestoreFailed(String error) {
@@ -631,8 +612,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get devErrSkillUnsupported =>
-      'Thiết bị chưa hỗ trợ skill này — cập nhật firmware.';
+  String get devErrSkillUnsupported => 'Thiết bị chưa hỗ trợ skill này — cập nhật firmware.';
 
   @override
   String get navSkills => 'Skill';
@@ -644,8 +624,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get skillAgentDesc => 'Mức dùng và thẻ duyệt';
 
   @override
-  String get skillAgentChannels =>
-      'Trang chủ · Danh sách agent · Claude · Codex · AI · Xu hướng';
+  String get skillAgentChannels => 'Trang chủ · Danh sách agent · Claude · Codex · AI · Xu hướng';
 
   @override
   String get skillMusicName => 'Nhạc';
@@ -716,12 +695,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get skillsChannelsTitle => 'MÀN THIẾT BỊ ĐANG XOAY';
 
   @override
-  String get skillsChannelsSystem =>
-      '+ luôn có: Đồng hồ · Thời tiết · Dự báo · Thông tin · Ban đêm';
+  String get skillsChannelsSystem => '+ luôn có: Đồng hồ · Thời tiết · Dự báo · Thông tin · Ban đêm';
 
   @override
-  String get skillsAttentionNote =>
-      'Thẻ cần duyệt / chờ trả lời của agent vẫn chen ngang ở mọi skill.';
+  String get skillsAttentionNote => 'Thẻ cần duyệt / chờ trả lời của agent vẫn chen ngang ở mọi skill.';
 
   @override
   String get navHome => 'Màn hình';
@@ -789,8 +766,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get skillsAlwaysOn => 'Luôn có (firmware cũ)';
 
   @override
-  String get skillsOrderNote =>
-      'Thiết bị xoay các tab theo thứ tự trên. Thẻ cần duyệt vẫn chen ngang mọi tab.';
+  String get skillsOrderNote => 'Thiết bị xoay các tab theo thứ tự trên. Thẻ cần duyệt vẫn chen ngang mọi tab.';
 
   @override
   String get skillsSoonTitle => 'SẮP CÓ';
@@ -826,8 +802,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get weatherNoLocationTitle => 'Chưa đặt vị trí';
 
   @override
-  String get weatherNoLocationBody =>
-      'Thiết bị cần vĩ độ / kinh độ để lấy thời tiết và dự báo.';
+  String get weatherNoLocationBody => 'Thiết bị cần vĩ độ / kinh độ để lấy thời tiết và dự báo.';
 
   @override
   String get weatherSetLocation => 'Đặt vị trí trong Cài đặt';
@@ -973,8 +948,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get photoNoPreview => 'không có bản xem';
 
   @override
-  String get photoNote =>
-      'Bấm vào ảnh để xoá. Cập nhật đầy đủ ở tab Thiết bị sẽ xoá hết ảnh trên thiết bị.';
+  String get photoNote => 'Bấm vào ảnh để xoá. Cập nhật đầy đủ ở tab Thiết bị sẽ xoá hết ảnh trên thiết bị.';
 
   @override
   String get photoEmptyTitle => 'Chưa có ảnh';
@@ -1009,8 +983,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get photoDeleteErrorTitle => 'Chưa xoá được ảnh';
 
   @override
-  String get photoDeleteErrorBody =>
-      'Thiết bị không trả lời. Ảnh vẫn còn trên thiết bị.';
+  String get photoDeleteErrorBody => 'Thiết bị không trả lời. Ảnh vẫn còn trên thiết bị.';
 
   @override
   String get photoCropTitle => 'Cắt ảnh';
@@ -1025,12 +998,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get photoCropPreview => 'XEM TRƯỚC TRÊN THIẾT BỊ';
 
   @override
-  String get photoCropPreviewBody =>
-      'Ảnh 188 × 188, đúng như màn thiết bị hiện.';
+  String get photoCropPreviewBody => 'Ảnh 188 × 188, đúng như màn thiết bị hiện.';
 
   @override
-  String get photoCropPreviewNote =>
-      'App tự thu nhỏ và nén dưới 40 KB trước khi gửi.';
+  String get photoCropPreviewNote => 'App tự thu nhỏ và nén dưới 40 KB trước khi gửi.';
 
   @override
   String get photoCropPickOther => 'Chọn ảnh khác';
@@ -1070,8 +1041,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get photoCropErrorFullBody =>
-      'Xoá bớt một ảnh rồi gửi lại. Vùng cắt này được giữ.';
+  String get photoCropErrorFullBody => 'Xoá bớt một ảnh rồi gửi lại. Vùng cắt này được giữ.';
 
   @override
   String get photoCropErrorTooBigTitle => 'Ảnh vẫn quá lớn';
@@ -1084,22 +1054,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get photoCropErrorNoSpaceTitle => 'Thiết bị hết chỗ lưu';
 
   @override
-  String get photoCropErrorNoSpaceBody =>
-      'Bộ nhớ thiết bị gần đầy. Xoá bớt ảnh rồi thử lại.';
+  String get photoCropErrorNoSpaceBody => 'Bộ nhớ thiết bị gần đầy. Xoá bớt ảnh rồi thử lại.';
 
   @override
   String get photoCropErrorRejectedTitle => 'Thiết bị không nhận ảnh';
 
   @override
-  String get photoCropErrorRejectedBody =>
-      'Ảnh app tạo ra bị lỗi. Thử lại; nếu vẫn lỗi, hãy báo lỗi app.';
+  String get photoCropErrorRejectedBody => 'Ảnh app tạo ra bị lỗi. Thử lại; nếu vẫn lỗi, hãy báo lỗi app.';
 
   @override
   String get photoCropErrorOfflineTitle => 'Mất kết nối với thiết bị';
 
   @override
-  String get photoCropErrorOfflineBody =>
-      'Kiểm tra thiết bị còn bật và cùng mạng Wi-Fi với điện thoại.';
+  String get photoCropErrorOfflineBody => 'Kiểm tra thiết bị còn bật và cùng mạng Wi-Fi với điện thoại.';
 
   @override
   String get devPhotoUnreadableTitle => 'Không mở được ảnh này';
@@ -1206,8 +1173,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get controlCardNote =>
-      'Duyệt trên máy tính. Bỏ thẻ chỉ gỡ nó khỏi màn thiết bị.';
+  String get controlCardNote => 'Duyệt trên máy tính. Bỏ thẻ chỉ gỡ nó khỏi màn thiết bị.';
 
   @override
   String get controlDismissCard => 'Bỏ thẻ khỏi màn';
@@ -1222,7 +1188,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String controlOldFwBody(String version) {
-    return 'Thiết bị đang chạy $version: chạm trên màn chưa dùng được, chỉ đổi app qua Start.';
+    return 'Thiết bị đang chạy $version: chạm trên màn chưa dùng được, chỉ mở app qua Start.';
   }
 
   @override
@@ -1232,8 +1198,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get controlSetupTitle => 'Thiết bị đang ở glimmer-setup';
 
   @override
-  String get controlSetupBody =>
-      'Thiết bị chưa vào được Wi-Fi nên chưa điều khiển được.';
+  String get controlSetupBody => 'Thiết bị chưa vào được Wi-Fi nên chưa điều khiển được.';
 
   @override
   String get controlSetupAction => 'Cài Wi-Fi';
@@ -1259,8 +1224,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get detailsBackA11y => 'Về Điều khiển';
 
   @override
-  String get devErrControlUnsupported =>
-      'Firmware chưa có lệnh này — cập nhật firmware.';
+  String get devErrControlUnsupported => 'Firmware chưa có lệnh này — cập nhật firmware.';
 
   @override
   String devControlCmdOpen(String app) {
@@ -1276,6 +1240,45 @@ class AppLocalizationsVi extends AppLocalizations {
   String devControlCmdMinimize(String app) {
     return 'Thu nhỏ $app';
   }
+
+  @override
+  String get devXpMenuArrange => 'Sắp xếp biểu tượng';
+
+  @override
+  String get devXpMenuRefresh => 'Làm mới';
+
+  @override
+  String get devXpMenuPaste => 'Dán';
+
+  @override
+  String get devXpMenuPasteShortcut => 'Dán lối tắt';
+
+  @override
+  String get devXpMenuNew => 'Mới';
+
+  @override
+  String get devXpMenuProperties => 'Thuộc tính';
+
+  @override
+  String get devXpMenuRestore => 'Khôi phục';
+
+  @override
+  String get devXpMenuMove => 'Di chuyển';
+
+  @override
+  String get devXpMenuSize => 'Kích thước';
+
+  @override
+  String get devXpMenuMinimize => 'Thu nhỏ';
+
+  @override
+  String get devXpMenuMaximize => 'Phóng to';
+
+  @override
+  String get devXpMenuClose => 'Đóng';
+
+  @override
+  String get devXpMenuAltF4 => 'Alt+F4';
 
   @override
   String devXpWeekday(String day) {
@@ -1351,11 +1354,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String devXpShortDur(int n, String unit) {
-    String _temp0 = intl.Intl.selectLogic(unit, {
-      'minutes': 'P',
-      'hours': 'G',
-      'other': 'NG',
-    });
+    String _temp0 = intl.Intl.selectLogic(unit, {'minutes': 'P', 'hours': 'G', 'other': 'NG'});
     return '$n$_temp0';
   }
 
@@ -1502,10 +1501,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String devXpWeatherSun(String event, String time) {
-    String _temp0 = intl.Intl.selectLogic(event, {
-      'set': 'Mặt trời lặn',
-      'other': 'Mặt trời mọc',
-    });
+    String _temp0 = intl.Intl.selectLogic(event, {'set': 'Mặt trời lặn', 'other': 'Mặt trời mọc'});
     return '$_temp0 $time';
   }
 
@@ -1521,21 +1517,13 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String devXpSpanShort(String unit, int n) {
-    String _temp0 = intl.Intl.selectLogic(unit, {
-      'minutes': '${n}P',
-      'hours': '${n}G',
-      'other': '${n}NG',
-    });
+    String _temp0 = intl.Intl.selectLogic(unit, {'minutes': '${n}P', 'hours': '${n}G', 'other': '${n}NG'});
     return '$_temp0';
   }
 
   @override
   String devXpSpanLong(String unit, int n) {
-    String _temp0 = intl.Intl.selectLogic(unit, {
-      'minutes': '$n phút',
-      'hours': '$n giờ',
-      'other': '$n ngày',
-    });
+    String _temp0 = intl.Intl.selectLogic(unit, {'minutes': '$n phút', 'hours': '$n giờ', 'other': '$n ngày'});
     return '$_temp0';
   }
 
@@ -1695,55 +1683,37 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String devXpCredNoun(String kind) {
-    String _temp0 = intl.Intl.selectLogic(kind, {
-      'claude': 'khóa',
-      'other': 'token',
-    });
+    String _temp0 = intl.Intl.selectLogic(kind, {'claude': 'khóa', 'other': 'token'});
     return '$_temp0';
   }
 
   @override
   String devXpCredNounCap(String kind) {
-    String _temp0 = intl.Intl.selectLogic(kind, {
-      'claude': 'Khóa',
-      'other': 'Token',
-    });
+    String _temp0 = intl.Intl.selectLogic(kind, {'claude': 'Khóa', 'other': 'Token'});
     return '$_temp0';
   }
 
   @override
   String devXpCredWho(String kind) {
-    String _temp0 = intl.Intl.selectLogic(kind, {
-      'claude': 'Khóa Claude',
-      'other': 'Token Codex',
-    });
+    String _temp0 = intl.Intl.selectLogic(kind, {'claude': 'Khóa Claude', 'other': 'Token Codex'});
     return '$_temp0';
   }
 
   @override
   String devXpCredWhoLower(String kind) {
-    String _temp0 = intl.Intl.selectLogic(kind, {
-      'claude': 'khóa Claude',
-      'other': 'token Codex',
-    });
+    String _temp0 = intl.Intl.selectLogic(kind, {'claude': 'khóa Claude', 'other': 'token Codex'});
     return '$_temp0';
   }
 
   @override
   String devXpBanner(String noun, String state, String host) {
-    String _temp0 = intl.Intl.selectLogic(state, {
-      'expired': 'hết hạn',
-      'other': 'bị từ chối',
-    });
+    String _temp0 = intl.Intl.selectLogic(state, {'expired': 'hết hạn', 'other': 'bị từ chối'});
     return '$noun $_temp0 · $host';
   }
 
   @override
   String devXpBannerShort(String state, String host) {
-    String _temp0 = intl.Intl.selectLogic(state, {
-      'expired': 'Hết hạn',
-      'other': 'Bị từ chối',
-    });
+    String _temp0 = intl.Intl.selectLogic(state, {'expired': 'Hết hạn', 'other': 'Bị từ chối'});
     return '$_temp0 · $host';
   }
 
@@ -1906,10 +1876,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String devXpAiBad(String kind) {
-    String _temp0 = intl.Intl.selectLogic(kind, {
-      'blocked': 'Chặn',
-      'other': 'Khóa',
-    });
+    String _temp0 = intl.Intl.selectLogic(kind, {'blocked': 'Chặn', 'other': 'Khóa'});
     return '$_temp0';
   }
 

@@ -44,86 +44,87 @@ class DeviceState {
     this.wallpaper,
     this.codexConfigured = false,
     this.sources = const DeviceSources(),
+    this.windowsApi = false,
   });
 
   factory DeviceState.fromJson(Map<String, dynamic> j) => DeviceState(
-        fw: jsonStr(j['fw']),
-        build: jsonStr(j['build']),
-        wifi: jsonStr(j['wifi']),
-        ip: jsonStr(j['ip']),
-        ssid: jsonStr(j['ssid']),
-        activeChannel: jsonStr(j['active_channel']),
-        resetReason: jsonStr(j['reset_reason']),
-        rssi: jsonInt(j['rssi']),
-        uptimeS: jsonInt(j['uptime_s']),
-        heap: jsonInt(j['heap']),
-        maxBlock: jsonInt(j['maxblk']),
-        heapRefusals: jsonInt(j['heap_refusals']),
-        nextFetchS: jsonInt(j['next_fetch_s']),
-        time: jsonInt(j['time']),
-        claudeConfigured: jsonBool(j['claude_configured']),
-        claudeValid: jsonBool(j['claude_valid']),
-        claudeErr: jsonStr(j['claude_err']),
-        usage: j['claude_usage'] is Map<String, dynamic>
-            ? Usage.fromJson(j['claude_usage'] as Map<String, dynamic>)
-            : const Usage(),
-        projects: List.unmodifiable((j['projects'] as List? ?? const [])
-            .whereType<Map<String, dynamic>>()
-            .map(Project.fromJson)),
-        skill: jsonStr(j['skill']),
-        skills: List.unmodifiable((j['skills'] as List? ?? const []).whereType<String>()),
-        skillsOn: List.unmodifiable((j['skills_on'] as List? ?? const []).whereType<String>()),
-        weatherConfigured: jsonBool(j['weather_configured']) || j['weather'] is Map,
-        weather: j['weather'] is Map<String, dynamic>
-            ? DeviceWeather.fromJson(j['weather'] as Map<String, dynamic>)
-            : null,
-        photos: j['photos'] is num ? (j['photos'] as num).toInt() : null,
-        nightFace: jsonBool(j['night_face']),
-        paused: j['paused'] is bool ? j['paused'] as bool : null,
-        screenOn: j['screen_on'] is bool ? j['screen_on'] as bool : null,
-        slideMs: jsonInt(j['slide_ms']),
-        slideLeftMs: j['slide_left_ms'] is num ? (j['slide_left_ms'] as num).toInt() : null,
-        wallpaper: j['wallpaper'] is bool ? j['wallpaper'] as bool : null,
-        codexConfigured: jsonBool(j['codex_configured']),
-        sources: DeviceSources.fromJson(j),
-      );
+    fw: jsonStr(j['fw']),
+    build: jsonStr(j['build']),
+    wifi: jsonStr(j['wifi']),
+    ip: jsonStr(j['ip']),
+    ssid: jsonStr(j['ssid']),
+    activeChannel: jsonStr(j['active_channel']),
+    resetReason: jsonStr(j['reset_reason']),
+    rssi: jsonInt(j['rssi']),
+    uptimeS: jsonInt(j['uptime_s']),
+    heap: jsonInt(j['heap']),
+    maxBlock: jsonInt(j['maxblk']),
+    heapRefusals: jsonInt(j['heap_refusals']),
+    nextFetchS: jsonInt(j['next_fetch_s']),
+    time: jsonInt(j['time']),
+    claudeConfigured: jsonBool(j['claude_configured']),
+    claudeValid: jsonBool(j['claude_valid']),
+    claudeErr: jsonStr(j['claude_err']),
+    usage: j['claude_usage'] is Map<String, dynamic>
+        ? Usage.fromJson(j['claude_usage'] as Map<String, dynamic>)
+        : const Usage(),
+    projects: List.unmodifiable(
+      (j['projects'] as List? ?? const []).whereType<Map<String, dynamic>>().map(Project.fromJson),
+    ),
+    skill: jsonStr(j['skill']),
+    skills: List.unmodifiable((j['skills'] as List? ?? const []).whereType<String>()),
+    skillsOn: List.unmodifiable((j['skills_on'] as List? ?? const []).whereType<String>()),
+    weatherConfigured: jsonBool(j['weather_configured']) || j['weather'] is Map,
+    weather: j['weather'] is Map<String, dynamic> ? DeviceWeather.fromJson(j['weather'] as Map<String, dynamic>) : null,
+    photos: j['photos'] is num ? (j['photos'] as num).toInt() : null,
+    nightFace: jsonBool(j['night_face']),
+    paused: j['paused'] is bool ? j['paused'] as bool : null,
+    screenOn: j['screen_on'] is bool ? j['screen_on'] as bool : null,
+    slideMs: jsonInt(j['slide_ms']),
+    slideLeftMs: j['slide_left_ms'] is num ? (j['slide_left_ms'] as num).toInt() : null,
+    wallpaper: j['wallpaper'] is bool ? j['wallpaper'] as bool : null,
+    codexConfigured: jsonBool(j['codex_configured']),
+    sources: DeviceSources.fromJson(j),
+    windowsApi: j['windows'] is Map,
+  );
 
   /// The same state with what a control command changed (answer of `/api/channel`, `/api/screen`).
   DeviceState withControl({String? activeChannel, bool? paused, bool? screenOn, int? slideLeftMs}) => DeviceState(
-        fw: fw,
-        build: build,
-        wifi: wifi,
-        ip: ip,
-        ssid: ssid,
-        activeChannel: activeChannel ?? this.activeChannel,
-        resetReason: resetReason,
-        rssi: rssi,
-        uptimeS: uptimeS,
-        heap: heap,
-        maxBlock: maxBlock,
-        heapRefusals: heapRefusals,
-        nextFetchS: nextFetchS,
-        time: time,
-        claudeConfigured: claudeConfigured,
-        claudeValid: claudeValid,
-        claudeErr: claudeErr,
-        usage: usage,
-        projects: projects,
-        skill: skill,
-        skills: skills,
-        skillsOn: skillsOn,
-        weatherConfigured: weatherConfigured,
-        weather: weather,
-        photos: photos,
-        nightFace: nightFace,
-        paused: paused ?? this.paused,
-        screenOn: screenOn ?? this.screenOn,
-        slideMs: slideMs,
-        slideLeftMs: slideLeftMs ?? this.slideLeftMs,
-        wallpaper: wallpaper,
-        codexConfigured: codexConfigured,
-        sources: sources,
-      );
+    fw: fw,
+    build: build,
+    wifi: wifi,
+    ip: ip,
+    ssid: ssid,
+    activeChannel: activeChannel ?? this.activeChannel,
+    resetReason: resetReason,
+    rssi: rssi,
+    uptimeS: uptimeS,
+    heap: heap,
+    maxBlock: maxBlock,
+    heapRefusals: heapRefusals,
+    nextFetchS: nextFetchS,
+    time: time,
+    claudeConfigured: claudeConfigured,
+    claudeValid: claudeValid,
+    claudeErr: claudeErr,
+    usage: usage,
+    projects: projects,
+    skill: skill,
+    skills: skills,
+    skillsOn: skillsOn,
+    weatherConfigured: weatherConfigured,
+    weather: weather,
+    photos: photos,
+    nightFace: nightFace,
+    paused: paused ?? this.paused,
+    screenOn: screenOn ?? this.screenOn,
+    slideMs: slideMs,
+    slideLeftMs: slideLeftMs ?? this.slideLeftMs,
+    wallpaper: wallpaper,
+    codexConfigured: codexConfigured,
+    sources: sources,
+    windowsApi: windowsApi,
+  );
 
   final String fw, build, wifi, ip, ssid, activeChannel, resetReason;
   final int rssi, uptimeS, heap, maxBlock, heapRefusals, nextFetchS, time;
@@ -155,6 +156,10 @@ class DeviceState {
 
   /// Rotation held by the app remote (R-DK-4); null = firmware without the command (R-DK-3).
   final bool? paused;
+
+  /// The firmware takes the app's open windows and context menus (`windows` in `/api/state`, panel
+  /// P-2026-11-26.14): `POST /api/windows`, `POST /api/menu`.
+  final bool windowsApi;
 
   /// Backlight on; null = firmware without `/api/screen` (R-DK-3).
   final bool? screenOn;

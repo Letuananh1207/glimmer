@@ -75,6 +75,7 @@ abstract class DeviceRepository extends ChangeNotifier {
   Future<Result<void>> reboot();
   Future<Result<void>> refreshNow();
   Future<Result<void>> showChannel(String name);
+
   /// Remove one card from the device screen (`/push/clear {id}`; R-DK-2: never answers the agent).
   Future<Result<void>> clearCard(String id);
 
@@ -86,6 +87,12 @@ abstract class DeviceRepository extends ChangeNotifier {
 
   /// `POST /api/screen {on}`: backlight off / on now (RAM only); [state] takes the answer. Returns `screen_on`.
   Future<Result<bool>> setScreen(bool on);
+
+  /// `POST /api/windows`: the app's open windows (panel P-2026-11-26.14), RAM only on the device.
+  Future<Result<void>> setWindows(Map<String, Object?> body);
+
+  /// `POST /api/menu`: draw / close a context menu over the device screen (R-DK-11).
+  Future<Result<void>> setMenu(Map<String, Object?> body);
   Future<Result<void>> clearAllCards();
   Future<Result<void>> clearProjects();
 

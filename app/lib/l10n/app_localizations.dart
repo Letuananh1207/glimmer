@@ -61,8 +61,7 @@ import 'app_localizations_vi.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -70,8 +69,7 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate =
-      _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -83,13 +81,12 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
-      <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[Locale('vi')];
@@ -2080,7 +2077,7 @@ abstract class AppLocalizations {
   /// **'Số liệu'**
   String get controlDetails;
 
-  /// Chip trên ô màn khi lệnh đang gửi
+  /// Không dùng từ 2026-11-26.7. Chip trên ô màn khi lệnh đang gửi
   ///
   /// In vi, this message translates to:
   /// **'Đang gửi…'**
@@ -2137,7 +2134,7 @@ abstract class AppLocalizations {
   /// Thanh báo firmware cũ
   ///
   /// In vi, this message translates to:
-  /// **'Thiết bị đang chạy {version}: chạm trên màn chưa dùng được, chỉ đổi app qua Start.'**
+  /// **'Thiết bị đang chạy {version}: chạm trên màn chưa dùng được, chỉ mở app qua Start.'**
   String controlOldFwBody(String version);
 
   /// Nút trong thanh báo → tab Thiết bị
@@ -2223,6 +2220,84 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Thu nhỏ {app}'**
   String devControlCmdMinimize(String app);
+
+  /// Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)
+  ///
+  /// In vi, this message translates to:
+  /// **'Sắp xếp biểu tượng'**
+  String get devXpMenuArrange;
+
+  /// Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)
+  ///
+  /// In vi, this message translates to:
+  /// **'Làm mới'**
+  String get devXpMenuRefresh;
+
+  /// Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)
+  ///
+  /// In vi, this message translates to:
+  /// **'Dán'**
+  String get devXpMenuPaste;
+
+  /// Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)
+  ///
+  /// In vi, this message translates to:
+  /// **'Dán lối tắt'**
+  String get devXpMenuPasteShortcut;
+
+  /// Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)
+  ///
+  /// In vi, this message translates to:
+  /// **'Mới'**
+  String get devXpMenuNew;
+
+  /// Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)
+  ///
+  /// In vi, this message translates to:
+  /// **'Thuộc tính'**
+  String get devXpMenuProperties;
+
+  /// Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)
+  ///
+  /// In vi, this message translates to:
+  /// **'Khôi phục'**
+  String get devXpMenuRestore;
+
+  /// Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)
+  ///
+  /// In vi, this message translates to:
+  /// **'Di chuyển'**
+  String get devXpMenuMove;
+
+  /// Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)
+  ///
+  /// In vi, this message translates to:
+  /// **'Kích thước'**
+  String get devXpMenuSize;
+
+  /// Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)
+  ///
+  /// In vi, this message translates to:
+  /// **'Thu nhỏ'**
+  String get devXpMenuMinimize;
+
+  /// Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)
+  ///
+  /// In vi, this message translates to:
+  /// **'Phóng to'**
+  String get devXpMenuMaximize;
+
+  /// Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng'**
+  String get devXpMenuClose;
+
+  /// Màn thiết bị · phím tắt cạnh Đóng trong menu cửa sổ
+  ///
+  /// In vi, this message translates to:
+  /// **'Alt+F4'**
+  String get devXpMenuAltF4;
 
   /// Ô màn thiết bị: thứ kiểu tiêu đề như firmware ClockFmt::weekdayTitle (day = DateTime.weekday)
   ///
@@ -3082,121 +3157,121 @@ abstract class AppLocalizations {
   /// **'cuối {d}/{m}'**
   String devXpTrendLast(int d, int m);
 
-  /// Dòng dưới ô màn
+  /// Không dùng từ 2026-11-26.7. Dòng dưới ô màn
   ///
   /// In vi, this message translates to:
   /// **'· đang mở trên thiết bị'**
   String get controlOpenOnDevice;
 
-  /// Dòng dưới ô màn sau khi chạm nút thanh tác vụ
+  /// Không dùng từ 2026-11-26.7. Dòng dưới ô màn sau khi chạm nút thanh tác vụ
   ///
   /// In vi, this message translates to:
   /// **'· vừa chạm trên thanh tác vụ'**
   String get controlJustOpened;
 
-  /// Tên màn chính trong dòng dưới ô màn
+  /// Không dùng từ 2026-11-26.7. Tên màn chính trong dòng dưới ô màn
   ///
   /// In vi, this message translates to:
   /// **'Desktop'**
   String get controlDesktop;
 
-  /// Dòng dưới ô màn khi đang ở desktop sau thu nhỏ
+  /// Không dùng từ 2026-11-26.7. Dòng dưới ô màn khi đang ở desktop sau thu nhỏ
   ///
   /// In vi, this message translates to:
   /// **'· {app} đã thu nhỏ'**
   String controlMinimizedNote(String app);
 
-  /// Dòng dưới ô màn khi vừa cài skill
+  /// Không dùng từ 2026-11-26.7. Dòng dưới ô màn khi vừa cài skill
   ///
   /// In vi, this message translates to:
   /// **'· {skill} vừa cài'**
   String controlInstalledNote(String skill);
 
-  /// Dòng dưới ô màn ở desktop
+  /// Không dùng từ 2026-11-26.7. Dòng dưới ô màn ở desktop
   ///
   /// In vi, this message translates to:
   /// **'· chạm biểu tượng để mở'**
   String get controlTapIconNote;
 
-  /// Chip trên ô màn khi vừa chạm _
+  /// Không dùng từ 2026-11-26.7. Chip trên ô màn khi vừa chạm _
   ///
   /// In vi, this message translates to:
   /// **'Thu nhỏ…'**
   String get controlMinimizing;
 
-  /// Chip khi vừa chạm ×
+  /// Không dùng từ 2026-11-26.7. Chip khi vừa chạm ×
   ///
   /// In vi, this message translates to:
   /// **'Đang tắt {app}…'**
   String controlClosing(String app);
 
-  /// Chip khi vừa chạm nút thanh tác vụ
+  /// Không dùng từ 2026-11-26.7. Chip khi vừa chạm nút thanh tác vụ
   ///
   /// In vi, this message translates to:
   /// **'Đang mở…'**
   String get controlOpening;
 
-  /// Chip khi vừa chạm biểu tượng desktop
+  /// Không dùng từ 2026-11-26.7. Chip khi vừa chạm biểu tượng desktop
   ///
   /// In vi, this message translates to:
   /// **'Đang mở {app}…'**
   String controlOpeningApp(String app);
 
-  /// Chip (dấu tích mint) khi vừa cài skill
+  /// Không dùng từ 2026-11-26.7. Chip (dấu tích mint) khi vừa cài skill
   ///
   /// In vi, this message translates to:
   /// **'Đã cài {skill}'**
   String controlInstalled(String skill);
 
-  /// Thẻ hướng dẫn dưới ô màn
+  /// Không dùng từ 2026-11-26.8. Thẻ hướng dẫn dưới ô màn
   ///
   /// In vi, this message translates to:
   /// **'CHẠM MÀN NHƯ DÙNG CHUỘT'**
   String get controlLegendTitle;
 
-  /// Thẻ hướng dẫn, ký hiệu _
+  /// Không dùng từ 2026-11-26.8. Thẻ hướng dẫn, ký hiệu _
   ///
   /// In vi, this message translates to:
   /// **'thu nhỏ'**
   String get controlLegendMin;
 
-  /// Thẻ hướng dẫn, ký hiệu □
+  /// Không dùng từ 2026-11-26.8. Thẻ hướng dẫn, ký hiệu □
   ///
   /// In vi, this message translates to:
   /// **'phóng to'**
   String get controlLegendMax;
 
-  /// Thẻ hướng dẫn, ký hiệu ×
+  /// Không dùng từ 2026-11-26.8. Thẻ hướng dẫn, ký hiệu ×
   ///
   /// In vi, this message translates to:
   /// **'tắt app'**
   String get controlLegendClose;
 
-  /// Thẻ hướng dẫn, ký hiệu ▭
+  /// Không dùng từ 2026-11-26.8. Thẻ hướng dẫn, ký hiệu ▭
   ///
   /// In vi, this message translates to:
   /// **'nút dưới: đổi app'**
   String get controlLegendTaskbar;
 
-  /// Ký hiệu trong thẻ hướng dẫn
+  /// Không dùng từ 2026-11-26.8. Ký hiệu trong thẻ hướng dẫn
   ///
   /// In vi, this message translates to:
   /// **'start'**
   String get controlLegendStartKey;
 
-  /// Thẻ hướng dẫn
+  /// Không dùng từ 2026-11-26.8. Thẻ hướng dẫn
   ///
   /// In vi, this message translates to:
   /// **'mở Start'**
   String get controlLegendStart;
 
-  /// Ký hiệu trong thẻ hướng dẫn
+  /// Không dùng từ 2026-11-26.8. Ký hiệu trong thẻ hướng dẫn
   ///
   /// In vi, this message translates to:
   /// **'giữ'**
   String get controlLegendHoldKey;
 
-  /// Thẻ hướng dẫn
+  /// Không dùng từ 2026-11-26.8. Thẻ hướng dẫn
   ///
   /// In vi, this message translates to:
   /// **'chuột phải'**
@@ -3407,8 +3482,7 @@ abstract class AppLocalizations {
   String get appChat;
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -3417,8 +3491,7 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['vi'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['vi'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;

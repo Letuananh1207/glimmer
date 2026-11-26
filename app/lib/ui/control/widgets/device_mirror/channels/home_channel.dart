@@ -6,9 +6,10 @@ import '../xp_canvas.dart';
 import '../xp_paint.dart';
 import 'desk_wallpaper.dart';
 
-/// Home — the XP desktop (`ch_home.cpp`, XP-Desktop): wallpaper 240×214, no window; icon column centred on x 40
-/// (Clawd, command window, photo, trash ×2, cells 48 tall from y 8) with white labels + black shadow
-/// ("Claude 38%", "Codex", "Ảnh", "Thùng rác"); the weather balloon 136×50 at (100, 150) pointing at the tray clock.
+/// Home — the XP desktop (`ch_home.cpp`, XP-Desktop, panel P-2026-11-26.14 XP-Desk): wallpaper 240×214, no window;
+/// one icon ×2 per program of the enabled skills (`DesktopView.icons`: column x 40 then x 120, cells 48 tall from
+/// y 8) with white labels + black shadow ("Claude 38%", "Codex", "Ảnh", "Thùng rác", "Thời tiết", "Đồng hồ"); the
+/// weather balloon 136×50 at (100, 150) pointing at the tray clock (weather skill on, a location set).
 ///
 /// The user's wallpaper JPEG (`/api/state.wallpaper`) cannot be read back from the device, so the mirror always
 /// draws the fallback wallpaper.
@@ -20,7 +21,7 @@ class HomeChannel extends MirrorChannel {
   static const _prompt = [0x20, 0x10, 0x27];
   static const _trash = [0x07F8, 0x0FFC, 0x1FFE, 0x0AA8, 0x0AA8, 0x0AA8, 0x0AA8, 0x0AA8, 0x0AA8, 0x07FC];
 
-  static const _colX = 40, _labelMax = 80.0;
+  static const _labelMax = 80.0;
   static const _balX = 100, _balY = 150, _balW = 136, _balH = 50, _tailX = 206, _tailY = 199;
   static const _lineX = 106, _lineW = 128.0;
 
@@ -43,13 +44,42 @@ class HomeChannel extends MirrorChannel {
     }
   }
 
-  void _icons(XpCanvas c) {
-    Xp.clawd(c, 22, 9, scale: 2);
-    c.bits(_rows(_term, 16), 24, 56, XpColors.white, scale: 2);
-    c.fill(26, 62, 28, 12, XpColors.black);
-    c.bits(_rows(_prompt, 6), 28, 64, XpColors.bar, scale: 2);
-    Xp.drawIcon(c, XpIcon.photo, 24, 104, XpColors.white, scale: 2);
-    c.bits(_rows(_trash, 14), 26, 152, XpColors.deskDDE6EE, scale: 2);
+  /// Icon of [program] (null = trash) ×2 in the cell at ([cx], [y]).
+  void _icon(XpCanvas c, String? program, int cx, int y, {bool sel = false}) {
+    final white = sel ? XpColors.selectIcon : XpColors.white;
+    switch (program) {
+      case 'Claude':
+        Xp.clawd(c, cx - 18, y + 1, scale: 2, color: sel ? XpColors.selectClawd : PanelColors.clawd);
+      case 'Codex':
+        c.bits(_rows(_term, 16), cx - 16, y, white, scale: 2);
+        c.fill(cx - 14, y + 6, 28, 12, XpColors.black);
+        c.bits(_rows(_prompt, 6), cx - 12, y + 8, XpColors.bar, scale: 2);
+      case 'Photo':
+        Xp.drawIcon(c, XpIcon.photo, cx - 16, y, white, scale: 2);
+      case 'Weather':
+        Xp.drawIcon(c, XpIcon.weather, cx - 16, y - 6, white, scale: 2);
+      case 'Clock':
+        Xp.drawIcon(c, XpIcon.clock, cx - 16, y - 6, white, scale: 2);
+      default:
+        c.bits(_rows(_trash, 14), cx - 14, y, sel ? XpColors.selectIcon : XpColors.deskDDE6EE, scale: 2);
+    }
+  }
+
+  /// XP selection: white text on xpSelect (+1 px each side, 13 tall), no shadow, dotted white border around it.
+  void _selectedLabel(XpCanvas c, String label, int cx, int y) {
+    final tw = c.textWidth(label, XpFont.jb11).round();
+    final bx = cx - tw ~/ 2 - 1, bw = tw + 2;
+    const bh = 13;
+    c.fill(bx, y, bw, bh, XpColors.select);
+    for (var k = 0; k < bw + 2; k += 2) {
+      c.pixel(bx - 1 + k, y - 1, XpColors.white);
+      c.pixel(bx - 1 + k, y + bh, XpColors.white);
+    }
+    for (var k = 0; k < bh + 2; k += 2) {
+      c.pixel(bx - 1, y - 1 + k, XpColors.white);
+      c.pixel(bx + bw, y - 1 + k, XpColors.white);
+    }
+    c.text(label, cx, y, XpFont.jb11, XpColors.white, align: XpAlign.center, maxWidth: _labelMax);
   }
 
   void _balloon(XpCanvas c, DesktopView d, AppLocalizations l) {
@@ -77,19 +107,25 @@ class HomeChannel extends MirrorChannel {
   void paint(XpCanvas c, MirrorFrame f, AppLocalizations l) {
     final d = f.agents.desktop;
     wallpaper(c);
-    _icons(c);
-    final labels = [
-      d.claudePct == null ? 'Claude' : 'Claude ${d.claudePct}%',
-      d.codexPct == null ? 'Codex' : 'Codex ${d.codexPct}%',
-      l.devXpTitlePhoto,
-      l.devXpDeskTrash,
-    ];
-    for (var i = 0; i < labels.length; i++) {
-      final y = 8 + 48 * i + 24;
+    for (final ic in d.icons) {
+      final sel = ic.program != null && ic.program == f.windows.sel;
+      _icon(c, ic.program, ic.cx, ic.y, sel: sel);
+      final label = switch (ic.program) {
+        'Claude' => d.claudePct == null ? 'Claude' : 'Claude ${d.claudePct}%',
+        'Codex' => d.codexPct == null ? 'Codex' : 'Codex ${d.codexPct}%',
+        'Photo' => l.devXpTitlePhoto,
+        'Weather' => l.devXpTitleWeather,
+        'Clock' => l.devXpTitleClock,
+        _ => l.devXpDeskTrash,
+      };
+      if (sel) {
+        _selectedLabel(c, label, ic.cx, ic.y + 24);
+        continue;
+      }
       c.text(
-        labels[i],
-        _colX,
-        y,
+        label,
+        ic.cx,
+        ic.y + 24,
         XpFont.jb11,
         XpColors.white,
         align: XpAlign.center,

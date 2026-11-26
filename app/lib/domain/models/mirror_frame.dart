@@ -4,46 +4,44 @@ import 'attention_card.dart';
 import 'device_state.dart';
 import 'mirror_agents.dart';
 import 'mirror_ambient.dart';
+import 'touch.dart';
 import 'usage_mirror.dart';
+import 'windows.dart';
 
 export 'mirror_agents.dart';
 export 'mirror_ambient.dart';
 
-/// Taskbar button (`XPCore::Btn`), in dock order.
-enum TaskButton { claude, photo, weather, clock }
+/// Icon of a taskbar button (`XPCore::Btn`): the skill of its window (agent windows = Clawd, Info = the info icon).
+enum TaskButton { claude, photo, weather, clock, info }
 
-/// What the device taskbar shows (`XPCore::BarState`, src/main.cpp `barState`).
+/// What the taskbar shows (design 2026-11-26.7, panel P-2026-11-26.14): one button per open window, in opening order,
+/// at most [max]; the top window's button pressed; no slide progress.
 class TaskbarModel {
   const TaskbarModel({
+    this.programs = const [],
     this.buttons = const [],
     this.active,
     this.flash = false,
     this.badge = 0,
-    this.progress = 0,
-    this.accent = TaskAccent.coral,
   });
 
-  /// Buttons of the enabled skills, in dock order.
+  static const max = 4;
+
+  /// The window of each button (program / channel name), in opening order.
+  final List<String> programs;
+
+  /// Icon of each button, parallel to [programs].
   final List<TaskButton> buttons;
 
-  /// Pressed button; null = none (Info, Home).
-  final TaskButton? active;
+  /// Index of the pressed button (the top window, when it shows); null = none (desktop, cards, Info…).
+  final int? active;
 
   /// Claude button lit orange: a card that needs the user holds the screen.
   final bool flash;
 
   /// Agents waiting (badge on the Claude button, 0 = none, > 9 shows '+').
   final int badge;
-
-  /// Slide progress 0…1 drawn under the pressed button (0 = not rotating).
-  final double progress;
-
-  /// Colour of that progress (the channel's, Codex lilac).
-  final TaskAccent accent;
 }
-
-/// Panel accent colours a frame can ask for (resolved to `PanelColors` by the painter).
-enum TaskAccent { coral, mint, sky, amber, lilac }
 
 /// One picture of the device screen, from `/api/state` (R-DK-6) — everything a [MirrorChannel] painter reads.
 /// Built by `mirrorFrameOf` from `ControlViewModel` (optimistic [channel] while a command is on its way, R-DK-1).
@@ -60,6 +58,8 @@ class MirrorFrame {
     this.ambient = const MirrorAmbient(),
     this.usage = const UsageMirror(),
     this.agents = const AgentsMirror(),
+    this.windows = WindowStack.empty,
+    this.menu,
   });
 
   /// Pseudo channel of the setup-AP "log-on" screen (`XP-SetupMode`).
@@ -99,6 +99,12 @@ class MirrorFrame {
 
   /// Attention / Agents / Home / Setup / Photo values (`agentsMirrorOf`).
   final AgentsMirror agents;
+
+  /// The app's open windows (taskbar, the selected desktop icon `sel`), design 2026-11-26.7.
+  final WindowStack windows;
+
+  /// The context menu over the screen (R-DK-11), or null.
+  final MenuView? menu;
 
   bool get clockSynced => deviceNow.year > 2000;
 

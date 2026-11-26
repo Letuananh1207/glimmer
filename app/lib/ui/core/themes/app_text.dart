@@ -9,13 +9,7 @@ abstract final class AppFonts {
   static const String family = 'JetBrainsMono';
 
   static TextStyle _mono(double size, FontWeight weight, {Color? color, double? letterSpacing}) =>
-      TextStyle(
-        fontFamily: family,
-        fontSize: size,
-        fontWeight: weight,
-        color: color,
-        letterSpacing: letterSpacing,
-      );
+      TextStyle(fontFamily: family, fontSize: size, fontWeight: weight, color: color, letterSpacing: letterSpacing);
 
   /// Tiêu đề màn Kết nối, tên glimmer ở Tổng quan.
   static final TextStyle screenTitle = _mono(20, FontWeight.w700);
@@ -99,9 +93,6 @@ abstract final class AppSize {
   /// Màn thiết bị 240 px × 1.5 = 360 (TouchMirror, design 2026-11-26.6).
   static const double deviceScale = 1.5;
   static const double roundButton = 56;
-
-  /// Vòng phản hồi chạm trên ô màn (TapRipple) = vùng trúng tối thiểu của nút nhỏ.
-  static const double tapRipple = 44;
 
   static const double radiusCard = 14;
   static const double radiusButton = 20;

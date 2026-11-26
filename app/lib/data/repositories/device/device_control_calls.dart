@@ -28,6 +28,14 @@ mixin _ControlCalls on DeviceRepository {
   });
 
   @override
+  Future<Result<void>> setWindows(Map<String, Object?> body) =>
+      _call(() async => _json('POST', '/api/windows', body: body, tries: 1));
+
+  @override
+  Future<Result<void>> setMenu(Map<String, Object?> body) =>
+      _call(() async => _json('POST', '/api/menu', body: body, tries: 1));
+
+  @override
   Future<Result<bool>> setScreen(bool on) => _call(() async {
     final j = await _json('POST', '/api/screen', body: {'on': on}, tries: 1);
     final shown = j['screen_on'] is bool ? j['screen_on'] as bool : on;

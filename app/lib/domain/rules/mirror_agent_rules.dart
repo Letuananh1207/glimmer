@@ -4,6 +4,7 @@ import '../models/attention_card.dart';
 import '../models/device_photo.dart';
 import '../models/device_state.dart';
 import '../models/mirror_agents.dart';
+import 'skill_rules.dart';
 
 /// `kind` of a /push card (unknown → info).
 CardKind cardKind(String kind) => switch (kind) {
@@ -150,6 +151,22 @@ const _badCred = {'not_set', 'expired', 'rejected', 'blocked'};
 
 int _toDisplay(double c, bool fahrenheit) => (fahrenheit ? c * 9 / 5 + 32 : c).round();
 
+/// Desktop icons (panel P-2026-11-26.14 §17 XP-Desk): column 0 (centre x 40) Claude, Codex, Ảnh then the trash;
+/// column 1 (centre x 120) Thời tiết, Đồng hồ — cells 48 tall from y 8, column 1 stops above the weather balloon.
+List<DeskIcon> deskIconsOf(List<String> skillsOn) {
+  const x0 = 40, x1 = 120, y0 = 8, cell = 48;
+  final col0 = <String?>[
+    if (skillsOn.contains(SkillIds.agent)) ...['Claude', 'Codex'],
+    if (skillsOn.contains(SkillIds.photo)) 'Photo',
+    null,
+  ];
+  final col1 = [if (skillsOn.contains(SkillIds.weather)) 'Weather', if (skillsOn.contains(SkillIds.clock)) 'Clock'];
+  return [
+    for (final (i, p) in col0.indexed) DeskIcon(p, x0, y0 + cell * i),
+    for (final (i, p) in col1.indexed) DeskIcon(p, x1, y0 + cell * i),
+  ];
+}
+
 /// The desktop (`labelText`, `balloonText`): Claude's hero % (weekly when `claudeWeeklyHero`) unless a key
 /// problem or no number; Codex usage is not in /api/state (always the bare name); the balloon when a location is set.
 DesktopView desktopOf(DeviceState s, Map<String, dynamic>? settings) {
@@ -159,9 +176,11 @@ DesktopView desktopOf(DeviceState s, Map<String, dynamic>? settings) {
   final w = s.weather;
   final f = settings?['useFahrenheit'] == true;
   final valid = w != null && w.valid && w.tempC != null;
+  final on = s.skillsOn.isEmpty ? const [SkillIds.agent] : s.skillsOn;
   return DesktopView(
     claudePct: credOk && used >= 0 ? used : null,
-    balloon: s.weatherConfigured,
+    balloon: s.weatherConfigured && on.contains(SkillIds.weather),
+    icons: deskIconsOf(on),
     temp: valid ? _toDisplay(w.tempC!, f) : null,
     feels: valid && w.feelsC != null ? _toDisplay(w.feelsC!, f) : null,
     desc: valid ? w.desc : '',

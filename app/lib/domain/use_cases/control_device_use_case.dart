@@ -2,6 +2,8 @@ import '../../data/repositories/device/device_repository.dart';
 import '../../utils/result.dart';
 import '../models/app_error.dart';
 import '../models/control.dart';
+import '../models/touch.dart';
+import '../models/windows.dart';
 import '../rules/control_rules.dart';
 
 /// The app remote (tab Điều khiển, R-DK-1…10): sends one command, once, and says whether the device did what was
@@ -42,9 +44,7 @@ class ControlDeviceUseCase {
       break;
     }
     return switch (last!) {
-      Ok(:final value) => Result.ok(
-        ControlOutcome(active: value.active, matched: channelSkill(value.active) == skill),
-      ),
+      Ok(:final value) => Result.ok(ControlOutcome(active: value.active, matched: channelSkill(value.active) == skill)),
       Error(:final error) => Result.error(error),
     };
   }
@@ -53,6 +53,18 @@ class ControlDeviceUseCase {
   Future<Result<ControlOutcome>> stopRotation(Map<String, dynamic>? settings) async {
     if (!rotationOn(settings)) return const Result.ok(ControlOutcome());
     return _setting({'autoRotate': false});
+  }
+
+  /// The app's open windows go down to the device (panel P-2026-11-26.14); nothing on firmware without it.
+  Future<Result<void>> sendWindows(WindowStack w) async {
+    if (!caps.windows) return const Result.ok(null);
+    return _device.setWindows(w.toJson());
+  }
+
+  /// R-DK-11: a context menu over the device screen; null closes it. Refused without the firmware for it.
+  Future<Result<void>> menu(MenuView? m) async {
+    if (!caps.windows) return Result.error(AppError(AppErrorKind.controlUnsupported, detail: 'menu'));
+    return _device.setMenu(m == null ? const {'kind': 'none'} : m.toJson());
   }
 
   /// Start → Khởi động lại (asked again by the screen first).

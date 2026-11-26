@@ -31,10 +31,13 @@ class ControlOutcome {
 
 /// Commands the connected firmware has (R-DK-3), known from the fields of `/api/state`.
 class ControlCaps {
-  const ControlCaps({this.touch = false, this.screen = false, this.dismissCard = false});
+  const ControlCaps({this.touch = false, this.screen = false, this.dismissCard = false, this.windows = false});
 
   /// Everything (current firmware).
-  static const all = ControlCaps(touch: true, screen: true, dismissCard: true);
+  static const all = ControlCaps(touch: true, screen: true, dismissCard: true, windows: true);
+
+  /// The device draws the app's open windows on its taskbar and context menus (R-DK-11).
+  final bool windows;
 
   /// Touches on the device screen (R-DK-10): the firmware of the app remote (`paused` reported).
   final bool touch;
@@ -48,8 +51,5 @@ class ControlCaps {
   };
 
   /// What the remote has but this firmware lacks, in screen order (old-firmware banner).
-  List<ControlCommand> get missing => [
-    if (!touch) ControlCommand.minimize,
-    if (!screen) ControlCommand.screenOff,
-  ];
+  List<ControlCommand> get missing => [if (!touch) ControlCommand.minimize, if (!screen) ControlCommand.screenOff];
 }

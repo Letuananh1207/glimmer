@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import '../../../../l10n/app_localizations.dart';
@@ -9,13 +7,14 @@ import '../../../core/themes/xp_colors.dart';
 import '../../../../domain/models/mirror_frame.dart';
 import 'mirror_channel.dart';
 import 'xp_canvas.dart';
+import 'xp_menu.dart';
 import 'xp_taskbar.dart';
 
-/// Ô màn thiết bị chạm được (components.md `TouchMirror`, screen_specs §8, design 2026-11-26.6): vỏ 376 bo 20 gradient
+/// Ô màn thiết bị chạm được (components.md `TouchMirror`, screen_specs §8, design 2026-11-26.6 / .7): vỏ 376 bo 20 gradient
 /// 160° `deviceShellTop` → `deviceShellBottom`, viền sáng trong 1 px trắng 8 %, bóng 0 10 24 đen 50 %, đệm 6; màn 364
 /// đen bo 6 đệm 2; vùng vẽ 360 = 240 px thiết bị × 1.5, vẽ bằng [MirrorChannel] của kênh đang hiện + thanh tác vụ.
 /// Cả vùng là bề mặt chạm như chuột: chạm → [onTap] với toạ độ px thiết bị (÷ 1.5), giữ ≥ 500 ms → [onHold] (chuột
-/// phải). Mỗi lần chạm hiện `TapRipple` tại điểm chạm.
+/// phải). Không vòng chạm, không chip (2026-11-26.7): màn đổi ngay là phản hồi.
 class TouchMirror extends StatefulWidget {
   const TouchMirror({
     super.key,
@@ -25,7 +24,6 @@ class TouchMirror extends StatefulWidget {
     this.onHold,
     this.dim = 0,
     this.offline = false,
-    this.chip,
     this.channels,
   });
 
@@ -42,9 +40,6 @@ class TouchMirror extends StatefulWidget {
   /// No answer from the device: last picture under a bg 72 % veil + "Mất kết nối".
   final bool offline;
 
-  /// `StatusChip` on the shell's top left (top −12, left 14).
-  final Widget? chip;
-
   /// Painter registry (tests); default [mirrorChannels].
   final Map<String, MirrorChannel>? channels;
 
@@ -60,36 +55,11 @@ class _TouchMirrorState extends State<TouchMirror> {
   static const _shadowBlur = 24.0;
   static const _shadowY = 10.0;
   static const _shadowAlpha = 0.5;
-  static const _chipTop = -12.0;
-  static const _chipLeft = 14.0;
   static const _offlineVeil = 0.72;
   static const _offlineGap = 6.0;
 
-  /// How long the ripple stays after a touch.
-  static const _rippleFor = Duration(milliseconds: 450);
-
-  Offset? _ripple;
-  Timer? _rippleTimer;
-
-  void _show(Offset p) {
-    _rippleTimer?.cancel();
-    setState(() => _ripple = p);
-    _rippleTimer = Timer(_rippleFor, () {
-      if (mounted) setState(() => _ripple = null);
-    });
-  }
-
-  @override
-  void dispose() {
-    _rippleTimer?.cancel();
-    super.dispose();
-  }
-
-  void _touch(Offset p, void Function(double x, double y)? on) {
-    if (on == null) return;
-    _show(p);
-    on(p.dx / AppSize.deviceScale, p.dy / AppSize.deviceScale);
-  }
+  void _touch(Offset p, void Function(double x, double y)? on) =>
+      on?.call(p.dx / AppSize.deviceScale, p.dy / AppSize.deviceScale);
 
   @override
   Widget build(BuildContext context) {
@@ -127,12 +97,6 @@ class _TouchMirrorState extends State<TouchMirror> {
                 ],
               ),
             ),
-          ),
-        if (_ripple != null)
-          Positioned(
-            left: _ripple!.dx - AppSize.tapRipple / 2,
-            top: _ripple!.dy - AppSize.tapRipple / 2,
-            child: const IgnorePointer(child: TapRipple()),
           ),
       ],
     );
@@ -185,31 +149,9 @@ class _TouchMirrorState extends State<TouchMirror> {
             child: ColoredBox(color: AppColors.outline.withValues(alpha: _rim)),
           ),
         ),
-        if (widget.chip != null) Positioned(top: _chipTop, left: _chipLeft, child: widget.chip!),
       ],
     );
   }
-}
-
-/// `TapRipple` (§8): vòng 44 (`tapRipple`) viền 2 trắng, nền trắng 28 %, viền ngoài 4 `tapRing`.
-class TapRipple extends StatelessWidget {
-  const TapRipple({super.key});
-
-  static const _border = 2.0;
-  static const _fill = 0.28;
-  static const _ring = 4.0;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: AppSize.tapRipple,
-    height: AppSize.tapRipple,
-    decoration: BoxDecoration(
-      shape: BoxShape.circle,
-      color: XpColors.white.withValues(alpha: _fill),
-      border: Border.all(color: XpColors.white, width: _border),
-      boxShadow: const [BoxShadow(color: AppColors.tapRing, spreadRadius: _ring)],
-    ),
-  );
 }
 
 /// Backlight off: `screenOff` plate + "MÀN ĐANG TẮT" 12.
@@ -246,6 +188,8 @@ class _MirrorPainter extends CustomPainter {
     final ch = channels[frame.channel] ?? fallbackChannel(frame.channel);
     ch.paint(c, frame, l);
     if (ch.hasTaskbar) XpTaskbar.paint(c, frame.taskbar, frame.trayClock);
+    final menu = frame.menu;
+    if (menu != null) XpMenuPainter.paint(c, menu, l);
     canvas.restore();
   }
 

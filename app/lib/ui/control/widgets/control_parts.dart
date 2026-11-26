@@ -138,46 +138,8 @@ class ControlBanner extends StatelessWidget {
   );
 }
 
-/// `StatusChip` (§8, design 2026-11-26.6) trên góc trái vỏ: cao 28 bo 14 `panel2` viền `line`, đệm 0 12 0 8, cách 6 —
-/// vòng xoay 16 (hoặc dấu tích mint khi [done]) + chữ 12 ink.
-class StatusChip extends StatelessWidget {
-  const StatusChip({super.key, required this.label, this.done = false});
-
-  final String label;
-  final bool done;
-
-  static const _h = 28.0;
-  static const _spinner = 16.0;
-  static const _gap = 6.0;
-  static const _stroke = 2.0;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    height: _h,
-    padding: const EdgeInsets.fromLTRB(AppSpace.s, 0, AppSpace.m, 0),
-    decoration: BoxDecoration(
-      color: AppColors.panel2,
-      borderRadius: BorderRadius.circular(_h / 2),
-      border: Border.all(color: AppColors.line),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox.square(
-          dimension: _spinner,
-          child: done
-              ? const Icon(Icons.check, size: _spinner, color: AppColors.mint)
-              : const CircularProgressIndicator(strokeWidth: _stroke, color: AppColors.ink),
-        ),
-        const SizedBox(width: _gap),
-        Text(label, style: AppFonts.label.copyWith(color: AppColors.ink, letterSpacing: 0)),
-      ],
-    ),
-  );
-}
-
-/// Dòng dưới ô màn (§8, design 2026-11-26.6): đệm 12 24 0, cách 8 — ô 8 bo 2 màu [accent] + tên app 13/700 ink + ghi
-/// chú 13 ([noteColor], muted / amber / lilac). Không có thanh (thiết bị không xoay).
+/// Dòng dưới ô màn (§8): đệm 12 24 0, cách 8 — ô 8 bo 2 màu [accent] + tiêu đề 13/700 ink + ghi chú 13 ([noteColor]).
+/// Từ 2026-11-26.7 chỉ còn khi màn tắt / ban đêm.
 class ChannelLine extends StatelessWidget {
   const ChannelLine({
     super.key,

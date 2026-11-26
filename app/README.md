@@ -55,14 +55,19 @@ reserve: 65536, side: 188}`; `POST /api/photos` multipart, trường `photo` = J
 404 — R-DK-3 khoá nút khi `/api/state` không có `paused` / `screen_on` / `slide_ms`):
 - `POST /api/channel {"name":"Claude"}` | `{"action":"next"}` | `{"action":"prev"}` → `{ok, active, paused}`;
   tên lạ → 404, action lạ → 400.
-- `POST /api/channel {"action":"pause"}` / `{"action":"resume"}` → `{ok, active, paused}`. Dừng xoay **tạm** (RAM, mất
-  khi khởi động lại, không đổi `autoRotate` — R-DK-4); đang dừng vẫn đổi kênh tay được và vẫn dừng; thẻ agent vẫn chen.
-  Máy chưa hiện gì khi dừng (phiếu `docs/phieu_panel/2026-11-26-tam-dung-xoay-va-tat-man.md`), chỉ vạch tiến độ ở nút
-  thanh tác vụ đứng yên.
+- `POST /api/channel {"action":"pause"}` / `{"action":"resume"}` → `{ok, active, paused}`: vẫn trả lời nhưng từ panel
+  P-2026-11-26.14 thiết bị **không xoay kênh** nữa (app vẫn dùng `paused` có mặt để biết firmware nhận chạm).
+- `POST /api/windows {"open":[…],"top":…|null,"min":[…],"sel":…|null}` → `{ok}` (panel P-2026-11-26.14): danh sách cửa sổ
+  app đang giữ (R-DK-7), cả danh sách mỗi lần; tên như `/api/channel`, tên lạ bỏ qua; RAM. Thanh tác vụ máy = các cửa sổ
+  này (4 nút cuối), `sel` = biểu tượng desktop đang chọn. `/api/channel {name}` của một chương trình chưa có trong danh
+  sách → máy tự thêm.
+- `POST /api/menu {"kind":"desktop"|"window"|"none","x","y","minimized"}` → `{ok}` (R-DK-11): vẽ / đóng menu chuột phải
+  (góc trên trái, máy giữ trong y ≤ 213); `409` khi màn không có menu (đêm, thẻ). Máy không tự làm theo mục: app chọn
+  mục rồi gửi lệnh. Mọi `/api/channel` đóng menu.
 - `POST /api/screen {"on":false|true}` → `{ok, screen_on}`. Tắt / bật đèn nền ngay, không theo giờ đêm, RAM. Thẻ urgent /
   cần duyệt / câu hỏi / lỗi của người dùng vẫn làm sáng màn lúc nó giữ màn; `screen_on` vẫn là `false` (lệnh của app).
-- `/api/state`: `paused` (bool), `screen_on` (bool), `slide_ms` = độ dài slide đang chạy, `slide_left_ms` = còn lại —
-  cả hai `0` khi không xoay (một kênh, tắt tự xoay, mặt đêm, thẻ đang giữ màn). Đang dừng: `slide_left_ms` đứng yên.
+- `/api/state`: `paused` (bool), `screen_on` (bool), `windows {open, top, min, sel}` + `menu` (`desktop` / `window` /
+  `none`) khi firmware có P-2026-11-26.14; `slide_ms` / `slide_left_ms` luôn `0` (không xoay).
 - Bỏ một thẻ: `POST /push/clear {"id":"…"}` → `{cleared: 1|0}` (như MCP `clear_card`); id lấy từ `GET /push`.
 
 Hình nền desktop (màn đầu, P-2026-11-26.12): `GET /api/wallpaper` → `{set, size, w: 240, h: 214, max_bytes: 40960, free,

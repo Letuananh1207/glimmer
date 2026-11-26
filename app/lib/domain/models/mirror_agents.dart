@@ -136,7 +136,18 @@ class AgentsList {
 
 /// The XP desktop (Home, `ch_home.cpp`).
 class DesktopView {
-  const DesktopView({this.claudePct, this.codexPct, this.balloon = false, this.temp, this.feels, this.desc = ''});
+  const DesktopView({
+    this.claudePct,
+    this.codexPct,
+    this.balloon = false,
+    this.temp,
+    this.feels,
+    this.desc = '',
+    this.icons = const [],
+  });
+
+  /// Desktop icons, one per program of the enabled skills + the trash (panel P-2026-11-26.14, XP Auto Arrange).
+  final List<DeskIcon> icons;
 
   /// % used shown under the Claude / Codex icon; null = the bare name (no key, loading, a key problem).
   final int? claudePct, codexPct;
@@ -147,6 +158,23 @@ class DesktopView {
   /// Temperature now / feels like in the unit of the settings; [temp] null = "chưa có thời tiết".
   final int? temp, feels;
   final String desc;
+}
+
+/// One desktop icon: [program] it opens (null = Thùng rác), column centre [cx] and cell top [y] (cells 48 tall).
+class DeskIcon {
+  const DeskIcon(this.program, this.cx, this.y);
+
+  final String? program;
+  final int cx, y;
+
+  @override
+  bool operator ==(Object other) => other is DeskIcon && other.program == program && other.cx == cx && other.y == y;
+
+  @override
+  int get hashCode => Object.hash(program, cx, y);
+
+  @override
+  String toString() => 'DeskIcon($program, $cx, $y)';
 }
 
 /// The first-run checklist (Setup, `ch_setup.cpp`).

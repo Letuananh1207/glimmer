@@ -19,8 +19,15 @@ AttentionCard _card(
   int showsIn = 0,
 }) => AttentionCard(id, kind, agent, title, value, body, 'glimmer', progress, age, showsInS: showsIn);
 
-DeviceState _state({String cred = 'ok', bool weather = true, int session = 38, int? photos}) => DeviceState.fromJson({
+DeviceState _state({
+  String cred = 'ok',
+  bool weather = true,
+  int session = 38,
+  int? photos,
+  List<String> skills = const ['agent', 'weather', 'clock'],
+}) => DeviceState.fromJson({
   'ip': '192.168.10.51',
+  'skills_on': skills,
   'claude_configured': true,
   'claude_usage': {'session_used': session, 'weekly_used': 12, 'cred': cred},
   'weather_configured': weather,

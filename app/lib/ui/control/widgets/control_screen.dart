@@ -4,7 +4,6 @@ import '../../../domain/models/control.dart';
 import '../../../domain/models/touch.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../core/labels.dart';
-import '../../core/skill_style.dart';
 import '../../core/themes/app_colors.dart';
 import '../../../utils/durations.dart';
 import '../view_models/control_view_model.dart';
@@ -16,12 +15,11 @@ import 'device_mirror/touch_mirror.dart';
 import 'hold_card_panel.dart';
 import 'program_style.dart';
 import 'start_menu_sheet.dart';
-import 'touch_legend.dart';
 
-/// Điều khiển (tab 1, screen_specs §8, design 2026-11-26.6): đầu màn, thanh báo (firmware chưa nhận chạm /
-/// glimmer-setup / mất kết nối), `TouchMirror` chạm như chuột (+ `TapRipple`, `StatusChip`), dòng chương trình hoặc
-/// `HoldCardPanel`, `TouchLegend`, `BrightnessSlider`, `RoundToggle` (tắt màn, chế độ đêm, số liệu); chạm start →
-/// `StartMenuSheet`; `CommandSnackbar` nổi trên thanh dưới khi lệnh không được nhận.
+/// Điều khiển (tab 1, screen_specs §8, design 2026-11-26.6 / .7 / .8): đầu màn, thanh báo (firmware chưa nhận chạm /
+/// glimmer-setup / mất kết nối), `TouchMirror` chạm như chuột, `HoldCardPanel` hoặc dòng màn tắt / ban đêm,
+/// `BrightnessSlider`, `RoundToggle` (tắt màn, chế độ đêm, số liệu); chạm start → `StartMenuSheet`; `CommandSnackbar`
+/// nổi trên thanh dưới khi lệnh không được nhận. Không chip, không chữ nào về chuyển / thu nhỏ / tắt app.
 class ControlScreen extends StatelessWidget {
   const ControlScreen({
     super.key,
@@ -83,14 +81,12 @@ class ControlScreen extends StatelessWidget {
                   semanticLabel: l.controlScreenA11y(_title(l, vm)),
                   dim: vm.dim,
                   offline: mode == ControlMode.offline,
-                  chip: vm.sending ? StatusChip(label: _chipText(l, vm)) : null,
                   onTap: touches ? (x, y) => _tap(context, vm, x, y) : null,
-                  // R-DK-8: chuột phải — menu chưa có thiết kế (phiếu panel), chỉ phản hồi chạm.
-                  onHold: vm.touchable ? (_, _) {} : null,
+                  // R-DK-11: giữ = chuột phải → menu ngữ cảnh vẽ trên thiết bị.
+                  onHold: vm.touchable && vm.caps.windows ? (x, y) => vm.hold(x, y) : null,
                 ),
               ),
-              _status(l, vm),
-              TouchLegend(enabled: vm.touchable),
+              ?_status(l, vm),
               BrightnessSlider(
                 value: vm.brightness,
                 dragging: vm.dragging,
@@ -182,9 +178,9 @@ class ControlScreen extends StatelessWidget {
     _ => null,
   };
 
-  /// Program line, or the card that holds the screen.
-  Widget _status(AppLocalizations l, ControlViewModel vm) {
-    if (vm.mode == ControlMode.setup) return const SizedBox.shrink();
+  /// The card that holds the screen, or the screen-off / night line; nothing otherwise (2026-11-26.7).
+  Widget? _status(AppLocalizations l, ControlViewModel vm) {
+    if (vm.mode == ControlMode.setup) return null;
     final card = vm.holding;
     if (card != null) {
       return HoldCardPanel(
@@ -211,26 +207,8 @@ class ControlScreen extends StatelessWidget {
         accent: AppColors.lilac,
       );
     }
-    final skill = vm.channelSkill;
-    return ChannelLine(
-      title: _title(l, vm),
-      note: switch (vm.note) {
-        LineNote.openOnDevice => l.controlOpenOnDevice,
-        LineNote.justOpened => l.controlJustOpened,
-        LineNote.minimized => l.controlMinimizedNote(ProgramStyle.name(l, vm.minimizedApp)),
-        LineNote.tapIcon => l.controlTapIconNote,
-      },
-      accent: skill == null ? AppColors.inkDim : SkillStyle.of(skill).accent,
-    );
+    return null;
   }
-
-  String _chipText(AppLocalizations l, ControlViewModel vm) => switch (vm.chip) {
-    ChipKind.minimizing => l.controlMinimizing,
-    ChipKind.closing => l.controlClosing(ProgramStyle.name(l, vm.chipApp)),
-    ChipKind.opening => l.controlOpening,
-    ChipKind.openingApp => l.controlOpeningApp(ProgramStyle.name(l, vm.chipApp)),
-    ChipKind.sending => l.controlSending,
-  };
 
   List<RoundItem> _toggles(AppLocalizations l, ControlViewModel vm) {
     final normal = vm.mode == ControlMode.normal;

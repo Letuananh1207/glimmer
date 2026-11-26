@@ -11,7 +11,6 @@ import 'package:glimmer_app/ui/control/widgets/device_mirror/touch_mirror.dart';
 import 'package:glimmer_app/ui/control/widgets/device_mirror/mirror_channel.dart';
 import 'package:glimmer_app/ui/control/widgets/hold_card_panel.dart';
 import 'package:glimmer_app/ui/control/widgets/start_menu_sheet.dart';
-import 'package:glimmer_app/ui/control/widgets/touch_legend.dart';
 import 'package:glimmer_app/ui/core/themes/app_theme.dart';
 
 import '../../../../testing/fakes/fake_repositories.dart';
@@ -20,7 +19,7 @@ const _url = 'http://192.168.1.50';
 final _vi = lookupAppLocalizations(const Locale('vi'));
 
 Map<String, dynamic> _state({
-  String channel = 'Claude',
+  String channel = 'Home',
   bool current = true,
   bool screenOn = true,
   String wifi = 'connected',
@@ -99,12 +98,11 @@ void main() {
     await _frames(t);
   }
 
-  testWidgets('normal: touch mirror, program line, legend, brightness, toggles; no rotation buttons', (t) async {
+  testWidgets('normal: touch mirror, brightness, toggles; no legend, no status line, no rotation buttons', (t) async {
     await pump(t, _state());
     expect(find.byType(TouchMirror), findsOneWidget);
-    expect(find.textContaining(_vi.controlOpenOnDevice, findRichText: true), findsOneWidget);
-    expect(find.byType(TouchLegend), findsOneWidget);
-    expect(find.text(_vi.controlLegendTitle), findsOneWidget);
+    expect(find.textContaining(_vi.controlOpenOnDevice, findRichText: true), findsNothing);
+    expect(find.text(_vi.controlLegendTitle), findsNothing);
     expect(find.text(_vi.controlPrev), findsNothing);
     expect(find.text(_vi.controlPause), findsNothing);
     expect(find.text('80%'), findsOneWidget);
@@ -112,7 +110,7 @@ void main() {
     expect(find.byIcon(Icons.lock_outline), findsNothing);
     await t.tap(find.text(_vi.controlDetails));
     await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
-    expect(opened, ['agent']);
+    expect(opened, [null]);
     await t.binding.setSurfaceSize(null);
   });
 
@@ -125,7 +123,6 @@ void main() {
     // × at device (228, 11) → shell pad 6 + screen pad 2 + × 1.5.
     await t.tapAt(mirror + const Offset(8 + 228 * 1.5, 8 + 11 * 1.5));
     await _frames(t);
-    await t.pump(const Duration(milliseconds: 500)); // ripple gone
     expect(rig.posts(), isEmpty);
     await t.binding.setSurfaceSize(null);
   });
@@ -135,7 +132,6 @@ void main() {
     final mirror = t.getTopLeft(find.byType(TouchMirror));
     await t.tapAt(mirror + const Offset(8 + 30 * 1.5, 8 + 227 * 1.5));
     await _frames(t);
-    await t.pump(const Duration(milliseconds: 500)); // ripple gone
     expect(find.byType(StartMenuSheet), findsOneWidget);
     expect(find.text(_vi.startAllPrograms), findsOneWidget);
     await t.tap(find.text(_vi.startAllPrograms));
@@ -200,9 +196,9 @@ void main() {
 
   testWidgets('R-DK-1 failed command: snackbar with Thử lại', (t) async {
     await pump(t, _state());
-    await t.runAsync(() => vm!.closeTop());
+    await t.runAsync(() => vm!.openProgram('Clock'));
     await _frames(t);
-    expect(find.text(_vi.controlFailed(_vi.devControlCmdClose(_vi.appClaude))), findsOneWidget);
+    expect(find.text(_vi.controlFailed(_vi.devControlCmdOpen(_vi.appClock))), findsOneWidget);
     expect(find.text(_vi.commonRetry), findsOneWidget);
     await t.binding.setSurfaceSize(null);
   });
