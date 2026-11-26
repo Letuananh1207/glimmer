@@ -1,6 +1,6 @@
 # Phiếu màn thiết bị: Báo "đang tạm dừng xoay" và "màn tắt từ app" trên thiết bị
 
-- Trạng thái: chờ thiết kế
+- Trạng thái: bỏ (thiết kế app 2026-11-26.6: thiết bị không tự xoay nữa, không còn lệnh tạm dừng; phần desktop / cửa sổ sang phiếu `2026-11-26-desktop-cua-so-xp.md`)
 - Ngày: 2026-11-26 · Nguồn: thiết kế app `2026-11-26.5` (màn Điều khiển, dòng "Cần firmware") — app ra lệnh dừng / tiếp
   tục xoay, tắt / bật màn; máy cần cho người đứng trước nó biết.
 
