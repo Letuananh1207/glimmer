@@ -1,7 +1,7 @@
 {
   "meta": {
     "name": "glimmer panel",
-    "version": "P-2026-11-26.13",
+    "version": "P-2026-11-26.14",
     "frame": {
       "width": 240,
       "height": 240,
@@ -1110,6 +1110,31 @@
         "value": "#808080",
         "rgb565": "0x8410",
         "use": "nét laptop của Clawd làm việc"
+      },
+      "xpSelectIcon": {
+        "value": "#98B4E2",
+        "rgb565": "0x9DBC",
+        "use": "icon trắng của biểu tượng desktop đang chọn (trắng pha 50 % xpSelect)"
+      },
+      "xpSelectClawd": {
+        "value": "#85719E",
+        "rgb565": "0x8393",
+        "use": "Clawd của biểu tượng desktop đang chọn (CLAWD pha 50 % xpSelect)"
+      },
+      "xpMenu": {
+        "value": "#FFFFFF",
+        "rgb565": "0xFFFF",
+        "use": "nền menu chuột phải"
+      },
+      "xpMenuBorder": {
+        "value": "#ACA899",
+        "rgb565": "0xAD53",
+        "use": "khung + vạch ngăn menu, chữ mục mờ (= xpDim)"
+      },
+      "xpCaptionOff": {
+        "value": "#7FA4F0",
+        "rgb565": "0x7D3E",
+        "use": "nét nút □ mờ trên thanh tiêu đề (= xpWelcomeLine)"
       }
     },
     "zone": {
@@ -1206,7 +1231,8 @@
           "max": "xpTitleLight",
           "close": "xpClose"
         }
-      }
+      },
+      "maxButton": "nút giữa (202, 3, 16×16) luôn mờ: nét □ xpCaptionOff — cửa sổ đầy màn, không đổi cỡ (XP làm mờ nút này với cửa sổ cố định)"
     },
     "taskbar": {
       "bands": [
@@ -1311,12 +1337,7 @@
         "w": 28,
         "h": 20,
         "y": 217,
-        "order": [
-          "claude",
-          "photo",
-          "weather",
-          "clock"
-        ],
+        "order": "cửa sổ đang mở theo thứ tự mở (app gửi xuống), tối đa 4 (x 71, 101, 131, 161)",
         "normal": [
           "xpBtnEdge",
           "xpBtn"
@@ -1329,9 +1350,10 @@
           "xpFlashEdge",
           "xpFlash"
         ],
-        "progress": "đáy nút đang hiện: (x+1, 234), cao 2, dài 26 × tiến độ, màu nhấn kênh",
+        "progress": "bỏ — thiết bị không xoay kênh",
         "badge": "AMBER 9×9 tại (x+18, 215), chữ số (x+21, 217)",
-        "icon": "Clawd (x+5, 222); icon skill căn tâm (x+14, 227)"
+        "icon": "Clawd (x+5, 222); icon skill căn tâm (x+14, 227)",
+        "minimized": "nút thường (không lõm)"
       },
       "tray": {
         "x": [
@@ -1515,26 +1537,20 @@
         "draw": "một lần khi vào màn, giải mã từng khối như skill Ảnh; rồi vẽ đè biểu tượng, bong bóng, thanh tác vụ"
       },
       "icons": {
-        "column": "tâm x 40, ô cao 48 từ y 8",
-        "label": "JBMono-11 white TC, bóng đen (+1, +1), tại y ô + 24",
-        "items": [
-          [
-            "Claude <x>%",
-            "Clawd ×2"
-          ],
-          [
-            "Codex <x>%",
-            "cửa sổ dòng lệnh ×2"
-          ],
-          [
-            "Ảnh",
-            "icon ảnh ×2"
-          ],
-          [
-            "Thùng rác",
-            "thùng ×2"
-          ]
-        ]
+        "grid": "cột 0 tâm x 40, cột 1 tâm x 120; ô cao 48 từ y 8; xếp từ trên xuống rồi sang cột kế (XP Auto Arrange)",
+        "column0": "tối đa 3 chương trình (y 8, 56, 104) + Thùng rác cố định ô y 152",
+        "column1": "tối đa 3 (y 8, 56, 104) — dừng trên bong bóng thời tiết (y 150)",
+        "order": [
+          "Claude <x>%",
+          "Codex <x>%",
+          "Ảnh",
+          "Thời tiết",
+          "Đồng hồ",
+          "<skill sau>"
+        ],
+        "when": "theo skill bật: agent → Claude + Codex; photo → Ảnh; weather → Thời tiết; clock → Đồng hồ",
+        "draw": "icon ×2: Clawd 36×20 tại (cx−18, ô+1), dòng lệnh 32×20 tại (cx−16, ô), ảnh 32×22 tại (cx−16, ô), thùng 28×20 tại (cx−14, ô), thời tiết / đồng hồ 32×28 tại (cx−16, ô−6); nhãn JBMono-11 white TC tại (cx, ô+24), bóng đen (+1, +1)",
+        "selected": "XP icon đang chọn: icon trắng → xpSelectIcon, Clawd → xpSelectClawd; nhãn nền xpSelect (rộng chữ + 1 px mỗi bên), chữ white không bóng, viền chấm 1 px white quanh nền nhãn"
       },
       "balloon": {
         "box": [
@@ -1570,7 +1586,7 @@
           ]
         ]
       },
-      "taskbar": "như mọi màn, không nút skill nào lõm"
+      "taskbar": "nút = cửa sổ đang mở (không nút nào lõm khi desktop đang hiện)"
     },
     "clawdWork": {
       "source": "GIF Clawd (cleverhack.com/clawd-claude-code-gif), 47 khung đọc theo ô",
@@ -1839,6 +1855,52 @@
           "..L...CCC..C...C.......",
           "...LLLL..C..C...C.C...."
         ]
+      }
+    },
+    "menu": {
+      "xp": "menu ngữ cảnh / menu cửa sổ (system menu) của Windows XP Luna",
+      "frame": "xpMenuBorder 1 px, nền xpMenu, đệm trong 2 px; không bóng đổ (RGB565)",
+      "item": {
+        "h": 17,
+        "text": "JBMono-11 TL tại (x+17, mục+2); mục mặc định JBMono-12B tại (x+17, mục+1)",
+        "on": "bg",
+        "off": "xpMenuBorder",
+        "submenu": "mũi tên ▸ 4×7 tại (x+w−10, mục+5)",
+        "glyph": "ký hiệu 7×7 tại (x+5, mục+5)",
+        "key": "phím tắt JBMono-11 TR tại (x+w−17, mục+2)"
+      },
+      "separator": {
+        "h": 7,
+        "line": "xpMenuBorder 1 px tại mục+3, x+2 … x+w−3"
+      },
+      "desktop": {
+        "open": "tại điểm giữ (góc trên trái), dời vào trong màn y ≤ 213",
+        "w": 166,
+        "items": [
+          "Sắp xếp biểu tượng ▸",
+          "Làm mới",
+          "—",
+          "Dán (mờ)",
+          "Dán lối tắt (mờ)",
+          "—",
+          "Mới ▸ (mờ)",
+          "—",
+          "Thuộc tính"
+        ]
+      },
+      "window": {
+        "open": "giữ nút thanh tác vụ: góc dưới trái tại (x nút, 213); giữ thanh tiêu đề: tại điểm giữ",
+        "w": 128,
+        "items": [
+          "Khôi phục (mờ)",
+          "Di chuyển (mờ)",
+          "Kích thước (mờ)",
+          "Thu nhỏ",
+          "Phóng to (mờ)",
+          "—",
+          "Đóng · Alt+F4 (đậm)"
+        ],
+        "minimized": "cửa sổ đang thu nhỏ: Khôi phục sáng, Thu nhỏ mờ"
       }
     }
   }

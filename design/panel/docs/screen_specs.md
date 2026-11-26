@@ -1836,6 +1836,8 @@ Nguồn `source/Photo-Empty.dc.html` · ảnh `screens/@2x/PhotoEmpty.png`
 
 ## 17. Kiểu XP (Luna) — giao diện toàn máy
 
+> **P-2026-11-26.14 — Desktop theo skill, thanh tác vụ = cửa sổ đang mở:** biểu tượng desktop theo skill bật (2 cột), biểu tượng đang chọn; nút thanh tác vụ là cửa sổ đang mở, bỏ vạch tiến độ; menu chuột phải (desktop, cửa sổ); nút □ mờ. Xem mục XP-Desk / XP-Menu.
+
 > **P-2026-11-26.13 — Clawd làm việc theo GIF:** Đang chạy = lấy laptop ra (một lần) rồi gõ lặp; xong = ngủ ngay. Clawd ngủ nâng lên y 44, `4NG` không còn dời sang trái.
 
 > **P-2026-11-26.12 — Màn đầu kiểu desktop:** `XP-Desktop` thay kênh Trang chủ: nền = ảnh JPEG người dùng (240×214), nền dự phòng vẽ pixel; biểu tượng desktop; bong bóng thời tiết ở khay.
@@ -2660,3 +2662,24 @@ Nguồn `source/XP-Claude-Laptop.dc.html` (canvas chạy cả vòng) · ảnh `s
 | 19 | 200 | `.......................` `.......................` `.......................` `.......................` `........CCCCCCCCCC.....` `........CCCCCCCCCC.....` `........KKCCCKKCCC.....` `........CCCCCCCCCC.....` `......CCCCCCCCCCCC.....` `.L...CCCCCCCCCCCCC.....` `..L..CCCCCCCCCCCCC.....` `...L....C..C...C.......` `.........C..C...C.C....` |
 | 21 | 200 | `.......................` `.......................` `.......................` `.......................` `........CCCCCCCCCC.....` `........CCCCCCCCCC.....` `........KKCCCKKCCC.....` `......CCCCCCCCCCCC.....` `......CCCCCCCCCCCC.....` `......CCCCCCCCCCCC.....` `.LL.....CCCCCCCCCC.....` `..L..CCCC..C...C.......` `...LLLL..C..C...C.C....` |
 | 22 | 200 | `.......................` `.......................` `.......................` `.......................` `........CCCCCCCCCC.....` `........CCCCCCCCCC.....` `........KKCCCKKCCC.....` `.....CCCCCCCCCCCCC.....` `.....CCCCCCCCCCCCC.....` `.....CCCCCCCCCCCCC.....` `.LL...CCCCCCCCCCCC.....` `..L...CCC..C...C.......` `...LLLL..C..C...C.C....` |
+
+### XP-Desk — desktop theo skill, cửa sổ, thanh tác vụ
+
+Nguồn `source/XP-Desk-Agent.dc.html`, `XP-Desk-All.dc.html`, `XP-Desk-Selected.dc.html`, `XP-Win-Open.dc.html` (hình nền chung `XP-Wall.dc.html` = hình nền dự phòng của XP-Desktop) · ảnh `XPDeskAgent.png`, `XPDeskAll.png`, `XPDeskSelected.png`, `XPWinOpen.png`. Token `themeXP.desktop.icons`, `themeXP.taskbar.buttons`.
+
+- **Biểu tượng desktop** (XP Auto Arrange): cột 0 tâm x 40, cột 1 tâm x 120; ô 48 từ y 8. Theo skill bật: Agent → `Claude <x>%`, `Codex <x>%`; Ảnh → `Ảnh`; Thời tiết → `Thời tiết`; Đồng hồ → `Đồng hồ`. Xếp từ trên xuống: cột 0 ô y 8 / 56 / 104, Thùng rác luôn ở ô y 152 cột 0; tiếp cột 1 ô y 8 / 56 / 104 (dừng trên bong bóng thời tiết y 150). Đủ 4 skill: cột 0 Claude, Codex, Ảnh, Thùng rác; cột 1 Thời tiết, Đồng hồ.
+- Icon ×2: Clawd 36×20 tại (cx−18, ô+1) mắt đen; dòng lệnh 32×20 tại (cx−16, ô); ảnh 32×22 (cx−16, ô); thùng 28×20 (cx−14, ô); thời tiết / đồng hồ (bitmap 16×14 của thanh tác vụ) ×2 = 32×28 tại (cx−16, ô−6). Nhãn JBMono-11 white TC (cx, ô+24), bóng đen (+1, +1). Bề rộng đo: `Thời tiết` 63 px, `Đồng hồ` 49 px, `Thùng rác` ≤ 80 px.
+- Chỉ skill Agent (`XPDeskAgent`): Claude, Codex, Thùng rác ở ô y 104; không bong bóng (skill Thời tiết tắt).
+- **Biểu tượng đang chọn** (`XPDeskSelected`; vừa cài skill / vừa chạm trên app): như XP — icon trắng → xpSelectIcon `#98B4E2`, Clawd → xpSelectClawd `#85719E`; nhãn: nền xpSelect `#316AC5` rộng chữ + 1 px mỗi bên, cao 13, chữ white không bóng, viền chấm 1 px white quanh nền. Bỏ chọn khi app mở cửa sổ khác hoặc chạm chỗ trống.
+- **Thanh tác vụ** = cửa sổ đang mở (app giữ danh sách, gửi xuống), theo thứ tự mở, tối đa 4 nút 28×20 tại x 71 / 101 / 131 / 161, y 217 (icon như cũ). Cửa sổ trên cùng: nút lõm (xpBtnPressedEdge / xpBtnPressed). Thu nhỏ: nút thường. Desktop đang hiện: không nút nào lõm. Không mở gì: chỉ start + khay. **Không còn vạch tiến độ 2 px** ở đáy nút. Badge amber / nút cam khi agent chờ giữ như cũ, trên nút Claude nếu cửa sổ Claude đang mở.
+- **Thu nhỏ** (`XPDeskAll`: Claude đã thu nhỏ): desktop hiện, nút Claude còn trên thanh tác vụ, không lõm. **Tắt (×)**: nút biến mất, hiện cửa sổ mở trước đó chưa thu nhỏ, hết → desktop.
+- **Nút □** (`XPWinOpen`, thanh tiêu đề mọi cửa sổ): ô (202, 3, 16×16) viền white, nền xpTitleLight `#2B80F5`, nét □ 8×8 tại (206, 6) màu xpCaptionOff `#7FA4F0` (thanh trên 2 px) — mờ như XP làm với cửa sổ không đổi cỡ. Tâm nút: `_` x 192, `□` x 210, `×` x 228 (y 11).
+
+### XP-Menu — menu chuột phải (giữ ≥ 500 ms trên app)
+
+Nguồn `source/XP-Menu-Desktop.dc.html`, `XP-Menu-Window.dc.html` · ảnh `XPMenuDesktop.png`, `XPMenuWindow.png`. Token `themeXP.menu`.
+
+- Khung XP Luna: viền 1 px xpMenuBorder `#ACA899`, nền white, đệm trong 2 px, không bóng đổ. Mục cao 17: chữ JBMono-11 bg TL tại (x+17, mục+2); mục mờ chữ xpMenuBorder; mũi tên ▸ 4×7 tại (x+w−10, mục+5); vạch ngăn cao 7 (nét 1 px tại +3). Không có mục đang trỏ (chạm trên app chọn thẳng).
+- **Desktop** (giữ chỗ trống): mở tại điểm giữ (góc trên trái), dời vào trong y ≤ 213. Rộng 166, cao 129. Mục: Sắp xếp biểu tượng ▸ (126 px), Làm mới, —, Dán (mờ), Dán lối tắt (mờ, 77 px), —, Mới ▸ (mờ), —, Thuộc tính (70 px). Ảnh: mở tại (60, 30).
+- **Cửa sổ** (giữ nút thanh tác vụ: góc dưới trái tại (x nút, 213); giữ thanh tiêu đề: tại điểm giữ). Rộng 128, cao 113. Mục, ký hiệu 7×7 tại (x+5, mục+5): Khôi phục (mờ), Di chuyển (mờ), Kích thước (mờ, 70 px), Thu nhỏ, Phóng to (mờ), —, **Đóng** JBMono-12B (28 px) + `Alt+F4` JBMono-11 TR (x+w−17). Cửa sổ đang thu nhỏ: Khôi phục sáng, Thu nhỏ mờ.
+- Menu đóng khi chọn mục, chạm ngoài menu, hoặc một thẻ agent chen ngang. Thuộc tính → cửa sổ Thông tin; Làm mới → vẽ lại desktop; Sắp xếp biểu tượng ▸ (menu con chưa vẽ).

@@ -5,6 +5,32 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-26.14 — Desktop theo skill, thanh tác vụ theo cửa sổ đang mở, menu chuột phải
+
+- **Desktop (kênh Home kiểu XP)** (`source/XP-Desk-Agent.dc.html`, `XP-Desk-All.dc.html`, `XP-Desk-Selected.dc.html`, hình nền chung
+  `XP-Wall.dc.html`; `screen_specs.md` §17 mục XP-Desk; ảnh `XPDeskAgent.png`, `XPDeskAll.png`, `XPDeskSelected.png`):
+  - Một biểu tượng cho mỗi chương trình của skill bật (Agent → Claude, Codex; Ảnh; Thời tiết; Đồng hồ), xếp như XP Auto Arrange: cột tâm
+    x 40 rồi x 120, ô 48 từ y 8; Thùng rác giữ ô y 152 cột 0; cột 1 dừng trên bong bóng thời tiết.
+  - Biểu tượng đang chọn như XP: icon pha xanh chọn, nhãn nền xpSelect + viền chấm.
+- **Thanh tác vụ** (mọi màn có thanh tác vụ; `XP-Win-Open.dc.html`, ảnh `XPWinOpen.png`): nút = cửa sổ đang mở (tối đa 4), cửa sổ trên
+  cùng lõm, thu nhỏ thì thường; không mở gì → chỉ start + khay. Bỏ vạch tiến độ slide.
+- **Thanh tiêu đề**: nút □ luôn mờ (nét xpCaptionOff) — cửa sổ đầy màn, không đổi cỡ (thành phần XP: nút phóng to bị tắt).
+- **Menu chuột phải** (`XP-Menu-Desktop.dc.html`, `XP-Menu-Window.dc.html`; ảnh `XPMenuDesktop.png`, `XPMenuWindow.png`): menu ngữ cảnh desktop
+  và menu cửa sổ (system menu) của XP, chữ tiếng Việt; mục không dùng được mờ.
+- Phiếu: `docs/phieu_panel/2026-11-26-desktop-cua-so-xp.md`
+- Đổi luật: thiết bị không tự xoay kênh; nút thanh tác vụ là cửa sổ đang mở (không còn một nút cố định cho mỗi skill); bấm `×` bỏ nút đó;
+  biểu tượng desktop theo skill bật.
+- Cần firmware: màu xpSelectIcon `#98B4E2`, xpSelectClawd `#85719E` (xpMenu = white, xpMenuBorder = xpDim, xpCaptionOff = xpWelcomeLine đã
+  có); danh sách cửa sổ đang mở + cửa sổ trên cùng + cửa sổ thu nhỏ (app gửi xuống, báo lại trong `/api/state`); lệnh mở / đóng menu
+  chuột phải tại toạ độ, chọn mục; tắt tự xoay.
+
+**Việc cần làm trong code:**
+- Kênh `Home`: vẽ biểu tượng theo skill bật theo lưới 2 cột (§17 XP-Desk); trạng thái chọn một biểu tượng.
+- Thanh tác vụ: nút theo danh sách cửa sổ đang mở, lõm = trên cùng; bỏ vạch tiến độ; badge / nút cam trên nút Claude khi nó đang mở.
+- Mọi cửa sổ XP: nút giữa thanh tiêu đề vẽ □ mờ.
+- Menu chuột phải: vẽ đè lên màn tại toạ độ (desktop / cửa sổ), đóng khi chọn mục / chạm ngoài / thẻ agent chen ngang.
+- Ghi chú cho app: tâm nút □ trên máy là x 210 (app đang tính 207).
+
 ## P-2026-11-26.13 — Clawd làm việc theo GIF (lấy laptop, gõ, ngủ)
 
 - **Kênh Claude kiểu XP** (`source/XP-Claude-Laptop.dc.html`, `screen_specs.md` §17 mục XP-Claude-Laptop, token `themeXP.clawdWork`;

@@ -1,6 +1,7 @@
 # Phiếu màn thiết bị: Desktop theo skill, cửa sổ thu nhỏ / phóng to / tắt, menu chuột phải — như Windows XP
 
 - Trạng thái: chờ thiết kế
+- Đã vẽ: P-2026-11-26.14
 - Ngày: 2026-11-26 · Nguồn: thiết kế app `2026-11-26.6` (màn Điều khiển chạm được như XP, mục "Cần thiết kế màn thiết
   bị"); kế hoạch `app/docs/tasks/2026-11-26-thiet-ke-2026-11-26.6.md`. Người dùng chốt: thiết bị **không tự xoay** nữa.
 
