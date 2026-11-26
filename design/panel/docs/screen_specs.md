@@ -1844,6 +1844,8 @@ Nguồn `source/Photo-Empty.dc.html` · ảnh `screens/@2x/PhotoEmpty.png`
 
 ## 17. Kiểu XP (Luna) — giao diện toàn máy
 
+> **P-2026-11-26.18 — nhãn desktop không có %:** `Claude` / `Codex` chỉ là tên — xem mục XP-Real.
+
 > **P-2026-11-26.17 — Đồng hồ, Thời tiết, Dự báo, Đêm, desktop theo XP thật:** Đồng hồ = hộp thoại Ngày và Giờ; Thời tiết = trang thuộc tính có tab; Dự báo = tab Dự báo, danh sách Chi tiết; Đêm = trình bảo vệ màn hình; desktop bỏ biểu tượng Thời tiết / Đồng hồ. Xem mục XP-Real. Thay phần tương ứng của XP-Weather, XP-Forecast, XP-Clock, XP-Desk.
 
 > **P-2026-11-26.16 — Mở cửa sổ như XP:** nút lún trước, thanh tiêu đề bay khi khôi phục / thu nhỏ, khung trống trước nội dung, con trỏ chờ, đang tải kiểu hộp tải về. Xem mục XP-Open (thay phần "Đang tải" ở Thành phần cho các cửa sổ chưa có số liệu).
@@ -2955,7 +2957,9 @@ Không thanh nhiệt độ, không thanh trạng thái. Chưa có dữ liệu: d
 
 **Đêm = trình bảo vệ màn hình** (`XPNightSaver`; kênh `Night`): nền `#000000`; `23:47` `VT323-86` xpLabel `#4D4D4D` TL (x, y) — 170 px; ngày `JBMono-11` xpLabel căn giữa (x + 85, y + 85), `Thứ Năm 26/11` 91 px. Mỗi phút (khi số phút đổi) khối nhảy chỗ: xóa khung cũ (x, y, 170×100) bằng đen, vẽ ở chỗ mới — x ∈ [6, 64], y ∈ [6, 134], ngẫu nhiên, cách chỗ cũ ≥ 30 px. Không thanh tác vụ, không cửa sổ (như trước).
 
-**Desktop như XP thật** (`XPDeskOneCol`): chỉ chương trình đã cài — một cột x 40: Claude % / Codex % / Ảnh / Thùng rác, y 8 / 56 / 104 / 152 (bỏ ô nào thì dồn lên). Bỏ cột x 120 (Thời tiết, Đồng hồ). Thời tiết mở từ biểu tượng khay, Đồng hồ mở từ giờ ở khay (ô giờ không có trạng thái lún — XP không có).
+**Desktop như XP thật** (`XPDeskOneCol`): chỉ chương trình đã cài — một cột x 40: Claude / Codex / Ảnh / Thùng rác, y 8 / 56 / 104 / 152 (bỏ ô nào thì dồn lên). Bỏ cột x 120 (Thời tiết, Đồng hồ). Thời tiết mở từ biểu tượng khay, Đồng hồ mở từ giờ ở khay (ô giờ không có trạng thái lún — XP không có).
+
+> **P-2026-11-26.18 — nhãn desktop không có %:** nhãn biểu tượng chỉ là tên chương trình, như XP thật: `Claude` (JBMono-11, 42 px) và `Codex` (35 px), TC tại (40, ô+24), bóng đen (+1, +1), không đổi theo số liệu. % chỉ hiện trong cửa sổ Claude / Codex. Thay hàng `Claude 38%` / `Codex 71%` của bảng XP-Desk.
 
 **Bitmap icon thời tiết** (Y xpIconWarn, A xpAmber, G xpFieldBorder, W white, B xpIconInfo):
 

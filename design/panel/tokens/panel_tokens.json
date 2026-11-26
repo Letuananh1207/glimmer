@@ -1586,15 +1586,17 @@
         "grid": "một cột tâm x 40; ô cao 48 từ y 8; xếp từ trên xuống (XP Auto Arrange)",
         "column0": "tối đa 3 chương trình (y 8, 56, 104) + Thùng rác cố định ô y 152",
         "order": [
-          "Claude <x>%",
-          "Codex <x>%",
+          "Claude",
+          "Codex",
           "Ảnh",
           "<skill sau>"
         ],
         "when": "theo skill bật: agent → Claude + Codex; photo → Ảnh. weather / clock không có biểu tượng — mở từ khay",
         "draw": "icon ×2: Clawd 36×20 tại (cx−18, ô+1), dòng lệnh 32×20 tại (cx−16, ô), ảnh 32×22 tại (cx−16, ô), thùng 28×20 tại (cx−14, ô), thời tiết / đồng hồ 32×28 tại (cx−16, ô−6); nhãn JBMono-11 white TC tại (cx, ô+24), bóng đen (+1, +1)",
         "selected": "XP icon đang chọn: icon trắng → xpSelectIcon, Clawd → xpSelectClawd; nhãn nền xpSelect (rộng chữ + 1 px mỗi bên), chữ white không bóng, viền chấm 1 px white quanh nền nhãn",
-        "p17": "P-2026-11-26.17 — chỉ chương trình đã cài: một cột x 40, y 8 / 56 / 104 / 152 (Claude %, Codex %, Ảnh, Thùng rác); cột x 120 bỏ"
+        "p17": "P-2026-11-26.17 — chỉ chương trình đã cài: một cột x 40, y 8 / 56 / 104 / 152 (Claude %, Codex %, Ảnh, Thùng rác); cột x 120 bỏ",
+        "label": "tên chương trình, không có số liệu: Claude 42 px, Codex 35 px (JBMono-11) — vẽ một lần, tick() không vẽ lại nhãn",
+        "p18": "P-2026-11-26.18 — nhãn bỏ %: Claude / Codex"
       },
       "balloon": {
         "xp": "bong bóng khay (notification balloon tip) của XP",

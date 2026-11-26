@@ -5,6 +5,17 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-26.18 — Claude và Codex trên desktop không hiện %
+
+- **Kênh Home — desktop** (`source/XP-Desk-OneCol.dc.html`, `screen_specs.md` §17 mục XP-Real; ảnh `XPDeskOneCol.png`):
+  - Nhãn biểu tượng chỉ là tên chương trình, như XP thật (biểu tượng desktop XP không mang số liệu): `Claude` (JBMono-11,
+    42 px) và `Codex` (35 px), white TC tại (40, ô+24), bóng đen (+1, +1). Vị trí, biểu tượng, trạng thái chọn không đổi.
+  - Máy đang vẽ `Claude <x>%` / `Codex <x>%` và vẽ lại nhãn khi % đổi. % vẫn hiện trong cửa sổ Claude / Codex.
+
+**Việc cần làm trong code:**
+- Kênh `Home`: nhãn biểu tượng Claude / Codex = `Claude` / `Codex`, không kèm %; `tick()` không còn vẽ lại nhãn khi số liệu
+  đổi (chỉ khi chọn / bỏ chọn biểu tượng hoặc bong bóng ẩn).
+
 ## P-2026-11-26.17 — Đồng hồ, Thời tiết, Dự báo, Đêm và desktop theo Windows XP thật
 
 - **Kênh Clock** (`source/XP-Clock-Props.dc.html`; `screen_specs.md` §17 mục XP-Real; ảnh `XPClockProps.png`): thành hộp
