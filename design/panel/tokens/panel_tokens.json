@@ -1596,7 +1596,36 @@
         "selected": "XP icon đang chọn: icon trắng → xpSelectIcon, Clawd → xpSelectClawd; nhãn nền xpSelect (rộng chữ + 1 px mỗi bên), chữ white không bóng, viền chấm 1 px white quanh nền nhãn",
         "p17": "P-2026-11-26.17 — chỉ chương trình đã cài: một cột x 40, y 8 / 56 / 104 / 152 (Claude %, Codex %, Ảnh, Thùng rác); cột x 120 bỏ",
         "label": "tên chương trình, không có số liệu: Claude 42 px, Codex 35 px (JBMono-11) — vẽ một lần, tick() không vẽ lại nhãn",
-        "p18": "P-2026-11-26.18 — nhãn bỏ %: Claude / Codex"
+        "p18": "P-2026-11-26.18 — nhãn bỏ %: Claude / Codex",
+        "bitmaps": {
+          "source": "source/XP-Desk-Icons.dc.html (SVG path mỗi màu một path, 1 đơn vị = 1 px)",
+          "size": [
+            32,
+            23
+          ],
+          "at": "(24, ô)",
+          "codex": {
+            "xp": "Command Prompt",
+            "cellY": 56,
+            "colors": 14
+          },
+          "photo": {
+            "xp": "My Pictures",
+            "cellY": 104,
+            "colors": 20
+          },
+          "trash": {
+            "xp": "Recycle Bin (trống)",
+            "cellY": 152,
+            "colors": 18
+          },
+          "shadow": {
+            "color": "#22303F",
+            "rule": "dither (x+y) chẵn, 1 px phải-dưới"
+          },
+          "storage": "flash (RGB565 + mặt nạ trong suốt), không tốn RAM"
+        },
+        "p19": "P-2026-11-26.19 — Codex / Ảnh / Thùng rác thành bitmap màu kiểu XP 32×23, thay icon trắng ×2"
       },
       "balloon": {
         "xp": "bong bóng khay (notification balloon tip) của XP",

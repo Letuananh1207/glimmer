@@ -1844,6 +1844,8 @@ Nguồn `source/Photo-Empty.dc.html` · ảnh `screens/@2x/PhotoEmpty.png`
 
 ## 17. Kiểu XP (Luna) — giao diện toàn máy
 
+> **P-2026-11-26.19 — biểu tượng desktop kiểu XP:** Codex / Ảnh / Thùng rác thành bitmap màu 32×23 — xem mục XP-Real.
+
 > **P-2026-11-26.18 — nhãn desktop không có %:** `Claude` / `Codex` chỉ là tên — xem mục XP-Real.
 
 > **P-2026-11-26.17 — Đồng hồ, Thời tiết, Dự báo, Đêm, desktop theo XP thật:** Đồng hồ = hộp thoại Ngày và Giờ; Thời tiết = trang thuộc tính có tab; Dự báo = tab Dự báo, danh sách Chi tiết; Đêm = trình bảo vệ màn hình; desktop bỏ biểu tượng Thời tiết / Đồng hồ. Xem mục XP-Real. Thay phần tương ứng của XP-Weather, XP-Forecast, XP-Clock, XP-Desk.
@@ -2960,6 +2962,7 @@ Không thanh nhiệt độ, không thanh trạng thái. Chưa có dữ liệu: d
 **Desktop như XP thật** (`XPDeskOneCol`): chỉ chương trình đã cài — một cột x 40: Claude / Codex / Ảnh / Thùng rác, y 8 / 56 / 104 / 152 (bỏ ô nào thì dồn lên). Bỏ cột x 120 (Thời tiết, Đồng hồ). Thời tiết mở từ biểu tượng khay, Đồng hồ mở từ giờ ở khay (ô giờ không có trạng thái lún — XP không có).
 
 > **P-2026-11-26.18 — nhãn desktop không có %:** nhãn biểu tượng chỉ là tên chương trình, như XP thật: `Claude` (JBMono-11, 42 px) và `Codex` (35 px), TC tại (40, ô+24), bóng đen (+1, +1), không đổi theo số liệu. % chỉ hiện trong cửa sổ Claude / Codex. Thay hàng `Claude 38%` / `Codex 71%` của bảng XP-Desk.
+> **P-2026-11-26.19 — biểu tượng desktop kiểu XP** (`XPDeskIcons`, `source/XP-Desk-Icons.dc.html`): Codex, Ảnh, Thùng rác thành bitmap màu 32×23 **pixel thật** (không phóng ×2) tại (24, ô) — Codex ô y 56, Ảnh 104, Thùng rác 152; Clawd không đổi. Bitmap = các `<path>` SVG trong source, mỗi path một màu, `M x y h w v1` = một đoạn ngang; ô không có path = trong suốt (giữ hình nền). Codex = Command Prompt (khung xám nổi 3D, tiêu đề gradient 7 sắc #0A246A→#A6CAF0, thân đen, `C:_` #C0C0C0), 14 màu; Ảnh = My Pictures (thư mục vàng gradient, nắp nghiêng, ảnh trời + mặt trời), 20 màu; Thùng rác = Recycle Bin (thùng lưới xám xanh, sáng trái → tối phải), 18 màu. Bóng chấm #22303F 1 px phải-dưới, ô (x+y) chẵn. Nhãn và vị trí như P-.18. Vẽ một lần cùng hình nền; chọn biểu tượng: XP tô xpSelect 50 % lên icon — ở đây thay mọi màu của bitmap bằng xpSelectIcon theo dither (x+y) chẵn (không pha trong suốt).
 
 **Bitmap icon thời tiết** (Y xpIconWarn, A xpAmber, G xpFieldBorder, W white, B xpIconInfo):
 

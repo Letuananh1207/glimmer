@@ -5,6 +5,22 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-26.19 — Biểu tượng desktop vẽ lại theo kiểu Windows XP
+
+- **Kênh Home — desktop** (`source/XP-Desk-Icons.dc.html`, `screen_specs.md` §17 mục XP-Real; ảnh `XPDeskIcons.png`):
+  - Codex = **Command Prompt** của XP: khung xám nổi 3D, thanh tiêu đề gradient xanh đậm → xanh nhạt, thân đen, `C:\_`.
+  - Ảnh = **My Pictures**: thư mục vàng chuyển sắc, nắp trước nghiêng, tấm ảnh trời xanh + mặt trời bên trong.
+  - Thùng rác = **Recycle Bin** (trống): thùng lưới xám xanh, sáng trái → tối phải, khe dọc, hai vành, miệng bầu dục tối.
+  - Cả ba: bitmap màu 32×23 pixel thật tại (24, ô), không phóng ×2; đổ sáng trên-trái, viền là sắc tối của vật; bóng chấm
+    #22303F 1 px phải-dưới thay bóng mờ XP. Clawd, nhãn, vị trí không đổi (P-.18).
+  - Máy đang vẽ icon nét trắng 16×10 phóng ×2.
+- Cần firmware: màu mới chỉ trong bitmap biểu tượng (Codex 14, Ảnh 20, Thùng rác 18 — lấy từ `fill` trong source), lưu
+  flash; mặt nạ trong suốt để giữ hình nền.
+
+**Việc cần làm trong code:**
+- Kênh `Home`: sinh bitmap 3 biểu tượng từ source (path SVG → RGB565 + mặt nạ), vẽ tại (24, 56) / (24, 104) / (24, 152);
+  trạng thái chọn = thay màu bitmap bằng xpSelectIcon theo dither (x+y) chẵn. Vẽ lại phần hình nền dưới icon như nhãn.
+
 ## P-2026-11-26.18 — Claude và Codex trên desktop không hiện %
 
 - **Kênh Home — desktop** (`source/XP-Desk-OneCol.dc.html`, `screen_specs.md` §17 mục XP-Real; ảnh `XPDeskOneCol.png`):
