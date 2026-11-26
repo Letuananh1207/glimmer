@@ -1836,6 +1836,8 @@ Nguồn `source/Photo-Empty.dc.html` · ảnh `screens/@2x/PhotoEmpty.png`
 
 ## 17. Kiểu XP (Luna) — giao diện toàn máy
 
+> **P-2026-11-26.11 — Màu theo XP, mắt Clawd đen:** số to (38%, 41%, 71%) màu đen, màu báo mức chỉ ở thanh tiến độ; chữ mờ xpDim = `#ACA899`; link xpLink = `#0066CC`; mắt Clawd (và miệng khi vui) luôn đen trên mọi nền.
+
 > **P-2026-11-26.10 — Góc khởi động:** Clawd trắng ở góc dưới phải màn khởi động đổi thành chữ `Clawdsoft` nghiêng trắng.
 
 > **P-2026-11-26.9 — Nút start + màn hệ thống theo ảnh XP thật + tên Clawdsoft Window xp:** nút start 68 px có cờ 4 ô (14×12) + chữ `start` nghiêng; 4 nút skill 28 px tại x 71 + 30k; màn khởi động / welcome / đăng nhập / cập nhật vẽ lại theo ảnh chụp XP, bỏ dòng thông tin (phiên bản, tên mạng, %, lần thử); logo `Clawdsoft` / `Window` / `xp` / `Professional`.
@@ -1880,12 +1882,14 @@ BBBBBB.YYYYY..
 
 **Thành phần:**
 
+- **Số to**: VT323-86 / VT323-44 màu black (như chữ hộp thoại XP); màu báo mức (xpGreen / xpAmber / xpRed / xpLilac) chỉ ở thanh tiến độ khối.
+- **Clawd**: ô mắt — và lỗ nửa ô của mắt / miệng vui — luôn tô `#000000` (không lấy màu nền be / xanh), ở mọi cỡ: tiêu đề, nút thanh tác vụ, màn Claude, thẻ agent, ô người dùng.
 - **Thanh tiến độ XP**: viền xpFieldBorder, nền white, 9 khối rời (khe 2 px; cao ≤ 6 px khe 1 px), khối sáng khi `pct > i·11.11`.
 - **Groupbox**: viền 1 px xpGroup, nhãn `JBMono-11` xpGroupLabel tại (x+7, y−6) trên nền thân.
 - **Ô trắng / danh sách**: viền xpFieldBorder, nền white; dòng chọn xpSelect chữ white; dòng kẻ xpRowLine; dòng hôm nay xpRowHi.
 - **Hộp thoại**: icon 24×24 tại (14, 36) — tròn xpIconError dấu X white / tam giác xpIconWarn dấu ! đen / tròn xpIconInfo chữ i white; tiêu đề `JBMono-12B` (48, 38); dòng `JBMono-11` từ (48, 58) bước 16; link `JBMono-12B` xpLink gạch chân. Không nút.
 - **Đang tải**: chữ `JBMono-12B` TC (120, 92); ô 140×14 tại (50, 116), 3 khối xpBar sáng chạy qua 9 ô, 1 ô / 0,2 s.
-- **Dữ liệu cũ**: tiêu đề thêm ` · cũ 14P`; số liệu xpDim. **Dải thông báo**: nền xpInfoBar cao 14, icon ! xpAmber, chữ xpRed.
+- **Dữ liệu cũ**: tiêu đề thêm ` · cũ 14P`; số liệu xpDim (`#ACA899`). **Dải thông báo**: nền xpInfoBar cao 14, icon ! xpAmber, chữ xpRed.
 - **Thẻ agent**: cửa sổ tên theo loại; Clawd ô 6 tại (66, 50); tiêu đề `JBMono-16B` TC (120, 120); chi tiết TC (120, 146); chân TC (120, 176). Cần bạn: nút Claude sáng cam.
 - **Clawd ngủ**: Clawd (156, 52); Zz động như §6, mọi khung dời (−2, −6) — khung 6 tại (196, 32); `4NG` TR (150, 84).
 

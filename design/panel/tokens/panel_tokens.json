@@ -1,7 +1,7 @@
 {
   "meta": {
     "name": "glimmer panel",
-    "version": "P-2026-11-26.10",
+    "version": "P-2026-11-26.11",
     "frame": {
       "width": 240,
       "height": 240,
@@ -696,8 +696,9 @@
         "rgb565": "0x0193"
       },
       "xpLink": {
-        "value": "#0033CC",
-        "rgb565": "0x0199"
+        "value": "#0066CC",
+        "rgb565": "0x0339",
+        "use": "link `glimmer.local`"
       },
       "xpTitleEdge": {
         "value": "#003DB5",
@@ -888,8 +889,9 @@
         "rgb565": "0x9B4D"
       },
       "xpDim": {
-        "value": "#A0A0A0",
-        "rgb565": "0xA514"
+        "value": "#ACA899",
+        "rgb565": "0xAD53",
+        "use": "chữ / số liệu mờ (dữ liệu cũ, đang tải) — màu chữ mờ của XP"
       },
       "xpStatusLine": {
         "value": "#ACA899",
@@ -978,6 +980,11 @@
       "white": {
         "value": "#FFFFFF",
         "rgb565": "0xFFFF"
+      },
+      "black": {
+        "value": "#000000",
+        "rgb565": "0x0000",
+        "use": "chữ thường, số to (hạn mức, chi phí), mắt Clawd"
       }
     },
     "zone": {
@@ -1362,6 +1369,10 @@
         "OtaProgress": "`đang cập nhật...` (20, 96) + `Đừng tắt hay rút điện máy.` 11 TC (120, 130)",
         "SetupMode": "trái: cờ ×2 (70, 74), `Window` nghiêng (12, 102) + `xp` cam, `Để bắt đầu,` / `kết nối Wi-Fi` 11 (14, 126 / 140); vạch dọc x 116: y 40–69 xpDividerFade, 70–169 xpDivider, 170–199 xpDividerFade; phải: ô chọn 112×50 tại (124, 86) xpUserSel + đường trên xpUserSelHi, ảnh 24×24 khung white tại (130, 92) nền xpUserPic + Clawd, tên `glimmer-` / `setup` 12B (158, 92 / 106), `192.168.4.1` 11 xpWelcomeSub (158, 121); dưới-trái nút nguồn 14×14 (8, 218) xpClose + `Cài đặt Wi-Fi` 11 (28, 219)"
       }
+    },
+    "rules": {
+      "heroNumber": "số to (VT323-86 / VT323-44) màu đen; màu báo mức chỉ ở thanh tiến độ khối",
+      "clawdEyes": "ô mắt Clawd (và lỗ miệng / mắt nửa ô khi vui) luôn tô #000000, mọi nền — giữ như bản gốc nền đen"
     }
   }
 }

@@ -5,6 +5,21 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-26.11 — Màu theo XP, mắt Clawd đen
+
+- **Mọi màn XP** (`source/XP-*.dc.html`, `screen_specs.md` §17, token `themeXP.color` / `themeXP.rules`; ảnh 44 màn `XP*.png`):
+  - Số to — `38%` Claude, `41%` Codex, `38%` / `71%` AI hôm nay — màu đen như chữ hộp thoại XP; màu báo mức chỉ ở thanh tiến độ khối.
+  - Chữ / số liệu mờ (dữ liệu cũ, đang tải, chưa có thời tiết): `#ACA899` (trước `#A0A0A0`) — màu chữ mờ của XP.
+  - Link `glimmer.local`: `#0066CC` (trước `#0033CC`).
+  - Mắt Clawd luôn đen (`#000000`) trên mọi nền — thân be, thanh tiêu đề, nút thanh tác vụ, thẻ agent, ô người dùng; kể cả vạch mắt ngủ,
+    mắt to, mắt buồn và mắt `^ ^` + miệng khi vui.
+- Cần firmware: đổi giá trị xpDim, xpLink (RGB565 trong token).
+
+**Việc cần làm trong code:**
+- Clawd: trước khi vẽ thân, tô `#000000` các ô mắt (và lỗ nửa ô khi vui) thay vì để lộ nền — áp ở mọi chỗ vẽ Clawd trong kiểu XP.
+- Kênh Claude / Codex / AI: số to vẽ màu đen; thanh tiến độ giữ màu báo mức.
+- Dữ liệu cũ / đang tải: dùng xpDim mới; link dùng xpLink mới. Bản xem trước màn trên máy tính vẽ theo.
+
 ## P-2026-11-26.10 — Màn khởi động: góc dưới phải là chữ Clawdsoft
 
 - **Màn khởi động** (`source/XP-Splash.dc.html`, `screen_specs.md` §17, token `themeXP.boot.corner`; ảnh `XPSplash.png`):
