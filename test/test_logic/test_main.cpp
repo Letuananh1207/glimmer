@@ -16,6 +16,8 @@
 #include "photos_core.h"
 #include "control_core.h"
 #include "desk_wallpaper.h"
+#include "clawd_work_core.h"
+#include "clawd_work.h"
 #include <time.h>
 #include <initializer_list>
 #if defined(_WIN32)   // host tests on Windows (MinGW) lack the POSIX localtime_r
@@ -1103,6 +1105,27 @@ void test_control_screen_off_wake() {
     TEST_ASSERT_EQUAL(80, brightness(80, false, false));
 }
 
+// P-2026-11-26.13: intro once (GIF timings rounded up to the 200 ms tick), then the typing loop.
+void test_clawd_work_timing() {
+    using namespace ClawdWork;
+    TEST_ASSERT_EQUAL_UINT32(3000, introTotalMs());
+    for (int i = 0; i < kIntroFrames; i++) TEST_ASSERT_EQUAL_UINT16(0, kIntroMs[i] % 200);
+    TEST_ASSERT_EQUAL_UINT8(0, slotAt(0));          // stands facing us
+    TEST_ASSERT_EQUAL_UINT8(0, slotAt(399));
+    TEST_ASSERT_EQUAL_UINT8(1, slotAt(400));        // wiggle
+    TEST_ASSERT_EQUAL_UINT8(9, slotAt(2999));       // last intro frame: lands
+    TEST_ASSERT_EQUAL_UINT8(10, slotAt(3000));      // typing loop
+    TEST_ASSERT_EQUAL_UINT8(11, slotAt(3200));
+    TEST_ASSERT_EQUAL_UINT8(12, slotAt(3400));
+    TEST_ASSERT_EQUAL_UINT8(10, slotAt(3600));      // loops, never back to the intro
+    TEST_ASSERT_EQUAL_UINT8(10, slotAt(3000 + 600UL * 1000));
+    // Every slot exists in the generated bitmaps; the intro starts on frame 0 (GIF 0).
+    for (int i = 0; i < kIntroFrames; i++) TEST_ASSERT_TRUE(kIntroSlot[i] < ClawdWorkBits::kFrames);
+    for (int i = 0; i < kLoopFrames; i++)  TEST_ASSERT_TRUE(kLoopSlot[i] < ClawdWorkBits::kFrames);
+    TEST_ASSERT_EQUAL_INT(13, ClawdWorkBits::kRows);
+    TEST_ASSERT_EQUAL_INT(23, ClawdWorkBits::kCols);
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_claude_limits_drive_windows_and_ignore_codenames);
@@ -1158,5 +1181,6 @@ int main(int, char**) {
     RUN_TEST(test_wallpaper_header_and_fallback);
     RUN_TEST(test_control_prev_and_pause);
     RUN_TEST(test_control_screen_off_wake);
+    RUN_TEST(test_clawd_work_timing);
     return UNITY_END();
 }

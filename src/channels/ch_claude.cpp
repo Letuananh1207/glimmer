@@ -3,8 +3,9 @@
 //   title     "Claude" (+ " · cũ 14P" / " · khóa lỗi" …)       XP::titleMeta
 //   y 28      hero label "Hạn mức tuần" / "Phiên 5 giờ"         JBMono-11 LABEL
 //   y 40      hero "38" VT323-86 + "%" VT323-44 at (10+w+2, 70) black (DIM stale); level colour in the bar only
-//   y 36      Clawd 72×40 at x 156 (asleep: y 52 + animated Zz) — mood from the board
-//   y 84      time to reset TR (229) — TR (150) while Clawd sleeps  JBMono-12B RED
+//   y 36      Clawd 72×40 at x 156 — mood from the board; asleep: y 44 + animated Zz;
+//             at work: the GIF Clawd with a laptop, 23×13 cells of 4 px at (136, 30)
+//   y 84      time to reset TR (229) — never moves (P-2026-11-26.13)  JBMono-12B RED
 //   y 102     XP progress 220×14
 //   y 128     groupbox (10,128,220,34) other window: "12% · 2G 14P" TR (224,135) + bar 208×7
 //   y 166     white field (10,166,220,44): the project board, 3 rows of 13 px
@@ -26,6 +27,8 @@
 #include "timeutil.h"
 #include "utf8.h"
 #include "xp.h"
+#include "clawd_work.h"
+#include "clawd_work_core.h"
 #include <math.h>
 #include <time.h>
 
@@ -41,7 +44,9 @@ static Cred   s_cred          = Cred::NOT_SET;
 static MetaSlot s_meta;
 static bool   s_loading = false;
 static uint32_t s_loadStep = 0;
-static int8_t s_asleep = -1;          // Clawd layout on screen: -1 unknown, 0 awake, 1 asleep
+// Clawd on screen: -1 unknown, else a Mode.
+enum Mode : int8_t { M_AWAKE = 0, M_ASLEEP = 1, M_WORK = 2 };
+static int8_t s_mode = -1;
 
 bool chClaudeEnabled(const ChannelCtx& ctx) {
     return ctx.settings && ctx.settings->showClaude && !ctx.settings->claudeKey.isEmpty();
@@ -56,13 +61,16 @@ static MetaSlot metaFor(const ChannelCtx& ctx) {
 static constexpr int kL = Layout::XP_LEFT;          // 10
 static constexpr int kR = Layout::XP_RIGHT;         // 229
 static constexpr int kHeroY = 40, kPctY = 70;
-static constexpr int kHeroClearR = 155;             // hero clears x 10..154 (Clawd from 156)
+static constexpr int kHeroClearR = 132;             // hero clears x 10..131 (Clawd's region from 132)
 static constexpr int kBarY = 102;
 static constexpr int kResetY = 84;
-static constexpr int kResetXAwake = kR, kResetXAsleep = 150;
 static constexpr int kClawdS = 4;                   // 18×10 cells → 72×40
 static constexpr int kClawdX = 156;
-static constexpr int kClawdYAwake = 36, kClawdYAsleep = 52;
+static constexpr int kClawdYAwake = 36, kClawdYAsleep = 44;
+// Clawd's region, repainted when his mode changes: x 132..229, y 22..83 (the
+// countdown below it, y 84.., is never touched by Clawd).
+static constexpr int kRegX = kHeroClearR, kRegY = Layout::XP_BODY_Y;
+static constexpr int kRegW = kR + 1 - kRegX, kRegH = kResetY - kRegY;
 static constexpr int kGroupY = 128, kGroupH = 34;
 static constexpr int kFieldY = 166, kFieldH = 44;
 static constexpr int kRowH = 13;
@@ -75,47 +83,46 @@ static uint16_t barColor(float pct, bool dim) {
     return c == GREEN ? BAR : c;
 }
 
-// Clawd's mood from the project board: alarmed for an approval, sad for an
-// error, walking while something runs, asleep (sleep eyes + "Zz", no blink)
-// when everything is done or nothing is on the board. Blinks every 4 s awake.
-static uint8_t clawdFrame() {
+// Clawd's mood from the project board (top = most urgent): something running
+// → at work (the GIF Clawd with a laptop, P-2026-11-26.13); everything done
+// or nothing on the board → asleep (sleep eyes + "Zz"); otherwise awake —
+// alarmed for an approval, sad for an error, blinking every 4 s.
+static Projects::State topState(bool* any) {
     const Projects::Board& b = AttentionQueue::projects();
     int ord[Projects::kMax];
     int n = Projects::ordered(b, ord, AttentionQueue::now());
-    uint8_t eyes = Display::CLAWD_SLEEP;         // asleep: nothing going on
-    bool walk = false;
-    if (n) {
-        switch (b.e[ord[0]].state) {             // ordered: most urgent first
-            case Projects::P_APPROVAL: eyes = Display::CLAWD_WIDE; break;
-            case Projects::P_ERROR:    eyes = Display::CLAWD_SAD;  break;
-            case Projects::P_DONE:     eyes = Display::CLAWD_SLEEP; break;   // all done
-            case Projects::P_WORKING:  eyes = Display::CLAWD_OPEN; walk = (millis() / 400) % 2; break;
-            default:                   eyes = Display::CLAWD_OPEN; break;
-        }
-        if ((eyes == Display::CLAWD_OPEN || eyes == Display::CLAWD_WIDE) && millis() % 4000 < 150)
-            eyes = Display::CLAWD_SHUT;          // blink
-    }
-    return eyes | (walk ? 0x10 : 0);
+    *any = n > 0;
+    return n ? b.e[ord[0]].state : Projects::P_DONE;
 }
-static bool frameAsleep(uint8_t f) { return (f & 0x0F) == Display::CLAWD_SLEEP; }
+static Mode clawdMode() {
+    bool any; Projects::State st = topState(&any);
+    if (!any || st == Projects::P_DONE) return M_ASLEEP;
+    return st == Projects::P_WORKING ? M_WORK : M_AWAKE;
+}
+static uint8_t clawdFrame() {                    // awake moods only
+    bool any; Projects::State st = topState(&any);
+    uint8_t eyes = st == Projects::P_APPROVAL ? Display::CLAWD_WIDE
+                 : st == Projects::P_ERROR    ? Display::CLAWD_SAD : Display::CLAWD_OPEN;
+    if (eyes != Display::CLAWD_SAD && millis() % 4000 < 150) eyes = Display::CLAWD_SHUT;   // blink
+    return eyes;
+}
 
 // ── Animated "Zz" over a sleeping Clawd (§6 table, token component.clawd.
-// sleepMark), every frame moved with Clawd to y 52 (§17 "Clawd ngủ"): frame
-// 6 lands at (196, 32), i.e. the §6 frames shifted (−6, −6) as drawn in
-// XP-Claude-NoProject/-Done. One z drifts up and grows, 12 frames × 400 ms
-// then a 1.2 s pause (6 s cycle). Each frame repaints only its box, which
-// stops at the title bar: cells above y 22 are not drawn.
-static constexpr int kZzDX = -6, kZzDY = -6;
-static constexpr int kZzX = 196 + kZzDX, kZzY = Layout::XP_BODY_Y;   // box x 190..219, y 22..51
-static constexpr int kZzW = 30, kZzH = kClawdYAsleep - Layout::XP_BODY_Y;
+// sleepMark), moved with Clawd to y 44 (§17 "Clawd ngủ", P-2026-11-26.13):
+// x − 2, y = 24 + round((y_§6 − 26) × 14 / 26) — the path squeezed into
+// y 24..38 between the title bar and Clawd's head; frame 6 lands at (200, 30).
+// One z drifts up and grows, 12 frames × 400 ms then a 1.2 s pause (6 s
+// cycle). Each frame repaints only its box (x 194..229, y 22..43).
+static constexpr int kZzX = 194, kZzY = Layout::XP_BODY_Y;
+static constexpr int kZzW = kR + 1 - kZzX, kZzH = kClawdYAsleep - Layout::XP_BODY_Y;
 static constexpr uint32_t kZzFrameMs = 400, kZzCycleMs = 6000;
 static constexpr int kZzFrames = 12;
 
 struct ZzFrame { uint8_t glyph, x, y; bool faint; };   // glyph 0 = z3, 1 = z4, 2 = Z5
 static const ZzFrame kZz[kZzFrames] PROGMEM = {
-    {0, 198, 52, true},  {0, 200, 50, false}, {0, 202, 48, false}, {0, 203, 45, false},
-    {1, 202, 42, false}, {1, 202, 40, false}, {1, 202, 38, false}, {1, 203, 36, false},
-    {2, 204, 32, false}, {2, 206, 30, false}, {2, 208, 28, true},  {2, 209, 26, true},
+    {0, 196, 38, true},  {0, 198, 37, false}, {0, 200, 36, false}, {0, 201, 34, false},
+    {1, 200, 33, false}, {1, 200, 32, false}, {1, 200, 30, false}, {1, 201, 29, false},
+    {2, 202, 27, false}, {2, 204, 26, false}, {2, 206, 25, true},  {2, 207, 24, true},
 };
 
 static uint32_t s_zzT0    = 0;    // millis() of frame 0
@@ -140,7 +147,7 @@ static void paintZzFrame(int k) {
         memcpy_P(&f, &kZz[k], sizeof(f));
         const uint8_t* rows = f.glyph == 0 ? kz3 : f.glyph == 1 ? kz4 : kZ5;
         // Fading frames (LINE on the dark theme) are xpDim on the beige body.
-        drawGlyph(rows, 3 + f.glyph, f.x + kZzDX, f.y + kZzDY, f.faint ? DIM : MUTED);
+        drawGlyph(rows, 3 + f.glyph, f.x, f.y, f.faint ? DIM : MUTED);
     }
     s_zzShown = (int8_t)k;
 }
@@ -152,21 +159,51 @@ static void tickZz() {
     if (k != s_zzShown) paintZzFrame(k);
 }
 
+// ── Clawd at work (P-2026-11-26.13, §17 XP-Claude-Laptop) ──
+// 23×13 cells of 4 px at (136, 30), every cell painted (body cells too), so a
+// new frame overwrites the last one without clearing; runs of one colour go
+// out as single rects.
+static uint32_t s_workT0   = 0;   // millis() Clawd started working
+static int8_t   s_workSlot = -1;  // frame slot on screen
+
+static void paintWorkFrame(uint8_t slot) {
+    static const uint16_t kCol[4] = {BODY, Display::CLAWD_ORANGE, BLACK, LAPTOP};
+    using namespace ClawdWorkBits;
+    using ClawdWork::kCell;
+    for (int j = 0; j < kRows; j++) {
+        uint8_t row[kBytesPerRow];
+        memcpy_P(row, kFrame[slot][j], kBytesPerRow);
+        auto cell = [&](int i) { return (row[i >> 2] >> (6 - 2 * (i & 3))) & 3; };
+        int i = 0;
+        while (i < kCols) {
+            const int c = cell(i);
+            int k = i;
+            while (k < kCols && cell(k) == c) k++;
+            tft.fillRect(ClawdWork::kOriginX + i * kCell, ClawdWork::kOriginY + j * kCell,
+                         (k - i) * kCell, kCell, kCol[c]);
+            i = k;
+        }
+    }
+    s_workSlot = (int8_t)slot;
+}
+
+static void tickWork() {
+    const uint8_t slot = ClawdWork::slotAt(millis() - s_workT0);
+    if (slot != s_workSlot) paintWorkFrame(slot);
+}
+
 // ── Region paint helpers (also called from draw()) ──
 
 static bool s_dim = false;                 // values painted dimmed (stale)
 
 static void paintReset(time_t resetEpoch) {
     String s = (resetEpoch > 0) ? Api::formatCountdown(resetEpoch) : String("--");
-    const bool asleep = s_asleep == 1;
-    // Awake: x 156..229 under Clawd (y 76..101). Asleep: left of Clawd, inside
-    // the hero band (x 100..154) — only the countdown's own box.
-    if (asleep) tft.fillRect(100, kResetY - 1, kHeroClearR - 100, 17, BODY);
-    else        tft.fillRect(kClawdX, kClawdYAwake + 40, kR + 1 - kClawdX, kBarY - kClawdYAwake - 40, BODY);
+    // Always TR (229, 84), under Clawd's region: x 132..229, y 84..101.
+    tft.fillRect(kRegX, kResetY, kRegW, kBarY - kResetY, BODY);
     Display::useFont("JBMono-12B");
     tft.setTextDatum(TR_DATUM);
     tft.setTextColor(s_dim ? DIM : RED, BODY);
-    tft.drawString(s, asleep ? kResetXAsleep : kResetXAwake, kResetY);
+    tft.drawString(s, kR, kResetY);
     Utf8::copy(s_heroReset, sizeof(s_heroReset), s.c_str());
 }
 
@@ -184,8 +221,8 @@ static void paintHero(float pct) {
     tft.setTextColor(uc, BODY);
     tft.drawString(pctBuf, kL, kHeroY);
     const int heroW = tft.textWidth(pctBuf);
-    // "100" ends at x 112; its "%" would meet the sleeping-Clawd countdown.
-    if (strlen(pctBuf) < 3 || s_asleep != 1) {
+    // "100" ends at x 112; its "%" would run into Clawd's region (x 132).
+    if (strlen(pctBuf) < 3) {
         Display::useFont("VT323-44");
         tft.setTextColor(uc, BODY);
         tft.drawString("%", kL + heroW + 2, kPctY);
@@ -193,26 +230,29 @@ static void paintHero(float pct) {
     XP::progress(kL, kBarY, kR + 1 - kL, 14, pct < 0 ? 0 : Api::shownPct(pct), barColor(pct, s_dim), 2);
 }
 
-static void paintClawd(bool force = false) {
+static void paintClawd(bool force = false) {       // awake moods
     uint8_t f = clawdFrame();
     if (!force && f == s_clawdFrame) return;
-    const bool asleep = frameAsleep(f);
-    Display::drawClawd(kClawdX, asleep ? kClawdYAsleep : kClawdYAwake, kClawdS,
-                       Display::CLAWD_ORANGE, f & 0x0F, f & 0x10, BODY);
-    if (asleep && (s_zzShown < 0 || force)) { s_zzT0 = millis(); paintZzFrame(0); }
+    Display::drawClawd(kClawdX, kClawdYAwake, kClawdS, Display::CLAWD_ORANGE, f, false, BODY);
     s_clawdFrame = f;
 }
 
-// Clawd awake ↔ asleep moves Clawd (y 36 ↔ 52), the countdown (x 229 ↔ 150)
-// and the Zz: clear the right column, then repaint the hero (its band holds
-// the sleeping countdown), Clawd and the countdown.
-static void paintRightColumn(float heroPct, time_t heroRst, bool asleep) {
-    tft.fillRect(kHeroClearR, Layout::XP_BODY_Y, kR + 1 - kHeroClearR, kBarY - Layout::XP_BODY_Y, BODY);
-    s_zzShown = -1;
-    s_asleep = asleep ? 1 : 0;
-    paintHero(heroPct);
-    paintClawd(true);
-    paintReset(heroRst);
+// A new mode clears Clawd's region (x 132..229, y 22..83) and starts it:
+// awake → the mood Clawd at (156, 36); asleep → the sleeping Clawd at
+// (156, 44) + Zz from frame 0; at work → the intro from its first frame.
+// The hero (x <= 131) and the countdown (y >= 84) are never touched.
+static void paintClawdRegion(Mode m) {
+    tft.fillRect(kRegX, kRegY, kRegW, kRegH, BODY);
+    s_mode = m; s_zzShown = -1; s_workSlot = -1; s_clawdFrame = 0xFF;
+    if (m == M_AWAKE) {
+        paintClawd(true);
+    } else if (m == M_ASLEEP) {
+        Display::drawClawd(kClawdX, kClawdYAsleep, kClawdS, Display::CLAWD_ORANGE,
+                           Display::CLAWD_SLEEP, false, BODY);
+        s_zzT0 = millis(); paintZzFrame(0);
+    } else {
+        s_workT0 = millis(); tickWork();
+    }
 }
 
 // Group "Phiên 5 giờ" / "Hạn mức tuần": "12% · 2G 14P" TR (224,135) + bar (16,151,208,7).
@@ -335,7 +375,7 @@ void chClaudeDraw(const ChannelCtx& ctx) {
     XP::titleMeta(s_meta.text);
     s_heroPct = -2.f; s_secPct = -2.f;
     s_heroReset[0] = 0; s_secSub[0] = 0;
-    s_asleep = -1; s_zzShown = -1; s_clawdFrame = 0xFF;
+    s_mode = -1; s_zzShown = -1; s_clawdFrame = 0xFF; s_workSlot = -1;
     s_loading = false;
 
     // Nothing to show yet and something is wrong: the XP message box.
@@ -360,7 +400,9 @@ void chClaudeDraw(const ChannelCtx& ctx) {
     tft.setTextColor(LABEL, BODY);
     tft.drawString(w.weeklyHero ? "Hạn mức tuần" : "Phiên 5 giờ", kL, 28);
 
-    paintRightColumn(w.heroPct, w.heroRst, frameAsleep(clawdFrame()));
+    paintHero(w.heroPct);
+    paintClawdRegion(clawdMode());
+    paintReset(w.heroRst);
 
     XP::groupBox(kL, kGroupY, kR + 1 - kL, kGroupH, w.weeklyHero ? "Phiên 5 giờ" : "Hạn mức tuần");
     paintSecondary(w.secPct, w.secRst);
@@ -395,15 +437,12 @@ void chClaudeTick(const ChannelCtx& ctx) {
     s_stale = stale;
     s_dim = stale;
 
-    // Clawd: awake ↔ asleep relays the right column; otherwise only the frame.
-    const bool asleep = frameAsleep(clawdFrame());
-    if ((asleep ? 1 : 0) != s_asleep) {
-        paintRightColumn(w.heroPct, w.heroRst, asleep);
-        s_heroPct = (w.heroPct < 0) ? -2.f : w.heroPct;
-    } else {
-        paintClawd();                     // mood / blink / step — only when the frame changes
-    }
-    tickZz();                             // sleeping: next Zz frame every 400 ms
+    // Clawd: a new mode repaints his region; otherwise only what moved.
+    const Mode m = clawdMode();
+    if (m != s_mode)        paintClawdRegion(m);
+    else if (m == M_AWAKE)  paintClawd();     // mood / blink — only when the frame changes
+    else if (m == M_WORK)   tickWork();       // intro once, then the typing loop
+    else                    tickZz();         // sleeping: next Zz frame every 400 ms
 
     if (minTick || dimChanged) {
         MetaSlot m = metaFor(ctx);
@@ -413,7 +452,6 @@ void chClaudeTick(const ChannelCtx& ctx) {
     float p = (w.heroPct < 0) ? -2.f : w.heroPct;
     if (fabsf(p - s_heroPct) > 0.4f || dimChanged) {
         paintHero(w.heroPct);
-        if (s_asleep == 1) paintReset(w.heroRst);       // its slot is inside the hero band
         s_heroPct = p;
     }
     if (minTick || dimChanged) {

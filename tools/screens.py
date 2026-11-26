@@ -53,7 +53,7 @@ X = {k: hx(v) for k, v in dict(
     START="3A9E3A", BAND_EDGE="3B4FA8", BTN="3C81F3", BAR="3CC63C", TITLE_HI="3D95FF", TRAY_HI="3FA9F5",
     LABEL="4D4D4D", WELCOME="5A7EDC", TASK_HI="5A9BF6", START_HI="5CC15C", USER_SEL_HI="5F84E3",
     MUTED="6F6F6F", LILAC="7A44C8", DIVIDER_FADE="7D9BE8", FIELD_BORDER="7F9DB9", WELCOME_LINE="7FA4F0",
-    FLAG_GREEN="81BC06", BOOT_BLOCK_HI="9BC0FA", BAND_EDGE_WARM="9C6A6A", DIM="ACA899", STATUS_LINE="ACA899",
+    FLAG_GREEN="81BC06", LAPTOP="808080", BOOT_BLOCK_HI="9BC0FA", BAND_EDGE_WARM="9C6A6A", DIM="ACA899", STATUS_LINE="ACA899",
     BOOT_GREY="B2B2B2", FLASH_EDGE="B8661E", EMPTY_ICON="B8B4A0", DIVIDER="B9CBF5", RED="C1272D",
     AMBER="C98A00", WELCOME_SUB="C9D6F7", GROUP="D0D0BF", ICON_ERROR="D8341E", ROW_HI="DCE6F8",
     CLOSE="E0523C", ROW_LINE="E4E4E4", BODY="ECE9D8", FLASH="F0A030", WELCOME_ORANGE="F28F2E",
@@ -640,6 +640,22 @@ CLAUDE_ROWS = [("glimmer", "approval", "Bash", "2P"), ("TieuMac3d", "working", "
                ("api", "done", "", "1G")]
 ZZ_Z4 = [0x0F, 0x02, 0x04, 0x0F]
 
+# Clawd at work (ch_claude.cpp paintWorkFrame, src/ui/clawd_work.h, P-2026-11-26.13):
+# 2 bits / cell (0 body, 1 Clawd, 2 eye, 3 laptop), 23×13 cells of 4 px at (136, 30).
+_SRC_WORK = (ROOT / "src" / "ui" / "clawd_work.h").read_text(encoding="utf-8")
+_WORK = [[[int(v, 16) for v in re.findall(r"0x([0-9A-Fa-f]{2})", r)]
+          for r in re.findall(r"\{(0x[^}]*)\}", blk)]
+         for blk in re.findall(r"// GIF frame \d+\n(.*?)\n    \}", _SRC_WORK, re.S)]
+WORK_LOOP0 = 10     # clawd_work_core.h kLoopSlot[0] (GIF frame 19)
+
+
+def clawd_work(sc, slot):
+    cols = [X["BODY"], CLAWD_ORANGE, X["BLACK"], X["LAPTOP"]]
+    for j, row in enumerate(_WORK[slot]):
+        for i in range(23):
+            c = (row[i >> 2] >> (6 - 2 * (i & 3))) & 3
+            sc.rect(136 + i * 4, 30 + j * 4, 4, 4, cols[c])
+
 
 def xp_usage_color(pct, healthy):
     """chrome.h xpUsageColor: remaining ≤ 20 % red, ≤ 50 % amber, else healthy."""
@@ -649,12 +665,12 @@ def xp_usage_color(pct, healthy):
     return X["RED"] if rem <= 20 else X["AMBER"] if rem <= 50 else healthy
 
 
-def hero(sc, pct, color, bar_color, pad_y, clear_r, asleep=False):
+def hero(sc, pct, color, bar_color, pad_y, clear_r, drop_100=False):
     """paintHero (Claude / Codex): VT323-86 digits + VT323-44 "%" + 220×14 bar."""
     s = f"{pct}" if pct >= 0 else "--"
     sc.rect(10, 40, clear_r - 10, 102 - 40, X["BODY"])
     hw = sc.text("VT323-86", s, 10, 40, color)
-    if len(s) < 3 or not asleep:
+    if len(s) < 3 or not drop_100:
         sc.text("VT323-44", "%", 10 + hw + 2, 70, color)
     progress(sc, 10, 102, 220, 14, max(pct, 0), bar_color, pad_y)
 
@@ -698,14 +714,17 @@ def claude_xp(sc, *, pct=38, reset="4NG", sec="12% · 2G 14P", sec_pct=12, rows=
     sc.text("JBMono-11", "Hạn mức tuần", 10, 28, X["LABEL"])
     hc = X["DIM"] if dim else xp_usage_color(pct, X["GREEN"])
     bc = X["BAR"] if hc == X["GREEN"] else hc
-    hero(sc, pct, X["DIM"] if dim else X["BLACK"], bc, 2, 155, asleep)   # digits black (P-2026-11-26.11)
-    clawd(sc, 156, 52 if asleep else 36, 4, bg=X["BODY"], eyes=eyes)
-    if asleep:   # Zz frame 6 (kZz[6] = z4 at (202,38) shifted (−6,−6))
+    hero(sc, pct, X["DIM"] if dim else X["BLACK"], bc, 2, 132, True)   # digits black (P-2026-11-26.11)
+    if eyes == "work":   # at work: first typing frame (P-2026-11-26.13)
+        clawd_work(sc, WORK_LOOP0)
+    else:
+        clawd(sc, 156, 44 if asleep else 36, 4, bg=X["BODY"], eyes=eyes)
+    if asleep:   # Zz frame 6 (kZz[6] = z4 at (200, 30), §17 P-2026-11-26.13)
         for j, row in enumerate(ZZ_Z4):
             for i in range(4):
                 if row & (1 << (3 - i)):
-                    sc.rect(196 + i * 2, 32 + j * 2, 2, 2, X["MUTED"])
-    sc.text("JBMono-12B", reset, 150 if asleep else 229, 84, X["DIM"] if dim else X["RED"], "TR")
+                    sc.rect(200 + i * 2, 30 + j * 2, 2, 2, X["MUTED"])
+    sc.text("JBMono-12B", reset, 229, 84, X["DIM"] if dim else X["RED"], "TR")
     group_box(sc, 10, 128, 220, 34, "Phiên 5 giờ")
     sc.text("JBMono-11", sec, 224, 135, X["DIM"] if dim else X["BLACK"], "TR")
     progress(sc, 16, 151, 208, 7, sec_pct, X["DIM"] if dim else X["BAR"])
@@ -1172,6 +1191,10 @@ SCREENS_A = [
      lambda s: cred_card_xp(s, "Claude", "", "warn", "Mất mạng",
                             ["Không tới được claude.ai.", "Kiểm tra Wi-Fi.", "", "Đang tự động thử lại..."]),
      "XPClaudeOffline"),
+    ("Claude · đang chạy", "XP-Claude-Laptop · Clawd gõ laptop",
+     lambda s: claude_xp(s, eyes="work",
+                         rows=[("TieuMac3d", "working", "Edit", "1P"), ("glimmer", "done", "", "12P"),
+                               ("api", "done", "", "1G")]), "XPClaudeLaptop"),
     ("Claude · chưa có project", "XP-Claude-NoProject · Clawd ngủ",
      lambda s: claude_xp(s, rows=[], eyes="sleep"), "XPClaudeNoProject"),
     ("Claude · đã xong hết", "XP-Claude-Done · Clawd ngủ",

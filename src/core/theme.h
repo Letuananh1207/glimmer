@@ -80,6 +80,7 @@ namespace Theme {
         constexpr uint16_t FIELD_BORDER     = 0x7CF7;  // #7F9DB9 xpFieldBorder
         constexpr uint16_t WELCOME_LINE     = 0x7D3E;  // #7FA4F0 xpWelcomeLine
         constexpr uint16_t FLAG_GREEN       = 0x85E0;  // #81BC06 xpFlagGreen
+        constexpr uint16_t LAPTOP           = 0x8410;  // #808080 xpLaptop — Clawd at work (P-2026-11-26.13)
         constexpr uint16_t BOOT_BLOCK_HI    = 0x9E1F;  // #9BC0FA xpBootBlockHi
         constexpr uint16_t BAND_EDGE_WARM   = 0x9B4D;  // #9C6A6A xpBandEdgeWarm
         constexpr uint16_t DIM              = 0xAD53;  // #ACA899 xpDim — XP disabled text (P-2026-11-26.11)
