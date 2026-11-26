@@ -24,6 +24,7 @@ class DevicePhotoPreview extends StatelessWidget {
   static const _titleTop = 2.0, _metaTop = 3.0, _metaRight = 5.0, _ruleTop = 18.0;
   static const _photoLeft = 30.0, _photoTop = 21.0;
   static const _barBottom = 6.0, _barH = 2.0, _barShare = 0.4;
+  static const _dockLeft = 2.0, _dockTop = 26.0;
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +64,7 @@ class DevicePhotoPreview extends StatelessWidget {
             height: AppSize.hairline,
             child: ColoredBox(color: AppColors.mint),
           ),
-          const Positioned(left: 2, top: 26, child: _Dock()),
+          const Positioned(left: _dockLeft, top: _dockTop, child: _Dock()),
           Positioned(
             left: _photoLeft,
             top: _photoTop,
@@ -89,6 +90,7 @@ class _Dock extends StatelessWidget {
   const _Dock();
 
   static const _width = 22.0, _cell = 24.0, _gap = 4.0, _radius = 3.0;
+  static const _pad = EdgeInsets.symmetric(vertical: 3, horizontal: 1);
   static const _scale = 0.75;
   static const _barW = 2.0, _barH = 12.0, _barTop = 6.0;
 
@@ -97,7 +99,7 @@ class _Dock extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         width: _width,
-        padding: const EdgeInsets.symmetric(vertical: _radius, horizontal: 1),
+        padding: _pad,
         decoration: BoxDecoration(
           border: Border.all(color: AppColors.line, width: AppSize.hairline),
           borderRadius: BorderRadius.circular(_radius),

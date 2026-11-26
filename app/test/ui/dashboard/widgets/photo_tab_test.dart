@@ -133,6 +133,29 @@ void main() {
     expect(label.top >= icon.bottom, true, reason: 'stacked');
   });
 
+  for (final on in [
+    ['agent', 'weather', 'clock'],
+    ['agent', 'photo'],
+  ]) {
+    testWidgets('DockTabBar ${on.length} tab: label right of the icon, tab 48 high', (t) async {
+      await open(t, on: on, tab: false);
+      for (final id in on) {
+        final name = switch (id) {
+          'agent' => _vi.skillAgentName,
+          'photo' => _vi.skillPhotoName,
+          'weather' => _vi.skillWeatherName,
+          _ => _vi.skillClockName,
+        };
+        final inTab = find.ancestor(of: find.text(name), matching: find.byType(InkWell));
+        expect(t.getSize(inTab).height, AppSize.dockTab, reason: id);
+        final icon = t.getRect(find.descendant(of: inTab, matching: find.byType(CustomPaint)).first);
+        final label = t.getRect(find.text(name));
+        expect(label.left >= icon.right, true, reason: '$id: one row');
+        expect((label.center.dy - icon.center.dy).abs() < 1, true, reason: '$id: centred on one line');
+      }
+    });
+  }
+
   testWidgets('grid: meta "5/8 · còn 3 chỗ", one tile without copy shows its name, add tile, note, show → Photo',
       (t) async {
     await open(t);
@@ -174,14 +197,14 @@ void main() {
     expect(find.text(_vi.photoFullTile(8)), findsOneWidget);
     expect(find.text(_vi.photoFullBody(8)), findsOneWidget);
     expect(find.text(_vi.photoAdd), findsNothing);
-    await t.tap(find.text(_vi.photoFullTile(8)));
+    await t.tap(find.text(_vi.photoFullTile(8)), warnIfMissed: false); // locked: nothing to hit
     await frames(t);
     expect(find.byType(PhotoSourceSheet), findsNothing);
   });
 
   testWidgets('delete: dialog → "Đang xoá" on the tile → error banner → retry', (t) async {
     await open(t);
-    await t.tap(find.text('p2.jpg'));
+    await t.tap(find.bySemanticsLabel(_vi.photoUnknownA11y('p2.jpg')));
     await frames(t);
     expect(find.text(_vi.photoDeleteTitle), findsOneWidget);
     expect(find.text(_vi.photoDeleteBody), findsOneWidget);
@@ -205,7 +228,7 @@ void main() {
 
   testWidgets('cancel in the dialog deletes nothing', (t) async {
     await open(t);
-    await t.tap(find.text('p2.jpg'));
+    await t.tap(find.bySemanticsLabel(_vi.photoUnknownA11y('p2.jpg')));
     await frames(t);
     await t.tap(find.text(_vi.commonCancel));
     await frames(t);

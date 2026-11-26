@@ -11,32 +11,11 @@ import 'package:glimmer_app/domain/use_cases/send_photo_use_case.dart';
 import 'package:glimmer_app/ui/photo_crop/view_models/photo_crop_view_model.dart';
 import 'package:glimmer_app/utils/result.dart';
 
+import '../../../../testing/fakes/fake_crop_image.dart';
 import '../../../../testing/fakes/fake_repositories.dart';
 import '../../../../testing/fakes/fake_services.dart';
 
 const _url = 'http://192.168.1.50';
-
-/// A decoded image of [width] × [height] with no pixels (renders zeros).
-class FakeCropImage implements CropImage {
-  FakeCropImage(this.width, this.height);
-
-  @override
-  final int width, height;
-  final rendered = <Rect>[];
-  bool disposed = false;
-
-  @override
-  Image? get image => null;
-
-  @override
-  Future<PhotoPixels> render(Rect src, int side) async {
-    rendered.add(src);
-    return PhotoPixels(Uint8List(side * side * 4), side, side);
-  }
-
-  @override
-  void dispose() => disposed = true;
-}
 
 void main() {
   late DeviceRig rig;

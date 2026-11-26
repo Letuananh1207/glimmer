@@ -1,6 +1,6 @@
 # Phiếu thiết kế: Skill Ảnh — gửi ảnh từ điện thoại lên thiết bị
 
-- Trạng thái: chờ thiết kế
+- Trạng thái: đã áp (2026-11-25.4)
 - Đã vẽ: 2026-11-25.4
 - Ngày: 2026-11-25 · Nguồn: yêu cầu người dùng ("nạp ảnh lên qua app"); firmware skill Ảnh đã có (thiết kế màn
   thiết bị `P-2026-11-25.7`, ảnh `design/panel/screens/@2x/Photo.png`, `PhotoEmpty.png`)
