@@ -20,6 +20,11 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
 
 ## 2. Màn hình — `DashboardScreen` (Dashboard.png, DashboardEmpty.png, DashboardStale.png, DashboardSetup.png, DashboardLoading.png, DashboardWeather.png, DashboardWeatherNoLocation.png, DashboardClock.png, DashboardSingle.png, DashboardPhoto.png, DashboardPhotoEmpty.png, DashboardPhotoFull.png, DashboardPhotoAdd.png, DashboardPhotoDelete.png, DashboardPhotoDeleting.png, DashboardPhotoDeleteError.png)
 
+> **2026-11-26.5 — Thành màn phụ "Số liệu"** (phiếu `app/docs/phieu_thiet_ke/2026-11-26-app-dieu-khien-thiet-bi.md`): không còn là tab 1. Đẩy từ Điều khiển (chạm ô màn / nút
+> "Số liệu"), mở đúng tab của kênh đang hiện; không có thanh dưới. Đầu màn (Clawd, tên, IP) thay bằng thanh trên cao 56:
+> nút quay lại 48 (`detailsBackA11y`) → Điều khiển, `detailsTitle` 18/700, nút refresh 44 bên phải. Mọi phần thân, `DockTabBar`
+> và các trạng thái giữ như dưới. Ảnh mọi trạng thái `Dashboard*.png` chụp lại.
+
 > **2026-11-25.4 — Tab Ảnh** (phiếu `app/docs/phieu_thiet_ke/2026-11-25-gui-anh-len-thiet-bi.md`): skill Ảnh (`photo`, màu nhấn `skillPhoto` = mint) thành tab thứ 2 của
 > `DockTabBar` khi bật. Prop `state` thêm `photo`, `photoEmpty`, `photoFull`, `photoAdd`, `photoDelete`, `photoDeleting`,
 > `photoDeleteError`; ảnh mỗi trạng thái một file `DashboardPhoto*.png`. Cả màn vừa 844 (`photoFull`, `photoDeleteError` 900).
@@ -99,6 +104,8 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
 
 ## 3. Cài đặt — `SettingsScreen` (Settings.png, SettingsChanged.png, SettingsError.png)
 
+> **2026-11-26.5:** thanh dưới tab 1 đổi thành "Điều khiển" (`navControl`, `icons/nav-control.svg`, huy hiệu agent chờ giữ nguyên); ảnh chụp lại.
+
 > **2026-11-25.3:** thanh dưới tab 1 đổi thành "Màn hình" (`navHome`, có huy hiệu agent chờ); ảnh chụp lại.
 
 > **2026-11-25.2 — Thanh điều hướng theo skill:** thanh dưới thành 4 tab (Agent · Skill · Cài đặt · Thiết bị), xem `components.md` "Thanh điều hướng dưới"; ảnh của mọi trạng thái màn này chụp lại. Tab 3, dùng chung mọi skill; mục SỐ LIỆU CLAUDE và AGENT thuộc skill Agent (chưa tách), nội dung không đổi.
@@ -121,6 +128,8 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
 - Thanh điều hướng dưới, tab 3 (Cài đặt).
 
 ## 4. Thiết bị — `DeviceScreen` (Device.png, DeviceBusy.png)
+
+> **2026-11-26.5:** thanh dưới tab 1 đổi thành "Điều khiển" (`navControl`, `icons/nav-control.svg`, huy hiệu agent chờ giữ nguyên); ảnh chụp lại.
 
 > **2026-11-25.3:** thanh dưới tab 1 đổi thành "Màn hình" (`navHome`, có huy hiệu agent chờ); ảnh chụp lại.
 
@@ -151,6 +160,8 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
   (working) hoặc nút `commonRetry` (failed) / `wifiDoneButton` (done). Đang làm thì không quay lại được.
 
 ## 6. Skill — `SkillsScreen` (Skills.png, SkillsSwitching.png, SkillsError.png, SkillsLegacy.png, SkillsLastOne.png, SkillsPhotoHint.png, SkillsPhotoFirmware.png)
+
+> **2026-11-26.5:** thanh dưới tab 1 đổi thành "Điều khiển" (`navControl`, `icons/nav-control.svg`, huy hiệu agent chờ giữ nguyên); ảnh chụp lại.
 
 > **2026-11-25.4 — Dòng skill Ảnh** (phiếu `app/docs/phieu_thiet_ke/2026-11-25-gui-anh-len-thiet-bi.md`): `SkillRow` Ảnh đứng thứ 2 (thứ tự dock: Agent, Ảnh, Thời tiết, Đồng hồ),
 > icon `dock-photo` ×1.5, màu nhấn `skillPhoto`, `skillPhotoName` / `skillPhotoDesc`; **mặc định tắt**. Có thêm trong mọi
@@ -234,4 +245,51 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
     `commonCancel`, `commonRetry`; `offline` → `photoCropErrorOffline*` + `commonCancel`, `commonRetry`. Vùng cắt giữ nguyên.
 - Gửi: thu nhỏ vùng cắt về 188 × 188, JPEG **baseline**, ≤ 40 KB — quá thì giảm chất lượng dần, chỉ báo `tooBig` khi đã hết bậc.
   Gửi xong app giữ bản sao (làm hình thu nhỏ ở tab Ảnh).
+
+## 8. Điều khiển — `ControlScreen` (Control.png, ControlSending.png, ControlFailed.png, ControlCard.png, ControlPaused.png, ControlScreenOff.png, ControlNight.png, ControlBrightness.png, ControlSingle.png, ControlOldFw.png, ControlSetup.png, ControlOffline.png)
+
+> **2026-11-26.5 — Màn mới, tab 1** (phiếu `app/docs/phieu_thiet_ke/2026-11-26-app-dieu-khien-thiet-bi.md`). App thành remote của thiết bị. Prop `state`: `normal`, `sending`, `failed`,
+> `card`, `paused`, `screenOff`, `night`, `brightness`, `single`, `oldFw`, `setup`, `offline`. 844, trừ `card` / `oldFw` /
+> `setup` / `offline` 960 (cuộn).
+
+- **Đầu màn** (đệm 10 16 4 20, cách 12): Clawd ×1.75 + cột: "glimmer" 16/700, chấm 7 (mint; amber khi setup, coral khi mất
+  kết nối) + mạng · IP 11 muted. Phải: nút refresh 44 inkDim (`controlRefreshA11y`) → `POST /api/refresh`.
+- **Ô màn `DeviceMirror`**: vỏ 312 × 312 (`deviceShell`), giữa ngang, lề trên 4, đệm 10, bo 22, gradient 160°
+  `deviceShellTop` → `deviceShellBottom`, viền sáng trong 1 px trắng 8 %, bóng 0 10 24 đen 50 %. Trong: màn 292 nền đen bo 6
+  đệm 2, vùng vẽ **288 × 288 = màn thiết bị 240 px × 1.2** (`deviceScale`). Vẽ **đúng từng px** theo `design/panel`
+  (§17 kiểu XP): `source/DeviceXP*.dc.html` là bản chép nguyên của `panel/source/XP-*.dc.html` (Claude-A, Weather, Attention,
+  Night, SetupMode) để tra; kênh khác theo file XP tương ứng của panel. Dữ liệu từ `/api/state` (kênh, số, project, thời tiết, ảnh, giờ).
+  Cả ô là một nút (`controlScreenA11y`): chạm → Số liệu ở tab của kênh; vuốt trái → kênh sau, vuốt phải → kênh trước.
+- **Dòng kênh** (đệm 12 24 0, cách 8): tên kênh 13/700 ink + ghi chú 13 muted (`controlNextIn`); thanh 3 bo 2 nền `panel2`,
+  phần chạy màu nhấn kênh = thời gian đã qua của slide (cần `slide_left_ms`).
+- **D-pad** (đệm 14 16 0, cách 10): 3 nút chia đều ≥ 64 (`padButton`) bo 18 nền `panel`: icon 28 ink + nhãn 11 inkDim —
+  `controlPrev` (chevron trái), `controlPause` / `controlResume` (pause / play), `controlNext`. Đang dừng: nút giữa nền amber 16 %,
+  icon + nhãn amber. Không dùng được: mờ 38 %; thiếu firmware: mờ + ổ khoá 14 góc trên phải.
+- **Nút tab** (`JumpTabBar`, lề 12 16 0): như `DockTabBar` 4 tab xếp dọc (ô 56, icon dock ×1.25 + nhãn 12), nút sáng = kênh
+  đang hiện trên thiết bị (không phải tab đang chọn của app); huy hiệu amber trên Agent. Bấm → `POST /api/channel {name}`.
+  Một skill bật (`single`): không có hàng này, thay bằng `controlSingleNote` 12 muted (lề 10 24 0).
+- **Độ sáng** (lề 12 16 0): thẻ ≥ 52 `panel` bo 14 đệm 0 16, cách 14: mặt trời 20 inkDim, thanh trượt (rãnh 4 `panel2`, phần
+  sáng amber, núm 20 ink có bóng; vùng chạm cao 44), số "80%" 13 ink rộng 40. Đang kéo: núm 28 + bong bóng ink chữ bg 12/700
+  trên núm; ô màn phủ đen theo độ sáng (minh hoạ). Gửi `brightness` khi thả tay.
+- **Nút tròn** (đệm 16 16 0, 3 cột): vòng 56 (`roundButton`) nền `panel` viền 1 `line`, icon 24 ink + nhãn 12 inkDim cách 6:
+  `controlScreenOff` (power), `controlNight` (moon), `controlDetails` (bar chart → Số liệu). Bật: nền tint + viền + icon + nhãn
+  màu nhấn — màn tắt amber (`controlScreenOn`), đêm lilac.
+- **`sending`**: ô màn đổi ngay sang kênh mới (lạc quan), chip trên góc phải vỏ (trên −10, phải 10): cao 28 bo 14 `panel2` viền
+  `line`, vòng xoay 16 + `controlSending` 12. Dòng kênh `controlJustSwitched`.
+- **`failed`**: ô màn về đúng kênh thiết bị; thanh báo nổi trên thanh dưới (trái / phải 12, đáy 92): nền `snackbar` bo 12 bóng,
+  `controlFailed` 13 ink + `commonRetry` 14/700 `clawd`. Tự ẩn sau 6 s.
+- **`card`** (thẻ agent giữ màn, `/push` có approval / input đang hiện): ô màn = thẻ XP Attention; thay dòng kênh bằng thẻ (lề 12
+  16 0, đệm 14 16, bo 14, nền amber 10 %, viền amber 40 %): `controlCardLabel` 12 amber, `controlCardBody` 14 ink (tên công cụ
+  đậm), `controlCardNote` 12 inkDim, nút viền `controlDismissCard` cao 40 bo 20 → bỏ thẻ theo id. **Không có nút duyệt.**
+- **`paused`**: dòng kênh amber `controlPausedNote`, thanh dừng; nút giữa `controlResume`.
+- **`screenOff`**: ô màn nền `screenOff` + `controlScreenOffOverlay` 12 #3A3540; dòng `controlScreenOffTitle` + `controlScreenOffNote`
+  amber; d-pad, tab, độ sáng, đêm mờ; nút power sáng amber.
+- **`night`**: ô màn = mặt đêm của thiết bị; dòng `controlNightTitle` + `controlNightNote` lilac; d-pad + tab mờ; nút đêm sáng lilac.
+- **`oldFw`** (firmware thiếu lệnh): thanh báo amber đầu màn (`controlOldFwTitle`, `controlOldFwBody`, `controlUpdateFirmware` →
+  Thiết bị); nút thiếu (kênh trước, dừng xoay, tắt màn) mờ + ổ khoá; dòng kênh không có thời gian.
+- **`setup`**: thanh báo amber `controlSetupTitle` / `controlSetupBody` / `controlSetupAction` → Cài Wi-Fi; ô màn = màn cài đặt của
+  thiết bị; mọi nút mờ.
+- **`offline`**: thanh báo coral `controlOfflineTitle` / `controlOfflineBody` + `commonRetry`; ô màn giữ hình cuối, phủ bg 72 %
+  + `controlOfflineOverlay` 14/700 + `controlOfflineOverlayNote` 12 muted; mọi nút mờ. Chưa từng kết nối / đang tìm → màn Kết nối.
+- Thanh điều hướng dưới, tab 1 (Điều khiển) đang chọn.
 

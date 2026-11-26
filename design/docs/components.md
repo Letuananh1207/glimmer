@@ -17,7 +17,7 @@
 | Chọn (Dropdown) | Chữ 16 + mũi tên 24, gạch dưới 1 #BDBDBD. |
 | Ô nhập | Viền 1 `outline`, bo 4, cao 56, chữ 16; nhãn nổi 12 `inkDim` khi có giá trị. Ô mật khẩu có nút mắt 48. |
 | Thanh % mức dùng | Bo 3, nền `panel2`; cao 8 (tuần) / 5 (phiên); màu theo % còn lại. |
-| Thanh điều hướng dưới | **2026-11-25.3:** tab 1 = **Màn hình** (`navHome`, icon `icons/nav-home.svg`) cho mọi skill, huy hiệu amber 16×16 bo 4 số agent chờ ở góc icon (ẩn khi 0). Còn lại như dưới. **2026-11-25.2:** cao 80, nền `panel`, **4 tab** chia đều: (1) màn chính của skill đang dùng — nhãn = tên skill, icon = icon skill (Agent: Clawd 24 không mắt; khi chọn tô `clawd`); (2) `navSkills`, icon apps; (3) `navSettings`, tune; (4) `navDevice`, memory. Tab đang chọn: viên 64 × 32 bo 16 nền `panel2`, icon ink (bỏ icon đen của bản đầu), nhãn 12/700 ink; tab khác: nhãn 12/500 inkDim. |
+| Thanh điều hướng dưới | **2026-11-26.5:** tab 1 = **Điều khiển** (`navControl`, `icons/nav-control.svg`), huy hiệu agent chờ như cũ. **2026-11-25.3:** tab 1 = **Màn hình** (`navHome`, icon `icons/nav-home.svg`) cho mọi skill, huy hiệu amber 16×16 bo 4 số agent chờ ở góc icon (ẩn khi 0). Còn lại như dưới. **2026-11-25.2:** cao 80, nền `panel`, **4 tab** chia đều: (1) màn chính của skill đang dùng — nhãn = tên skill, icon = icon skill (Agent: Clawd 24 không mắt; khi chọn tô `clawd`); (2) `navSkills`, icon apps; (3) `navSettings`, tune; (4) `navDevice`, memory. Tab đang chọn: viên 64 × 32 bo 16 nền `panel2`, icon ink (bỏ icon đen của bản đầu), nhãn 12/700 ink; tab khác: nhãn 12/500 inkDim. |
 | Hộp thoại | Nền `panel`, bo 28, đệm 24, tiêu đề 24/400, nút căn phải. Lớp phủ `scrim`. |
 | Vòng xoay | 40, nét 4, `clawd`. |
 | `SkillTile` | **2026-11-25.3: bỏ** — thay bằng `SkillRow`. **2026-11-25.2:** ô skill trong lưới màn Skill — 4 kiểu: đang dùng / chọn được / đang đổi / sắp có. Số đo ở `screen_specs.md` §6. Màu nhấn theo skill: `skillAgent`, `skillMusic`, `skillSocial`, `skillFun`. |
@@ -33,3 +33,11 @@
 | `DeletePhotoDialog` | **2026-11-25.4:** hộp thoại 312 hỏi xoá ảnh, có hình ảnh 96; nút Xoá coral. §2. |
 | `CropFrame` | **2026-11-25.4:** vùng cắt vuông kéo / phóng: khung 260 trong vùng 340, phủ ngoài 60 %, lưới chia ba, 4 góc L. §7. |
 | `DevicePhotoPreview` | **2026-11-25.4:** ô 180 vẽ lại màn Ảnh của thiết bị (×0.75): tiêu đề, dock, ảnh 141 tại (30, 21), vạch mint. §7. |
+| `DeviceMirror` | **2026-11-26.5:** ô màn thiết bị trên app: vỏ 312 bo 22 gradient, màn 288 = 240 px × 1.2, vẽ đúng từng px màn XP của `design/panel`; chạm / vuốt. `screen_specs.md` §8. |
+| `ChannelProgress` | **2026-11-26.5:** tên kênh + ghi chú + thanh 3 px màu nhấn kênh (thời gian slide). §8. |
+| `ControlPad` | **2026-11-26.5:** 3 nút ≥ 64 bo 18 (kênh trước / dừng–tiếp tục / kênh sau), trạng thái sáng amber, mờ, ổ khoá. §8. |
+| `JumpTabBar` | **2026-11-26.5:** `DockTabBar` kiểu xếp dọc dùng làm nút nhảy kênh; sáng theo kênh thiết bị đang hiện. §8. |
+| `BrightnessSlider` | **2026-11-26.5:** thẻ độ sáng, núm 20 (kéo 28 + bong bóng %), phần sáng amber. §8. |
+| `RoundToggle` | **2026-11-26.5:** nút tròn 56 + nhãn; bật = tint + viền màu nhấn. §8. |
+| `HoldCardPanel` | **2026-11-26.5:** thẻ amber "thẻ agent đang chiếm màn" + nút "Bỏ thẻ khỏi màn"; không duyệt hộ. §8. |
+| `CommandSnackbar` | **2026-11-26.5:** thanh báo nổi trên thanh dưới khi thiết bị không nhận lệnh, có Thử lại. §8. |

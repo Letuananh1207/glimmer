@@ -1,8 +1,48 @@
 {
-  "version": "2026-11-25.4",
+  "version": "2026-11-26.5",
   "start": "Connect",
-  "rule": "Chưa kết nối được thiết bị → Connect. Kết nối được → khung 4 tab: tab 1 = Màn hình (Dashboard) chia theo các tab dock đang bật, tab 2 = Skills (bật / tắt), tab 3 = Settings, tab 4 = Device. Settings và Device dùng chung; Connect và WifiSetup ngoài khung tab.",
+  "rule": "Chưa kết nối được thiết bị → Connect. Kết nối được → khung 4 tab: tab 1 = Control (điều khiển: ô màn thiết bị + nút), tab 2 = Skills, tab 3 = Settings, tab 4 = Device. Dashboard (Số liệu) là màn phụ đẩy từ Control, mở đúng tab của kênh đang hiện. Settings và Device dùng chung; Connect, WifiSetup, PhotoCrop ngoài khung tab.",
   "screens": {
+    "Control": {
+      "source": "source/Control.dc.html",
+      "tab": 0,
+      "states": [
+        "normal",
+        "sending",
+        "failed",
+        "card",
+        "paused",
+        "screenOff",
+        "night",
+        "brightness",
+        "single",
+        "oldFw",
+        "setup",
+        "offline"
+      ],
+      "mirror": "Ô màn vẽ lại màn thiết bị theo design/panel (source/DeviceXP*.dc.html = bản chép XP-*.dc.html của panel), từ /api/state; ×1.2",
+      "actions": {
+        "prev": "POST /api/channel {\"action\":\"prev\"} (cần firmware)",
+        "next": "POST /api/channel {\"action\":\"next\"}",
+        "jump": "POST /api/channel {\"name\":\"<kênh đầu của skill>\"}",
+        "pause": "POST /api/channel {\"action\":\"pause\"|\"resume\"} (cần firmware)",
+        "brightness": "POST /api/settings {brightness} khi thả tay",
+        "screen": "tắt / bật màn ngay (cần firmware)",
+        "night": "POST /api/settings nightMode",
+        "refresh": "POST /api/refresh",
+        "dismissCard": "bỏ thẻ theo id (cần firmware HTTP; /push/clear xoá hết)"
+      },
+      "gestures": {
+        "tapScreen": "Dashboard ở tab của kênh đang hiện",
+        "swipeLeft": "next",
+        "swipeRight": "prev"
+      },
+      "to": {
+        "Dashboard": "Chạm ô màn / nút 'Số liệu' (push)",
+        "Device": "'Cập nhật firmware' (oldFw)",
+        "WifiSetup": "'Cài Wi-Fi' (setup)"
+      }
+    },
     "Connect": {
       "source": "source/Connect.dc.html",
       "states": [
@@ -17,7 +57,6 @@
     },
     "Dashboard": {
       "source": "source/Dashboard.dc.html",
-      "tab": 0,
       "states": [
         "normal",
         "empty",
@@ -56,7 +95,8 @@
       "to": {
         "Settings": "Nút 'Đặt vị trí trong Cài đặt' (weatherNoLoc)",
         "PhotoCrop": "Bảng 'Thêm ảnh' → chọn trong thư viện / chụp ảnh (push)"
-      }
+      },
+      "route": "push từ Control, có nút quay lại, không thanh dưới; tên hiện \"Số liệu\""
     },
     "Settings": {
       "source": "source/Settings.dc.html",
@@ -145,9 +185,9 @@
   "tabs": [
     {
       "tab": 0,
-      "screen": "Dashboard",
-      "label": "navHome",
-      "icon": "icons/nav-home.svg",
+      "screen": "Control",
+      "label": "navControl",
+      "icon": "icons/nav-control.svg",
       "badge": "số agent chờ"
     },
     {

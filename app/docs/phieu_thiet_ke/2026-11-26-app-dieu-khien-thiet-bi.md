@@ -1,6 +1,7 @@
 # Phiếu thiết kế: App thành "điều khiển" thiết bị — màn thiết bị + nút điều khiển
 
 - Trạng thái: chờ thiết kế
+- Đã vẽ: 2026-11-26.5
 - Ngày: 2026-11-26 · Nguồn: yêu cầu người dùng ("app giúp người dùng tương tác điều khiển thiết bị phần cứng, chứ không như
   hiện tại"); người dùng chọn: trung tâm là màn thiết bị + nút điều khiển; giữ phong cách app hiện tại (nền tối, chữ mono)
 

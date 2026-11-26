@@ -814,7 +814,7 @@
   },
   "navHome": "Màn hình",
   "@navHome": {
-    "description": "Tab 1 thanh dưới (2026-11-25.3), mọi skill"
+    "description": "Không dùng từ 2026-11-26.5 (thay bằng navControl). Tab 1 thanh dưới (2026-11-25.3), mọi skill"
   },
   "navHomeBadgeA11y": "{count} agent đang chờ",
   "@navHomeBadgeA11y": {
@@ -1313,5 +1313,238 @@
   "photoCropErrorOfflineBody": "Kiểm tra thiết bị còn bật và cùng mạng Wi-Fi với điện thoại.",
   "@photoCropErrorOfflineBody": {
     "description": "Lỗi mạng khi gửi"
+  },
+  "navControl": "Điều khiển",
+  "@navControl": {
+    "description": "Tab 1 thanh dưới"
+  },
+  "controlRefreshA11y": "Làm mới số liệu",
+  "@controlRefreshA11y": {
+    "description": "Nút icon refresh đầu màn Điều khiển"
+  },
+  "controlScreenA11y": "Màn thiết bị đang hiện {channel}. Chạm để xem số liệu, vuốt để đổi kênh",
+  "@controlScreenA11y": {
+    "description": "Nhãn đọc màn hình ô màn",
+    "placeholders": {
+      "channel": {
+        "type": "String"
+      }
+    }
+  },
+  "controlNextIn": "· đổi kênh sau {seconds} s",
+  "@controlNextIn": {
+    "description": "Dòng kênh dưới ô màn",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "controlJustSwitched": "· vừa chuyển",
+  "@controlJustSwitched": {
+    "description": "Dòng kênh ngay sau khi đổi"
+  },
+  "controlPausedNote": "· đã dừng xoay, giữ kênh này",
+  "@controlPausedNote": {
+    "description": "Dòng kênh khi dừng xoay, amber"
+  },
+  "controlScreenOffTitle": "Màn đang tắt",
+  "@controlScreenOffTitle": {
+    "description": "Dòng kênh khi màn tắt"
+  },
+  "controlScreenOffNote": "· bấm Bật màn để mở lại",
+  "@controlScreenOffNote": {
+    "description": "Dòng kênh khi màn tắt"
+  },
+  "controlScreenOffOverlay": "MÀN ĐANG TẮT",
+  "@controlScreenOffOverlay": {
+    "description": "Chữ mờ giữa ô màn tối"
+  },
+  "controlNightTitle": "Chế độ đêm",
+  "@controlNightTitle": {
+    "description": "Dòng kênh khi đêm"
+  },
+  "controlNightNote": "· tới {time}, không xoay kênh",
+  "@controlNightNote": {
+    "description": "Dòng kênh khi đêm",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "controlPrev": "Kênh trước",
+  "@controlPrev": {
+    "description": "Nút d-pad trái"
+  },
+  "controlNext": "Kênh sau",
+  "@controlNext": {
+    "description": "Nút d-pad phải"
+  },
+  "controlPause": "Dừng xoay",
+  "@controlPause": {
+    "description": "Nút d-pad giữa"
+  },
+  "controlResume": "Tiếp tục xoay",
+  "@controlResume": {
+    "description": "Nút d-pad giữa khi đang dừng (amber)"
+  },
+  "controlJumpGroupA11y": "Nhảy tới tab",
+  "@controlJumpGroupA11y": {
+    "description": "Nhóm nút tab skill"
+  },
+  "controlJumpA11y": "Hiện {skill} trên thiết bị",
+  "@controlJumpA11y": {
+    "description": "Nhãn đọc màn hình nút tab skill",
+    "placeholders": {
+      "skill": {
+        "type": "String"
+      }
+    }
+  },
+  "controlBrightness": "Độ sáng",
+  "@controlBrightness": {
+    "description": "Nhãn đọc màn hình thanh trượt"
+  },
+  "controlScreenOff": "Tắt màn",
+  "@controlScreenOff": {
+    "description": "Nút tròn"
+  },
+  "controlScreenOn": "Bật màn",
+  "@controlScreenOn": {
+    "description": "Nút tròn khi màn đang tắt (amber)"
+  },
+  "controlNight": "Chế độ đêm",
+  "@controlNight": {
+    "description": "Nút tròn (lilac khi bật)"
+  },
+  "controlDetails": "Số liệu",
+  "@controlDetails": {
+    "description": "Nút tròn → màn Số liệu"
+  },
+  "controlSending": "Đang gửi…",
+  "@controlSending": {
+    "description": "Chip trên ô màn khi lệnh đang gửi"
+  },
+  "controlFailed": "Thiết bị không nhận lệnh \"{command}\".",
+  "@controlFailed": {
+    "description": "Thanh báo nổi; command = tên nút",
+    "placeholders": {
+      "command": {
+        "type": "String"
+      }
+    }
+  },
+  "controlCardLabel": "THẺ AGENT ĐANG CHIẾM MÀN",
+  "@controlCardLabel": {
+    "description": "Thẻ dưới ô màn khi thẻ agent giữ màn"
+  },
+  "controlCardBody": "{agent} · {project} cần bạn duyệt {tool}",
+  "@controlCardBody": {
+    "description": "Thẻ giữ màn (approval); input → controlCardBodyInput",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      },
+      "project": {
+        "type": "String"
+      },
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "controlCardBodyInput": "{agent} · {project} đang chờ bạn trả lời",
+  "@controlCardBodyInput": {
+    "description": "Thẻ giữ màn (input)",
+    "placeholders": {
+      "agent": {
+        "type": "String"
+      },
+      "project": {
+        "type": "String"
+      }
+    }
+  },
+  "controlCardNote": "Duyệt trên máy tính. Bỏ thẻ chỉ gỡ nó khỏi màn thiết bị.",
+  "@controlCardNote": {
+    "description": "Thẻ giữ màn"
+  },
+  "controlDismissCard": "Bỏ thẻ khỏi màn",
+  "@controlDismissCard": {
+    "description": "Nút viền trong thẻ giữ màn"
+  },
+  "controlSingleNote": "Chỉ skill {skill} đang bật — ‹ › đi qua các kênh của skill này và Thông tin.",
+  "@controlSingleNote": {
+    "description": "Thay hàng nút tab khi một skill bật",
+    "placeholders": {
+      "skill": {
+        "type": "String"
+      }
+    }
+  },
+  "controlOldFwTitle": "Firmware chưa có đủ nút",
+  "@controlOldFwTitle": {
+    "description": "Thanh báo firmware cũ"
+  },
+  "controlOldFwBody": "Thiết bị đang chạy {version}: chưa có {missing}.",
+  "@controlOldFwBody": {
+    "description": "Thanh báo firmware cũ; missing = danh sách nút thiếu",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "missing": {
+        "type": "String"
+      }
+    }
+  },
+  "controlUpdateFirmware": "Cập nhật firmware",
+  "@controlUpdateFirmware": {
+    "description": "Nút trong thanh báo → tab Thiết bị"
+  },
+  "controlSetupTitle": "Thiết bị đang ở glimmer-setup",
+  "@controlSetupTitle": {
+    "description": "Thanh báo"
+  },
+  "controlSetupBody": "Thiết bị chưa vào được Wi-Fi nên chưa điều khiển được.",
+  "@controlSetupBody": {
+    "description": "Thanh báo"
+  },
+  "controlSetupAction": "Cài Wi-Fi",
+  "@controlSetupAction": {
+    "description": "Nút → Cài Wi-Fi"
+  },
+  "controlOfflineTitle": "Không thấy thiết bị",
+  "@controlOfflineTitle": {
+    "description": "Thanh báo coral"
+  },
+  "controlOfflineBody": "Không trả lời ở {ip} từ {ago} trước.",
+  "@controlOfflineBody": {
+    "description": "Thanh báo coral",
+    "placeholders": {
+      "ip": {
+        "type": "String"
+      },
+      "ago": {
+        "type": "String"
+      }
+    }
+  },
+  "controlOfflineOverlay": "Mất kết nối",
+  "@controlOfflineOverlay": {
+    "description": "Phủ trên ô màn"
+  },
+  "controlOfflineOverlayNote": "hình cuối cùng app nhận được",
+  "@controlOfflineOverlayNote": {
+    "description": "Phủ trên ô màn"
+  },
+  "detailsTitle": "Số liệu",
+  "@detailsTitle": {
+    "description": "Tiêu đề màn Số liệu (màn phụ)"
+  },
+  "detailsBackA11y": "Về Điều khiển",
+  "@detailsBackA11y": {
+    "description": "Nút quay lại màn Số liệu"
   }
 }

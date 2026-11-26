@@ -5,6 +5,45 @@ widget và việc cần làm — không ghi đường dẫn file hay cách code.
 
 ---
 
+## 2026-11-26.5 — App thành điều khiển thiết bị: tab 1 là remote có màn thiết bị
+
+- **Điều khiển · `ControlScreen`** — màn mới, tab 1 (`source/Control.dc.html`, `screen_specs.md` §8; ảnh `Control.png` +
+  11 trạng thái `Control*.png`):
+  - `DeviceMirror`: vỏ máy 312, màn 288 = màn thiết bị 240 px × 1.2, vẽ đúng từng px màn XP của `design/panel` (bản chép
+    `source/DeviceXP*.dc.html`) từ `/api/state`. Chạm → Số liệu đúng tab kênh; vuốt trái / phải = kênh sau / trước.
+  - `ChannelProgress` (kênh · đổi sau N s + thanh màu kênh), `ControlPad` (kênh trước · dừng / tiếp tục xoay · kênh sau),
+    `JumpTabBar` (Agent / Ảnh / Thời tiết / Đồng hồ, sáng theo kênh thiết bị), `BrightnessSlider`, `RoundToggle` (tắt màn,
+    chế độ đêm, số liệu). Nút refresh đầu màn = làm mới số liệu.
+  - Trạng thái: đang gửi (ô màn đổi ngay + chip), không nhận lệnh (`CommandSnackbar` + Thử lại), thẻ agent chiếm màn
+    (`HoldCardPanel` + "Bỏ thẻ khỏi màn", không duyệt hộ), dừng xoay, màn tắt, chế độ đêm, đang kéo độ sáng, một skill,
+    firmware cũ (nút thiếu có ổ khoá), glimmer-setup, mất kết nối.
+- **Số liệu · `DashboardScreen`** (`source/Dashboard.dc.html`, §2; ảnh mọi `Dashboard*.png` chụp lại): thành màn phụ đẩy từ
+  Điều khiển — thanh trên "← Số liệu" + refresh thay đầu màn Clawd, bỏ thanh dưới. Thân và các tab giữ nguyên.
+- **Khung · thanh dưới** (ảnh Skill, Cài đặt, Thiết bị chụp lại): tab 1 "Điều khiển" (`navControl`, `icons/nav-control.svg`).
+- **Token:** màu `deviceShellTop/Bottom`, `snackbar`, `screenOff`; size `deviceShell` 312, `deviceScreen` 288, `deviceScale` 1.2,
+  `padButton` 64, `roundButton` 56, `controlTab` 56; radius `deviceShell` 22, `padButton` 18, `snackbar` 12. **Chuỗi:** 42
+  khoá mới (`navControl`, `control…`, `details…`); `navHome` không dùng.
+- Phiếu: `app/docs/phieu_thiet_ke/2026-11-26-app-dieu-khien-thiet-bi.md`
+- Đổi luật: R-SK-6 "Tab Ảnh trên Màn hình" → "trên Số liệu". Đề xuất luật mới (phía code chốt):
+  R-DK-1 bấm nút → ô màn đổi ngay, gửi lệnh; thiết bị trả kênh khác / không trả lời → về theo thiết bị + báo, không thử lại tự động;
+  R-DK-2 "Bỏ thẻ" chỉ gỡ thẻ khỏi màn thiết bị, app không duyệt / trả lời hộ;
+  R-DK-3 lệnh firmware chưa có → nút khoá + gợi ý cập nhật, không gửi;
+  R-DK-4 dừng xoay là tạm (không đổi `autoRotate` lưu), mất khi thiết bị khởi động lại;
+  R-DK-5 độ sáng gửi khi thả tay, như cài đặt; R-DK-6 ô màn vẽ theo `/api/state`, mở app / về tab 1 thì đọc lại ngay.
+- Cần firmware: `POST /api/channel {"action":"prev"}`; dừng / tiếp tục xoay tạm (`{"action":"pause"|"resume"}`, `/api/state`
+  báo đang dừng); tắt / bật màn ngay (không đợi giờ đêm, `/api/state` báo màn tắt); `slide_left_ms` (và độ dài slide) trong
+  `/api/state`; bỏ một thẻ theo id qua HTTP (như MCP `clear_card`). Màn thiết bị: biểu tượng "tạm dừng" ở khay khi xoay đang
+  dừng — cần `/panel-design` vẽ theo Windows XP thật (ô màn trên app chưa vẽ).
+
+**Việc cần làm trong code:**
+- `ControlScreen` (mới, tab 1): bố cục và trạng thái như đặc tả; gọi các lệnh `/api/channel`, `/api/settings`, `/api/refresh`,
+  bỏ thẻ; phản hồi lạc quan + chip đang gửi + thanh báo lỗi; khoá nút khi firmware chưa có lệnh.
+- `DeviceMirror`: vẽ lại màn XP của từng kênh đúng px theo `design/panel` (240 px × 1.2) từ `/api/state`, đổi theo kênh hiện;
+  chạm → Số liệu, vuốt → kênh sau / trước.
+- `DashboardScreen` → màn phụ "Số liệu": thanh trên có nút quay lại, bỏ thanh dưới, mở ở tab của kênh đang hiện.
+- Thanh dưới: tab 1 "Điều khiển", icon `nav-control`.
+- Chuỗi, token, icon theo trên.
+
 ## 2026-11-25.4 — Skill Ảnh: gửi ảnh từ điện thoại lên thiết bị
 
 - **Màn hình · `DashboardScreen`** (`source/Dashboard.dc.html`, `screen_specs.md` §2; ảnh mới `DashboardPhoto.png`,
