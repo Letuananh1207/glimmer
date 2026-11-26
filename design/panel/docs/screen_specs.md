@@ -1836,6 +1836,8 @@ Nguồn `source/Photo-Empty.dc.html` · ảnh `screens/@2x/PhotoEmpty.png`
 
 ## 17. Kiểu XP (Luna) — giao diện toàn máy
 
+> **P-2026-11-26.10 — Góc khởi động:** Clawd trắng ở góc dưới phải màn khởi động đổi thành chữ `Clawdsoft` nghiêng trắng.
+
 > **P-2026-11-26.9 — Nút start + màn hệ thống theo ảnh XP thật + tên Clawdsoft Window xp:** nút start 68 px có cờ 4 ô (14×12) + chữ `start` nghiêng; 4 nút skill 28 px tại x 71 + 30k; màn khởi động / welcome / đăng nhập / cập nhật vẽ lại theo ảnh chụp XP, bỏ dòng thông tin (phiên bản, tên mạng, %, lần thử); logo `Clawdsoft` / `Window` / `xp` / `Professional`.
 
 > **P-2026-11-26.8 — Kiểu XP bản A:** mọi kênh vẽ lại thành cửa sổ kiểu XP (thanh tiêu đề xanh, thân be, thanh tác vụ). Thay §1–16 khi phía code áp; bố cục cũ giữ làm tham chiếu dữ liệu.
@@ -1889,7 +1891,7 @@ BBBBBB.YYYYY..
 
 **Màn hệ thống (không cửa sổ), theo ảnh chụp XP thật — không dòng thông tin:**
 
-- **Khởi động** (`XP-Splash`): nền đen; cờ ×3 (42×36) trên-phải; `Clawdsoft` 11 white, `Window` 16B white, `xp` 11 xpWelcomeOrange chỉ số trên, `Professional` 11 xpWelcomeOrange — cụm căn giữa (x0 = (240 − (w + 16)) / 2); ô 56×11 tại (92, 152) viền xpBootGrey góc vạt, 3 khối xanh 6×5 bước 8 chạy qua lại; Clawd trắng (212, 224).
+- **Khởi động** (`XP-Splash`): nền đen; cờ ×3 (42×36) trên-phải; `Clawdsoft` 11 white, `Window` 16B white, `xp` 11 xpWelcomeOrange chỉ số trên, `Professional` 11 xpWelcomeOrange — cụm căn giữa (x0 = (240 − (w + 16)) / 2); ô 56×11 tại (92, 152) viền xpBootGrey góc vạt, 3 khối xanh 6×5 bước 8 chạy qua lại; góc dưới phải chữ `Clawdsoft` nghiêng white (bitmap, mép phải x 231, y 226) — chỗ tên hãng của XP.
 - **Welcome** (`XP-Connecting`): nền xpWelcome; dải trên y 0–29 + đường y 30, dải dưới y 206–239 xpWelcomeBand; viền y 205–206 cam giữa nhạt dần ra hai bên; chỉ chữ `welcome` nghiêng white + bóng tại (70, 106).
 - **Đăng nhập** (`XP-SetupMode`): nền welcome; trái cờ ×2 + `Window` nghiêng + `xp` + `Để bắt đầu, kết nối Wi-Fi`; vạch dọc x 116 mờ hai đầu; phải ô chọn (ảnh khung trắng + `glimmer-setup` + `192.168.4.1` nhỏ); dưới-trái nút nguồn đỏ + `Cài đặt Wi-Fi`. Chi tiết: token `themeXP.welcome`.
 - **Cập nhật** (`XP-OtaProgress`): nền welcome; `đang cập nhật...` nghiêng (20, 96); `Đừng tắt hay rút điện máy.` 11 TC (120, 130).

@@ -5,6 +5,15 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-26.10 — Màn khởi động: góc dưới phải là chữ Clawdsoft
+
+- **Màn khởi động** (`source/XP-Splash.dc.html`, `screen_specs.md` §17, token `themeXP.boot.corner`; ảnh `XPSplash.png`):
+  - Góc dưới phải: bỏ Clawd trắng (212, 224); thay bằng chữ `Clawdsoft` trắng nghiêng nhỏ (bitmap từ JBMono-11, nghiêng 1 px / 3
+    hàng), căn mép phải x 231, đỉnh y 226 — đúng chỗ tên hãng trên màn khởi động XP.
+
+**Việc cần làm trong code:**
+- Màn khởi động: vẽ bitmap `Clawdsoft` (token) ở góc dưới phải thay Clawd. Bản xem trước màn trên máy tính vẽ theo.
+
 ## P-2026-11-26.9 — Nút start kiểu XP, màn hệ thống theo XP thật, tên Clawdsoft Window xp
 
 - **Thanh tác vụ** (mọi màn có cửa sổ; `screen_specs.md` §17, token `themeXP.taskbar`):
