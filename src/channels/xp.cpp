@@ -188,6 +188,16 @@ void drawIcon(Icon icon, int x, int y, int scale, uint16_t color) {
             tft.fillRect(x + c * scale, y + r * scale, run * scale, scale, color);
             c += run;
         }
+        // Clawd's eye holes are black on every background (P-2026-11-26.11):
+        // off cells inside the head (rows 1–3, columns 3–14).
+        if (icon == XPCore::ICON_CLAWD && r >= 1 && r <= 3) {
+            const uint32_t head = pgm_read_dword(&ic.rows[0]);
+            for (int c = 0; c < ic.w; c++) {
+                const uint32_t bit = 1u << (ic.w - 1 - c);
+                if ((head & bit) && !(row & bit))
+                    tft.fillRect(x + c * scale, y + r * scale, scale, scale, 0x0000);
+            }
+        }
     }
 }
 

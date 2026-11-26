@@ -5,7 +5,7 @@
 //   y 40      hero "$4.20" VT323-86 black — the Codex credits left (the
 //             pre-XP "$4.20" status meta); "--" xpDim when none / loading
 //   y 120     two groupboxes 106×66 "Claude" (x 10) / "Codex" (x 124):
-//             value VT323-44 at (+8, 128) in the usage colour ("Khóa" red when
+//             value VT323-44 at (+8, 128) black, bar in the usage colour ("Khóa" red when
 //             the credential is bad, "--" xpDim while loading), bar 90×12 at y 164
 //   y 196     status bar: advice left ("Dùng Claude"), resets right
 //             ("CL 2G 14P · CX 3NG"); loading "Đang tải..." / "CL -- · CX --";
@@ -82,7 +82,7 @@ static void paintBlock(int i, const Side& s) {
         c = DIM;
     } else {
         snprintf_P(buf, sizeof(buf), PSTR("%.0f%%"), Api::shownPct(s.pct));
-        c = mode == 3 ? DIM : xpUsageColor(s.pct, GREEN);
+        c = mode == 3 ? DIM : BLACK;   // black number, level colour in the bar (P-2026-11-26.11)
     }
     Display::useFont("VT323-44");
     tft.setTextDatum(TL_DATUM);

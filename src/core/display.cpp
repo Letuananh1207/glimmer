@@ -139,14 +139,22 @@ void Display::drawClawd(int x, int y, int s, uint16_t color, uint8_t eyes, bool 
         default: break;
     }
     if (walking) rows[8] = rows[9] = kWalkLegs;
+    // Eye holes are always black, on any background (P-2026-11-26.11, token
+    // themeXP.rules.clawdEyes): an off cell inside the head (rows 1–3, columns
+    // 3–14) is an eye, not background.
+    auto cellColor = [&](int j, int i) -> uint16_t {
+        const uint32_t bit = 1u << (17 - i);
+        if (rows[j] & bit) return color;
+        return (j >= 1 && j <= 3 && (kClawd[0] & bit)) ? (uint16_t)0x0000 : bg;
+    };
     for (int j = 0; j < 10; j++) {
         // Runs of equal cells as single rects: few SPI transactions.
         int i = 0;
         while (i < 18) {
-            const bool on = rows[j] & (1u << (17 - i));
+            const uint16_t c = cellColor(j, i);
             int k = i;
-            while (k < 18 && (bool)(rows[j] & (1u << (17 - k))) == on) k++;
-            tft.fillRect(x + i * s, y + j * s, (k - i) * s, s, on ? color : bg);
+            while (k < 18 && cellColor(j, k) == c) k++;
+            tft.fillRect(x + i * s, y + j * s, (k - i) * s, s, c);
             i = k;
         }
     }
@@ -159,7 +167,7 @@ void Display::drawClawd(int x, int y, int s, uint16_t color, uint8_t eyes, bool 
         };
         const int h = s / 2 > 0 ? s / 2 : 1;
         for (const auto& c : kHappyHoles)
-            tft.fillRect(x + c[0] * s / 2, y + c[1] * s / 2, h, h, bg);
+            tft.fillRect(x + c[0] * s / 2, y + c[1] * s / 2, h, h, 0x0000);   // black, like the eyes
     }
 }
 

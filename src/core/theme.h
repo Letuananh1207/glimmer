@@ -34,7 +34,7 @@ namespace Theme {
     // the token's "xp" prefix: xpBody → XP::BODY. Night face + boot keep BG.
     namespace XP {
         constexpr uint16_t WELCOME_BAND     = 0x0193;  // #00309C xpWelcomeBand
-        constexpr uint16_t LINK             = 0x0199;  // #0033CC xpLink
+        constexpr uint16_t LINK             = 0x0339;  // #0066CC xpLink (P-2026-11-26.11)
         constexpr uint16_t TITLE_EDGE       = 0x01F6;  // #003DB5 xpTitleEdge
         constexpr uint16_t GROUP_LABEL      = 0x023A;  // #0046D5 xpGroupLabel
         constexpr uint16_t FRAME            = 0x023A;  // #0047D3 xpFrame
@@ -82,7 +82,7 @@ namespace Theme {
         constexpr uint16_t FLAG_GREEN       = 0x85E0;  // #81BC06 xpFlagGreen
         constexpr uint16_t BOOT_BLOCK_HI    = 0x9E1F;  // #9BC0FA xpBootBlockHi
         constexpr uint16_t BAND_EDGE_WARM   = 0x9B4D;  // #9C6A6A xpBandEdgeWarm
-        constexpr uint16_t DIM              = 0xA514;  // #A0A0A0 xpDim
+        constexpr uint16_t DIM              = 0xAD53;  // #ACA899 xpDim — XP disabled text (P-2026-11-26.11)
         constexpr uint16_t STATUS_LINE      = 0xAD53;  // #ACA899 xpStatusLine
         constexpr uint16_t BOOT_GREY        = 0xB596;  // #B2B2B2 xpBootGrey
         constexpr uint16_t FLASH_EDGE       = 0xBB23;  // #B8661E xpFlashEdge

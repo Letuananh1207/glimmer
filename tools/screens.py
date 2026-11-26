@@ -44,7 +44,7 @@ CLAWD_ORANGE = hx("D97757")
 
 # Theme::XP::* (token themeXP.color)
 X = {k: hx(v) for k, v in dict(
-    WELCOME_BAND="00309C", LINK="0033CC", TITLE_EDGE="003DB5", GROUP_LABEL="0046D5", FRAME="0047D3",
+    WELCOME_BAND="00309C", LINK="0066CC", TITLE_EDGE="003DB5", GROUP_LABEL="0046D5", FRAME="0047D3",
     TITLE_DARK="0049D6", TITLE="0058EE", FLAG_BLUE="05A6F0", TITLE_SHADOW="0A246A", SKY="0A6ACF",
     TRAY="0F8BE8", TRAY_EDGE="1042AF", BTN_PRESSED_EDGE="163E91", BOOT_BLOCK_LO="1A4DB8", BTN_EDGE="1A50C8",
     TASK_DARK="1C4FBF", CHECK_BOX="1C5180", BTN_PRESSED="1E4FB5", START_SHADOW="1E5E1E", ICON_INFO="1F6FE0",
@@ -53,7 +53,7 @@ X = {k: hx(v) for k, v in dict(
     START="3A9E3A", BAND_EDGE="3B4FA8", BTN="3C81F3", BAR="3CC63C", TITLE_HI="3D95FF", TRAY_HI="3FA9F5",
     LABEL="4D4D4D", WELCOME="5A7EDC", TASK_HI="5A9BF6", START_HI="5CC15C", USER_SEL_HI="5F84E3",
     MUTED="6F6F6F", LILAC="7A44C8", DIVIDER_FADE="7D9BE8", FIELD_BORDER="7F9DB9", WELCOME_LINE="7FA4F0",
-    FLAG_GREEN="81BC06", BOOT_BLOCK_HI="9BC0FA", BAND_EDGE_WARM="9C6A6A", DIM="A0A0A0", STATUS_LINE="ACA899",
+    FLAG_GREEN="81BC06", BOOT_BLOCK_HI="9BC0FA", BAND_EDGE_WARM="9C6A6A", DIM="ACA899", STATUS_LINE="ACA899",
     BOOT_GREY="B2B2B2", FLASH_EDGE="B8661E", EMPTY_ICON="B8B4A0", DIVIDER="B9CBF5", RED="C1272D",
     AMBER="C98A00", WELCOME_SUB="C9D6F7", GROUP="D0D0BF", ICON_ERROR="D8341E", ROW_HI="DCE6F8",
     CLOSE="E0523C", ROW_LINE="E4E4E4", BODY="ECE9D8", FLASH="F0A030", WELCOME_ORANGE="F28F2E",
@@ -189,12 +189,14 @@ def clawd(sc, x, y, scale, color=CLAWD_ORANGE, bg=None, **kw):
         for i, c in enumerate(row):
             if c == "#":
                 sc.rect(x + i * scale, y + j * scale, scale, scale, color)
+            elif 1 <= j <= 3 and 3 <= i <= 14:   # eye holes: always black (P-2026-11-26.11)
+                sc.rect(x + i * scale, y + j * scale, scale, scale, X["BLACK"])
             elif bg is not None:
                 sc.rect(x + i * scale, y + j * scale, scale, scale, bg)
     if kw.get("eyes") == "happy":
         h = max(scale // 2, 1)
         for hx_, hy in HAPPY_HOLES:
-            sc.rect(x + hx_ * scale // 2, y + hy * scale // 2, h, h, bg if bg is not None else X["BODY"])
+            sc.rect(x + hx_ * scale // 2, y + hy * scale // 2, h, h, X["BLACK"])
 
 
 BADGES = {   # display.cpp drawBadge 7×7
@@ -234,6 +236,13 @@ ICONS = {   # (w, h, rows): bit (w-1-x) of row y
 def draw_icon(sc, icon, x, y, scale, color):
     w, h, rows = ICONS[icon]
     sc.bits(rows, w, x, y, color, scale)
+    if icon == "clawd":   # eye holes black (xp.cpp drawIcon, P-2026-11-26.11)
+        head = rows[0]
+        for r in (1, 2, 3):
+            for c in range(w):
+                bit = 1 << (w - 1 - c)
+                if (head & bit) and not (rows[r] & bit):
+                    sc.rect(x + c * scale, y + r * scale, scale, scale, X["BLACK"])
 
 
 _title = [""]
@@ -689,7 +698,7 @@ def claude_xp(sc, *, pct=38, reset="4NG", sec="12% · 2G 14P", sec_pct=12, rows=
     sc.text("JBMono-11", "Hạn mức tuần", 10, 28, X["LABEL"])
     hc = X["DIM"] if dim else xp_usage_color(pct, X["GREEN"])
     bc = X["BAR"] if hc == X["GREEN"] else hc
-    hero(sc, pct, hc, bc, 2, 155, asleep)
+    hero(sc, pct, X["DIM"] if dim else X["BLACK"], bc, 2, 155, asleep)   # digits black (P-2026-11-26.11)
     clawd(sc, 156, 52 if asleep else 36, 4, bg=X["BODY"], eyes=eyes)
     if asleep:   # Zz frame 6 (kZz[6] = z4 at (202,38) shifted (−6,−6))
         for j, row in enumerate(ZZ_Z4):
@@ -736,7 +745,7 @@ def codex_xp(sc, *, pct=41, reset="3NG", tag="Spark", sec="2G 14P", resets="còn
         title_meta(sc, meta)
     sc.text("JBMono-11", "Hạn mức tuần", 10, 28, X["LABEL"])
     hc = X["DIM"] if stale else xp_usage_color(pct, X["LILAC"])
-    hero(sc, pct, hc, hc, 1, 150)
+    hero(sc, pct, X["DIM"] if stale else X["BLACK"], hc, 1, 150)   # digits black (P-2026-11-26.11)
     if credits:
         sc.text("JBMono-11", "tín dụng", 229, 28, X["MUTED"], "TR")
         sc.text("JBMono-12B", credits, 229, 42, X["DIM"] if stale else X["BLACK"], "TR")
@@ -813,7 +822,7 @@ def _ai_block(sc, i, mode, used):
     elif mode == 1 or used < 0:
         s, c = "--", X["DIM"]
     else:
-        s, c = f"{used}%", X["DIM"] if mode == 3 else xp_usage_color_left(rem, healthy)
+        s, c = f"{used}%", X["DIM"] if mode == 3 else X["BLACK"]   # black number (P-2026-11-26.11)
     sc.text("VT323-44", s, bx + 8, 128, c)
     lit = mode in (0, 3)
     progress(sc, bx + 8, 164, 90, 12, used if lit and used >= 0 else 0,

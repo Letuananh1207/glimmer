@@ -2,7 +2,7 @@
 //
 //   title     "Codex" (+ " · <model label>" / " · cũ 18P" / " · khóa lỗi")
 //   y 28      hero label from the window length ("Hạn mức tuần")  JBMono-11 LABEL
-//   y 40      hero "41" VT323-86 + "%" VT323-44 at (10+w+2, 70)  xpLilac / usage colour
+//   y 40      hero "41" VT323-86 + "%" VT323-44 at (10+w+2, 70)  black (DIM stale); bar xpLilac / usage colour
 //   y 28..54  limit credits "tín dụng" + "$4.20" TR 229 (only when the account has some)
 //   y 68/84   "đặt lại sau" TR (229,68) muted + countdown TR (229,84) JBMono-12B RED
 //   y 102     XP progress 220×14 (blocks 1 px from the field edge)
@@ -114,7 +114,8 @@ static void paintHero(float pct) {
     else         snprintf_P(pctBuf, sizeof(pctBuf), PSTR("%.0f"), Api::shownPct(pct));
     tft.fillRect(kL, kHeroY, kHeroClearR - kL, kBarY - kHeroY, BODY);   // x 10..149, y 40..101
 
-    const uint16_t uc = heroColor(pct, s_stale);
+    // Hero digits black (P-2026-11-26.11); the level colour is the bar's only.
+    const uint16_t uc = s_stale ? DIM : BLACK;
     Display::useFont("VT323-86");
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(uc, BODY);
@@ -124,7 +125,7 @@ static void paintHero(float pct) {
     tft.setTextColor(uc, BODY);
     tft.drawString("%", kL + heroW + 2, kPctY);           // "100%" ends at x 132
 
-    XP::progress(kL, kBarY, kR + 1 - kL, 14, pct < 0 ? 0 : Api::shownPct(pct), uc, 1);
+    XP::progress(kL, kBarY, kR + 1 - kL, 14, pct < 0 ? 0 : Api::shownPct(pct), heroColor(pct, s_stale), 1);
 }
 
 // Secondary text: "12% · 2G 14P", "12%", the countdown alone, or "--".

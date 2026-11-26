@@ -2,7 +2,7 @@
 //
 //   title     "Claude" (+ " · cũ 14P" / " · khóa lỗi" …)       XP::titleMeta
 //   y 28      hero label "Hạn mức tuần" / "Phiên 5 giờ"         JBMono-11 LABEL
-//   y 40      hero "38" VT323-86 + "%" VT323-44 at (10+w+2, 70) usage colour
+//   y 40      hero "38" VT323-86 + "%" VT323-44 at (10+w+2, 70) black (DIM stale); level colour in the bar only
 //   y 36      Clawd 72×40 at x 156 (asleep: y 52 + animated Zz) — mood from the board
 //   y 84      time to reset TR (229) — TR (150) while Clawd sleeps  JBMono-12B RED
 //   y 102     XP progress 220×14
@@ -176,7 +176,9 @@ static void paintHero(float pct) {
     else         snprintf_P(pctBuf, sizeof(pctBuf), PSTR("%.0f"), Api::shownPct(pct));
     tft.fillRect(kL, kHeroY, kHeroClearR - kL, kBarY - kHeroY, BODY);   // x 10..154, y 40..101
 
-    const uint16_t uc = heroColor(pct, s_dim);
+    // Hero digits black like XP dialog text; the level colour lives in the bar
+    // only (P-2026-11-26.11, token themeXP.rules.heroNumber).
+    const uint16_t uc = s_dim ? DIM : BLACK;
     Display::useFont("VT323-86");
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(uc, BODY);
