@@ -46,6 +46,14 @@ const char kGlobe[] PROGMEM = "...............................EEEEEEEEEE........
 const char kFolder[] PROGMEM = "DDDDDDDD................DFFFFFFFD...............DFFFFFFFFDDDDDDDDDDDDDD.DFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDFFFFFFFFFFFFFFFFFFFFFFDDDDDDDDDDDDDDDDDDDDDDDDD........................";   // 24×20
 const char kPaper[] PROGMEM = "BBBBBBB...BWWWWWBB..BWLLLWWBB.BWWWWWWWB.BWLLLLLWB.BWWWWWWWB.BWLLLLLWB.BWWWWWWWB.BWLLLLLWB.BWWWWWWWB.BBBBBBBBB.";   // 10×11
 
+// P-2026-11-26.17 weather icons (screen_specs §17 XP-Real): sun / partly / rain, 16 and 32 px.
+const char kWxSun16[] PROGMEM = ".......YY..............YY..........Y...YY...Y.....YYY......YYY.....Y...AA...Y........AAYYAA..........AYYYYA.....YYY.AYYYYYYA.YYYYYY.AYYYYYYA.YYY.....AYYYYA..........AAYYAA........Y...AA...Y.....YYY......YYY.....Y...YY...Y..........YY..............YY.......";   // 16×16
+const char kWxSun32[] PROGMEM = "..............................................YYYY............................YYYY............................YYYY....................YY......YYYY......YY...........YYY......YYYY......YYY.........YYYYY..............YYYYY........YYYYYY............YYYYYY..........YYY..............YYY.............Y....AAAAAAAA....Y..................AAYYYYYYAA.....................AYYYYYYYYYYA...................AAYYYYYYYYYYAA..................AYYYYYYYYYYYYA..........YYYYY...AYYYYYYYYYYYYA...YYYYY..YYYYY...AYYYYYYYYYYYYA...YYYYY..YYYYY...AYYYYYYYYYYYYA...YYYYY..YYYYY...AYYYYYYYYYYYYA...YYYYY..........AYYYYYYYYYYYYA..................AAYYYYYYYYYYAA...................AYYYYYYYYYYA.....................AAYYYYYYAA..................Y....AAAAAAAA....Y.............YYY..............YYY..........YYYYYY............YYYYYY........YYYYY..............YYYYY.........YYY......YYYY......YYY...........YY......YYYY......YY....................YYYY............................YYYY............................YYYY..............................................";   // 32×32
+const char kWxPartly16[] PROGMEM = ".....YY...........Y..YY..Y.......YY......YY.........AAAA...........AYYYYA.......YY.AYYYYGGGG....YY.AYYYGWWWWG......AYYGWWWWWWG......GGWWWWWWWG.....GWWWWWWWWWG.....GWWWWWWWWWWG....GWWWWWWWWWWG....GWWWWWWWWWWG....GGGGGGGGGGGG.................................";   // 16×16
+const char kWxPartly32[] PROGMEM = "..........YYYY............................YYYY......................Y.....YYYY.....Y...............YYY............YYY.............YYYYY..........YYYYY.............YYY............YYY...............Y....AAAAAA....Y...................AAYYYYYYAA......................AYYYYYYYYA.....................AYYYYYYYYYYA..............YYY...AYYYYYYYYYYA.GGYYY........YYY...AYYYYYYYYYGGGWWGGG........YYY...AYYYYYYYYGWWWWWWWWG.......YYY...AYYYYYYYGWWWWWWWWWWG............AYYYYYYGWWWWWWWWWWWWG............AYYGGGWWWWWWWWWWWWWG............AGGWWWWWWWWWWWWWWWWG............GWWWWWWWWWWWWWWWWWWWG...........GWWWWWWWWWWWWWWWWWWWG..........GWWWWWWWWWWWWWWWWWWWWWG.........GWWWWWWWWWWWWWWWWWWWWWWG........GWWWWWWWWWWWWWWWWWWWWWWG........GWWWWWWWWWWWWWWWWWWWWWWWG.......GWWWWWWWWWWWWWWWWWWWWWWWG.......GWWWWWWWWWWWWWWWWWWWWWWG........GWWWWWWWWWWWWWWWWWWWWWWG........GWWWWWWWWWWWWWWWWWWWWWG.........GGGGGGGGGGGGGGGGGGGGGGG...................................................................................................................................";   // 32×32
+const char kWxRain16[] PROGMEM = "........................................................GGGG...........GWWWWG.......GGGWWWWWWG.....GWWWWWWWWWG.....GWWWWWWWWWWG....GWWWWWWWWWWG....GWWWWWWWWWWG....GWWWWWWWWWWG....GGGGGGGGGGGG......B..B...B.......BB..B..B........B..B...B.......BB..B..B.....";   // 16×16
+const char kWxRain32[] PROGMEM = "...................................................................................................................................................................................GG...........................GGGWWGGG.......................GWWWWWWWWG.....................GWWWWWWWWWWG...................GWWWWWWWWWWWWG...............GGGWWWWWWWWWWWWWG.............GGWWWWWWWWWWWWWWWWG............GWWWWWWWWWWWWWWWWWWWG...........GWWWWWWWWWWWWWWWWWWWG..........GWWWWWWWWWWWWWWWWWWWWWG.........GWWWWWWWWWWWWWWWWWWWWWWG........GWWWWWWWWWWWWWWWWWWWWWWG........GWWWWWWWWWWWWWWWWWWWWWWWG.......GWWWWWWWWWWWWWWWWWWWWWWWG.......GWWWWWWWWWWWWWWWWWWWWWWG........GWWWWWWWWWWWWWWWWWWWWWWG........GWWWWWWWWWWWWWWWWWWWWWG.........GGGGGGGGGGGGGGGGGGGGGGG.............................................................................BB.....BB.....BB...............BB.....BB.....BB................BB.....BB.....BB...............BB.....BB.....BB................BB.....BB.....BB...............BB.....BB.....BB................BB.....BB.....BB.........";   // 32×32
+
 struct Ink { char key; uint16_t color; };
 // Draw a char-art bitmap at (x, y): runs of one key → one fillRect; unknown keys transparent.
 void drawArt(const char* art, int w, int h, int x, int y, const Ink* inks, int nInks) {
@@ -307,20 +315,68 @@ void progress(int x, int y, int w, int h, float pct, uint16_t on, int padY) {
     }
 }
 
-void groupLabel(int x, int y, const char* label, int clearW) {
+void groupLabel(int x, int y, const char* label, int clearW, uint16_t bg) {
     Display::useFont("JBMono-11");
     int tw = label && *label ? tft.textWidth(label) : 0;
     int pw = tw + 6 > clearW ? tw + 6 : clearW;
-    tft.fillRect(x + 4, y - 6, pw, 13, BODY);
+    tft.fillRect(x + 4, y - 6, pw, 13, bg);
     if (!tw) return;
     tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(GROUP_LABEL, BODY);
+    tft.setTextColor(GROUP_LABEL, bg);
     tft.drawString(label, x + 7, y - 6);
 }
 
-void groupBox(int x, int y, int w, int h, const char* label) {
+void groupBox(int x, int y, int w, int h, const char* label, uint16_t bg) {
     tft.drawRect(x, y, w, h, GROUP);
-    groupLabel(x, y, label);
+    groupLabel(x, y, label, 0, bg);
+}
+
+void tabs(const char* const* labels, int n, int selected) {
+    // Page: FIELD_BORDER 1 px (6, 41, 228×169), white inside.
+    tft.drawRect(6, 41, 228, 169, FIELD_BORDER);
+    tft.fillRect(7, 42, 226, 167, WHITE);
+    tft.fillRect(6, 26, 228, 15, BODY);                    // the strip above the page
+    Display::useFont("JBMono-11");
+    tft.setTextDatum(TL_DATUM);
+    int x = 6, selX = 6, selW = 0;
+    for (int i = 0; i < n; i++) {
+        const int w = tft.textWidth(labels[i]) + 10;
+        if (i == selected) { selX = x; selW = w; x += w; continue; }
+        // Unselected: y 28–40, 1 px narrower than its slot, xpRowLine face.
+        tft.drawRect(x, 28, w - 1, 14, FIELD_BORDER);
+        tft.fillRect(x + 1, 29, w - 3, 12, ROW_LINE);
+        tft.setTextColor(BLACK, ROW_LINE);
+        tft.drawString(labels[i], x + 5, 29);
+        x += w;
+    }
+    if (selW) {
+        // Selected: y 26–41, orange / yellow hot top, white face joined to the page.
+        tft.drawFastHLine(selX, 26, selW, WELCOME_ORANGE);
+        tft.fillRect(selX, 27, selW, 2, FLAG_YELLOW);
+        tft.drawFastVLine(selX, 27, 15, FIELD_BORDER);
+        tft.drawFastVLine(selX + selW - 1, 27, 15, FIELD_BORDER);
+        tft.fillRect(selX + 1, 29, selW - 2, 13, WHITE);
+        tft.setTextColor(BLACK, WHITE);
+        tft.drawString(labels[selected], selX + 5, 29);
+    }
+}
+
+WxIcon wxIconFor(uint8_t code) {
+    if (code <= 1) return WX_SUN;                          // clear, mainly clear
+    if (code <= 3 || code == 45 || code == 48) return WX_PARTLY;   // cloudy, fog
+    return WX_RAIN;                                        // drizzle, rain, snow, showers, storms
+}
+
+void weatherIcon(uint8_t code, int x, int y, bool big) {
+    static const Ink kInks[] = {{'Y', ICON_WARN}, {'A', AMBER}, {'G', FIELD_BORDER}, {'W', WHITE}, {'B', ICON_INFO}};
+    const int s = big ? 32 : 16;
+    const char* art;
+    switch (wxIconFor(code)) {
+        case WX_SUN:    art = big ? kWxSun32 : kWxSun16; break;
+        case WX_PARTLY: art = big ? kWxPartly32 : kWxPartly16; break;
+        default:        art = big ? kWxRain32 : kWxRain16; break;
+    }
+    drawArt(art, s, s, x, y, kInks, 5);
 }
 
 void field(int x, int y, int w, int h) {

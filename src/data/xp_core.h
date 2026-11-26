@@ -79,13 +79,14 @@ inline const char* progName(int p) {
     return p >= 0 && p < PROG_COUNT ? kName[p] : nullptr;
 }
 // kChannels[] name → program (case-insensitive like /api/channel); PROG_NONE
-// for the desktop, cards, the night face, setup.
+// for the desktop, cards, the night face, setup. Forecast is the "Dự báo" tab
+// of the Weather window (P-2026-11-26.17): one program, one taskbar button.
 inline Prog progOf(const char* name) {
     if (!name) return PROG_NONE;
     for (int p = 0; p < PROG_COUNT; p++) {
         const char* a = progName(p); const char* b = name;
         while (*a && *b && ((*a | 0x20) == (*b | 0x20))) { a++; b++; }
-        if (!*a && !*b) return (Prog)p;
+        if (!*a && !*b) return p == PROG_FORECAST ? PROG_WEATHER : (Prog)p;
     }
     return PROG_NONE;
 }
@@ -227,8 +228,8 @@ inline WinFrame frameOf(const char* name) {
         {"Claude", {"Claude", ICON_CLAWD, false}},      {"Codex", {"Codex", ICON_CLAWD, false}},
         {"AI", {"AI hôm nay", ICON_CLAWD, true}},       {"Trend", {"Xu hướng", ICON_CLAWD, true}},
         {"Agents", {"Tác tử", ICON_CLAWD, true}},       {"Photo", {"Ảnh", ICON_PHOTO, false}},
-        {"Weather", {"Thời tiết", ICON_WEATHER, true}}, {"Forecast", {"Dự báo", ICON_WEATHER, true}},
-        {"Clock", {"Đồng hồ", ICON_CLOCK, true}},       {"Info", {"Thông tin", ICON_INFO, false}},
+        {"Weather", {"Thời tiết", ICON_WEATHER, false}}, {"Forecast", {"Thời tiết", ICON_WEATHER, false}},
+        {"Clock", {"Ngày và Giờ", ICON_CLOCK, false}},       {"Info", {"Thông tin", ICON_INFO, false}},
         {"Setup", {"Cài đặt", ICON_CLAWD, false}},
     };
     for (const Row& r : kRows) if (name && !strcmp(r.name, name)) return r.f;
@@ -248,21 +249,57 @@ constexpr int kPaperN = 6;
 inline int paperX(int i) { return 60 + 20 * i; }
 inline int paperY(int i) { static const uint8_t kY[kPaperN] = {48, 43, 40, 40, 43, 48}; return kY[i]; }
 
-// ── Desktop icons (P-2026-11-26.14, XP-Desk, XP Auto Arrange) ──
-// Column 0 (centre x 40): Claude, Codex (agent), Ảnh (photo), then the
-// trash; column 1 (centre x 120): Thời tiết, Đồng hồ. Cells 48 tall from y 8.
+// ── Date and Time Properties calendar (P-2026-11-26.17, XP-Real) ──
+// Month grid 7 × 6, weeks from Monday. [month] 1..12.
+inline bool leapYear(int y) { return (y % 4 == 0 && y % 100 != 0) || y % 400 == 0; }
+inline int daysIn(int year, int month) {
+    static const uint8_t kD[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    if (month < 1 || month > 12) return 30;
+    return month == 2 && leapYear(year) ? 29 : kD[month - 1];
+}
+// Cells before day 1 (days of the previous month) when day 1 falls on
+// [wdayOfFirst] (tm_wday: 0 = Sunday).
+inline int leadingDays(int wdayOfFirst) { return (wdayOfFirst + 6) % 7; }
+// Day number shown in grid cell [i] (0..41) and whether it is in [month].
+struct CalCell { int day; bool inMonth; };
+inline CalCell calCell(int i, int year, int month, int wdayOfFirst) {
+    const int lead = leadingDays(wdayOfFirst);
+    const int n = daysIn(year, month);
+    if (i < lead) {
+        const int pm = month == 1 ? 12 : month - 1, py = month == 1 ? year - 1 : year;
+        return {daysIn(py, pm) - lead + 1 + i, false};
+    }
+    if (i - lead < n) return {i - lead + 1, true};
+    return {i - lead - n + 1, false};
+}
+
+// ── Screen saver (Night, P-2026-11-26.17): the time block (170×100) jumps
+// every minute inside x 6..64, y 6..134, at least 30 px from where it was.
+// [r1], [r2] = random numbers; tries the next spots until one is far enough.
+inline void saverSpot(int oldX, int oldY, uint32_t r1, uint32_t r2, int& x, int& y) {
+    for (int k = 0; k < 16; k++) {
+        x = 6 + (int)((r1 + 17u * k) % 59u);
+        y = 6 + (int)((r2 + 31u * k) % 129u);
+        const int dx = x - oldX, dy = y - oldY;
+        if (dx * dx + dy * dy >= 30 * 30) return;
+    }
+    x = oldX < 35 ? 64 : 6;                       // fall back: the far corner
+    y = oldY < 70 ? 134 : 6;
+}
+
+// ── Desktop icons (P-2026-11-26.17 XP-Desk-OneCol: as XP, only installed
+// programs) ── one column, centre x 40: Claude, Codex (agent), Ảnh (photo),
+// then the trash; cells 48 tall from y 8. Weather opens from the tray icon,
+// the clock from the tray clock (no desktop icons).
 constexpr int kDeskMax = 6;
 constexpr int kDeskTrash = -2;              // DeskIcon::prog of the trash
 struct DeskIcon { int8_t prog; int16_t cx, y; };
 inline int deskIcons(const char* skillsOn, DeskIcon* out) {
-    int n = 0, c0 = 0, c1 = 0;
-    auto add0 = [&](int8_t p) { out[n++] = {p, 40, (int16_t)(8 + 48 * c0++)}; };
-    auto add1 = [&](int8_t p) { out[n++] = {p, 120, (int16_t)(8 + 48 * c1++)}; };
-    if (Skill::inList(skillsOn, "agent")) { add0(PROG_CLAUDE); add0(PROG_CODEX); }
-    if (Skill::inList(skillsOn, "photo")) add0(PROG_PHOTO);
-    add0(kDeskTrash);
-    if (Skill::inList(skillsOn, "weather")) add1(PROG_WEATHER);
-    if (Skill::inList(skillsOn, "clock")) add1(PROG_CLOCK);
+    int n = 0;
+    auto add = [&](int8_t p) { out[n] = {p, 40, (int16_t)(8 + 48 * n)}; n++; };
+    if (Skill::inList(skillsOn, "agent")) { add(PROG_CLAUDE); add(PROG_CODEX); }
+    if (Skill::inList(skillsOn, "photo")) add(PROG_PHOTO);
+    add(kDeskTrash);
     return n;
 }
 

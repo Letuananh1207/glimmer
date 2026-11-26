@@ -77,9 +77,22 @@ namespace XP {
     // Groupbox: 1-px GROUP rectangle (x, y, w, h) — interior NOT filled —
     // and the caption JBMono-11 GROUP_LABEL at (x+7, y−6) on a BODY patch
     // (x+4, y−6, textW+6, 13). Paints the outline + caption patch only.
-    void groupBox(int x, int y, int w, int h, const char* label);
+    // [bg]: the caption patch — WHITE on a tab page (P-2026-11-26.17).
+    void groupBox(int x, int y, int w, int h, const char* label, uint16_t bg = Theme::XP::BODY);
     // Repaint the caption only (patch width = max(old, new) so a shorter one clears).
-    void groupLabel(int x, int y, const char* label, int clearW = 0);
+    void groupLabel(int x, int y, const char* label, int clearW = 0, uint16_t bg = Theme::XP::BODY);
+
+    // Luna tab control (P-2026-11-26.17, §17 XP-Real): page (6, 41, 228×169)
+    // FIELD_BORDER + WHITE; tabs from x 6, width = text + 10 (JBMono-11 TL
+    // (x+5, 29)); the selected one y 26–41 with a WELCOME_ORANGE / FLAG_YELLOW
+    // hot top and a white face joined to the page, the others y 28–40 ROW_LINE.
+    void tabs(const char* const* labels, int n, int selected);
+
+    // Weather icon for a WMO code: sun (0–1), partly cloudy (2–3, fog), rain
+    // (the rest) — 16×16, or 32×32 with [big]. Transparent background.
+    enum WxIcon : uint8_t { WX_SUN, WX_PARTLY, WX_RAIN };
+    WxIcon wxIconFor(uint8_t code);
+    void weatherIcon(uint8_t code, int x, int y, bool big);
 
     // White field / list box: FIELD_BORDER 1 px + WHITE fill. Rows inside:
     // selected ROW = fillRect SELECT + WHITE text, ruled ROW_LINE, today ROW_HI.

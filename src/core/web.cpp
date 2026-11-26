@@ -339,6 +339,7 @@ static void handleApiGetSettings() {
     d[F("nightBright")]   = s.nightBright;
     d[F("weatherLat")]    = s.weatherLat;
     d[F("weatherLon")]    = s.weatherLon;
+    d[F("weatherPlace")]  = s.weatherPlace;
     d[F("useFahrenheit")] = s.useFahrenheit;
     d[F("userName")]      = s.userName;
     d[F("pinApprovals")]   = s.pinApprovals;
@@ -438,6 +439,7 @@ static void applyIfPresent(Settings& s, JsonDocument& d) {
     applyBool("useFahrenheit", s.useFahrenheit);
     applyFloat("weatherLat", s.weatherLat);
     applyFloat("weatherLon", s.weatherLon);
+    applyStr("weatherPlace", s.weatherPlace);   // the app sends it with its location (P-2026-11-26.17)
     // Enabled skills (R-SK-1): known ids only; an empty result is ignored (at least one stays on).
     if (d[F("skillsOn")].is<JsonArray>()) {
         String in;

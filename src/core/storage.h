@@ -42,6 +42,7 @@ struct Settings {
     // Weather (Open-Meteo, no key needed)
     float    weatherLat    = 0.0f;
     float    weatherLon    = 0.0f;
+    String   weatherPlace;            // place name of the location (from the app), e.g. "Hà Nội"
     bool     showWeather   = true;
     bool     useFahrenheit = false;
 

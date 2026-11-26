@@ -358,16 +358,46 @@ def progress(sc, x, y, w, h, pct, on=None, pad_y=-1):
         bx += bw + gap
 
 
-def group_label(sc, x, y, label, clear_w=0):
+def group_label(sc, x, y, label, clear_w=0, bg=None):
     tw = sc.width("JBMono-11", label) if label else 0
-    sc.rect(x + 4, y - 6, max(tw + 6, clear_w), 13, X["BODY"])
+    sc.rect(x + 4, y - 6, max(tw + 6, clear_w), 13, bg or X["BODY"])
     if tw:
         sc.text("JBMono-11", label, x + 7, y - 6, X["GROUP_LABEL"])
 
 
-def group_box(sc, x, y, w, h, label):
+def group_box(sc, x, y, w, h, label, bg=None):
     sc.outline(x, y, w, h, X["GROUP"])
-    group_label(sc, x, y, label)
+    group_label(sc, x, y, label, bg=bg)
+
+
+def tabs(sc, labels, sel):
+    """XP::tabs (P-2026-11-26.17 Luna tab control)."""
+    sc.outline(6, 41, 228, 169, X["FIELD_BORDER"])
+    sc.rect(7, 42, 226, 167, X["WHITE"])
+    sc.rect(6, 26, 228, 15, X["BODY"])
+    x, sx, sw = 6, 6, 0
+    for i, t in enumerate(labels):
+        w = sc.width("JBMono-11", t) + 10
+        if i == sel:
+            sx, sw = x, w
+        else:
+            sc.outline(x, 28, w - 1, 14, X["FIELD_BORDER"])
+            sc.rect(x + 1, 29, w - 3, 12, X["ROW_LINE"])
+            sc.text("JBMono-11", t, x + 5, 29, X["BLACK"])
+        x += w
+    sc.hline(sx, 26, sw, X["WELCOME_ORANGE"])
+    sc.rect(sx, 27, sw, 2, X["FLAG_YELLOW"])
+    sc.vline(sx, 27, 15, X["FIELD_BORDER"])
+    sc.vline(sx + sw - 1, 27, 15, X["FIELD_BORDER"])
+    sc.rect(sx + 1, 29, sw - 2, 13, X["WHITE"])
+    sc.text("JBMono-11", labels[sel], sx + 5, 29, X["BLACK"])
+
+
+def wx_icon(sc, code, x, y, big):
+    """XP::weatherIcon: sun (0–1), partly (2–3, fog), rain (the rest)."""
+    kind = "Sun" if code <= 1 else "Partly" if code <= 3 or code in (45, 48) else "Rain"
+    inks = {"Y": X["ICON_WARN"], "A": X["AMBER"], "G": X["FIELD_BORDER"], "W": X["WHITE"], "B": X["ICON_INFO"]}
+    draw_art(sc, f"kWx{kind}{32 if big else 16}", x, y, inks)
 
 
 def field(sc, x, y, w, h):
@@ -937,9 +967,10 @@ DESK_TRASH = [0x07F8, 0x0FFC, 0x1FFE, 0x0AA8, 0x0AA8, 0x0AA8, 0x0AA8, 0x0AA8, 0x
 
 
 # XPCore::deskIcons (P-2026-11-26.14 XP-Desk): column 0 Claude, Codex, Ảnh, trash; column 1 Thời tiết, Đồng hồ.
-def desk_icons(skills):
+def desk_icons(skills, one_col=True):
+    """XPCore::deskIcons — P-2026-11-26.17: one column x 40, no Weather / Clock (older designs: one_col=False)."""
     col0 = (["Claude", "Codex"] if "agent" in skills else []) + (["Photo"] if "photo" in skills else []) + [None]
-    col1 = (["Weather"] if "weather" in skills else []) + (["Clock"] if "clock" in skills else [])
+    col1 = [] if one_col else (["Weather"] if "weather" in skills else []) + (["Clock"] if "clock" in skills else [])
     return [(p, 40, 8 + 48 * i) for i, p in enumerate(col0)] + [(p, 120, 8 + 48 * i) for i, p in enumerate(col1)]
 
 
@@ -976,12 +1007,12 @@ def balloon_xp(sc, line1, line2):
 
 def desktop(sc, *, cl="Claude 38%", cx="Codex 71%", line1=f"29° {DOT} Ít mây", line2="cảm giác 33°",
             balloon=False, badge=1, skills=("agent", "photo", "weather", "clock"), sel=None,
-            windows=(), top=None, tray=None):
+            windows=(), top=None, tray=None, one_col=False):
     """tray=None: the weather tray icon when the weather skill is on (P-2026-11-26.15); the older
     design images (before .15) are drawn with tray=False."""
     sc.img.paste(_desk_wallpaper(), (0, 0))
     labels = {"Claude": cl, "Codex": cx, "Photo": "Ảnh", "Weather": "Thời tiết", "Clock": "Đồng hồ", None: "Thùng rác"}
-    for prog, x, y in desk_icons(skills):
+    for prog, x, y in desk_icons(skills, one_col):
         selected = sel is not None and prog == sel
         white = X["SELECT_ICON"] if selected else X["WHITE"]
         if prog == "Claude":
@@ -1164,29 +1195,28 @@ AGENT_ROWS = [("approval", f"Cần bạn {DOT} Bash", f"claude {DOT} glimmer {DO
 WEATHER_DAYS = [("30/24", "Mưa rào"), ("28/23", "Mưa")]
 
 
-def weather(sc, *, stale=False, status="Mặt trời lặn 17:24", meta="", temp="29°", cond="Ít mây",
-            hilo="31° / 24°", stack=("cảm giác 33°", "ẩm 74%", "gió 12km"), uv=7, days=WEATHER_DAYS):
-    window(sc, "Thời tiết", "weather", True)
-    for k, x in enumerate((10, 124)):
-        group_box(sc, x, 144, 106, 46, "Kia" if k else "Mai")
+def weather(sc, *, stale=False, meta="", temp="29°", cond="Ít mây", code=2, place="Hà Nội",
+            rows=(("Cảm giác:", "33°"), ("Độ ẩm:", "74%"), ("Gió:", "12 km/h"), ("Chỉ số UV:", "7 · cao")),
+            low=(("Cao / thấp:", "31° / 24°"), ("Mặt trời lặn:", "17:24")), **_old):
+    """ch_weather.cpp (P-2026-11-26.17 XP-Weather-Props): property sheet, tab Hiện tại."""
+    window(sc, "Thời tiết", "weather", False)
     title_meta(sc, meta)
-    status_bar(sc, status, "")
-    dim = X["DIM"]
-    sc.text("VT323-86", temp, 10, 28, dim if stale else X["BLACK"])
-    ry = 32
-    for line in stack:
-        sc.text("JBMono-11", line, 229, ry, dim if stale else X["LABEL"], "TR")
-        ry += 18
-    if uv is not None:
-        c = dim if stale else X["RED"] if uv >= 8 else X["AMBER"] if uv >= 6 else X["LABEL"]
-        sc.text("JBMono-11", f"UV {uv}", 229, ry, c, "TR")
-    sc.text("JBMono-13", fit(sc, "JBMono-13", cond, 142 - 12 - 2), 12, 100, dim if stale else X["SKY"])
-    sc.text("JBMono-11", hilo, 12, 118, dim if stale else X["LABEL"])
-    for k, (b, c) in enumerate(days):
-        cx = (10, 124)[k] + 53
-        sc.text("VT323-32", b, cx, 150, dim if stale else X["BLACK"], "TC")
-        sc.text("JBMono-11", fit(sc, "JBMono-11", c, 100), cx, 175, dim if stale else X["MUTED"], "TC")
-    taskbar(sc, active="weather", accent=T_SKY, badge=1)
+    tabs(sc, ["Hiện tại", "Dự báo"], 0)
+    ink = X["DIM"] if stale else X["BLACK"]
+    wx_icon(sc, code, 14, 50, True)
+    sc.text("JBMono-16B", fit(sc, "JBMono-16B", cond, 112), 54, 52, ink)
+    if place:
+        sc.text("JBMono-11", place, 54, 71, X["DIM"] if stale else X["LABEL"])
+    sc.text("VT323-44", temp, 226, 52, ink, "TR")
+    sc.hline(12, 90, 216, X["GROUP"])
+    sc.hline(12, 164, 216, X["GROUP"])
+    for k, (a, b) in enumerate(rows):
+        sc.text("JBMono-11", a, 14, 96 + 16 * k, ink)
+        sc.text("JBMono-11", b, 112, 96 + 16 * k, ink)
+    for k, (a, b) in enumerate(low):
+        sc.text("JBMono-11", a, 14, 171 + 16 * k, ink)
+        sc.text("JBMono-11", b, 112, 171 + 16 * k, ink)
+    taskbar(sc, active="weather", accent=T_SKY, badge=0)
 
 
 def weather_loading(sc):
@@ -1202,72 +1232,126 @@ def weather_error(sc):
 
 
 # ── Forecast (ch_forecast.cpp) ───────────────────────────────────────────────
-FORECAST = [("Ít mây", 24, 31), ("Mưa rào", 24, 30), ("Mưa", 23, 28)]
+FORECAST = [("Ít mây", 2, 24, 31), ("Mưa rào", 80, 24, 30), ("Mưa", 61, 23, 28)]
 
 
 def forecast(sc, days=FORECAST):
-    window(sc, "Dự báo", "weather", True)
-    status_bar(sc, "3 ngày tới", "")
-    field(sc, 10, 28, 220, 162)
+    """ch_forecast.cpp (P-2026-11-26.17 XP-Forecast-Details): tab Dự báo of the Weather window."""
+    window(sc, "Thời tiết", "weather", False)
+    tabs(sc, ["Hiện tại", "Dự báo"], 1)
+    field(sc, 10, 48, 220, 157)
+    sc.rect(11, 49, 218, 15, X["BODY"])
+    sc.hline(11, 64, 218, X["GROUP"])
+    sc.hline(11, 65, 218, X["DIM"])
+    for x in (95, 160, 193):
+        sc.vline(x, 52, 10, X["DIM"])
+    sc.text("JBMono-11", "Ngày", 17, 50, X["BLACK"])
+    sc.text("JBMono-11", "Trời", 101, 50, X["BLACK"])
+    sc.text("JBMono-11", "Thấp", 189, 50, X["BLACK"], "TR")
+    sc.text("JBMono-11", "Cao", 224, 50, X["BLACK"], "TR")
     if not days:
-        draw_icon(sc, "weather", 104, 70, 2, X["GROUP"])
-        sc.text("JBMono-12B", "Chưa có dự báo", 120, 110, X["MUTED"], "TC")
-        taskbar(sc, active="weather", accent=T_SKY, badge=1)
-        return
-    for i in (1, 2):
-        sc.rect(11, 28 + i * 53, 218, 1, X["ROW_LINE"])
-    gmin = min(d[1] for d in days); gmax = max(d[2] for d in days)
-    rng = max(gmax - gmin, 1)
-    for i, (cond, lo, hi) in enumerate(days):
-        base = 28 + i * 53
-        today = i == 0
-        sc.rect(11, base + 1, 218, 52, X["WHITE"])
-        if today:
-            sc.rect(11, base + 2, 218, 51, X["ROW_HI"])
-        sc.text("JBMono-12B", ("Nay", "Mai", "Kia")[i], 18, base + 8, X["SKY"] if today else X["BLACK"])
-        sc.text("JBMono-11", fit(sc, "JBMono-11", cond, 112 - 21 - 18 - 4), 18, base + 28, X["MUTED"])
-        sc.rect(118, base + 25, 74, 4, X["ROW_LINE"])
-        x0 = 125 + int((lo - gmin) / rng * 59 + 0.5)
-        x1 = 125 + int((hi - gmin) / rng * 59 + 0.5)
-        x1 = max(x1, x0 + 4)
-        if x1 > 192:
-            x1 = 192; x0 = min(x0, x1 - 4)
-        x0 = max(x0, 118)
-        sc.rect(x0, base + 24, x1 - x0, 6, X["SKY"] if today else X["MUTED"])
-        sc.text("JBMono-11", f"{lo}°", 112, base + 20, X["SKY"], "TR")
-        sc.text("JBMono-11", f"{hi}°", 222, base + 20, X["RED"], "TR")
-    taskbar(sc, active="weather", accent=T_SKY, badge=1)
+        sc.text("JBMono-11", "Chưa có dự báo", 17, 70, X["DIM"])
+    for i, (cond, code, lo, hi) in enumerate(days):
+        y = 66 + 24 * i
+        sel = i == 0
+        bg, ink = (X["SELECT"], X["WHITE"]) if sel else (X["WHITE"], X["BLACK"])
+        sc.rect(11, y, 218, 24, bg)
+        wx_icon(sc, code, 15, y + 4, False)
+        sc.text("JBMono-13", ("Hôm nay", "Mai", "Kia")[i], 35, y + 3, ink)
+        sc.text("JBMono-13", fit(sc, "JBMono-13", cond, 189 - 24 - 4 - 101), 101, y + 3, ink)
+        sc.text("JBMono-13", f"{lo}°", 189, y + 3, ink, "TR")
+        sc.text("JBMono-13", f"{hi}°", 224, y + 3, ink, "TR")
+    taskbar(sc, active="weather", accent=T_SKY, badge=0)
 
 
 # ── Clock (ch_clock.cpp) ─────────────────────────────────────────────────────
-def clock(sc, hh="14", mm="32", ampm=None, date="Thứ Tư · 25/11", greet="chào buổi chiều, bạn"):
-    window(sc, "Đồng hồ", "clock", True)
-    status_bar(sc, "Tuần 48", "GMT+7")
-    sc.text("JBMono-12B", date, 120, 30, X["BLACK"], "TC")
-    field(sc, 20, 52, 200, 86)
-    dw = sc.width("VT323-86", "0"); cw = sc.width("VT323-86", ":")
-    apw = sc.width("JBMono-12B", "CH") + 2 if ampm else 0
-    hhx = 120 - (dw * 4 + cw + apw) // 2
-    sc.text("VT323-86", hh, hhx, 60, X["BLACK"])
-    sc.text("VT323-86", ":", hhx + dw * 2, 60, X["BLACK"])
-    mmx = hhx + dw * 2 + cw
-    sc.text("VT323-86", mm, mmx, 60, X["BLACK"])
-    if ampm:
-        sc.text("JBMono-12B", ampm, mmx + dw * 2 + 2, 60 + 56 - 13, X["BLACK"])
-    sc.text("JBMono-13", greet, 120, 152, X["GROUP_LABEL"], "TC")
-    taskbar(sc, active="clock", accent=T_AMBER, badge=1)
+SIN60 = [0, 107, 213, 316, 416, 512, 602, 685, 761, 828, 887, 935, 974, 1002, 1018, 1024, 1018, 1002, 974, 935, 887, 828, 761, 685, 602, 512, 416, 316, 213, 107, 0, -107, -213, -316, -416, -512, -602, -685, -761, -828, -887, -935, -974, -1002, -1018, -1024, -1018, -1002, -974, -935, -887, -828, -761, -685, -602, -512, -416, -316, -213, -107]
+
+
+def _p60(i, r, cx=183, cy=106):
+    sn, cs = SIN60[i % 60], SIN60[(i + 15) % 60]
+    rnd = lambda v: (v * r + (512 if v >= 0 else -512)) // 1024 if v * r >= 0 else -((-v * r + 512) // 1024)
+    return cx + rnd(sn), cy - rnd(cs)
+
+
+def _thick(sc, x0, y0, x1, y1, t, c):
+    o = t // 2
+    dx, sx = abs(x1 - x0), 1 if x0 < x1 else -1
+    dy, sy = -abs(y1 - y0), 1 if y0 < y1 else -1
+    e = dx + dy
+    while True:
+        sc.rect(x0 - o, y0 - o, t, t, c)
+        if x0 == x1 and y0 == y1:
+            break
+        e2 = 2 * e
+        if e2 >= dy:
+            e += dy; x0 += sx
+        if e2 <= dx:
+            e += dx; y0 += sy
+
+
+def clock(sc, h=14, m=32, sec=15, h24=True, day=26, month=11, year=2026, wday_first=0, zone="GMT+7 · Hà Nội", **_old):
+    """ch_clock.cpp (P-2026-11-26.17 XP-Clock-Props): Date and Time Properties."""
+    window(sc, "Ngày và Giờ", "clock", False)
+    tabs(sc, ["Ngày và giờ", "Múi giờ"], 0)
+    group_box(sc, 10, 54, 122, 128, "Ngày", X["WHITE"])
+    group_box(sc, 136, 54, 94, 128, "Giờ", X["WHITE"])
+    field(sc, 14, 62, 114, 16)
+    sc.text("JBMono-11", f"{month:02d}/{year}", 17, 63, X["BLACK"])
+    sc.rect(113, 63, 14, 14, X["BTN"])
+    for r in range(3):
+        sc.hline(116 + r, 69 + r, 5 - 2 * r, X["WHITE"])
+    for i, t in enumerate(["T2", "T3", "T4", "T5", "T6", "T7", "CN"]):
+        sc.text("JBMono-11", t, 13 + 16 * i + 8, 82, X["GROUP_LABEL"], "TC")
+    sc.hline(13, 96, 112, X["GROUP"])
+    dim = lambda y, mo: [31, 29 if (y % 4 == 0 and y % 100) or y % 400 == 0 else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][mo - 1]
+    lead = (wday_first + 6) % 7
+    n = dim(year, month)
+    pm, py = (12, year - 1) if month == 1 else (month - 1, year)
+    for i in range(42):
+        if i < lead:
+            d, inm = dim(py, pm) - lead + 1 + i, False
+        elif i - lead < n:
+            d, inm = i - lead + 1, True
+        else:
+            d, inm = i - lead - n + 1, False
+        x, y = 13 + 16 * (i % 7), 98 + 13 * (i // 7)
+        today = inm and d == day
+        if today:
+            sc.rect(x, y, 16, 13, X["SELECT"])
+        sc.text("JBMono-11", str(d), x + 8, y, X["WHITE"] if today else X["BLACK"] if inm else X["DIM"], "TC")
+    sc.rect(147, 70, 73, 73, X["WHITE"])
+    for k in range(60):
+        if k % 5:
+            x, y = _p60(k, 34)
+            sc.pixel(x, y, X["DIM"])
+            continue
+        x, y = _p60(k, 33)
+        sz = 3 if k % 15 == 0 else 2
+        sc.rect(x - 1, y - 1, sz, sz, X["TITLE"])
+    for pos, ln, t, c in (((h % 12) * 5 + m // 12, 18, 3, X["BLACK"]), (m, 27, 2, X["BLACK"]), (sec, 30, 1, X["RED"])):
+        x, y = _p60(pos, ln)
+        _thick(sc, 183, 106, x, y, t, c)
+    sc.rect(182, 105, 3, 3, X["BLACK"])
+    field(sc, 145, 152, 76, 18)
+    sc.rect(208, 153, 12, 16, X["BODY"])
+    sc.hline(208, 160, 12, X["FIELD_BORDER"])
+    for r in range(3):
+        sc.hline(214 - r, 155 + r, 1 + 2 * r, X["BLACK"])
+        sc.hline(212 + r, 163 + r, 5 - 2 * r, X["BLACK"])
+    t = f"{h:02d}:{m:02d}:{sec:02d}" if h24 else f"{h % 12 or 12}:{m:02d} {'SA' if h < 12 else 'CH'}"
+    sc.text("JBMono-12B", t, 148, 153, X["BLACK"])
+    sc.text("JBMono-11", f"Múi giờ: {zone}", 12, 189, X["BLACK"])
+    taskbar(sc, active="clock", accent=T_AMBER, badge=0)
 
 
 # ── Night (ch_night.cpp): no window, no taskbar ──────────────────────────────
-def night(sc, hh="23", mm="47", date="Thứ Tư 25/11"):
+def night(sc, hh="23", mm="47", date="Thứ Năm 26/11", x=14, y=22):
+    """ch_night.cpp (P-2026-11-26.17 XP-Night-Saver): the screen saver block at (x, y)."""
     sc.rect(0, 0, W, H, X["BLACK"])
-    dw = sc.width("VT323-86", "0"); cw = sc.width("VT323-86", ":")
-    hhx = (W - (dw * 4 + cw)) // 2
     ink = X["LABEL"]
-    sc.text("VT323-86", hh, hhx, 70, ink)
-    sc.text("VT323-86", ":", hhx + dw * 2, 70, ink)
-    sc.text("VT323-86", mm, hhx + dw * 2 + cw, 70, ink)
-    sc.text("JBMono-11", date, 120, 150, ink, "TC")
+    sc.text("VT323-86", f"{hh}:{mm}", x, y + 13, ink)
+    sc.text("JBMono-11", date, x + 85, y + 86, ink, "TC")
 
 
 # ── Info (ch_info.cpp) ───────────────────────────────────────────────────────
@@ -1381,6 +1465,8 @@ SCREENS_B = [
      lambda s: desktop(s, windows=["Claude"]), "XPDeskAll"),
     ("Desktop · vừa cài Đồng hồ", "XP-Desk-Selected · Đồng hồ đang chọn",
      lambda s: desktop(s, sel="Clock"), "XPDeskSelected"),
+    ("Desktop · một cột", "XP-Desk-OneCol · chỉ chương trình đã cài",
+     lambda s: desktop(s, one_col=True), "XPDeskOneCol"),
     ("Desktop · khay thời tiết", "XP-Desk-Tray · không bong bóng, icon thời tiết ở khay",
      desktop, "XPDeskTray"),
     ("Desktop · bong bóng", "XP-Desk-Balloon · hiện ~10 s khi vào desktop",
@@ -1435,15 +1521,15 @@ SCREENS_B = [
 ]
 
 SCREENS_C = [
-    ("Thời tiết", "XP-Weather", weather, "XPWeather"),
+    ("Thời tiết", "XP-Weather-Props · tab Hiện tại", weather, "XPWeatherProps"),
     ("Thời tiết · đang tải", "XP-Weather-Loading", weather_loading, "XPWeatherLoading"),
     ("Thời tiết · lỗi", "XP-Weather-Error · HTTP 500", weather_error, "XPWeatherError"),
     ("Thời tiết · cũ", "XP-Weather-Stale · 2 giờ",
-     lambda s: weather(s, stale=True, meta="cũ 2G", status="Cập nhật 2 giờ trước"), "XPWeatherStale"),
-    ("Dự báo", "XP-Forecast", forecast, "XPForecast"),
-    ("Dự báo · chưa có", "XP-Forecast-Empty", lambda s: forecast(s, days=[]), "XPForecastEmpty"),
-    ("Đồng hồ", "XP-Clock", clock, "XPClock"),
-    ("Đêm", "XP-Night · không cửa sổ", night, "XPNight"),
+     lambda s: weather(s, stale=True, meta="cũ 2G"), None),
+    ("Dự báo", "XP-Forecast-Details · tab Dự báo", forecast, "XPForecastDetails"),
+    ("Dự báo · chưa có", "XP-Forecast-Details · chưa có dữ liệu", lambda s: forecast(s, days=[]), None),
+    ("Đồng hồ", "XP-Clock-Props · Ngày và Giờ", clock, "XPClockProps"),
+    ("Đêm", "XP-Night-Saver · khối nhảy chỗ", night, "XPNightSaver"),
     ("Thông tin", "XP-Info · không nút nào lõm", info, "XPInfo"),
     ("Cài đặt", "XP-Setup · chưa có khóa", setup, "XPSetup"),
     ("Ảnh", "XP-Photo · 2/5", photo, "XPPhoto"),

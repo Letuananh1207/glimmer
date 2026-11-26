@@ -66,6 +66,7 @@ Settings Storage::load() {
     s.nightBright   = doc[F("night_bright")]   | 15;
     s.weatherLat    = doc[F("weather_lat")]    | 0.0f;
     s.weatherLon    = doc[F("weather_lon")]    | 0.0f;
+    s.weatherPlace  = doc[F("weather_place")]  | "";
     s.showWeather   = doc[F("show_weather")]   | true;
     s.useFahrenheit = doc[F("fahrenheit")]     | false;
     s.userName      = doc[F("user_name")]      | "";
@@ -128,6 +129,7 @@ bool Storage::save(const Settings& s) {
     doc[F("night_bright")] = s.nightBright;
     doc[F("weather_lat")]  = s.weatherLat;
     doc[F("weather_lon")]  = s.weatherLon;
+    doc[F("weather_place")] = s.weatherPlace;
     doc[F("show_weather")] = s.showWeather;
     doc[F("fahrenheit")]   = s.useFahrenheit;
     doc[F("user_name")]    = s.userName;

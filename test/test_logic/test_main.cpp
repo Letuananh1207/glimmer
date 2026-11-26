@@ -789,7 +789,7 @@ void test_window_open_zoom_and_frame() {
     WinFrame f = frameOf("Weather");
     TEST_ASSERT_EQUAL_STRING("Thời tiết", f.title);
     TEST_ASSERT_EQUAL(ICON_WEATHER, f.icon);
-    TEST_ASSERT_TRUE(f.status);
+    TEST_ASSERT_FALSE(f.status);      // P-2026-11-26.17: the property sheet has no status bar
     TEST_ASSERT_FALSE(frameOf("Claude").status);
     TEST_ASSERT_EQUAL_STRING("AI hôm nay", frameOf("AI").title);
     // Slot of a program among the last [slots] open windows.
@@ -816,6 +816,34 @@ void test_tls_heap_gate() {
     TEST_ASSERT_FALSE(tlsHeapOk(23528, 11999));   // no block for BearSSL's largest allocation
     TEST_ASSERT_FALSE(tlsHeapOk(19999, 19000));   // not enough heap for the ~25 K handshake
     TEST_ASSERT_TRUE(tlsHeapOk(kTlsMinFree, kTlsMinBlock));
+}
+
+// P-2026-11-26.17 XP-Real: Date and Time calendar (weeks from Monday) and the
+// screen saver's jump.
+void test_calendar_and_saver() {
+    using namespace XPCore;
+    // November 2026: day 1 is a Sunday → 6 days of October first (26..31).
+    TEST_ASSERT_EQUAL(6, leadingDays(0));
+    CalCell c = calCell(0, 2026, 11, 0);
+    TEST_ASSERT_EQUAL(26, c.day); TEST_ASSERT_FALSE(c.inMonth);
+    c = calCell(6, 2026, 11, 0);
+    TEST_ASSERT_EQUAL(1, c.day); TEST_ASSERT_TRUE(c.inMonth);
+    c = calCell(35, 2026, 11, 0);
+    TEST_ASSERT_EQUAL(30, c.day); TEST_ASSERT_TRUE(c.inMonth);
+    c = calCell(36, 2026, 11, 0);
+    TEST_ASSERT_EQUAL(1, c.day); TEST_ASSERT_FALSE(c.inMonth);
+    TEST_ASSERT_EQUAL(29, daysIn(2028, 2));
+    TEST_ASSERT_EQUAL(28, daysIn(2026, 2));
+    TEST_ASSERT_EQUAL(0, leadingDays(1));                       // a Monday starts the grid
+    // January: the leading days come from December of the year before.
+    c = calCell(0, 2027, 1, 5);                                 // 1/1/2027 is a Friday
+    TEST_ASSERT_EQUAL(28, c.day);
+    for (uint32_t r = 0; r < 200; r += 7) {
+        int x, y;
+        saverSpot(14, 22, r * 2654435761u, r * 40503u + 11, x, y);
+        TEST_ASSERT_TRUE(x >= 6 && x <= 64 && y >= 6 && y <= 134);
+        TEST_ASSERT_TRUE((x - 14) * (x - 14) + (y - 22) * (y - 22) >= 900);
+    }
 }
 
 void test_xp_progress_blocks_and_marquee() {
@@ -1043,17 +1071,20 @@ void test_windows_adopt_and_prune() {
     TEST_ASSERT_EQUAL(1, w.n);
 }
 
-// P-2026-11-26.14 XP-Desk: icons per enabled skill, column 0 then column 1.
+// P-2026-11-26.17 XP-Desk-OneCol: only installed programs, one column x 40
+// (no Weather / Clock icons — they open from the tray).
 void test_desk_icons_follow_skills() {
     using namespace XPCore;
     DeskIcon ic[kDeskMax];
     int n = deskIcons("agent,photo,weather,clock", ic);
-    TEST_ASSERT_EQUAL(6, n);
+    TEST_ASSERT_EQUAL(4, n);
     TEST_ASSERT_EQUAL(PROG_CLAUDE, ic[0].prog); TEST_ASSERT_EQUAL(40, ic[0].cx); TEST_ASSERT_EQUAL(8, ic[0].y);
     TEST_ASSERT_EQUAL(PROG_PHOTO, ic[2].prog);  TEST_ASSERT_EQUAL(104, ic[2].y);
     TEST_ASSERT_EQUAL(kDeskTrash, ic[3].prog);  TEST_ASSERT_EQUAL(152, ic[3].y);
-    TEST_ASSERT_EQUAL(PROG_WEATHER, ic[4].prog); TEST_ASSERT_EQUAL(120, ic[4].cx); TEST_ASSERT_EQUAL(8, ic[4].y);
-    TEST_ASSERT_EQUAL(PROG_CLOCK, ic[5].prog);  TEST_ASSERT_EQUAL(56, ic[5].y);
+    for (int i = 0; i < n; i++) TEST_ASSERT_EQUAL(40, ic[i].cx);
+    // Forecast is the Weather window's tab: one program.
+    TEST_ASSERT_EQUAL(PROG_WEATHER, progOf("Forecast"));
+    TEST_ASSERT_EQUAL_STRING("Thời tiết", frameOf("Forecast").title);
     n = deskIcons("agent", ic);                      // XPDeskAgent: trash at y 104
     TEST_ASSERT_EQUAL(3, n);
     TEST_ASSERT_EQUAL(kDeskTrash, ic[2].prog);
@@ -1332,6 +1363,7 @@ int main(int, char**) {
     RUN_TEST(test_tray_weather_and_balloon);
     RUN_TEST(test_window_open_zoom_and_frame);
     RUN_TEST(test_tls_heap_gate);
+    RUN_TEST(test_calendar_and_saver);
     RUN_TEST(test_projects_follow_hook_events);
     RUN_TEST(test_projects_order_idle_and_eviction);
     RUN_TEST(test_projects_sessions_merge_per_project);

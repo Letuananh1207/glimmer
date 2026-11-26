@@ -526,7 +526,7 @@ function app() {
     },
 
     hasLocation() { return !!(this.settings.weatherLat || this.settings.weatherLon); },
-    clearLocation() { this.settings.weatherLat = 0; this.settings.weatherLon = 0; this.weatherCity = ''; },
+    clearLocation() { this.settings.weatherLat = 0; this.settings.weatherLon = 0; this.settings.weatherPlace = ''; this.weatherCity = ''; },
 
     // Channel toggles in the device's rotation order, with what each needs.
     channelToggles() {
@@ -732,6 +732,7 @@ function app() {
       this.settings.weatherLat = Math.round(c.latitude * 10000) / 10000;
       this.settings.weatherLon = Math.round(c.longitude * 10000) / 10000;
       this.weatherCity = c.name + (c.admin1 ? ', ' + c.admin1 : '');
+      this.settings.weatherPlace = c.name;   // shown on the Weather / Clock windows
       this.cityResults = [];
     },
 
