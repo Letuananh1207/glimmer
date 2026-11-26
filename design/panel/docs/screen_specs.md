@@ -1836,42 +1836,66 @@ Nguồn `source/Photo-Empty.dc.html` · ảnh `screens/@2x/PhotoEmpty.png`
 
 ## 17. Kiểu XP (Luna) — giao diện toàn máy
 
+> **P-2026-11-26.9 — Nút start + màn hệ thống theo ảnh XP thật + tên Clawdsoft Window xp:** nút start 68 px có cờ 4 ô (14×12) + chữ `start` nghiêng; 4 nút skill 28 px tại x 71 + 30k; màn khởi động / welcome / đăng nhập / cập nhật vẽ lại theo ảnh chụp XP, bỏ dòng thông tin (phiên bản, tên mạng, %, lần thử); logo `Clawdsoft` / `Window` / `xp` / `Professional`.
+
 > **P-2026-11-26.8 — Kiểu XP bản A:** mọi kênh vẽ lại thành cửa sổ kiểu XP (thanh tiêu đề xanh, thân be, thanh tác vụ). Thay §1–16 khi phía code áp; bố cục cũ giữ làm tham chiếu dữ liệu.
 
-Chỉ lấy **dáng** XP: không logo, tên, ảnh nền hay font của Microsoft. Font giữ JetBrains Mono / VT323. Chuyển sắc vẽ bằng dải màu đặc. Màu: `tokens/panel_tokens.json` → `themeXP.color` (tên `xp*`, kèm RGB565).
+Lấy dáng XP; không dùng tên, chữ hay font của Microsoft (logo đọc là **Clawdsoft Window xp**). Font JetBrains Mono / VT323; chữ nghiêng (`start`, `welcome`, `Window`, `đang cập nhật...`) là bitmap 1-bit sinh từ font thật, nghiêng 1 px / 3 hàng. Màu: token `themeXP.color` (RGB565).
 
 **Khung chung (mọi kênh có cửa sổ):**
 
 | phần | tọa độ | màu / font |
 |---|---|---|
 | thanh tiêu đề | y 0–21, 5 dải: y0 · y1–2 · y3–18 · y19–20 · y21 | xpTitleHi · xpTitleLight · xpTitle · xpTitleDark · xpTitleEdge |
-| icon tiêu đề | (4, 6) Clawd 18×10; icon skill 16 px căn tâm (13, 11) | CLAWD / white |
+| icon tiêu đề | (4, 6) Clawd 18×10; icon skill căn tâm (13, 11) | CLAWD / white |
 | chữ tiêu đề | TL (24, 4), bóng (25, 5); tối đa 156 px | `JBMono-12B` white, bóng xpTitleShadow |
-| 3 nút | 16×16 tại x 184 / 202 / 220, y 3; viền 1 px white; ký hiệu white 2 px | thu nhỏ, phóng to xpTitleLight; đóng xpClose |
-| khung cửa sổ | x 0–1 và 238–239, y 22–213 | xpFrame |
-| thân | x 2–237, y 22–213 (nội dung x 10–229) | xpBody |
-| thanh trạng thái (tuỳ kênh) | y 196 đường xpStatusLine, y 197 white; chữ TL (8, 199), phải TR (231, 199) + vạch ngăn | `JBMono-11` black |
-| thanh tác vụ | y 214–239, 4 dải: y214 · y215–216 · y217–236 · y237–239 | xpTaskHi · xpTaskLight · xpTask · xpTaskDark |
-| nút bắt đầu | x 0–78, dải xpStartHi / xpStart / xpStartDark; Clawd white (5, 222); `glimmer` (26, 219) + bóng (27, 220) | `JBMono-12B` white |
-| nút skill | 26×20 tại x 82 + 28k, y 217 (Claude, Ảnh, Thời tiết, Đồng hồ); icon căn giữa | thường xpBtnEdge/xpBtn; đang hiện xpBtnPressedEdge/xpBtnPressed; thẻ cần bạn xpFlashEdge/xpFlash |
-| tiến độ slide | đáy nút đang hiện: (x+1, 234) cao 2, dài 24 × tiến độ (thay vạch y 230) | màu nhấn kênh |
-| huy hiệu agent chờ | 9×9 vạt góc tại (x+17, 215) trên nút Claude; chữ số 3×5 BG | AMBER |
-| khay giờ | x 196–239: viền trái xpTrayEdge, đường trên xpTrayHi; `14:32` TC (218, 221) | xpTray; `JBMono-11` white |
+| 3 nút | 16×16 tại x 184 / 202 / 220, y 3; viền 1 px white | thu nhỏ, phóng to xpTitleLight; đóng xpClose |
+| khung + thân | khung x 0–1 / 238–239, y 22–213; thân x 2–237, y 22–213 (nội dung x 10–229) | xpFrame; xpBody |
+| thanh trạng thái (tuỳ kênh) | đường y 196 xpStatusLine, y 197 white; chữ TL (8, 199), phải TR (231, 199) + vạch ngăn | `JBMono-11` black |
+| thanh tác vụ | y 214–239, dải y214 · y215–216 · y217–236 · y237–239 | xpTaskHi · xpTaskLight · xpTask · xpTaskDark |
+| nút start | x 0–67, dải xpStartHi / xpStart / xpStartDark, mép phải bo tròn (thụt 5,3,2,1,1 … 1,1,2,3,5) viền xpStartDark; cờ 14×12 tại (7, 221); chữ `start` nghiêng (25, 221) + bóng (26, 222) | cờ xpFlagRed / Green / Blue / Yellow; chữ white, bóng xpStartShadow |
+| nút skill | 28×20 tại x 71 + 30k, y 217 (Claude, Ảnh, Thời tiết, Đồng hồ); Clawd (x+5, 222), icon căn tâm (x+14, 227) | thường xpBtnEdge/xpBtn; đang hiện xpBtnPressedEdge/xpBtnPressed; thẻ cần bạn xpFlashEdge/xpFlash |
+| tiến độ slide | (x+1, 234) cao 2, dài 26 × tiến độ — thay vạch y 230 | màu nhấn kênh |
+| huy hiệu agent chờ | 9×9 vạt góc (x+18, 215), chữ số 3×5 BG (x+21, 217), trên nút Claude | AMBER |
+| khay giờ | x 196–239, viền trái xpTrayEdge, đường trên xpTrayHi; `14:32` TC (218, 221) | xpTray; `JBMono-11` white |
+
+**Cờ (14×12, ô 1 px; R/G/B/Y = xpFlagRed/Green/Blue/Yellow):**
+
+```
+........GGGGG.
+...RRRR.GGGGGG
+.RRRRRR.GGGGGG
+.RRRRRR.GGGGGG
+.RRRRRR.GGGGGG
+RRRRRRR.......
+.......YYYYYY.
+BBBBBB.YYYYYY.
+BBBBBB.YYYYYY.
+BBBBBB.YYYYYY.
+BBBBBB.YYYYY..
+.BBBB.........
+```
 
 **Thành phần:**
 
-- **Thanh tiến độ XP**: ô viền xpFieldBorder, nền white, 9 khối rời (khe 2 px; cao ≤ 6 px khe 1 px), khối sáng khi `pct > i·11.11`.
+- **Thanh tiến độ XP**: viền xpFieldBorder, nền white, 9 khối rời (khe 2 px; cao ≤ 6 px khe 1 px), khối sáng khi `pct > i·11.11`.
 - **Groupbox**: viền 1 px xpGroup, nhãn `JBMono-11` xpGroupLabel tại (x+7, y−6) trên nền thân.
 - **Ô trắng / danh sách**: viền xpFieldBorder, nền white; dòng chọn xpSelect chữ white; dòng kẻ xpRowLine; dòng hôm nay xpRowHi.
-- **Hộp thoại** (lỗi / cảnh báo / thông tin): icon 24×24 tại (14, 36) — tròn xpIconError dấu X white, tam giác xpIconWarn dấu ! đen, tròn xpIconInfo chữ i white; tiêu đề `JBMono-12B` (48, 38); dòng `JBMono-11` từ (48, 58) bước 16; link `JBMono-12B` xpLink gạch chân. Không nút.
+- **Hộp thoại**: icon 24×24 tại (14, 36) — tròn xpIconError dấu X white / tam giác xpIconWarn dấu ! đen / tròn xpIconInfo chữ i white; tiêu đề `JBMono-12B` (48, 38); dòng `JBMono-11` từ (48, 58) bước 16; link `JBMono-12B` xpLink gạch chân. Không nút.
 - **Đang tải**: chữ `JBMono-12B` TC (120, 92); ô 140×14 tại (50, 116), 3 khối xpBar sáng chạy qua 9 ô, 1 ô / 0,2 s.
-- **Dữ liệu cũ**: tiêu đề thêm ` · cũ 14P`; mọi số liệu xpDim.
-- **Dải thông báo**: nền xpInfoBar cao 14, đường dưới xpStatusLine, icon ! xpAmber, chữ xpRed.
-- **Thẻ agent**: cửa sổ tên theo loại; Clawd ô 6 (108×60) tại (66, 50); tiêu đề `JBMono-16B` TC (120, 120); chi tiết TC (120, 146); chân TC (120, 176) sau đường kẻ y 168. Thẻ cần bạn: nút Claude sáng cam, không huy hiệu.
-- **Clawd ngủ** (Claude chưa có project / xong hết): Clawd (156, 52); Zz động như §6 nhưng mọi khung dời (−2, −6) — khung 6 tại (196, 32); `4NG` TR (150, 84).
-- **Màn không cửa sổ**: Đêm (nền đen, chữ #4D4D4D), Khởi động / Cập nhật (nền đen), Wi-Fi / Cài đặt Wi-Fi (màn chào xpWelcome).
+- **Dữ liệu cũ**: tiêu đề thêm ` · cũ 14P`; số liệu xpDim. **Dải thông báo**: nền xpInfoBar cao 14, icon ! xpAmber, chữ xpRed.
+- **Thẻ agent**: cửa sổ tên theo loại; Clawd ô 6 tại (66, 50); tiêu đề `JBMono-16B` TC (120, 120); chi tiết TC (120, 146); chân TC (120, 176). Cần bạn: nút Claude sáng cam.
+- **Clawd ngủ**: Clawd (156, 52); Zz động như §6, mọi khung dời (−2, −6) — khung 6 tại (196, 32); `4NG` TR (150, 84).
 
-**Các màn** (nguồn `source/<Màn>.dc.html`, ảnh `screens/@2x/<Màn bỏ gạch>.png`; bảng = chữ trên màn, đo bằng VLW thật):
+**Màn hệ thống (không cửa sổ), theo ảnh chụp XP thật — không dòng thông tin:**
+
+- **Khởi động** (`XP-Splash`): nền đen; cờ ×3 (42×36) trên-phải; `Clawdsoft` 11 white, `Window` 16B white, `xp` 11 xpWelcomeOrange chỉ số trên, `Professional` 11 xpWelcomeOrange — cụm căn giữa (x0 = (240 − (w + 16)) / 2); ô 56×11 tại (92, 152) viền xpBootGrey góc vạt, 3 khối xanh 6×5 bước 8 chạy qua lại; Clawd trắng (212, 224).
+- **Welcome** (`XP-Connecting`): nền xpWelcome; dải trên y 0–29 + đường y 30, dải dưới y 206–239 xpWelcomeBand; viền y 205–206 cam giữa nhạt dần ra hai bên; chỉ chữ `welcome` nghiêng white + bóng tại (70, 106).
+- **Đăng nhập** (`XP-SetupMode`): nền welcome; trái cờ ×2 + `Window` nghiêng + `xp` + `Để bắt đầu, kết nối Wi-Fi`; vạch dọc x 116 mờ hai đầu; phải ô chọn (ảnh khung trắng + `glimmer-setup` + `192.168.4.1` nhỏ); dưới-trái nút nguồn đỏ + `Cài đặt Wi-Fi`. Chi tiết: token `themeXP.welcome`.
+- **Cập nhật** (`XP-OtaProgress`): nền welcome; `đang cập nhật...` nghiêng (20, 96); `Đừng tắt hay rút điện máy.` 11 TC (120, 130).
+- **Đêm** (`XP-Night`): nền đen, chữ #4D4D4D, không cửa sổ.
+
+**Các màn** (nguồn `source/<Màn>.dc.html`, ảnh `screens/@2x/<Màn bỏ gạch>.png`; bảng = chữ vẽ bằng font, đo bằng VLW thật — chữ nghiêng là bitmap, không có trong bảng):
 
 ### XP-Claude-A — Kiểu XP · A: thân cửa sổ sáng (be như XP)
 
@@ -2522,52 +2546,6 @@ Nguồn `source/XP-Night.dc.html` · ảnh `screens/@2x/XPNight.png`
 | 120, 70 | TC | `VT323-86` | `23:47` | 170 |
 | 120, 150 | TC | `JBMono-11` | `Thứ Tư 25/11` | 84 |
 
-### XP-Splash — XP · khởi động
-
-Nguồn `source/XP-Splash.dc.html` · ảnh `screens/@2x/XPSplash.png`
-
-| x, y | datum | font | nội dung | px |
-|---|---|---|---|---|
-| 120, 112 | TC | `JBMono-16B` | `glimmer` | 70 |
-| 120, 176 | TC | `JBMono-11` | `đang khởi động...` | 119 |
-| 120, 218 | TC | `JBMono-11` | `v0.23.0-glimmer` | 105 |
-
-### XP-Connecting — XP · đang kết nối Wi-Fi
-
-Nguồn `source/XP-Connecting.dc.html` · ảnh `screens/@2x/XPConnecting.png`
-
-| x, y | datum | font | nội dung | px |
-|---|---|---|---|---|
-| 130, 70 | TL | `JBMono-16B` | `Wi-Fi` | 50 |
-| 130, 98 | TL | `JBMono-11` | `Đang kết nối` | 84 |
-| 130, 114 | TL | `JBMono-11` | `Anh Viet` | 56 |
-| 130, 130 | TL | `JBMono-11` | `lần thử 1` | 63 |
-| 230, 216 | TR | `JBMono-11` | `v0.23.0-glimmer` | 105 |
-
-### XP-SetupMode — XP · chế độ cài đặt Wi-Fi
-
-Nguồn `source/XP-SetupMode.dc.html` · ảnh `screens/@2x/XPSetupMode.png`
-
-| x, y | datum | font | nội dung | px |
-|---|---|---|---|---|
-| 130, 70 | TL | `JBMono-16B` | `Cài đặt` | 70 |
-| 130, 98 | TL | `JBMono-11` | `Kết nối Wi-Fi` | 91 |
-| 130, 114 | TL | `JBMono-11` | `glimmer-setup` | 91 |
-| 130, 130 | TL | `JBMono-11` | `rồi mở` | 42 |
-| 130, 150 | TL | `JBMono-12B` | `192.168.4.1` | 77 |
-| 230, 216 | TR | `JBMono-11` | `v0.23.0-glimmer` | 105 |
-
-### XP-OtaProgress — XP · đang cập nhật
-
-Nguồn `source/XP-OtaProgress.dc.html` · ảnh `screens/@2x/XPOtaProgress.png`
-
-| x, y | datum | font | nội dung | px |
-|---|---|---|---|---|
-| 120, 70 | TC | `JBMono-16B` | `Đang cập nhật` | 130 |
-| 120, 132 | TC | `VT323-44` | `42%` | 54 |
-| 120, 178 | TC | `JBMono-11` | `Đừng rút điện.` | 98 |
-| 120, 218 | TC | `JBMono-11` | `v0.23.0-glimmer` | 105 |
-
 ### XP-NoChannels — XP · chưa có kênh
 
 Nguồn `source/XP-NoChannels.dc.html` · ảnh `screens/@2x/XPNoChannels.png`
@@ -2579,4 +2557,44 @@ Nguồn `source/XP-NoChannels.dc.html` · ảnh `screens/@2x/XPNoChannels.png`
 | 48, 38 | TL | `JBMono-12B` | `Chưa có kênh` | 84 |
 | 48, 58 | TL | `JBMono-11` | `Bật kênh trên trang web:` | 168 |
 | 48, 80 | TL | `JBMono-12B` | `glimmer.local` | 91 |
+
+### XP-Splash — XP · khởi động
+
+Nguồn `source/XP-Splash.dc.html` · ảnh `screens/@2x/XPSplash.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 82, 89 | TL | `JBMono-11` | `Clawdsoft` | 63 |
+| 82, 103 | TL | `JBMono-16B` | `Window` | 60 |
+| 144, 104 | TL | `JBMono-11` | `xp` | 14 |
+| 84, 122 | TL | `JBMono-11` | `Professional` | 84 |
+
+### XP-Connecting — XP · welcome / đang kết nối Wi-Fi
+
+Nguồn `source/XP-Connecting.dc.html` · ảnh `screens/@2x/XPConnecting.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+
+### XP-SetupMode — XP · màn đăng nhập / cài đặt Wi-Fi
+
+Nguồn `source/XP-SetupMode.dc.html` · ảnh `screens/@2x/XPSetupMode.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 81, 103 | TL | `JBMono-11` | `xp` | 14 |
+| 14, 126 | TL | `JBMono-11` | `Để bắt đầu,` | 77 |
+| 14, 140 | TL | `JBMono-11` | `kết nối Wi-Fi` | 91 |
+| 158, 92 | TL | `JBMono-12B` | `glimmer-` | 56 |
+| 158, 106 | TL | `JBMono-12B` | `setup` | 35 |
+| 158, 121 | TL | `JBMono-11` | `192.168.4.1` | 77 |
+| 28, 219 | TL | `JBMono-11` | `Cài đặt Wi-Fi` | 91 |
+
+### XP-OtaProgress — XP · đang cập nhật
+
+Nguồn `source/XP-OtaProgress.dc.html` · ảnh `screens/@2x/XPOtaProgress.png`
+
+| x, y | datum | font | nội dung | px |
+|---|---|---|---|---|
+| 120, 130 | TC | `JBMono-11` | `Đừng tắt hay rút điện máy.` | 182 |
 

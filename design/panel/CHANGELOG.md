@@ -5,6 +5,26 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-26.9 — Nút start kiểu XP, màn hệ thống theo XP thật, tên Clawdsoft Window xp
+
+- **Thanh tác vụ** (mọi màn có cửa sổ; `screen_specs.md` §17, token `themeXP.taskbar`):
+  - Nút start x 0–67, mép phải bo tròn: cờ 4 ô 14×12 tại (7, 221) + chữ `start` nghiêng trắng có bóng (bitmap trong token).
+  - 4 nút skill 28×20 tại x 71 + 30k; Clawd (x+5, 222), icon căn tâm (x+14, 227); huy hiệu (x+18, 215); tiến độ dài 26.
+- **Màn hệ thống** (`source/XP-Splash|Connecting|SetupMode|OtaProgress.dc.html`; token `themeXP.boot`, `themeXP.welcome`), vẽ theo ảnh chụp XP:
+  - Khởi động: nền đen, cờ ×3, logo `Clawdsoft` / `Window` / `xp` / `Professional` căn giữa, ô 3 khối xanh chạy; bỏ dòng phiên bản.
+  - Welcome (đang kết nối Wi-Fi): chỉ chữ `welcome` nghiêng — bỏ tên mạng, lần thử.
+  - Đăng nhập (cài đặt Wi-Fi): trái cờ + `Window xp` + "Để bắt đầu, kết nối Wi-Fi"; phải ô `glimmer-setup` + `192.168.4.1`; nút nguồn đỏ.
+  - Cập nhật: `đang cập nhật...` nghiêng + "Đừng tắt hay rút điện máy." — bỏ thanh và %.
+- Ảnh: 44 màn `XP*.png` vẽ lại.
+- Đổi luật: màn kết nối Wi-Fi và cập nhật không còn hiện tên mạng / lần thử / phần trăm (xem trên trang web).
+- Cần firmware: 4 màu cờ + màu màn welcome / đăng nhập (token `themeXP.color`); bitmap chữ nghiêng `start`, `welcome`, `Window`,
+  `đang cập nhật...` (sinh từ JBMono, nghiêng 1 px / 3 hàng).
+
+**Việc cần làm trong code:**
+- Thanh tác vụ: nút start 68 px (cờ + `start` nghiêng), nút skill 28 px tại x 71 + 30k.
+- Màn khởi động / kết nối Wi-Fi / chế độ cài đặt / cập nhật: vẽ theo §17 và token `themeXP.boot` / `themeXP.welcome`; thanh 3 khối chạy 0,2 s / bước.
+- Bản xem trước màn trên máy tính vẽ theo.
+
 ## P-2026-11-26.8 — Giao diện kiểu XP (bản A, thân be)
 
 - **Toàn máy** (`source/XP-*.dc.html`, `screen_specs.md` §17, token `themeXP`; ảnh `XP*.png`, 44 màn):

@@ -1,7 +1,7 @@
 {
   "meta": {
     "name": "glimmer panel",
-    "version": "P-2026-11-26.8",
+    "version": "P-2026-11-26.9",
     "frame": {
       "width": 240,
       "height": 240,
@@ -719,6 +719,10 @@
         "value": "#0058EE",
         "rgb565": "0x02DD"
       },
+      "xpFlagBlue": {
+        "value": "#05A6F0",
+        "rgb565": "0x053E"
+      },
       "xpTitleShadow": {
         "value": "#0A246A",
         "rgb565": "0x092D"
@@ -738,6 +742,10 @@
       "xpBtnPressedEdge": {
         "value": "#163E91",
         "rgb565": "0x11F2"
+      },
+      "xpBootBlockLo": {
+        "value": "#1A4DB8",
+        "rgb565": "0x1A77"
       },
       "xpBtnEdge": {
         "value": "#1A50C8",
@@ -771,9 +779,17 @@
         "value": "#245EDC",
         "rgb565": "0x22FB"
       },
+      "xpWelcomeShadow": {
+        "value": "#2A3F8F",
+        "rgb565": "0x29F1"
+      },
       "xpTitleLight": {
         "value": "#2B80F5",
         "rgb565": "0x2C1E"
+      },
+      "xpUserSel": {
+        "value": "#2C55C4",
+        "rgb565": "0x2AB8"
       },
       "xpStartDark": {
         "value": "#2E7D2E",
@@ -798,6 +814,10 @@
       "xpStart": {
         "value": "#3A9E3A",
         "rgb565": "0x3CE7"
+      },
+      "xpBandEdge": {
+        "value": "#3B4FA8",
+        "rgb565": "0x3A75"
       },
       "xpBtn": {
         "value": "#3C81F3",
@@ -831,17 +851,21 @@
         "value": "#5CC15C",
         "rgb565": "0x5E0B"
       },
+      "xpUserSelHi": {
+        "value": "#5F84E3",
+        "rgb565": "0x5C3C"
+      },
       "xpMuted": {
         "value": "#6F6F6F",
         "rgb565": "0x6B6D"
       },
-      "xpBootBlockHi": {
-        "value": "#6FA0F5",
-        "rgb565": "0x6D1E"
-      },
       "xpLilac": {
         "value": "#7A44C8",
         "rgb565": "0x7A39"
+      },
+      "xpDividerFade": {
+        "value": "#7D9BE8",
+        "rgb565": "0x7CDD"
       },
       "xpFieldBorder": {
         "value": "#7F9DB9",
@@ -851,9 +875,17 @@
         "value": "#7FA4F0",
         "rgb565": "0x7D3E"
       },
-      "xpWelcomeDivider": {
-        "value": "#99B4EE",
-        "rgb565": "0x9DBD"
+      "xpFlagGreen": {
+        "value": "#81BC06",
+        "rgb565": "0x85E0"
+      },
+      "xpBootBlockHi": {
+        "value": "#9BC0FA",
+        "rgb565": "0x9E1F"
+      },
+      "xpBandEdgeWarm": {
+        "value": "#9C6A6A",
+        "rgb565": "0x9B4D"
       },
       "xpDim": {
         "value": "#A0A0A0",
@@ -875,6 +907,10 @@
         "value": "#B8B4A0",
         "rgb565": "0xBDB4"
       },
+      "xpDivider": {
+        "value": "#B9CBF5",
+        "rgb565": "0xBE5E"
+      },
       "xpRed": {
         "value": "#C1272D",
         "rgb565": "0xC125"
@@ -882,6 +918,10 @@
       "xpAmber": {
         "value": "#C98A00",
         "rgb565": "0xCC40"
+      },
+      "xpWelcomeSub": {
+        "value": "#C9D6F7",
+        "rgb565": "0xCEBE"
       },
       "xpGroup": {
         "value": "#D0D0BF",
@@ -919,9 +959,17 @@
         "value": "#F2C200",
         "rgb565": "0xF600"
       },
-      "xpWelcomeHi": {
-        "value": "#FFE680",
-        "rgb565": "0xFF30"
+      "xpUserPic": {
+        "value": "#F2C27A",
+        "rgb565": "0xF60F"
+      },
+      "xpFlagRed": {
+        "value": "#F35325",
+        "rgb565": "0xF284"
+      },
+      "xpFlagYellow": {
+        "value": "#FFBA08",
+        "rgb565": "0xFDC1"
       },
       "xpInfoBar": {
         "value": "#FFFFE1",
@@ -1054,8 +1102,9 @@
       "start": {
         "x": [
           0,
-          78
+          67
         ],
+        "round": "mép phải thụt theo hàng y 214..239: 5,3,2,1,1, 0×16, 1,1,2,3,5; cột mép xpStartDark",
         "bands": [
           [
             214,
@@ -1073,22 +1122,61 @@
             "xpStartDark"
           ]
         ],
-        "icon": [
-          5,
-          222
-        ],
+        "flag": {
+          "at": [
+            7,
+            221
+          ],
+          "rows": [
+            "........GGGGG.",
+            "...RRRR.GGGGGG",
+            ".RRRRRR.GGGGGG",
+            ".RRRRRR.GGGGGG",
+            ".RRRRRR.GGGGGG",
+            "RRRRRRR.......",
+            ".......YYYYYY.",
+            "BBBBBB.YYYYYY.",
+            "BBBBBB.YYYYYY.",
+            "BBBBBB.YYYYYY.",
+            "BBBBBB.YYYYY..",
+            ".BBBB........."
+          ],
+          "colors": {
+            "R": "xpFlagRed",
+            "G": "xpFlagGreen",
+            "B": "xpFlagBlue",
+            "Y": "xpFlagYellow"
+          }
+        },
         "label": {
-          "text": "glimmer",
-          "x": 26,
-          "y": 219,
-          "font": "JBMono-12B",
-          "shadow": "xpStartShadow"
+          "text": "start",
+          "kind": "bitmap chữ nghiêng (JBMono-12B, nghiêng 1 px / 3 hàng)",
+          "at": [
+            25,
+            221
+          ],
+          "shadow": [
+            26,
+            222,
+            "xpStartShadow"
+          ],
+          "rows": [
+            "............##...................##......",
+            "............##...................##......",
+            "....####.######...###...#####.######.....",
+            "...#...#...##....##.##..##..#...##.......",
+            "...##......##........#..##..##..##.......",
+            "..#####...##....#####..##......##........",
+            "......#...##....#...#..##......##........",
+            "..#...#...##....##.##..##......##........",
+            "..####....###..###.#..##.......###......."
+          ]
         }
       },
       "buttons": {
-        "x": 82,
-        "step": 28,
-        "w": 26,
+        "x": 71,
+        "step": 30,
+        "w": 28,
         "h": 20,
         "y": 217,
         "order": [
@@ -1109,8 +1197,9 @@
           "xpFlashEdge",
           "xpFlash"
         ],
-        "progress": "đáy nút đang hiện: x+1, y 234, cao 2, dài 24 × tiến độ, màu nhấn kênh",
-        "badge": "huy hiệu AMBER 9×9 tại (x+17, 215)"
+        "progress": "đáy nút đang hiện: (x+1, 234), cao 2, dài 26 × tiến độ, màu nhấn kênh",
+        "badge": "AMBER 9×9 tại (x+18, 215), chữ số (x+21, 217)",
+        "icon": "Clawd (x+5, 222); icon skill căn tâm (x+14, 227)"
       },
       "tray": {
         "x": [
@@ -1201,6 +1290,59 @@
       ],
       "lit": 3,
       "stepMs": 200
+    },
+    "boot": {
+      "bg": "bg",
+      "flag": "cờ ×3 (42×36), góc trái-trên (x0 + w(Window) − 26, 50)",
+      "wordmark": {
+        "small": [
+          "Clawdsoft",
+          "JBMono-11",
+          "white",
+          "(x0, 89)"
+        ],
+        "big": [
+          "Window",
+          "JBMono-16B",
+          "white",
+          "(x0, 103)"
+        ],
+        "xp": [
+          "xp",
+          "JBMono-11",
+          "xpWelcomeOrange",
+          "(x0 + w + 2, 104)"
+        ],
+        "edition": [
+          "Professional",
+          "JBMono-11",
+          "xpWelcomeOrange",
+          "(x0 + 2, 122)"
+        ],
+        "x0": "(240 − (w + 16)) / 2, w = độ rộng `Window` 16B"
+      },
+      "bar": {
+        "box": [
+          92,
+          152,
+          56,
+          11,
+          "xpBootGrey",
+          "góc vạt 1 px"
+        ],
+        "blocks": "3 khối 6×5 bước 8, xpBootBlock + đỉnh xpBootBlockHi + đáy xpBootBlockLo; chạy qua lại 1 bước / 0,2 s"
+      },
+      "corner": "Clawd trắng ô 1 tại (212, 224)"
+    },
+    "welcome": {
+      "bg": "xpWelcome",
+      "bands": "trên y 0–29 xpWelcomeBand + đường y30 xpWelcomeLine; dưới y 206–239 xpWelcomeBand; viền y 205–206: 0–40 xpBandEdge, 40–80 xpBandEdgeWarm, 80–160 xpWelcomeOrange, 160–200 xpBandEdgeWarm, 200–240 xpBandEdge",
+      "word": "bitmap chữ nghiêng JBMono-16B (nghiêng 1 px / 3 hàng) white + bóng (+1, +1) xpWelcomeShadow",
+      "screens": {
+        "Connecting": "chỉ `welcome` tại (70, 106)",
+        "OtaProgress": "`đang cập nhật...` (20, 96) + `Đừng tắt hay rút điện máy.` 11 TC (120, 130)",
+        "SetupMode": "trái: cờ ×2 (70, 74), `Window` nghiêng (12, 102) + `xp` cam, `Để bắt đầu,` / `kết nối Wi-Fi` 11 (14, 126 / 140); vạch dọc x 116: y 40–69 xpDividerFade, 70–169 xpDivider, 170–199 xpDividerFade; phải: ô chọn 112×50 tại (124, 86) xpUserSel + đường trên xpUserSelHi, ảnh 24×24 khung white tại (130, 92) nền xpUserPic + Clawd, tên `glimmer-` / `setup` 12B (158, 92 / 106), `192.168.4.1` 11 xpWelcomeSub (158, 121); dưới-trái nút nguồn 14×14 (8, 218) xpClose + `Cài đặt Wi-Fi` 11 (28, 219)"
+      }
     }
   }
 }
