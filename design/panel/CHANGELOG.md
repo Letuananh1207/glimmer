@@ -5,6 +5,38 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-26.17 — Đồng hồ, Thời tiết, Dự báo, Đêm và desktop theo Windows XP thật
+
+- **Kênh Clock** (`source/XP-Clock-Props.dc.html`; `screen_specs.md` §17 mục XP-Real; ảnh `XPClockProps.png`): thành hộp
+  thoại Ngày và Giờ của XP — tiêu đề `Ngày và Giờ` (77 px); tab `Ngày và giờ` / `Múi giờ`; groupbox Ngày (10, 54, 122×128):
+  ô tháng `11/2026`, lịch tháng ô 16×13 từ (13, 98), tuần từ thứ Hai, ngày tháng khác xpDim, hôm nay xpSelect chữ white;
+  groupbox Giờ (136, 54, 94×128): đồng hồ kim tâm (183, 106), ô giờ `14:32:15` 12B (56 px) có nút tăng giảm; dòng
+  `Múi giờ: GMT+7 · Hà Nội` (161 px). Bỏ số VT323 to, câu chào, thanh trạng thái.
+- **Kênh Weather** (`source/XP-Weather-Props.dc.html`; ảnh `XPWeatherProps.png`): trang thuộc tính kiểu tab Chung — tab
+  `Hiện tại` / `Dự báo`; icon 32×32 (14, 50), `Ít mây` 16B, nơi 11 xpLabel, `29°` VT323-44 TR (226, 45); 6 dòng
+  `nhãn:` / giá trị (giá trị x 112), hai vạch khắc. Bỏ groupbox Mai / Kia và thanh trạng thái.
+- **Kênh Forecast** (`source/XP-Forecast-Details.dc.html`; ảnh `XPForecastDetails.png`): thành tab `Dự báo` của cửa sổ
+  Thời tiết (tiêu đề `Thời tiết`); danh sách dạng Chi tiết (10, 48, 220×157), hàng tiêu đề `Ngày | Trời | Thấp | Cao`,
+  dòng 24 px JBMono-13 + icon 16×16, dòng hôm nay xpSelect. Bỏ thanh nhiệt độ.
+- **Kênh Night** (`source/XP-Night-Saver.dc.html`, `XP-Night-Saver-Play.dc.html`; ảnh `XPNightSaver.png`): trình bảo vệ
+  màn hình — giữ nền đen, chữ xpLabel; khối `23:47` VT323-86 (170 px) + ngày nhảy chỗ mỗi phút trong x 6–64, y 6–134.
+- **Desktop** (`source/XP-Desk-OneCol.dc.html`; ảnh `XPDeskOneCol.png`): chỉ chương trình đã cài, một cột x 40 (Claude %,
+  Codex %, Ảnh, Thùng rác); bỏ biểu tượng Thời tiết, Đồng hồ (XP thật không có).
+- Đổi luật: biểu tượng desktop không còn theo skill `weather` / `clock` (thay phần đó của P-2026-11-26.14); Thời tiết
+  mở từ biểu tượng khay, Đồng hồ mở từ giờ ở khay. Forecast thành tab của cửa sổ Thời tiết: một nút thanh tác vụ, một
+  cửa sổ (`windows` coi Weather + Forecast là một chương trình). Skill Đồng hồ tắt → khay vẫn hiện giờ.
+- Cần firmware: tên nơi của thời tiết (dòng `Hà Nội`) nếu chưa có; dữ liệu lịch tháng (thứ của ngày 1, số ngày) tính từ
+  giờ máy; múi giờ dạng `GMT+7` + tên nơi.
+
+**Việc cần làm trong code:**
+- Thành phần tab Luna dùng chung (tab chọn / không chọn, trang tab white, groupbox nền white).
+- Kênh `Clock`: vẽ lại theo bảng §17 XP-Real; mỗi giây chỉ vẽ lại mặt đồng hồ (147..219, 70..142) và chữ ô giờ; qua
+  nửa đêm vẽ lại lịch.
+- Kênh `Weather`: trang Hiện tại theo bảng; icon 32×32 theo mã thời tiết (bitmap nắng / ít mây / mưa trong đặc tả).
+- Kênh `Forecast`: tab Dự báo trong cửa sổ Thời tiết; danh sách Chi tiết; icon 16×16 từng dòng.
+- Kênh `Night`: khối giờ + ngày nhảy chỗ ngẫu nhiên mỗi phút (xóa khung cũ bằng đen).
+- Desktop: bỏ biểu tượng Thời tiết và Đồng hồ; cột x 40 dồn lên. Taskbar: Weather và Forecast chung một nút.
+
 ## P-2026-11-26.16 — Mở cửa sổ như XP: nút lún, thanh tiêu đề bay, khung trước, con trỏ chờ, hộp tải về
 
 - **Mọi kênh có cửa sổ** (`source/XP-Open-1|2|3.dc.html`, `XP-Open-Play.dc.html`; `screen_specs.md` §17 mục XP-Open;
