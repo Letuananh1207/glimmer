@@ -5,6 +5,28 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-26.23 — Dọn thiết kế: bỏ màn lỗi thời, cập nhật màn dùng chung
+
+- **Bỏ 76 màn lỗi thời** khỏi canvas và `source/` (73 file; 3 phương án chưa từng chốt):
+  - kiểu cũ trước XP (thay từ P-2026-11-26.8/.9): Claude, Codex, AI, Trend, Weather, Forecast, Clock, Info, Setup, Home,
+    Agents, Attention, Night, Photo, màn hệ thống, dock dọc (`Dock`, `*-Dock`);
+  - XP đã có bản thay: XP-Home (+ KeyBad, NoWeather), XP-Weather, XP-Forecast, XP-Clock, XP-Night, XP-Desktop,
+    XP-Desk-Agent / Selected / Tray / Balloon / OneCol, XP-Weather-Loading (→ hộp thoại tải về P-.16), XP-Claude-B, XP-Max-A/B.
+  - Ảnh `screens/@2x/` và mục đặc tả của các màn này giữ làm lịch sử; source cũ xem lịch sử git.
+- **XP-Desk-All** (`source/XP-Desk-All.dc.html`; ảnh `XPDeskAll.png`): = desktop hiện hành (P-.17–.19: một cột, biểu tượng
+  kiểu XP, nhãn không %) + Claude thu nhỏ trên thanh tác vụ. Màn này được nhúng trong XP-Open-1/2, XP-Open-Play,
+  XP-Menu-Desktop — giờ các màn đó hiện đúng desktop.
+- **Kênh Weather / Forecast** (`source/XP-Weather-Error.dc.html`, `XP-Weather-Stale.dc.html`, `XP-Forecast-Empty.dc.html`;
+  `screen_specs.md` mục cùng tên; ảnh `XPWeatherError.png`, `XPWeatherStale.png`, `XPForecastEmpty.png`) vẽ lại theo cửa sổ
+  có tab (P-.17): lỗi = tam giác cảnh báo XP + `Chưa có thời tiết` / `Máy chủ trả lỗi 500.` / `Đang tự thử lại...`; cũ =
+  tiêu đề `Thời tiết · cũ 2G`, giá trị xpMuted, `Cập nhật: 2 giờ trước` xpAmber; Dự báo chưa có = ListView rỗng + `Chưa có
+  dự báo`.
+
+**Việc cần làm trong code:**
+- Kênh `Weather`: trạng thái lỗi và dữ liệu cũ vẽ trong trang tab Hiện tại như trên.
+- Kênh `Forecast` (tab Dự báo): chưa có dữ liệu → ListView rỗng + `Chưa có dự báo`.
+- `tools/screens.py`: bỏ so sánh với các ảnh / source đã gỡ nếu có.
+
 ## P-2026-11-26.22 — Ngày và Giờ chạm được như Windows XP
 
 - **Kênh Clock** (`source/XP-Clock-Props.dc.html`, mới `XP-Clock-Month.dc.html`, `XP-Clock-Zone.dc.html`,

@@ -1844,6 +1844,8 @@ Nguồn `source/Photo-Empty.dc.html` · ảnh `screens/@2x/PhotoEmpty.png`
 
 ## 17. Kiểu XP (Luna) — giao diện toàn máy
 
+> **P-2026-11-26.23 — dọn thiết kế:** bỏ 76 màn lỗi thời khỏi canvas và `source/` (màn kiểu cũ trước XP, màn XP đã có bản thay); XP-Desk-All = desktop hiện hành (Claude thu nhỏ); Thời tiết lỗi / cũ / Dự báo chưa có vẽ lại theo cửa sổ có tab. Các mục đặc tả của màn đã bỏ giữ làm lịch sử.
+
 > **P-2026-11-26.22 — Ngày và Giờ chạm được:** 3 tab (Ngày và giờ / Múi giờ / Internet), tháng + năm tách, danh sách tháng, chọn múi giờ, đồng bộ lại — xem mục XP-Real.
 
 > **P-2026-11-26.21 — bỏ bong bóng thời tiết:** xem mục XP-Desk-Tray.
@@ -2423,6 +2425,8 @@ Nguồn `source/XP-Home-NoWeather.dc.html` · ảnh `screens/@2x/XPHomeNoWeather
 
 ### XP-Weather-Loading — XP · Thời tiết · đang tải
 
+> **P-2026-11-26.23 — bỏ:** Thời tiết đang tải = hộp thoại tải về kiểu XP (P-.16, mục XP-Open); source cũ đã gỡ.
+
 Nguồn `source/XP-Weather-Loading.dc.html` · ảnh `screens/@2x/XPWeatherLoading.png`
 
 | x, y | datum | font | nội dung | px |
@@ -2431,52 +2435,38 @@ Nguồn `source/XP-Weather-Loading.dc.html` · ảnh `screens/@2x/XPWeatherLoadi
 | 24, 4 | TL | `JBMono-12B` | `Thời tiết` | 63 |
 | 120, 92 | TC | `JBMono-12B` | `Đang tải thời tiết...` | 147 |
 
-### XP-Weather-Error — XP · Thời tiết · lỗi
+### XP-Weather-Error — Thời tiết · lỗi (tab Hiện tại)
 
-Nguồn `source/XP-Weather-Error.dc.html` · ảnh `screens/@2x/XPWeatherError.png`
+> **P-2026-11-26.23:** vẽ lại theo cửa sổ Thời tiết có tab (P-.17), thay bảng cũ.
 
-| x, y | datum | font | nội dung | px |
-|---|---|---|---|---|
-| 25, 5 | TL | `JBMono-12B` | `Thời tiết` | 63 |
-| 24, 4 | TL | `JBMono-12B` | `Thời tiết` | 63 |
-| 48, 38 | TL | `JBMono-12B` | `Chưa có thời tiết` | 119 |
-| 48, 58 | TL | `JBMono-11` | `Máy chủ trả lỗi 500.` | 140 |
-| 48, 74 | TL | `JBMono-11` | `` | 0 |
-| 48, 90 | TL | `JBMono-11` | `Đang tự thử lại...` | 126 |
+Nguồn `source/XP-Weather-Error.dc.html` · ảnh `screens/@2x/XPWeatherError.png`. Khung, tiêu đề `Thời tiết`, tab `Hiện tại` (chọn) /
+`Dự báo`, thanh tác vụ như `XPWeatherProps`. Trang tab:
 
-### XP-Weather-Stale — XP · Thời tiết · dữ liệu cũ
+| khối | tọa độ | màu / font | chữ, rộng đo |
+|---|---|---|---|
+| biểu tượng cảnh báo XP | tam giác 24×21 tại (14, 52): viền xpAmber, nền xpIconWarn, `!` black 2 px (cột 11–12, hàng 7–14 + 16–17) | — | — |
+| tiêu đề lỗi | TL (46, 52) | `JBMono-12B` black | `Chưa có thời tiết` 119 |
+| chi tiết | TL (46, 72) | `JBMono-11` black | `Máy chủ trả lỗi 500.` 140 (chữ theo lỗi) |
+| vạch | (12, 96, 216×1) | xpGroup | — |
+| đang thử lại | TL (14, 104) | `JBMono-11` xpLabel | `Đang tự thử lại...` 126 |
 
-Nguồn `source/XP-Weather-Stale.dc.html` · ảnh `screens/@2x/XPWeatherStale.png`
+### XP-Weather-Stale — Thời tiết · dữ liệu cũ (tab Hiện tại)
 
-| x, y | datum | font | nội dung | px |
-|---|---|---|---|---|
-| 25, 5 | TL | `JBMono-12B` | `Thời tiết · cũ 2G` | 119 |
-| 24, 4 | TL | `JBMono-12B` | `Thời tiết · cũ 2G` | 119 |
-| 10, 28 | TL | `VT323-86` | `29°` | 102 |
-| 12, 100 | TL | `JBMono-13` | `Ít mây` | 48 |
-| 12, 118 | TL | `JBMono-11` | `31° / 24°` | 63 |
-| 229, 32 | TR | `JBMono-11` | `cảm giác 33°` | 84 |
-| 229, 50 | TR | `JBMono-11` | `ẩm 74%` | 42 |
-| 229, 68 | TR | `JBMono-11` | `gió 12km` | 56 |
-| 229, 86 | TR | `JBMono-11` | `UV 7` | 28 |
-| 17, 138 | TL | `JBMono-11` | `Mai` | 21 |
-| 63, 150 | TC | `VT323-32` | `30/24` | 65 |
-| 63, 175 | TC | `JBMono-11` | `Mưa rào` | 49 |
-| 131, 138 | TL | `JBMono-11` | `Kia` | 21 |
-| 177, 150 | TC | `VT323-32` | `28/23` | 65 |
-| 177, 175 | TC | `JBMono-11` | `Mưa` | 21 |
-| 8, 199 | TL | `JBMono-11` | `Cập nhật 2 giờ trước` | 140 |
+> **P-2026-11-26.23:** vẽ lại theo cửa sổ Thời tiết có tab, thay bảng cũ.
 
-### XP-Forecast-Empty — XP · Dự báo · chưa có
+Nguồn `source/XP-Weather-Stale.dc.html` · ảnh `screens/@2x/XPWeatherStale.png`. Bố cục y như `XPWeatherProps` (mục XP-Real), khác:
 
-Nguồn `source/XP-Forecast-Empty.dc.html` · ảnh `screens/@2x/XPForecastEmpty.png`
+- Tiêu đề cửa sổ `Thời tiết · cũ 2G` (`JBMono-12B`, 119 px; `titleMeta`).
+- Giá trị xám xpMuted `#6F6F6F`: mô tả `Ít mây` 16B, nhiệt độ VT323-44, cột giá trị 4 hàng + `31° / 24°`. Nhãn (`Cảm giác:` …) giữ black, `Hà Nội` giữ xpLabel.
+- Hàng cuối thay `Mặt trời lặn` bằng `Cập nhật:` (14, 187) + `2 giờ trước` xpAmber TL (112, 187), 77 px.
 
-| x, y | datum | font | nội dung | px |
-|---|---|---|---|---|
-| 25, 5 | TL | `JBMono-12B` | `Dự báo` | 42 |
-| 24, 4 | TL | `JBMono-12B` | `Dự báo` | 42 |
-| 120, 110 | TC | `JBMono-12B` | `Chưa có dự báo` | 98 |
-| 8, 199 | TL | `JBMono-11` | `3 ngày tới` | 70 |
+### XP-Forecast-Empty — Thời tiết · tab Dự báo chưa có
+
+> **P-2026-11-26.23:** vẽ lại theo tab Dự báo (ListView Details, P-.17), thay bảng cũ.
+
+Nguồn `source/XP-Forecast-Empty.dc.html` · ảnh `screens/@2x/XPForecastEmpty.png`. Khung, tab `Dự báo` (chọn), ListView và hàng tiêu đề
+cột (`Ngày` / `Trời` / `Thấp` / `Cao`) như `XPForecastDetails`; không có hàng. Chữ `Chưa có dự báo` `JBMono-11` xpMuted căn giữa
+x 11–228, y 74 (98 px) — như ListView XP rỗng hiện lời nhắn ở đầu danh sách.
 
 ### XP-Trend-Collecting — XP · Xu hướng · đang thu thập
 
