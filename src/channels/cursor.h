@@ -31,6 +31,17 @@ void overlay();
 // overlay(); nothing to erase.
 void screenRepainted();
 
+// P-2026-11-27.24: a window just opened / loading (XP::waitCursor). In mouse
+// mode the cursor turns into Working in Background where it is for a while
+// (300 ms, each call extends it) and true comes back — the fixed wait cell is not
+// drawn; otherwise false (the window draws its fixed cell, as before).
+bool busy(uint32_t now);
+// The app drives a visible cursor on a screen that may show it.
+bool mouseMode();
+// Where the cursor's hotspot is drawn (valid while shown()).
+int  drawnX();
+int  drawnY();
+
 bool    seen();                  // a packet came since boot (the app drives a cursor)
 uint8_t x();
 uint8_t y();

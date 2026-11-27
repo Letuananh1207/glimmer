@@ -15,8 +15,10 @@
 //   POST /api/screen   — {"on":false|true} backlight off / on now (RAM only)
 //   POST /api/windows  — {"open":[…],"top":…|null,"min":[…],"sel":…|null} the app's open windows (RAM only)
 //   POST /api/clock    — {"tab","year","month","day","list","top","sync"} the Clock window as touched (RAM only)
-//   POST /api/power    — {"on":false|true} the app's power button: shut down / boot (RAM only)
-//   POST /api/menu     — {"kind":"desktop"|"window"|"start"|"none","x","y","minimized","all","hover"} menu (RAM only)
+//   POST /api/power    — {"on":false|true} the app's power button: shut down / boot; {"restart":true}
+//                        Tắt máy tính › Khởi động lại (RAM only)
+//   POST /api/menu     — {"kind":"desktop"|"window"|"start"|"turnoff"|"none","x","y","minimized","all",
+//                        "hover","sub"} menu / Start menu / Tắt máy tính (RAM only)
 //   POST /mcp          — JSON-RPC: push_card, clear_card, list_cards, get_state, show/next_channel
 //   GET  /api/photos   — photos on the device + limits; POST uploads one (multipart field
 //                        "photo", baseline JPEG 188×188); DELETE /api/photos?name=p3.jpg
@@ -81,6 +83,8 @@ extern void        mainSetWindows(const Control::Windows& w);
 extern const Control::Menu& mainMenu();
 extern bool        mainSetMenu(const Control::Menu& m);
 extern void        mainSetPower(bool on);
+extern void        mainRestart();
+extern int         mainHot();
 extern const char* mainPowerName();
 extern const ClockCore::View& mainClockView();
 extern void        mainSetClock(const ClockCore::View& v, bool sync);
@@ -209,8 +213,10 @@ static void handleApiState() {
         if (w.sel >= 0) wo[F("sel")] = XPCore::progName(w.sel); else wo[F("sel")] = nullptr;
         const XPCore::MenuKind k = mainMenu().kind;
         d[F("menu")] = k == XPCore::MENU_DESKTOP ? "desktop" : k == XPCore::MENU_WINDOW ? "window"
-                     : k == XPCore::MENU_START ? "start" : "none";
+                     : k == XPCore::MENU_START ? "start" : k == XPCore::MENU_TURNOFF ? "turnoff" : "none";
         d[F("menu_hover")] = mainMenu().hover;
+        d[F("menu_sub")] = mainMenu().sub;
+        d[F("hot")] = mainHot();   // P-2026-11-27.24: button under the cursor (slot 0.., 10 = _, 11 = ×, -1)
         // P-2026-11-26.21: no tray balloon any more; still reported (always false) so the app knows
         // this firmware has the weather tray icon.
         d[F("balloon")] = false;
@@ -1086,7 +1092,8 @@ void Web::begin(Settings& settings) {
         Control::Menu m;
         m.kind = !strcmp(kind, "desktop") ? XPCore::MENU_DESKTOP
                : !strcmp(kind, "window")  ? XPCore::MENU_WINDOW
-               : !strcmp(kind, "start")   ? XPCore::MENU_START : XPCore::MENU_NONE;
+               : !strcmp(kind, "start")   ? XPCore::MENU_START
+               : !strcmp(kind, "turnoff") ? XPCore::MENU_TURNOFF : XPCore::MENU_NONE;
         m.all = d["all"] | false;            // Start menu: All Programs open
         int x = d[F("x")] | 0, y = d[F("y")] | 0;
         if (m.kind != XPCore::MENU_NONE) XPCore::menuClamp(m.kind, x, y);
@@ -1094,6 +1101,7 @@ void Web::begin(Settings& settings) {
         m.y = (int16_t)y;
         m.minimized = d[F("minimized")] | false;
         m.hover = (int8_t)(d[F("hover")] | -1);
+        m.sub = (int8_t)(d[F("sub")] | -1);   // Start › All Programs row (P-2026-11-27.24)
         if (!mainSetMenu(m)) {
             server.send_P(409, PSTR("application/json"), PSTR("{\"error\":\"no menu on this screen\"}"));
             return;
@@ -1109,11 +1117,13 @@ void Web::begin(Settings& settings) {
     server.on("/api/power",          HTTP_POST, []() {
         if (!checkAuth()) { server.send_P(401, PSTR("application/json"), PSTR("{\"error\":\"unauthorized\"}")); return; }
         JsonDocument d;
-        if (deserializeJson(d, server.arg("plain")) || !d[F("on")].is<bool>()) {
-            server.send_P(400, PSTR("application/json"), PSTR("{\"error\":\"body must be {on: true|false}\"}"));
+        // P-2026-11-27.24: {"restart": true} = Tắt máy tính › Khởi động lại (shut down, boot again).
+        if (deserializeJson(d, server.arg("plain")) || (!d[F("on")].is<bool>() && !(d[F("restart")] | false))) {
+            server.send_P(400, PSTR("application/json"), PSTR("{\"error\":\"body must be {on: true|false} or {restart: true}\"}"));
             return;
         }
-        mainSetPower(d[F("on")].as<bool>());
+        if (d[F("restart")] | false) mainRestart();
+        else mainSetPower(d[F("on")].as<bool>());
         JsonDocument r;
         r[F("ok")]    = true;
         r[F("power")] = mainPowerName();

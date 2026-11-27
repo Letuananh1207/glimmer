@@ -6,6 +6,8 @@
 #include "layout.h"
 #include "config.h"
 #include "utf8.h"
+#include "cursor.h"
+#include "pointer_core.h"
 
 using namespace Theme::XP;
 using XPCore::Icon;
@@ -129,6 +131,8 @@ void titleIcon(Icon icon) {
         }
     }
 }
+
+int8_t s_hot = -1;   // PointerCore::kHotNone
 
 // 16×16 caption button at (x, 3): 1-px white border, fill, glyph.
 void captionButton(int x, uint16_t fill, char kind) {
@@ -256,10 +260,14 @@ void titleBar(const char* t, Icon icon) {
     titleBands(0, SCREEN_W);
     titleIcon(icon);
     paintTitleText(s_title);
-    captionButton(184, TITLE_LIGHT, '_');
+    // P-2026-11-27.24: _ and × light under the mouse (XP Luna hot), □ never.
+    captionButton(184, s_hot == PointerCore::kHotMin ? TITLE_HI : TITLE_LIGHT, '_');
     captionButton(202, TITLE_LIGHT, 'o');
-    captionButton(220, CLOSE, 'x');
+    captionButton(220, s_hot == PointerCore::kHotClose ? CLOSE_HOT : CLOSE, 'x');
 }
+
+void setHot(int8_t hot) { s_hot = hot; }
+int8_t hot() { return s_hot; }
 
 void titleMeta(const char* meta) {
     char t[80];
@@ -445,17 +453,24 @@ void marquee(int x, int y, int w, int h, uint32_t step) {
             tft.fillRect(b.x0 + i * (b.w + b.gap), b.y0, b.w, b.h, BAR);
 }
 
-void waitCursor(uint32_t step) {
-    static const Ink kArrowInk[] = {{'X', BLACK}, {'W', WHITE}};
+void hourglass(int frame, int x, int y) {
     static const Ink kGlass[] = {{'X', BLACK}, {'W', WHITE}, {'S', AMBER}};
+    switch (frame & 3) {
+        case 0:  drawArt(kGlass0, 9, 12, x + 10, y + 9, kGlass, 3); break;
+        case 1:  drawArt(kGlass1, 9, 12, x + 10, y + 9, kGlass, 3); break;
+        case 2:  drawArt(kGlass2, 9, 12, x + 10, y + 9, kGlass, 3); break;
+        default: drawArt(kGlass3, 12, 9, x + 8, y + 11, kGlass, 3); break;
+    }
+}
+
+// P-2026-11-27.24: in mouse mode the cursor itself turns into Working in
+// Background where it is (cursor.cpp); the fixed cell (132, 160) only without.
+void waitCursor(uint32_t step) {
+    if (Cursor::busy(millis())) return;
+    static const Ink kArrowInk[] = {{'X', BLACK}, {'W', WHITE}};
     tft.fillRect(132, 160, 21, 22, BODY);        // the cursor's cell (arrow + hourglass)
     drawArt(kArrow, 12, 19, 132, 160, kArrowInk, 2);
-    switch (XPCore::hourglassFrame(step)) {
-        case 0:  drawArt(kGlass0, 9, 12, 142, 169, kGlass, 3); break;
-        case 1:  drawArt(kGlass1, 9, 12, 142, 169, kGlass, 3); break;
-        case 2:  drawArt(kGlass2, 9, 12, 142, 169, kGlass, 3); break;
-        default: drawArt(kGlass3, 12, 9, 140, 171, kGlass, 3); break;
-    }
+    hourglass(XPCore::hourglassFrame(step), 132, 160);
 }
 
 void emptyFrame(const char* title, Icon icon, bool status) {

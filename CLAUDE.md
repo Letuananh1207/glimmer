@@ -339,12 +339,30 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
   `Display::clipHits(x, y, w, h)` — a font load is ~30 ms, a missed guard
   makes the cursor crawl (measured: Claude 193 → 4–80 ms, Home 8 ms).
   Anything that paints calls `Cursor::overlay()` after. No cursor on Night,
-  system screens, screen off, power off. **Menu hover**: `/api/menu {…,
-  hover}` (item index without separators) lights it xpSelect; same menu +
-  new hover repaints only the menu; `/api/state` `menu_hover`. **Power**:
-  `POST /api/power {on}` → `shutting` (1.5 s, screen as is until the panel
-  design's shutdown screen) → `off` (= screen off, windows cleared) /
-  `booting` (boot splash 2.4 s) → `on` (desktop, no windows); `/api/state` `power`.
+  system screens, screen off, power off. Shapes (P-2026-11-27.24 XP-Pointer):
+  arrow 12×19, hand 16×19, wait = arrow + XP-Open's hourglass (21×22, 4 ×
+  200 ms); in mouse mode (`Cursor::mouseMode()`) `XP::waitCursor` turns the
+  cursor into wait where it is (`Cursor::busy`, 300 ms per call) instead of
+  the fixed cell (132, 160). **Menu hover**: `/api/menu {…, hover}` (item
+  index without separators) lights it xpSelect, dim items too (as XP); same
+  menu + new hover repaints only the menu. **Start menu / Tắt máy tính light
+  the row under the cursor themselves** (`pointer_core.h` geometry, the app's
+  `hover` / `sub` wins: Start = left column, right column, bottom band; `sub`
+  = All Programs rows); another row lit repaints only two rows. **Hot**
+  (device-computed): the taskbar button / title-bar _ / × under the cursor
+  lights (`XP::setHot`, repaintRect of its box); none while a menu is open.
+  `/api/state` `menu_hover`, `menu_sub`, `hot`. **Tắt máy tính**
+  (`xp_turnoff.{h,cpp}`, menu kind `turnoff`): Start › `Tắt máy` or Alt+F4
+  on the desktop (the app opens it); dotted shade over all 240×240 + XP's
+  Turn off computer box; no taskbar update under it; Chờ / Tắt / Khởi động
+  lại / Hủy are the app's `/api/screen off` (closes it) / `/api/power off` /
+  `/api/power {restart}` / `/api/menu none`. **Power**: `POST /api/power
+  {on}` → `shutting` ("đang tắt máy..." screen, `Display::drawShutDown`, 1.5
+  s) → `off` (= screen off, windows cleared) / `booting` (boot splash 2.4 s →
+  welcome 1 s, still reported `booting`) → `on` (desktop, no windows);
+  `{restart:true}` = shutting → booting. The power screens own the panel
+  (`Control::powerScreen`: no drawActive, tick, taskbar, cursor);
+  `/api/state` `power`.
 
 ## Attention queue (agents, push, device notices)
 

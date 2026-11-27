@@ -6,6 +6,7 @@
 #include "start_icons.h"
 #include "desk_icons.h"
 #include "skill_core.h"
+#include "pointer_core.h"
 
 using namespace Theme::XP;
 
@@ -39,7 +40,7 @@ const char kSettings[] PROGMEM = "Cài đặt";
 const char kAddRemove[] PROGMEM = "Thêm / gỡ";
 const char kDevice[] PROGMEM = "Thiết bị";
 const char kRestart[] PROGMEM = "Khởi động lại";
-const char kTurnOff[] PROGMEM = "Tắt màn";
+const char kTurnOff[] PROGMEM = "Tắt máy";   // P-2026-11-27.24: opens Tắt máy tính
 
 void text(const char* p, const char* font, int x, int y, uint16_t fg, uint16_t bg) {
     char t[40];
@@ -78,67 +79,137 @@ void userBand() {
     tft.drawFastHLine(0, 33, 240, kOrangeDark);
 }
 
-// Left column: pinned agent programs, the others by skill, All Programs.
-void leftColumn(const char* on, bool all) {
-    const bool agent = Skill::inList(on, "agent");
-    int y = 38;
-    if (agent) {
-        ICON(StartIcons, PinClawd, 3, 39);
-        text(kClaude, "JBMono-12B", 42, 37, BLACK, WHITE);
-        text(kUsage, "JBMono-11", 42, 51, MUTED, WHITE);
-        ICON(DeskIcons, Codex, 5, 65);
-        text(kCodex, "JBMono-12B", 42, 66, BLACK, WHITE);
-        text(kUsage, "JBMono-11", 42, 80, MUTED, WHITE);
-        tft.drawFastHLine(6, 95, 140, ROW_LINE);
-        y = 99;
+using PointerCore::StartLayout;
+using namespace PointerCore;
+
+void layoutOf(const char* on, StartLayout& L) {
+    startLayout(Skill::inList(on, "agent"), Skill::inList(on, "photo"), Skill::inList(on, "weather"),
+                Skill::inList(on, "clock"), L);
+}
+
+// A colour icon with its top highlight row white (a lit bottom-band button, as XP): runs of palette
+// entry 1 on the icon's first row of that colour.
+template <typename Run>
+void runsLit(const Run* r, int n, const uint16_t* pal, int x0, int y0) {
+    int hiY = 255;
+    for (int k = 0; k < n; k++) {
+        Run q; memcpy_P(&q, &r[k], sizeof(q));
+        if (q.c == 1 && q.y < hiY) hiY = q.y;
     }
-    if (Skill::inList(on, "photo"))   { ICON(StartIcons, Photo, 6, y + 3);   text(kPhoto, "JBMono-11", 28, y + 4, BLACK, WHITE);   y += 20; }
-    if (Skill::inList(on, "weather")) { ICON(StartIcons, Weather, 6, y + 2); text(kWeather, "JBMono-11", 28, y + 4, BLACK, WHITE); y += 20; }
-    if (Skill::inList(on, "clock"))   { ICON(StartIcons, Clock, 6, y + 2);   text(kClock, "JBMono-11", 28, y + 4, BLACK, WHITE);   y += 20; }
+    for (int k = 0; k < n; k++) {
+        Run q; memcpy_P(&q, &r[k], sizeof(q));
+        const uint16_t c = q.c == 1 && q.y == hiY ? WHITE : pgm_read_word(&pal[q.c]);
+        tft.fillRect(x0 + q.x, y0 + q.y, q.w, 1, c);
+    }
+}
+#define ICON_LIT(NS, N, X, Y, LIT) \
+    ((LIT) ? runsLit(NS::k##N##Runs, NS::k##N##RunCount, NS::k##N##Pal, (X), (Y)) \
+           : runs(NS::k##N##Runs, NS::k##N##RunCount, NS::k##N##Pal, (X), (Y)))
+
+// One Start menu row, lit (xpSelect, white text — icons keep their colours) or not.
+void paintItem(const StartLayout& L, int i, bool lit) {
+    if (i < 0 || i >= L.n) return;
+    const Rect r = L.row[i];
+    const int y = r.y;
+    const uint16_t fg = lit ? WHITE : BLACK;
+    switch (L.item[i]) {
+        case S_CLAUDE:
+        case S_CODEX:
+        case S_PHOTO:
+        case S_WEATHER:
+        case S_CLOCK:
+        case S_ALL: {
+            const uint16_t bg = lit ? SELECT : WHITE;
+            tft.fillRect(r.x, r.y, r.w, r.h, bg);
+            switch (L.item[i]) {
+                case S_CLAUDE:
+                    ICON(StartIcons, PinClawd, 3, 39);
+                    text(kClaude, "JBMono-12B", 42, 37, fg, bg);
+                    text(kUsage, "JBMono-11", 42, 51, lit ? WHITE : MUTED, bg);
+                    break;
+                case S_CODEX:
+                    ICON(DeskIcons, Codex, 5, 65);
+                    text(kCodex, "JBMono-12B", 42, 66, fg, bg);
+                    text(kUsage, "JBMono-11", 42, 80, lit ? WHITE : MUTED, bg);
+                    break;
+                case S_PHOTO:   ICON(StartIcons, Photo, 6, y + 3);   text(kPhoto, "JBMono-11", 28, y + 4, fg, bg);   break;
+                case S_WEATHER: ICON(StartIcons, Weather, 6, y + 2); text(kWeather, "JBMono-11", 28, y + 4, fg, bg); break;
+                case S_CLOCK:   ICON(StartIcons, Clock, 6, y + 2);   text(kClock, "JBMono-11", 28, y + 4, fg, bg);   break;
+                default:
+                    text(kAll, "JBMono-12B", 4, 170, fg, bg);
+                    ICON(StartIcons, AllArrow, 138, 171);
+            }
+            return;
+        }
+        case S_DESKTOP:
+        case S_STATS:
+        case S_SETTINGS:
+        case S_ADDREMOVE:
+        case S_DEVICE: {
+            const uint16_t bg = lit ? SELECT : kRight;
+            const uint16_t ink = lit ? WHITE : TITLE_SHADOW;
+            tft.fillRect(r.x, r.y, r.w, r.h, bg);
+            switch (L.item[i]) {
+                case S_DESKTOP:   ICON(StartIcons, Desktop, 156, y + 2);   text(kDesktop, "JBMono-12B", 175, y + 3, ink, bg);  break;
+                case S_STATS:     ICON(StartIcons, Stats, 156, y + 2);     text(kStats, "JBMono-12B", 175, y + 3, ink, bg);    break;
+                case S_SETTINGS:  ICON(StartIcons, Settings, 156, y + 2);  text(kSettings, "JBMono-11", 175, y + 3, ink, bg);  break;
+                case S_ADDREMOVE: ICON(StartIcons, AddRemove, 156, y + 2); text(kAddRemove, "JBMono-11", 175, y + 3, ink, bg); break;
+                default:          ICON(StartIcons, Device, 156, y + 2);    text(kDevice, "JBMono-11", 175, y + 3, ink, bg);    break;
+            }
+            return;
+        }
+        case S_RESTART: ICON_LIT(StartIcons, Restart, 8, 194, lit); return;   // the label stays white
+        default:        ICON_LIT(StartIcons, Power, 165, 194, lit); return;
+    }
+}
+
+// One All Programs row (152, row, 87x20).
+void paintSub(const StartLayout& L, int i, bool lit) {
+    if (i < 0 || i >= L.subN) return;
+    const Rect r = L.subRow[i];
+    const int y = r.y;
+    const uint16_t bg = lit ? SELECT : WHITE, fg = lit ? WHITE : BLACK;
+    tft.fillRect(r.x, r.y, r.w, r.h, bg);
+    switch (L.sub[i]) {
+        case SUB_CLAUDE:  ICON(StartIcons, SmallClawd, 154, y + 5); text(kClaude, "JBMono-11", 173, y + 4, fg, bg);  break;
+        case SUB_CODEX:   ICON(StartIcons, SmallCodex, 154, y + 4); text(kCodex, "JBMono-11", 173, y + 4, fg, bg);   break;
+        case SUB_PHOTO:   ICON(StartIcons, Photo, 154, y + 3);      text(kPhoto, "JBMono-11", 173, y + 4, fg, bg);   break;
+        case SUB_WEATHER: ICON(StartIcons, Weather, 154, y + 2);    text(kWeather, "JBMono-11", 173, y + 4, fg, bg); break;
+        case SUB_CLOCK:   ICON(StartIcons, Clock, 154, y + 2);      text(kClock, "JBMono-11", 173, y + 4, fg, bg);   break;
+        default:          ICON(StartIcons, AddRemove, 154, y + 2);  text(kAddRemove, "JBMono-11", 173, y + 4, fg, bg);
+    }
+}
+
+bool litItem(const StartLayout& L, const Control::Menu& m, int i) {
+    return i == m.hover || (m.all && i >= 0 && i < L.n && L.item[i] == S_ALL);
+}
+
+void columns(const StartLayout& L, const Control::Menu& m) {
+    if (L.n && L.item[0] == S_CLAUDE) tft.drawFastHLine(6, 95, 140, ROW_LINE);
     tft.drawFastHLine(6, 163, 140, ROW_LINE);
-    const uint16_t bg = all ? SELECT : WHITE;
-    if (all) tft.fillRect(2, 167, 149, 20, SELECT);
-    text(kAll, "JBMono-12B", 4, 170, all ? WHITE : BLACK, bg);
-    ICON(StartIcons, AllArrow, 138, 171);
-}
-
-void rightColumn() {
-    ICON(StartIcons, Desktop, 156, 40);   text(kDesktop, "JBMono-12B", 175, 41, TITLE_SHADOW, kRight);
-    ICON(StartIcons, Stats, 156, 61);     text(kStats, "JBMono-12B", 175, 62, TITLE_SHADOW, kRight);
     tft.drawFastHLine(157, 83, 78, DIVIDER);
-    ICON(StartIcons, Settings, 156, 90);  text(kSettings, "JBMono-11", 175, 91, TITLE_SHADOW, kRight);
-    ICON(StartIcons, AddRemove, 156, 111); text(kAddRemove, "JBMono-11", 175, 112, TITLE_SHADOW, kRight);
-    ICON(StartIcons, Device, 156, 132);   text(kDevice, "JBMono-11", 175, 133, TITLE_SHADOW, kRight);
+    for (int i = 0; i < L.n; i++)
+        if (L.item[i] != S_RESTART && L.item[i] != S_TURNOFF) paintItem(L, i, litItem(L, m, i));
 }
 
-void bottomBand() {
+void bottomBand(const StartLayout& L, const Control::Menu& m) {
     for (int b = 0; b < 5; b++) tft.fillRect(0, 190 + 5 * b, 240, b == 4 ? 4 : 5, kBottom[b]);
     tft.drawFastHLine(0, 190, 240, TASK_HI);
-    ICON(StartIcons, Restart, 8, 194);
     text(kRestart, "JBMono-11", 27, 196, WHITE, kBottom[1]);
-    ICON(StartIcons, Power, 165, 194);
     text(kTurnOff, "JBMono-11", 184, 196, WHITE, kBottom[1]);
+    const int r = startIndexOf(L, S_RESTART), t = startIndexOf(L, S_TURNOFF);
+    paintItem(L, r, m.hover == r);
+    paintItem(L, t, m.hover == t);
 }
 
-// All Programs sub-menu (151, 62, 89 wide): installed programs, —, Thêm / gỡ.
-void allPrograms(const char* on) {
-    const bool agent = Skill::inList(on, "agent");
-    const int n = (agent ? 2 : 0) + Skill::inList(on, "photo") + Skill::inList(on, "weather") + Skill::inList(on, "clock");
-    const int h = 4 + 20 * n + 7 + 20;
-    tft.fillRect(151, 62, 89, h, MENU_BORDER);
-    tft.fillRect(152, 63, 87, h - 2, WHITE);
-    int y = 64;
-    if (agent) {
-        ICON(StartIcons, SmallClawd, 154, y + 5); text(kClaude, "JBMono-11", 173, y + 4, BLACK, WHITE); y += 20;
-        ICON(StartIcons, SmallCodex, 154, y + 4); text(kCodex, "JBMono-11", 173, y + 4, BLACK, WHITE);  y += 20;
-    }
-    if (Skill::inList(on, "photo"))   { ICON(StartIcons, Photo, 154, y + 3);   text(kPhoto, "JBMono-11", 173, y + 4, BLACK, WHITE);   y += 20; }
-    if (Skill::inList(on, "weather")) { ICON(StartIcons, Weather, 154, y + 2); text(kWeather, "JBMono-11", 173, y + 4, BLACK, WHITE); y += 20; }
-    if (Skill::inList(on, "clock"))   { ICON(StartIcons, Clock, 154, y + 2);   text(kClock, "JBMono-11", 173, y + 4, BLACK, WHITE);   y += 20; }
-    tft.drawFastHLine(155, y + 3, 81, MENU_BORDER);
-    y += 7;
-    ICON(StartIcons, AddRemove, 154, y + 2);
-    text(kAddRemove, "JBMono-11", 173, y + 4, BLACK, WHITE);
+// All Programs sub-menu (151, 62, 89 wide): installed programs, separator, Thêm / gỡ.
+void allPrograms(const StartLayout& L, const Control::Menu& m) {
+    const Rect b = L.subBox;
+    tft.fillRect(b.x, b.y, b.w, b.h, MENU_BORDER);
+    tft.fillRect(b.x + 1, b.y + 1, b.w - 2, b.h - 2, WHITE);
+    for (int i = 0; i < L.subN; i++) paintSub(L, i, i == m.sub);
+    const Rect add = L.subRow[L.subN - 1];
+    tft.drawFastHLine(155, add.y - 4, 81, MENU_BORDER);
 }
 
 }  // namespace
@@ -146,15 +217,34 @@ void allPrograms(const char* on) {
 namespace XPStart {
 
 void draw(const Control::Menu& m, const char* skillsOn) {
+    StartLayout L;
+    layoutOf(skillsOn, L);
     userBand();
     tft.fillRect(0, 34, 240, 156, BTN_EDGE);            // body: blue edges x 0 / 239
     tft.fillRect(1, 34, 151, 156, WHITE);
     tft.drawFastVLine(152, 34, 156, kColEdge);
     tft.fillRect(153, 34, 86, 156, kRight);
-    leftColumn(skillsOn, m.all);
-    rightColumn();
-    bottomBand();
-    if (m.all) allPrograms(skillsOn);
+    columns(L, m);
+    bottomBand(L, m);
+    if (m.all) allPrograms(L, m);
+}
+
+// P-2026-11-27.24: another row lit — only the two rows repaint (the one that was lit, the new one).
+void relight(const Control::Menu& was, const Control::Menu& now, const char* skillsOn) {
+    StartLayout L;
+    layoutOf(skillsOn, L);
+    // Under the open sub-menu the right column is hidden: leave it.
+    auto hidden = [&](int i) {
+        return now.all && i >= 0 && i < L.n && L.item[i] >= S_DESKTOP && L.item[i] <= S_DEVICE;
+    };
+    if (was.hover != now.hover) {
+        if (!hidden(was.hover)) paintItem(L, was.hover, litItem(L, now, was.hover));
+        if (!hidden(now.hover)) paintItem(L, now.hover, true);
+    }
+    if (now.all && was.sub != now.sub) {
+        paintSub(L, was.sub, false);
+        paintSub(L, now.sub, true);
+    }
 }
 
 }  // namespace XPStart

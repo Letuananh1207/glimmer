@@ -124,6 +124,8 @@ struct Menu {
     // Item lit (R-DK-18/19): under the mouse cursor or chosen with the arrow
     // keys — index among the items (separators not counted), -1 = none.
     int8_t hover = -1;
+    // Start menu with All Programs open: the sub-menu row lit (pointer_core.h order), -1 = none.
+    int8_t sub = -1;
 };
 
 // ── Power (R-DK-20): the app's power button ────────────────────────────────
@@ -131,38 +133,65 @@ struct Menu {
 // running, so it still takes commands and an urgent / approval card still
 // wakes it, like the screen-off of /api/screen). On = boot screen, then the
 // desktop with no window open (as a fresh start of the app).
-enum Power : uint8_t { POWER_ON = 0, POWER_SHUTTING, POWER_OFF, POWER_BOOTING };
+// P-2026-11-27.24: shutting = XP's "đang tắt máy..." screen; booting = the boot screen, then the
+// welcome screen 1 s (POWER_WELCOME, still reported "booting"), then the desktop. Restart (Tắt máy
+// tính › Khởi động lại) = shutting, then booting instead of off.
+enum Power : uint8_t { POWER_ON = 0, POWER_SHUTTING, POWER_OFF, POWER_BOOTING, POWER_WELCOME };
 
-constexpr uint32_t kShutMs = 1500;    // shutting down → off (XP's "shutting down" screen: panel design)
-constexpr uint32_t kBootMs = 2400;    // boot screen → desktop (12 steps of the 200-ms block box)
+constexpr uint32_t kShutMs    = 1500;   // "đang tắt máy..." → off
+constexpr uint32_t kBootMs    = 2400;   // boot screen → welcome (12 steps of the 200-ms block box)
+constexpr uint32_t kWelcomeMs = 1000;   // welcome → desktop
 
 struct PowerState {
     Power    p = POWER_ON;
     uint32_t since = 0;               // millis the state began
+    bool     restart = false;         // shutting down to boot again
 };
 
 // The power button: on / off asked. True when the state changed. Pressing
 // "off" while booting, or "on" while shutting down, turns around at once.
 inline bool requestPower(PowerState& s, bool on, uint32_t now) {
-    const bool isOn = s.p == POWER_ON || s.p == POWER_BOOTING;
+    const bool isOn = s.p == POWER_ON || s.p == POWER_BOOTING || s.p == POWER_WELCOME;
+    if (!on && s.p == POWER_SHUTTING && s.restart) { s.restart = false; return true; }   // off: no boot after
     if (on == isOn) return false;
     s.p = on ? POWER_BOOTING : POWER_SHUTTING;
     s.since = now;
+    s.restart = false;
     return true;
 }
 
-// Time passing: shutting → off, booting → on. True when the state changed.
+// Khởi động lại: shut down, then boot again. Only from on (no-op while already going down / up).
+inline bool requestRestart(PowerState& s, uint32_t now) {
+    if (s.p != POWER_ON) return false;
+    s.p = POWER_SHUTTING;
+    s.since = now;
+    s.restart = true;
+    return true;
+}
+
+// Time passing: shutting → off (or booting on a restart), booting → welcome → on. True when the
+// state changed.
 inline bool advancePower(PowerState& s, uint32_t now) {
-    if (s.p == POWER_SHUTTING && now - s.since >= kShutMs) { s.p = POWER_OFF; s.since = now; return true; }
-    if (s.p == POWER_BOOTING  && now - s.since >= kBootMs) { s.p = POWER_ON;  s.since = now; return true; }
+    if (s.p == POWER_SHUTTING && now - s.since >= kShutMs) {
+        s.p = s.restart ? POWER_BOOTING : POWER_OFF;
+        s.restart = false;
+        s.since = now;
+        return true;
+    }
+    if (s.p == POWER_BOOTING && now - s.since >= kBootMs) { s.p = POWER_WELCOME; s.since = now; return true; }
+    if (s.p == POWER_WELCOME && now - s.since >= kWelcomeMs) { s.p = POWER_ON; s.since = now; return true; }
     return false;
 }
+
+// The power screens own the panel (no window tick, no taskbar, no cursor).
+inline bool powerScreen(Power p) { return p == POWER_SHUTTING || p == POWER_BOOTING || p == POWER_WELCOME; }
 
 inline const char* powerName(Power p) {
     switch (p) {
         case POWER_SHUTTING: return "shutting";
         case POWER_OFF:      return "off";
-        case POWER_BOOTING:  return "booting";
+        case POWER_BOOTING:
+        case POWER_WELCOME:  return "booting";
         default:             return "on";
     }
 }
@@ -171,6 +200,11 @@ inline const char* powerName(Power p) {
 // repaints (no repaint of the screen under it).
 inline bool sameMenu(const Menu& a, const Menu& b) {
     return a.kind == b.kind && a.x == b.x && a.y == b.y && a.minimized == b.minimized && a.all == b.all;
+}
+
+// Same as [sameMenu], with also the same item lit: nothing to repaint.
+inline bool sameLit(const Menu& a, const Menu& b) {
+    return sameMenu(a, b) && a.hover == b.hover && a.sub == b.sub;
 }
 
 }  // namespace Control

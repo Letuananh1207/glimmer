@@ -124,6 +124,16 @@ namespace XP {
     // frame step % 4 at (142, 169) (frame 3 lies flat at (140, 171)); repaints
     // its 21×22 cell on BODY.
     void waitCursor(uint32_t step);
+    // XP-Open's hourglass [frame] (0..3) beside an arrow whose tip is at (x, y) — the mouse cursor's
+    // Working in Background (P-2026-11-27.24, cursor.cpp) and the fixed wait cell.
+    void hourglass(int frame, int x, int y);
+
+    // ── Hot buttons (P-2026-11-27.24 XP-Pointer) ──
+    // The button under the mouse cursor (PointerCore::hotAt: a taskbar slot,
+    // kHotMin, kHotClose; kHotNone): the title bar's _ / × and the taskbar
+    // paint it lit. main.cpp sets it and repaints the button's box.
+    void setHot(int8_t hot);
+    int8_t hot();
     // The window's empty frame (title bar, frame, empty BODY, empty status
     // bar) + the wait cursor — held 200 ms before the content.
     void emptyFrame(const char* title, XPCore::Icon icon, bool status);

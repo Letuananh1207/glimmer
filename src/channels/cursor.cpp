@@ -2,6 +2,7 @@
 #include "cursor.h"
 #include <WiFiUdp.h>
 #include "display.h"
+#include "xp.h"
 
 using namespace CursorCore;
 
@@ -17,6 +18,11 @@ Packet   s_drawn;                // what is on the panel (valid while s_shown)
 bool     s_shown = false;
 uint32_t s_lastMove = 0;
 uint16_t s_repaintMs = 0, s_repaintMax = 0;   // cost of the last / worst erase
+uint32_t s_busyUntil = 0;        // Working in Background until then (XP::waitCursor)
+bool     s_busy = false;
+int8_t   s_drawnFrame = -1;      // hourglass frame on the panel (shape wait)
+
+constexpr uint32_t kBusyHoldMs = 300;   // > one 200-ms tick of a loading screen
 
 Glyph glyphOf(uint8_t shape) {
     Glyph g;
@@ -51,6 +57,19 @@ void paintGlyph(int x, int y, const Glyph& g) {
 }
 
 Box boxOfDrawn() { return boxOf(s_drawn.x, s_drawn.y, glyphOf(s_drawn.shape)); }
+
+// The glyph, and for Working in Background the hourglass beside the arrow.
+void paintCursor(const Packet& p, int frame) {
+    paintGlyph(p.x, p.y, glyphOf(p.shape));
+    if (p.shape == SHAPE_WAIT) XP::hourglass(frame, p.x, p.y);
+}
+
+// What to draw now: the app's shape, or wait while a window is busy.
+Shape shapeNow(uint32_t now) {
+    if (s_busy && (int32_t)(now - s_busyUntil) >= 0) s_busy = false;
+    if (s_want.shape == SHAPE_NONE) return SHAPE_NONE;
+    return s_busy ? SHAPE_WAIT : s_want.shape;
+}
 
 void erase(Cursor::Repaint repaint) {
     if (!s_shown) return;
@@ -100,21 +119,38 @@ void setAllowed(bool allowed, Repaint repaint) {
 
 void step(uint32_t now, Repaint repaint) {
     if (!s_allowed || !s_seen) return;
-    const bool same = s_shown && s_drawn.x == s_want.x && s_drawn.y == s_want.y && s_drawn.shape == s_want.shape;
+    Packet want = s_want;
+    want.shape = shapeNow(now);
+    const int frame = want.shape == SHAPE_WAIT ? waitFrame(now) : -1;
+    const bool same = s_shown && s_drawn.x == want.x && s_drawn.y == want.y && s_drawn.shape == want.shape
+                   && s_drawnFrame == frame;
     if (same) return;
     if (s_shown && now - s_lastMove < kMinMoveMs) return;      // paced; the next pass catches up
     s_lastMove = now;
     erase(repaint);
-    s_drawn = s_want;
+    s_drawn = want;
+    s_drawnFrame = (int8_t)frame;
     if (s_drawn.shape == SHAPE_NONE) return;
-    paintGlyph(s_drawn.x, s_drawn.y, glyphOf(s_drawn.shape));
+    paintCursor(s_drawn, frame);
     s_shown = true;
 }
 
 void overlay() {
     if (!s_shown || !s_allowed) return;
-    paintGlyph(s_drawn.x, s_drawn.y, glyphOf(s_drawn.shape));
+    paintCursor(s_drawn, s_drawnFrame);
 }
+
+bool mouseMode() { return s_seen && s_allowed && s_want.shape != SHAPE_NONE; }
+
+bool busy(uint32_t now) {
+    if (!mouseMode()) return false;
+    s_busy = true;
+    s_busyUntil = now + kBusyHoldMs;
+    return true;
+}
+
+int drawnX() { return s_drawn.x; }
+int drawnY() { return s_drawn.y; }
 
 void screenRepainted() {
     // Whatever was under the old glyph is fresh now; draw it again on top.

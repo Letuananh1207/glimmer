@@ -22,6 +22,7 @@ namespace Display {
     void drawConnecting(const char* ssid, int attempt);   // welcome: painted once
     void drawError(const char* title, const char* msg);
     void drawOtaProgress(uint8_t pct);             // "đang cập nhật...": painted once
+    void drawShutDown();                           // "đang tắt máy..." (P-2026-11-27.24): painted once
 
     // 16×16 glimmer spark logo — direct-blit, no FS dependency.
     void drawLogo(int x, int y, uint16_t color);

@@ -20,6 +20,7 @@
 #include "clawd_work_core.h"
 #include "clawd_work.h"
 #include "cursor_core.h"
+#include "pointer_core.h"
 #include <time.h>
 #include <initializer_list>
 #if defined(_WIN32)   // host tests on Windows (MinGW) lack the POSIX localtime_r
@@ -1408,7 +1409,15 @@ void test_cursor_glyphs_and_packets() {
     using namespace CursorCore;
     checkRows(kArrowRows, kGlyphs[SHAPE_ARROW]);
     checkRows(kHandRows,  kGlyphs[SHAPE_HAND]);
-    checkRows(kWaitRows,  kGlyphs[SHAPE_WAIT]);
+    // P-2026-11-27.24: wait = the arrow in a 21×22 box, hotspot at the tip; the glass runs 4 × 200 ms.
+    TEST_ASSERT_EQUAL(kWaitW, kGlyphs[SHAPE_WAIT].w);
+    TEST_ASSERT_EQUAL(kWaitH, kGlyphs[SHAPE_WAIT].h);
+    TEST_ASSERT_TRUE(kWaitH <= kMaxH);
+    TEST_ASSERT_EQUAL_UINT16(kGlyphs[SHAPE_ARROW].blk[18], kGlyphs[SHAPE_WAIT].blk[18]);
+    TEST_ASSERT_EQUAL_UINT16(0, kGlyphs[SHAPE_WAIT].blk[21]);
+    TEST_ASSERT_EQUAL(0, waitFrame(199));
+    TEST_ASSERT_EQUAL(1, waitFrame(200));
+    TEST_ASSERT_EQUAL(0, waitFrame(800));
     TEST_ASSERT_EQUAL_UINT16(0x8000, kGlyphs[SHAPE_ARROW].blk[0]);        // the tip: column 0, black
     TEST_ASSERT_TRUE(boxOf(10, 10, kGlyphs[SHAPE_NONE]).empty());
 
@@ -1456,8 +1465,83 @@ void test_power_button_states() {
     TEST_ASSERT_EQUAL(POWER_SHUTTING, p.p);
     TEST_ASSERT_TRUE(requestPower(p, true, 6200));               // on while shutting: boots again
     TEST_ASSERT_TRUE(advancePower(p, 6200 + kBootMs));
+    // P-2026-11-27.24: boot screen, then the welcome screen 1 s (still "booting"), then on.
+    TEST_ASSERT_EQUAL(POWER_WELCOME, p.p);
+    TEST_ASSERT_EQUAL_STRING("booting", powerName(p.p));
+    TEST_ASSERT_TRUE(powerScreen(p.p));
+    TEST_ASSERT_FALSE(advancePower(p, 6200 + kBootMs + kWelcomeMs - 1));
+    TEST_ASSERT_TRUE(advancePower(p, 6200 + kBootMs + kWelcomeMs));
     TEST_ASSERT_EQUAL(POWER_ON, p.p);
     TEST_ASSERT_EQUAL_STRING("on", powerName(p.p));
+    TEST_ASSERT_FALSE(powerScreen(p.p));
+}
+
+// P-2026-11-27.24 Tắt máy tính › Khởi động lại: shutting, then the boot screen (not off).
+void test_power_restart() {
+    using namespace Control;
+    PowerState p;
+    TEST_ASSERT_TRUE(requestRestart(p, 100));
+    TEST_ASSERT_EQUAL(POWER_SHUTTING, p.p);
+    TEST_ASSERT_FALSE(requestRestart(p, 200));                   // already going down
+    TEST_ASSERT_TRUE(advancePower(p, 100 + kShutMs));
+    TEST_ASSERT_EQUAL(POWER_BOOTING, p.p);
+    TEST_ASSERT_TRUE(advancePower(p, 100 + kShutMs + kBootMs));
+    TEST_ASSERT_TRUE(advancePower(p, 100 + kShutMs + kBootMs + kWelcomeMs));
+    TEST_ASSERT_EQUAL(POWER_ON, p.p);
+    // Off pressed while restarting: it stays off.
+    TEST_ASSERT_TRUE(requestRestart(p, 10000));
+    TEST_ASSERT_TRUE(requestPower(p, false, 10100));
+    TEST_ASSERT_TRUE(advancePower(p, 10000 + kShutMs));
+    TEST_ASSERT_EQUAL(POWER_OFF, p.p);
+    TEST_ASSERT_FALSE(powerScreen(p.p));
+}
+
+// P-2026-11-27.24 XP-Pointer: Start menu rows / sub-menu / Tắt máy tính / hot buttons under the cursor.
+void test_pointer_start_menu() {
+    using namespace PointerCore;
+    StartLayout L;
+    startLayout(true, false, true, true, L);
+    // Claude, Codex, Thời tiết, Đồng hồ, All, 5 right, 2 bottom.
+    TEST_ASSERT_EQUAL(12, L.n);
+    TEST_ASSERT_EQUAL(S_WEATHER, L.item[2]);
+    TEST_ASSERT_EQUAL(99, L.row[2].y);                           // first row under the pinned two
+    TEST_ASSERT_EQUAL(2, startHit(L, false, 28, 105));           // "Thời tiết"
+    TEST_ASSERT_EQUAL(0, startHit(L, false, 60, 40));            // pinned Claude
+    TEST_ASSERT_EQUAL(-1, startHit(L, false, 60, 96));           // the separator under the pins
+    TEST_ASSERT_EQUAL(startIndexOf(L, S_SETTINGS), startHit(L, false, 180, 95));
+    TEST_ASSERT_EQUAL(-1, startHit(L, false, 180, 82));          // right-column separator
+    TEST_ASSERT_EQUAL(startIndexOf(L, S_TURNOFF), startHit(L, false, 190, 200));
+    TEST_ASSERT_EQUAL(startIndexOf(L, S_RESTART), startHit(L, false, 30, 200));
+    // All Programs open: the sub-menu covers the right column.
+    TEST_ASSERT_EQUAL(4 + 20 * 4 + 7 + 20, L.subBox.h);         // Claude, Codex, Thời tiết, Đồng hồ + Thêm / gỡ
+    TEST_ASSERT_EQUAL(-1, startHit(L, true, 180, 95));
+    TEST_ASSERT_EQUAL(2, subHit(L, true, 180, 105));             // Thời tiết in the sub-menu
+    TEST_ASSERT_EQUAL(SUB_ADDREMOVE, L.sub[subHit(L, true, 180, 64 + 80 + 7 + 5)]);
+    TEST_ASSERT_EQUAL(-1, subHit(L, false, 180, 105));
+    // Agent off: programs from y 38.
+    startLayout(false, true, false, false, L);
+    TEST_ASSERT_EQUAL(S_PHOTO, L.item[0]);
+    TEST_ASSERT_EQUAL(38, L.row[0].y);
+}
+
+void test_pointer_turnoff_and_hot() {
+    using namespace PointerCore;
+    TEST_ASSERT_EQUAL(TO_STANDBY, turnOffHit(50, 100));
+    TEST_ASSERT_EQUAL(TO_OFF, turnOffHit(120, 100));
+    TEST_ASSERT_EQUAL(TO_RESTART, turnOffHit(190, 100));
+    TEST_ASSERT_EQUAL(TO_CANCEL, turnOffHit(190, 160));
+    TEST_ASSERT_EQUAL(-1, turnOffHit(85, 100));
+    XPCore::BarState bar;
+    bar.prog[0] = 0; bar.prog[1] = 2;
+    TEST_ASSERT_EQUAL(0, hotAt(bar, true, 80, 225));
+    TEST_ASSERT_EQUAL(1, hotAt(bar, true, 110, 225));
+    TEST_ASSERT_EQUAL(kHotNone, hotAt(bar, true, 140, 225));    // empty slot
+    TEST_ASSERT_EQUAL(kHotNone, hotAt(bar, true, 20, 225));     // start never lights
+    TEST_ASSERT_EQUAL(kHotClose, hotAt(bar, true, 228, 11));
+    TEST_ASSERT_EQUAL(kHotMin, hotAt(bar, true, 192, 11));
+    TEST_ASSERT_EQUAL(kHotNone, hotAt(bar, true, 210, 11));     // □ is off
+    TEST_ASSERT_EQUAL(kHotNone, hotAt(bar, false, 228, 11));    // desktop: no title bar
+    TEST_ASSERT_EQUAL(XPCore::kBtnY, hotRect(1).y);
 }
 
 // R-DK-18/19: another item lit is the same menu (only the menu repaints).
@@ -1482,9 +1566,9 @@ void test_cursor_box_clipped() {
     Box e = boxOf(235, 230, a);                                  // runs off the bottom-right
     TEST_ASSERT_EQUAL(5, e.w); TEST_ASSERT_EQUAL(10, e.h);
     const Glyph& w = kGlyphs[SHAPE_WAIT];
-    Box t = boxOf(0, 0, w);                                      // hotspot (5, 7) at the corner
-    TEST_ASSERT_EQUAL(0, t.x); TEST_ASSERT_EQUAL(0, t.y);
-    TEST_ASSERT_EQUAL(6, t.w); TEST_ASSERT_EQUAL(8, t.h);
+    Box t = boxOf(230, 225, w);                                  // hotspot at the tip, runs off the corner
+    TEST_ASSERT_EQUAL(230, t.x); TEST_ASSERT_EQUAL(225, t.y);
+    TEST_ASSERT_EQUAL(10, t.w); TEST_ASSERT_EQUAL(15, t.h);
     TEST_ASSERT_TRUE(overlaps(m, boxOf(105, 60, a)));
     TEST_ASSERT_FALSE(overlaps(m, boxOf(112, 50, a)));           // side by side
     TEST_ASSERT_FALSE(overlaps(m, Box()));
@@ -1559,6 +1643,9 @@ int main(int, char**) {
     RUN_TEST(test_cursor_glyphs_and_packets);
     RUN_TEST(test_cursor_box_clipped);
     RUN_TEST(test_power_button_states);
+    RUN_TEST(test_power_restart);
+    RUN_TEST(test_pointer_start_menu);
+    RUN_TEST(test_pointer_turnoff_and_hot);
     RUN_TEST(test_menu_hover_same_menu);
     return UNITY_END();
 }

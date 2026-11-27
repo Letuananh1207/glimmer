@@ -287,9 +287,38 @@ def title_bar(sc, t, icon="clawd"):
         w, h, _ = ICONS[icon]
         draw_icon(sc, icon, 13 - w // 2, 11 - h // 2, 1, X["WHITE"])
     title_text(sc, t)
-    caption_button(sc, 184, X["TITLE_LIGHT"], "_")
+    # P-2026-11-27.24: _ / × hot under the mouse (_HOT[0] = "min" / "close" / a taskbar slot).
+    caption_button(sc, 184, X["TITLE_HI"] if _HOT[0] == "min" else X["TITLE_LIGHT"], "_")
     caption_button(sc, 202, X["TITLE_LIGHT"], "o")
-    caption_button(sc, 220, X["CLOSE"], "x")
+    caption_button(sc, 220, hx("F06A50") if _HOT[0] == "close" else X["CLOSE"], "x")
+
+
+_HOT = [None]   # XP::hot(): None, "min", "close" or a taskbar slot index
+
+
+# ── Mouse cursor (channels/cursor.cpp, cursor_core.h; P-2026-11-27.24 XP-Pointer) ──
+def _cursor_rows(name):
+    src = (Path(__file__).resolve().parent.parent / "src" / "data" / "cursor_core.h").read_text(encoding="utf-8")
+    body = re.search(r"constexpr const char\* " + name + r"\[\] = \{(.*?)\};", src, re.S).group(1)
+    return re.findall(r'"([BW.]+)"', body)
+
+
+CURSOR = {"arrow": (_cursor_rows("kArrowRows"), 0, 0), "hand": (_cursor_rows("kHandRows"), 5, 0)}
+
+
+def cursor(sc, shape, x, y, frame=0):
+    """Cursor::overlay: the glyph with its hotspot at (x, y); 'wait' = arrow + hourglass."""
+    rows, hx_, hy_ = CURSOR["arrow" if shape == "wait" else shape]
+    for r, row in enumerate(rows):
+        for c, k in enumerate(row):
+            if k != ".":
+                sc.pixel(x - hx_ + c, y - hy_ + r, X["BLACK"] if k == "B" else X["WHITE"])
+    if shape == "wait":
+        inks = {"X": X["BLACK"], "W": X["WHITE"], "S": X["AMBER"]}
+        if frame % 4 == 3:
+            draw_art(sc, "kGlass3", x + 8, y + 11, inks)
+        else:
+            draw_art(sc, f"kGlass{frame % 4}", x + 10, y + 9, inks)
 
 
 def title_meta(sc, meta):
@@ -602,7 +631,7 @@ def taskbar(sc, *, active="claude", windows=None, top=None, flash=False, badge=1
         edge, fill = {"flash": ("FLASH_EDGE", "FLASH"), "pressed": ("BTN_PRESSED_EDGE", "BTN_PRESSED"),
                       "normal": ("BTN_EDGE", "BTN")}[look]
         sc.rect(x, 217, 28, 20, X[edge])
-        sc.rect(x + 1, 218, 26, 18, X[fill])
+        sc.rect(x + 1, 218, 26, 18, X["TASK_HI"] if look == "normal" and _HOT[0] == slot else X[fill])
         icon = PROG_ICON.get(prog, "clawd")
         if icon == "clawd":
             draw_icon(sc, "clawd", x + 5, 222, 1, X["WHITE"] if look == "flash" else CLAWD_ORANGE)
@@ -1049,9 +1078,10 @@ def run_icon(sc, icon, x0, y0):
         sc.rect(x0 + x, y0 + y, w, 1, pal[c])
 
 
-def start_menu(sc, skills=("agent", "photo", "weather", "clock"), all_open=False):
-    """XPStart::draw."""
+def start_menu(sc, skills=("agent", "photo", "weather", "clock"), all_open=False, hover=None):
+    """XPStart::draw; hover = the label of the lit row (P-2026-11-27.24)."""
     si = _start_icon
+    sel = X["SELECT"]
     for (y0, y1), c in zip(((0, 6), (6, 11), (11, 16), (16, 22), (22, 27), (27, 32)),
                            ("3D95FF", "2B80F5", "1C6BE8", "0F5BDC", "0A50D2", "0B4CC8")):
         sc.rect(0, y0, 240, y1 - y0, hx(c))
@@ -1076,7 +1106,11 @@ def start_menu(sc, skills=("agent", "photo", "weather", "clock"), all_open=False
     for sk, name, label, dy in (("photo", "Photo", "Ảnh", 3), ("weather", "Weather", "Thời tiết", 2),
                                 ("clock", "Clock", "Đồng hồ", 2)):
         if sk in skills:
-            run_icon(sc, si(name), 6, y + dy); sc.text("JBMono-11", label, 28, y + 4, X["BLACK"]); y += 20
+            lit = hover == label
+            if lit:
+                sc.rect(2, y, 149, 20, sel)
+            run_icon(sc, si(name), 6, y + dy)
+            sc.text("JBMono-11", label, 28, y + 4, X["WHITE"] if lit else X["BLACK"]); y += 20
     sc.hline(6, 163, 140, X["ROW_LINE"])
     if all_open:
         sc.rect(2, 167, 149, 20, X["SELECT"])
@@ -1093,7 +1127,7 @@ def start_menu(sc, skills=("agent", "photo", "weather", "clock"), all_open=False
         sc.rect(0, 190 + 5 * b, 240, 4 if b == 4 else 5, hx(c))
     sc.hline(0, 190, 240, X["TASK_HI"])
     run_icon(sc, si("Restart"), 8, 194); sc.text("JBMono-11", "Khởi động lại", 27, 196, X["WHITE"])
-    run_icon(sc, si("Power"), 165, 194); sc.text("JBMono-11", "Tắt màn", 184, 196, X["WHITE"])
+    run_icon(sc, si("Power"), 165, 194); sc.text("JBMono-11", "Tắt máy", 184, 196, X["WHITE"])
     if all_open:
         progs = ([("SmallClawd", "Claude", 5), ("SmallCodex", "Codex", 4)] if "agent" in skills else []) + \
             [(n, l, d) for sk, n, l, d in (("photo", "Photo", "Ảnh", 3), ("weather", "Weather", "Thời tiết", 2),
@@ -1106,6 +1140,64 @@ def start_menu(sc, skills=("agent", "photo", "weather", "clock"), all_open=False
         sc.hline(155, y + 3, 81, X["MENU_BORDER"])
         y += 7
         run_icon(sc, si("AddRemove"), 154, y + 2); sc.text("JBMono-11", "Thêm / gỡ", 173, y + 4, X["BLACK"])
+
+
+# ── Tắt máy tính (channels/xp_turnoff.cpp, P-2026-11-27.24) ──
+TURNOFF_SYM = [
+    [0x030, 0x048, 0x084, 0x102, 0x231, 0x249, 0x249, 0x231, 0x102, 0x084, 0x048, 0x030],
+    [0x030, 0x132, 0x231, 0x231, 0x231, 0x201, 0x201, 0x201, 0x102, 0x084, 0x078, 0x000],
+    [0x07A, 0x086, 0x10E, 0x200, 0x200, 0x201, 0x201, 0x001, 0x1C2, 0x184, 0x178, 0x000],
+]
+
+
+def turnoff(sc, lit=None):
+    """XPTurnOff::draw over what is on screen; lit = 0 Chờ, 1 Tắt, 2 Khởi động lại, 3 Hủy."""
+    for y in range(240):
+        for x in range(y & 1, 240, 2):
+            sc.pixel(x, y, X["BLACK"])
+    sc.rect(13, 49, 214, 130, X["BLACK"])
+    sc.rect(14, 50, 212, 28, X["WELCOME_BAND"])
+    sc.text("JBMono-12B", "Tắt máy tính", 22, 57, X["WHITE"])
+    sc.rect(204, 58, 6, 5, hx("F25022")); sc.rect(211, 58, 6, 5, hx("81BC06"))
+    sc.rect(204, 64, 6, 5, hx("05A6F0")); sc.rect(211, 64, 6, 5, hx("FFBA08"))
+    sc.hline(14, 78, 212, X["WELCOME_LINE"])
+    sc.rect(14, 79, 212, 66, X["WELCOME"])
+    sc.rect(14, 145, 212, 33, X["WELCOME_BAND"])
+    faces = (("F2C200", "FFE680"), ("D8341E", "F06A50"), ("2E8A2E", "5CC15C"))
+    for i, (face, light) in enumerate(faces):
+        x, y = 38 + 70 * i, 90
+        on = lit == i
+        sc.rect(x + 1, y, 22, 24, X["BLACK"]); sc.rect(x, y + 1, 24, 22, X["BLACK"])
+        sc.rect(x + 1, y + 1, 22, 22, X["WHITE"])
+        sc.rect(x + 2, y + 2, 20, 20, hx(light if on else face))
+        sc.hline(x + 2, y + 2, 20, X["WHITE"] if on else hx(light))
+        for r, bits in enumerate(TURNOFF_SYM[i]):
+            for c in range(10):
+                if bits >> (9 - c) & 1:
+                    sc.pixel(x + 7 + c, y + 6 + r, X["WHITE"])
+    sc.rect(165, 151, 52, 21, hx("003C74")); sc.rect(164, 152, 54, 19, hx("003C74"))
+    sc.rect(165, 152, 52, 19, hx("F4F3EE")); sc.rect(165, 169, 52, 2, hx("D6D0C5"))
+    if lit == 3:
+        sc.outline(165, 152, 52, 19, hx("F8B330"))
+    sc.text("JBMono-11", "Hủy", 191, 155, X["BLACK"], "TC")
+    for label, x, y in (("Chờ", 50, 117), ("Tắt", 120, 117), ("Khởi động", 190, 117), ("lại", 190, 129)):
+        sc.text("JBMono-11", label, x, y, X["WHITE"], "TC")
+
+
+def shut_down(sc):
+    """Display::drawShutDown (XP-ShutDown)."""
+    welcome_chrome(sc)
+    italic(sc, "kShutDownBits", 145, 18, 20, 96)
+
+
+def with_hot(hot, draw):
+    def f(sc):
+        _HOT[0] = hot
+        try:
+            draw(sc)
+        finally:
+            _HOT[0] = None
+    return f
 
 
 def desktop(sc, *, cl="Claude", cx="Codex", line1=f"29° {DOT} Ít mây", line2="cảm giác 33°",
@@ -1785,6 +1877,20 @@ SCREENS = [
     ("Welcome", "XP-Connecting · đang kết nối Wi-Fi", connecting, "XPConnecting"),
     ("Đăng nhập", "XP-SetupMode · chế độ cài đặt Wi-Fi", setup_ap, "XPSetupMode"),
     ("Đang cập nhật", "XP-OtaProgress · nạp qua Wi-Fi", ota, "XPOtaProgress"),
+    ("Đang tắt máy", "XP-ShutDown · power shutting, 1,5 s", shut_down, "XPShutDown"),
+    ("Start · mục sáng", "XP-Hover-Start · chuột trên Thời tiết",
+     lambda s: (desktop(s, one_col=True), start_menu(s, hover="Thời tiết"),
+                taskbar(s, windows=[], tray_weather=True, start_down=True), cursor(s, "arrow", 64, 125)),
+     "XPHoverStart"),
+    ("Nút thanh tác vụ hot", "XP-Hot-Task · chuột trên nút Thời tiết",
+     with_hot(1, lambda s: (claude_xp(s), taskbar(s, windows=["Claude", "Weather", "Clock"], top="Claude", badge=0),
+                            cursor(s, "arrow", 114, 228))), "XPHotTask"),
+    ("Nút × hot", "XP-Hot-Close · chuột trên ×",
+     with_hot("close", lambda s: (info(s), taskbar(s, windows=["Claude", "Photo", "Weather", "Clock"], top="Info"),
+                                  cursor(s, "arrow", 228, 11))), "XPHotClose"),
+    ("Tắt máy tính", "XP-TurnOff · chuột trên Tắt",
+     lambda s: (desktop(s, one_col=True, windows=["Claude"]), turnoff(s, lit=1), cursor(s, "hand", 121, 99)),
+     "XPTurnOff"),
     ("Chưa có kênh", "XP-NoChannels · mọi kênh tắt", no_channels, "XPNoChannels"),
 ]
 

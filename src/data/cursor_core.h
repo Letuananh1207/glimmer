@@ -11,9 +11,11 @@
 // save-under. Moving the cursor repaints the screen clipped to the old box
 // (main.cpp repaintRect, TFT viewport), then draws the glyph at the new spot.
 //
-// Glyphs: Windows XP's arrow, link hand and hourglass at real pixels, 'B'
-// black, 'W' white, '.' transparent; at most kMaxW × kMaxH. Provisional
-// until the panel design (docs/phieu_panel/2026-11-27-con-tro-va-tat-may.md).
+// Glyphs (P-2026-11-27.24, screen_specs §17 XP-Pointer): XP's Normal Select
+// arrow 12×19 and Link Select hand 16×19 at real pixels, 'B' black, 'W' white,
+// '.' transparent; Working in Background = the arrow + XP-Open's hourglass
+// (9×12 at +10, +9; on its side 12×9 at +8, +11; sand xpAmber), a 21×22 box
+// with the hotspot at the tip, 4 frames × 200 ms (cursor.cpp draws the glass).
 #include <stdint.h>
 #include <stddef.h>
 #ifndef PROGMEM
@@ -29,7 +31,7 @@ constexpr size_t   kPacketLen  = 8;      // 'G' 'C' ver shape seqHi seqLo x y
 constexpr uint8_t  kVersion    = 1;
 constexpr int      kScreen     = 240;
 constexpr int      kMaxW       = 16;
-constexpr int      kMaxH       = 20;
+constexpr int      kMaxH       = 22;
 constexpr uint32_t kMinMoveMs  = 40;     // repaint + redraw at most ~25 / s
 
 struct Packet {
@@ -137,31 +139,21 @@ constexpr const char* kHandRows[] = {
     "....BBBBBBBBBB..",
 };
 
-// XP hourglass 11 × 15, hotspot in the middle.
-constexpr const char* kWaitRows[] = {
-    "BBBBBBBBBBB",
-    "BWWWWWWWWWB",
-    ".BWWWWWWWB.",
-    ".BWBBBBBWB.",
-    ".BWWBBBWWB.",
-    "..BWWBWWB..",
-    "...BWBWB...",
-    "....BWB....",
-    "...BWWWB...",
-    "..BWWBWWB..",
-    ".BWWWBWWWB.",
-    ".BWWBBBWWB.",
-    ".BWBBBBBWB.",
-    "BWWWWWWWWWB",
-    "BBBBBBBBBBB",
-};
+// Working in Background: the arrow in a 21 × 22 box (the hourglass beside it
+// is drawn on top, see kGlass*).
+constexpr int kWaitW = 21, kWaitH = 22;
+constexpr Glyph boxed(Glyph g, uint8_t w, uint8_t h) { g.w = w; g.h = h; return g; }
+
+// The hourglass frame shown at [ms] (4 × 200 ms, as XP-Open's wait cursor).
+constexpr uint32_t kWaitFrameMs = 200;
+inline int waitFrame(uint32_t ms) { return (int)(ms / kWaitFrameMs % 4); }
 
 // Indexed by Shape (SHAPE_NONE has no glyph: an empty one).
 static const Glyph kGlyphs[SHAPE_COUNT] PROGMEM = {
     Glyph{0, 0, 0, 0, {}, {}},
     makeGlyph(12, 0, 0, kArrowRows),
     makeGlyph(16, 5, 0, kHandRows),
-    makeGlyph(11, 5, 7, kWaitRows),
+    boxed(makeGlyph(12, 0, 0, kArrowRows), kWaitW, kWaitH),
 };
 
 // ── Box on screen ───────────────────────────────────────────────────────────

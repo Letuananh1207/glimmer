@@ -10,11 +10,14 @@
 //   body        y 34–189: left column white x 1–151 (pinned Claude / Codex when the agent skill is on,
 //               then Ảnh / Thời tiết / Đồng hồ by skill, "Tất cả chương trình" + green arrow), right
 //               column #D3E5FA x 153–238 (Desktop, Số liệu, —, Cài đặt, Thêm / gỡ, Thiết bị)
-//   bottom band (0, 190, 240×24): Khởi động lại (green) and Tắt màn (red)
+//   bottom band (0, 190, 240×24): Khởi động lại (green) and Tắt máy (red, opens Tắt máy tính)
 //   all         All Programs open: its row xpSelect, sub-menu (151, 62, 89×h) with the installed programs
 //               + "Thêm / gỡ"
 #include "control_core.h"
 
 namespace XPStart {
+    // [m].hover / [m].sub = the rows lit (pointer_core.h order).
     void draw(const Control::Menu& m, const char* skillsOn);
+    // Same menu, another row lit (P-2026-11-27.24): repaints only the two rows.
+    void relight(const Control::Menu& was, const Control::Menu& now, const char* skillsOn);
 }

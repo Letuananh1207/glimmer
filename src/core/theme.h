@@ -111,5 +111,12 @@ namespace Theme {
         constexpr uint16_t INFO_BAR         = 0xFFFC;  // #FFFFE1 xpInfoBar
         constexpr uint16_t WHITE            = 0xFFFF;  // #FFFFFF white
         constexpr uint16_t BLACK            = 0x0000;  // #000000 body text
+        // P-2026-11-27.24 (themeXP.hot, themeXP.turnOff): hot caption × / Tắt button lit,
+        // Chờ button lit, Hủy button (XP push button).
+        constexpr uint16_t CLOSE_HOT        = 0xF34A;  // #F06A50 xpClose hot
+        constexpr uint16_t STANDBY_HI       = 0xFF30;  // #FFE680 Chờ lit
+        constexpr uint16_t PUSH_EDGE        = 0x01EE;  // #003C74 push button edge
+        constexpr uint16_t PUSH_FACE        = 0xF79D;  // #F4F3EE push button face
+        constexpr uint16_t PUSH_SHADE       = 0xD698;  // #D6D0C5 push button bottom rows
     }
 }

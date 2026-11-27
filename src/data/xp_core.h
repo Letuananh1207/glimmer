@@ -281,12 +281,17 @@ inline int deskIcons(const char* skillsOn, DeskIcon* out) {
 // XP Luna menu: 1-px border, 1-px pad, items 17 tall, separators 7 tall.
 // Placed by the app (top-left), kept inside x 0..239, y 0..213.
 // MENU_START (P-2026-11-26.20): the XP Start menu, (0, 0)–(239, 213), never moved.
-enum MenuKind : uint8_t { MENU_NONE, MENU_DESKTOP, MENU_WINDOW, MENU_START };
+// MENU_TURNOFF (P-2026-11-27.24): XP's Turn off computer box over the whole screen (dotted shade
+// included), never moved — opened like a menu, closed like one.
+enum MenuKind : uint8_t { MENU_NONE, MENU_DESKTOP, MENU_WINDOW, MENU_START, MENU_TURNOFF };
 constexpr int kMenuItemH = 17, kMenuSepH = 7, kMenuPad = 2;
 constexpr int kMenuDeskW = 166, kMenuWinW = 128;
 // Desktop: 6 items, 3 separators → 127; window: 6 items, 1 separator → 113.
-inline int menuW(MenuKind k) { return k == MENU_START ? 240 : k == MENU_DESKTOP ? kMenuDeskW : kMenuWinW; }
+inline int menuW(MenuKind k) {
+    return k == MENU_START || k == MENU_TURNOFF ? 240 : k == MENU_DESKTOP ? kMenuDeskW : kMenuWinW;
+}
 inline int menuH(MenuKind k) {
+    if (k == MENU_TURNOFF) return 240;
     if (k == MENU_START) return 214;
     return k == MENU_DESKTOP ? 2 * kMenuPad + 6 * kMenuItemH + 3 * kMenuSepH
                              : 2 * kMenuPad + 6 * kMenuItemH + 1 * kMenuSepH;

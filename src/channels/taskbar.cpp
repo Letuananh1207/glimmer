@@ -77,6 +77,8 @@ void paintSlot(int i, const BarState& s) {
     Look look = lookOfSlot(i, s);
     uint16_t edge = look == LOOK_FLASH ? FLASH_EDGE : look == LOOK_PRESSED ? BTN_PRESSED_EDGE : BTN_EDGE;
     uint16_t fill = look == LOOK_FLASH ? FLASH      : look == LOOK_PRESSED ? BTN_PRESSED      : BTN;
+    // P-2026-11-27.24: a normal button under the mouse lights (xpTaskHi); pressed / flashing keep their look.
+    if (look != LOOK_FLASH && look != LOOK_PRESSED && XP::hot() == i) fill = TASK_HI;
     tft.fillRect(x, kBtnY, kBtnW, kBtnH, edge);
     tft.fillRect(x + 1, kBtnY + 1, kBtnW - 2, kBtnH - 2, fill);
     Icon ic = progIcon(p);
