@@ -120,6 +120,7 @@ struct Menu {
     XPCore::MenuKind kind = XPCore::MENU_NONE;
     int16_t x = 0, y = 0;          // top-left, clamped inside y ≤ 213
     bool minimized = false;        // window menu of a minimized window: Khôi phục lit, Thu nhỏ dim
+    bool all = false;              // Start menu: All Programs open (P-2026-11-26.20)
 };
 
 }  // namespace Control

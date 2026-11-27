@@ -37,6 +37,9 @@
 #include "wallpaper.h"
 #include "control_core.h"
 #include "xp_menu.h"
+#include "xp_start.h"
+#include "clock_core.h"
+#include <coredecls.h>
 
 // ── Channel registry — declared in their own .cpp files ─────────────────────
 extern bool chClaudeEnabled(const ChannelCtx&);  extern void chClaudeDraw(const ChannelCtx&);
@@ -67,10 +70,6 @@ extern void chTrendTick      (const ChannelCtx&);
 extern void chInfoTick       (const ChannelCtx&);
 extern void chNightTick      (const ChannelCtx&);
 extern bool chAttentionNeedsYou();
-extern void chHomeEntered();                       // desktop came up → tray balloon pops up
-extern void chHomeLeft();                          // desktop went away → balloon gone
-extern void chHomeBalloon(const ChannelCtx&, bool show);
-extern bool chHomeBalloonShown();
 extern bool chAttentionWakesScreen();
 
 static const Channel kChannels[] = {
@@ -117,6 +116,9 @@ static bool        g_screenOff   = false; // backlight off on the app's command
 // context menu drawn over the screen. The device never rotates channels.
 static Control::Windows g_windows;
 static Control::Menu    g_menu;
+// The Clock window as the app touched it (P-2026-11-26.22) and the last SNTP sync.
+static ClockCore::View  g_clockView;
+static volatile uint32_t g_ntpLast = 0;
 static bool        g_wantHome    = true;  // boot: the desktop as soon as it can show
 
 // ── Fetch scheduler state ────────────────────────────────────────────────────
@@ -153,6 +155,8 @@ uint32_t mainApprovalTtlS()   { return (uint32_t)g_settings.approvalTtlMin * 60U
 bool     mainAgentDoneCards() { return g_settings.agentDoneCards; }
 bool     mainPaused()       { return g_rot.paused; }
 int8_t   mainSelectedIcon() { return g_windows.sel; }
+const ClockCore::View& mainClockView() { return g_clockView; }
+uint32_t mainNtpLast()      { return g_ntpLast; }
 const Control::Windows& mainWindows() { return g_windows; }
 const Control::Menu&    mainMenu()    { return g_menu; }
 bool     mainScreenOn()     { return !g_screenOff; }
@@ -272,6 +276,7 @@ static XPCore::BarState barState(uint32_t) {
     s.trayWeather = Skill::inList(g_settings.skillsOn.c_str(), "weather");
     XPCore::fillBar(s, open, n, g_windows.top, XPCore::progOf(name), XPCore::slotsFor(s.trayWeather));
     s.flash = name && !strcmp(name, "Attention") && chAttentionNeedsYou();
+    s.startDown = g_menu.kind == XPCore::MENU_START;
     return s;
 }
 
@@ -288,13 +293,8 @@ static int8_t   g_minimizing = XPCore::PROG_NONE;   // program going down to its
 
 static bool isHome(const char* name) { return name && !strcmp(name, "Home"); }
 
-// Tray balloon (P-2026-11-26.15): pops up when the desktop comes up from
-// another screen, hidden when anything else takes the screen (a card too).
-static void noteDrawn(const char* name) {
-    if (isHome(name) && !isHome(g_drawnName)) chHomeEntered();
-    if (!isHome(name) && isHome(g_drawnName)) chHomeLeft();
-    g_drawnName = name;
-}
+// What drawActive() painted last (P-2026-11-26.21: no tray balloon any more).
+static void noteDrawn(const char* name) { g_drawnName = name; }
 
 // Taskbar slot showing program [p] in [s], -1 = none.
 static int slotOf(const XPCore::BarState& s, int p) {
@@ -302,11 +302,17 @@ static int slotOf(const XPCore::BarState& s, int p) {
     return -1;
 }
 
+// The open menu: the Start menu (P-2026-11-26.20) or a context menu (P-2026-11-26.14).
+static void paintMenu() {
+    if (g_menu.kind == XPCore::MENU_START) XPStart::draw(g_menu, g_settings.skillsOn.c_str());
+    else XPMenu::draw(g_menu);
+}
+
 // A context menu stays over the screen it was opened on (not on Night / cards).
 static void drawMenuOver(const char* name) {
     if (g_menu.kind == XPCore::MENU_NONE) return;
     if (XPCore::buttonFor(name) == XPCore::BTN_NO_BAR || !strcmp(name, "Attention")) g_menu = Control::Menu();
-    else XPMenu::draw(g_menu);
+    else paintMenu();
 }
 
 static void drawActive() {
@@ -403,6 +409,8 @@ bool mainShowChannel(const char* name) {
     recomputeActive();
     for (int i = 0; i < g_activeCount; i++) {
         if (!strcasecmp(kChannels[g_activeIdx[i]].name, name)) {
+            if (strcmp(kChannels[g_activeIdx[g_activePtr]].name, "Clock") && !strcasecmp(name, "Clock"))
+                g_clockView = ClockCore::View();      // the Clock window opens on today, as XP
             g_activePtr = i;
             g_menu = Control::Menu();
             g_wantHome = false;
@@ -471,34 +479,30 @@ bool mainSetMenu(const Control::Menu& m) {
     if (m.kind != XPCore::MENU_NONE
         && (XPCore::buttonFor(name) == XPCore::BTN_NO_BAR || !strcmp(name, "Attention"))) return false;
     const bool wasOpen = g_menu.kind != XPCore::MENU_NONE;
+    const bool startToStart = wasOpen && g_menu.kind == XPCore::MENU_START && m.kind == XPCore::MENU_START;
     g_menu = m;
     if (m.kind != XPCore::MENU_NONE) {
-        if (wasOpen) drawActive();        // moved: repaint under the old one first
-        else XPMenu::draw(g_menu);
+        // Start → Start (All Programs opened / closed): the menu covers its own area.
+        if (wasOpen && !startToStart) drawActive();   // moved: repaint under the old one first
+        else paintMenu();
     } else if (wasOpen) {
         drawActive();
     }
+    if (Taskbar::shown()) Taskbar::update(barState(millis()), g_settings.clock24h);   // start button
     return true;
 }
 
-// Tray balloon from the app (POST /api/balloon): tap the tray icon → show
-// 10 s, × → hide. Only over the desktop (the balloon is part of it) and with
-// the weather skill on; an open context menu closes first, as in XP.
-bool mainSetBalloon(bool show) {
-    if (g_apMode || !g_activeCount || !isHome(kChannels[g_activeIdx[g_activePtr]].name)) return !show;
-    if (show && !Skill::inList(g_settings.skillsOn.c_str(), "weather")) return false;
-    if (g_menu.kind != XPCore::MENU_NONE) {
-        g_menu = Control::Menu();
-        if (show) chHomeEntered(); else chHomeLeft();
-        drawActive();
-        return true;
+// The Clock window touched from the app (POST /api/clock, P-2026-11-26.22):
+// tab, viewed month / year, chosen day, open list. Repaints the window when it
+// is on screen. [sync] asks the time servers again now ("Cập nhật ngay").
+void mainSetClock(const ClockCore::View& v, bool sync) {
+    g_clockView = v;
+    if (sync) {
+        configTime(0, 0, "pool.ntp.org", "time.google.com");
+        Storage::applyTimezone(g_settings);
     }
-    chHomeBalloon(makeCtx(), show);
-    return true;
-}
-
-bool mainBalloonShown() {
-    return g_activeCount && isHome(kChannels[g_activeIdx[g_activePtr]].name) && chHomeBalloonShown();
+    if (g_activeCount && !strcmp(kChannels[g_activeIdx[g_activePtr]].name, "Clock") && g_menu.kind == XPCore::MENU_NONE)
+        drawActive();
 }
 
 // A new / deleted wallpaper: repaint the desktop if it is on screen.
@@ -700,6 +704,8 @@ static void startAPMode() {
 static void onStaUp() {
     MDNS.begin(MDNS_HOSTNAME);
     MDNS.addService("http", "tcp", 80);      // lets the Android app find it via NSD
+    // Remember each SNTP sync (the Clock window's Internet tab, P-2026-11-26.22).
+    settimeofday_cb([]() { g_ntpLast = (uint32_t)time(nullptr); });
     configTime(0, 0, "pool.ntp.org", "time.google.com");
     Storage::applyTimezone(g_settings);
     for (int i = 0; i < 20 && !timeSynced(); i++) delay(250);

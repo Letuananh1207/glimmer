@@ -574,7 +574,7 @@ _BTN_PROG = {"claude": "Claude", "photo": "Photo", "weather": "Weather", "clock"
 
 
 def taskbar(sc, *, active="claude", windows=None, top=None, flash=False, badge=1, clock="14:32",
-            tray_weather=False, **_old):
+            tray_weather=False, start_down=False, **_old):
     """Taskbar::draw. windows = open programs in opening order (last 4 shown — last 3 with the
     weather tray, P-2026-11-26.15), top = the one on top (pressed while it shows). Legacy callers
     pass active = the button of the only open window."""
@@ -586,7 +586,10 @@ def taskbar(sc, *, active="claude", windows=None, top=None, flash=False, badge=1
     task_bands(sc, 0, tray_x, 0, 25)
     for r in range(26):                                   # start button
         edge = 67 - START_INSET[r]
-        c = X["START_HI"] if r <= 1 else X["START"] if r <= 22 else X["START_DARK"]
+        if start_down:   # P-2026-11-26.20: pressed while the Start menu is open
+            c = X["START_DARK"] if r <= 1 else X["GREEN"] if r <= 22 else X["START_DARK"]
+        else:
+            c = X["START_HI"] if r <= 1 else X["START"] if r <= 22 else X["START_DARK"]
         sc.rect(0, 214 + r, edge, 1, c)
         sc.pixel(edge, 214 + r, X["START_DARK"])
     draw_flag(sc, 7, 221, 1)
@@ -1005,9 +1008,109 @@ def balloon_xp(sc, line1, line2):
         sc.text("JBMono-11", fit(sc, "JBMono-11", line2, 132), 102, 178, X["LABEL"])
 
 
-def desktop(sc, *, cl="Claude 38%", cx="Codex 71%", line1=f"29° {DOT} Ít mây", line2="cảm giác 33°",
+# src/ui/desk_icons.h (tools/deskicons.py, P-2026-11-26.19): XP colour icons, runs of palette colours.
+_SRC_DESKICONS = (ROOT / "src" / "ui" / "desk_icons.h").read_text(encoding="utf-8")
+
+
+def _desk_icon(name):
+    pal_src = re.search(rf"k{name}Pal\[\] PROGMEM = \{{(.*?)\}};", _SRC_DESKICONS, re.S).group(1)
+    pal = [hx(h) for h in re.findall(r"/\* #([0-9A-F]{6}) \*/", pal_src)]
+    runs_src = re.search(rf"k{name}Runs\[\] PROGMEM = \{{(.*?)\n\}};", _SRC_DESKICONS, re.S).group(1)
+    runs = [tuple(int(v) for v in m) for m in re.findall(r"\{(\d+), (\d+), (\d+), (\d+)\}", runs_src)]
+    return pal, runs
+
+
+DESK_XP = {"Codex": _desk_icon("Codex"), "Photo": _desk_icon("Photo"), None: _desk_icon("Trash")}
+
+
+def desk_icon_xp(sc, prog, x0, y0, selected=False):
+    pal, runs = DESK_XP[prog]
+    for x, y, w, c in runs:
+        sc.rect(x0 + x, y0 + y, w, 1, pal[c])
+        if selected:
+            for i in range((x0 + x + y0 + y) & 1, w, 2):
+                sc.pixel(x0 + x + i, y0 + y, X["SELECT_ICON"])
+
+
+# src/ui/start_icons.h + channels/xp_start.cpp (P-2026-11-26.20 XP-Start).
+_SRC_STARTICONS = (ROOT / "src" / "ui" / "start_icons.h").read_text(encoding="utf-8")
+
+
+def _start_icon(name):
+    pal_src = re.search(rf"k{name}Pal\[\] PROGMEM = \{{(.*?)\}};", _SRC_STARTICONS, re.S).group(1)
+    pal = [hx(h) for h in re.findall(r"/\* #([0-9A-F]{6}) \*/", pal_src)]
+    runs_src = re.search(rf"k{name}Runs\[\] PROGMEM = \{{(.*?)\n\}};", _SRC_STARTICONS, re.S).group(1)
+    return pal, [tuple(int(v) for v in m) for m in re.findall(r"\{(\d+), (\d+), (\d+), (\d+)\}", runs_src)]
+
+
+def run_icon(sc, icon, x0, y0):
+    pal, runs = icon
+    for x, y, w, c in runs:
+        sc.rect(x0 + x, y0 + y, w, 1, pal[c])
+
+
+def start_menu(sc, skills=("agent", "photo", "weather", "clock"), all_open=False):
+    """XPStart::draw."""
+    si = _start_icon
+    for (y0, y1), c in zip(((0, 6), (6, 11), (11, 16), (16, 22), (22, 27), (27, 32)),
+                           ("3D95FF", "2B80F5", "1C6BE8", "0F5BDC", "0A50D2", "0B4CC8")):
+        sc.rect(0, y0, 240, y1 - y0, hx(c))
+    sc.hline(3, 0, 234, hx("5A9BF6"))
+    sc.rect(5, 4, 24, 24, X["WHITE"]); sc.rect(6, 5, 22, 22, X["MENU_BORDER"])
+    sc.rect(7, 6, 20, 14, hx("93C0F3")); sc.rect(7, 20, 20, 6, hx("76BE37"))
+    run_icon(sc, si("UserClawd"), 9, 11)
+    sc.text("JBMono-16B", "Clawd", 36, 8, X["TITLE_SHADOW"])
+    sc.text("JBMono-16B", "Clawd", 35, 7, X["WHITE"])
+    sc.hline(0, 32, 240, hx("F0A030")); sc.hline(0, 32, 20, hx("F7C97A")); sc.hline(220, 32, 20, hx("F7C97A"))
+    sc.hline(0, 33, 240, hx("B8661E"))
+    sc.rect(0, 34, 240, 156, X["BTN_EDGE"]); sc.rect(1, 34, 151, 156, X["WHITE"])
+    sc.vline(152, 34, 156, hx("95BDEE")); sc.rect(153, 34, 86, 156, hx("D3E5FA"))
+    y = 38
+    if "agent" in skills:
+        run_icon(sc, si("PinClawd"), 3, 39)
+        sc.text("JBMono-12B", "Claude", 42, 37, X["BLACK"]); sc.text("JBMono-11", "mức dùng", 42, 51, X["MUTED"])
+        run_icon(sc, DESK_XP["Codex"], 5, 65)
+        sc.text("JBMono-12B", "Codex", 42, 66, X["BLACK"]); sc.text("JBMono-11", "mức dùng", 42, 80, X["MUTED"])
+        sc.hline(6, 95, 140, X["ROW_LINE"])
+        y = 99
+    for sk, name, label, dy in (("photo", "Photo", "Ảnh", 3), ("weather", "Weather", "Thời tiết", 2),
+                                ("clock", "Clock", "Đồng hồ", 2)):
+        if sk in skills:
+            run_icon(sc, si(name), 6, y + dy); sc.text("JBMono-11", label, 28, y + 4, X["BLACK"]); y += 20
+    sc.hline(6, 163, 140, X["ROW_LINE"])
+    if all_open:
+        sc.rect(2, 167, 149, 20, X["SELECT"])
+    sc.text("JBMono-12B", "Tất cả chương trình", 4, 170, X["WHITE"] if all_open else X["BLACK"])
+    run_icon(sc, si("AllArrow"), 138, 171)
+    navy = X["TITLE_SHADOW"]
+    run_icon(sc, si("Desktop"), 156, 40); sc.text("JBMono-12B", "Desktop", 175, 41, navy)
+    run_icon(sc, si("Stats"), 156, 61); sc.text("JBMono-12B", "Số liệu", 175, 62, navy)
+    sc.hline(157, 83, 78, X["DIVIDER"])
+    run_icon(sc, si("Settings"), 156, 90); sc.text("JBMono-11", "Cài đặt", 175, 91, navy)
+    run_icon(sc, si("AddRemove"), 156, 111); sc.text("JBMono-11", "Thêm / gỡ", 175, 112, navy)
+    run_icon(sc, si("Device"), 156, 132); sc.text("JBMono-11", "Thiết bị", 175, 133, navy)
+    for b, c in enumerate(("4285F4", "2B72E8", "1C64DC", "1758D0", "134CC2")):
+        sc.rect(0, 190 + 5 * b, 240, 4 if b == 4 else 5, hx(c))
+    sc.hline(0, 190, 240, X["TASK_HI"])
+    run_icon(sc, si("Restart"), 8, 194); sc.text("JBMono-11", "Khởi động lại", 27, 196, X["WHITE"])
+    run_icon(sc, si("Power"), 165, 194); sc.text("JBMono-11", "Tắt màn", 184, 196, X["WHITE"])
+    if all_open:
+        progs = ([("SmallClawd", "Claude", 5), ("SmallCodex", "Codex", 4)] if "agent" in skills else []) + \
+            [(n, l, d) for sk, n, l, d in (("photo", "Photo", "Ảnh", 3), ("weather", "Weather", "Thời tiết", 2),
+                                          ("clock", "Clock", "Đồng hồ", 2)) if sk in skills]
+        h = 4 + 20 * len(progs) + 7 + 20
+        sc.rect(151, 62, 89, h, X["MENU_BORDER"]); sc.rect(152, 63, 87, h - 2, X["WHITE"])
+        y = 64
+        for name, label, dy in progs:
+            run_icon(sc, si(name), 154, y + dy); sc.text("JBMono-11", label, 173, y + 4, X["BLACK"]); y += 20
+        sc.hline(155, y + 3, 81, X["MENU_BORDER"])
+        y += 7
+        run_icon(sc, si("AddRemove"), 154, y + 2); sc.text("JBMono-11", "Thêm / gỡ", 173, y + 4, X["BLACK"])
+
+
+def desktop(sc, *, cl="Claude", cx="Codex", line1=f"29° {DOT} Ít mây", line2="cảm giác 33°",
             balloon=False, badge=1, skills=("agent", "photo", "weather", "clock"), sel=None,
-            windows=(), top=None, tray=None, one_col=False):
+            windows=(), top=None, tray=None, one_col=False, xp_icons=True):
     """tray=None: the weather tray icon when the weather skill is on (P-2026-11-26.15); the older
     design images (before .15) are drawn with tray=False."""
     sc.img.paste(_desk_wallpaper(), (0, 0))
@@ -1017,6 +1120,8 @@ def desktop(sc, *, cl="Claude 38%", cx="Codex 71%", line1=f"29° {DOT} Ít mây"
         white = X["SELECT_ICON"] if selected else X["WHITE"]
         if prog == "Claude":
             draw_icon(sc, "clawd", x - 18, y + 1, 2, X["SELECT_CLAWD"] if selected else CLAWD_ORANGE)
+        elif xp_icons and prog in ("Codex", "Photo", None):     # P-2026-11-26.19
+            desk_icon_xp(sc, prog, x - 16, y, selected)
         elif prog == "Codex":
             sc.bits(DESK_TERM, 16, x - 16, y, white, 2)
             sc.rect(x - 14, y + 6, 28, 12, X["BLACK"])
@@ -1202,20 +1307,22 @@ def weather(sc, *, stale=False, meta="", temp="29°", cond="Ít mây", code=2, p
     window(sc, "Thời tiết", "weather", False)
     title_meta(sc, meta)
     tabs(sc, ["Hiện tại", "Dự báo"], 0)
-    ink = X["DIM"] if stale else X["BLACK"]
+    ink = X["MUTED"] if stale else X["BLACK"]          # P-2026-11-26.23: stale values xpMuted, labels black
     wx_icon(sc, code, 14, 50, True)
     sc.text("JBMono-16B", fit(sc, "JBMono-16B", cond, 112), 54, 52, ink)
     if place:
-        sc.text("JBMono-11", place, 54, 71, X["DIM"] if stale else X["LABEL"])
+        sc.text("JBMono-11", place, 54, 71, X["LABEL"])
     sc.text("VT323-44", temp, 226, 52, ink, "TR")
     sc.hline(12, 90, 216, X["GROUP"])
     sc.hline(12, 164, 216, X["GROUP"])
+    if stale:
+        low = (low[0], ("Cập nhật:", "2 giờ trước"))
     for k, (a, b) in enumerate(rows):
-        sc.text("JBMono-11", a, 14, 96 + 16 * k, ink)
+        sc.text("JBMono-11", a, 14, 96 + 16 * k, X["BLACK"])
         sc.text("JBMono-11", b, 112, 96 + 16 * k, ink)
     for k, (a, b) in enumerate(low):
-        sc.text("JBMono-11", a, 14, 171 + 16 * k, ink)
-        sc.text("JBMono-11", b, 112, 171 + 16 * k, ink)
+        sc.text("JBMono-11", a, 14, 171 + 16 * k, X["BLACK"])
+        sc.text("JBMono-11", b, 112, 171 + 16 * k, X["AMBER"] if stale and k == 1 else ink)
     taskbar(sc, active="weather", accent=T_SKY, badge=0)
 
 
@@ -1225,9 +1332,22 @@ def weather_loading(sc):
     taskbar(sc, active="weather", accent=T_SKY, badge=1)
 
 
+_SRC_WARN = (ROOT / "src" / "ui" / "warn_icon.h").read_text(encoding="utf-8")
+
+
 def weather_error(sc):
+    """ch_weather.cpp error before any data, inside the Hiện tại tab (P-2026-11-26.23 XP-Weather-Error)."""
     window(sc, "Thời tiết", "weather", False)
-    dialog(sc, "warn", "Chưa có thời tiết", ["Máy chủ trả lỗi 500.", "", "Đang tự thử lại..."])
+    tabs(sc, ["Hiện tại", "Dự báo"], 0)
+    pal_src = re.search(r"kWarnPal\[\] PROGMEM = \{(.*?)\};", _SRC_WARN, re.S).group(1)
+    pal = [hx(h) for h in re.findall(r"/\* #([0-9A-F]{6}) \*/", pal_src)]
+    runs_src = re.search(r"kWarnRuns\[\] PROGMEM = \{(.*?)\n\};", _SRC_WARN, re.S).group(1)
+    for x, y, w, c in (tuple(int(v) for v in m) for m in re.findall(r"\{(\d+), (\d+), (\d+), (\d+)\}", runs_src)):
+        sc.rect(14 + x, 52 + y, w, 1, pal[c])
+    sc.text("JBMono-12B", "Chưa có thời tiết", 46, 52, X["BLACK"])
+    sc.text("JBMono-11", "Máy chủ trả lỗi 500.", 46, 72, X["BLACK"])
+    sc.hline(12, 96, 216, X["GROUP"])
+    sc.text("JBMono-11", "Đang tự thử lại...", 14, 104, X["LABEL"])
     taskbar(sc, active="weather", accent=T_SKY, badge=1)
 
 
@@ -1250,7 +1370,7 @@ def forecast(sc, days=FORECAST):
     sc.text("JBMono-11", "Thấp", 189, 50, X["BLACK"], "TR")
     sc.text("JBMono-11", "Cao", 224, 50, X["BLACK"], "TR")
     if not days:
-        sc.text("JBMono-11", "Chưa có dự báo", 17, 70, X["DIM"])
+        sc.text("JBMono-11", "Chưa có dự báo", 120, 74, X["MUTED"], "TC")   # P-2026-11-26.23
     for i, (cond, code, lo, hi) in enumerate(days):
         y = 66 + 24 * i
         sel = i == 0
@@ -1290,17 +1410,87 @@ def _thick(sc, x0, y0, x1, y1, t, c):
             e += dx; y0 += sy
 
 
-def clock(sc, h=14, m=32, sec=15, h24=True, day=26, month=11, year=2026, wday_first=0, zone="GMT+7 · Hà Nội", **_old):
-    """ch_clock.cpp (P-2026-11-26.17 XP-Clock-Props): Date and Time Properties."""
+CLOCK_TABS = ["Ngày và giờ", "Múi giờ", "Internet"]
+ZONES = [(-480, "Los Angeles"), (-300, "New York"), (-180, "Brasília"), (0, "London"), (60, "Paris, Berlin"),
+         (180, "Moskva"), (240, "Dubai"), (330, "New Delhi"), (420, "Hà Nội"), (480, "Singapore"),
+         (540, "Tokyo, Seoul"), (600, "Sydney")]
+LAND_ROWS = [[(4, 8), (9, 12), (18, 24)], [(1, 8), (10, 11), (14, 26)], [(3, 9), (13, 25)], [(4, 8), (13, 23), (24, 24)],
+             [(5, 7), (12, 22)], [(6, 7), (12, 17), (19, 19), (21, 22)], [(8, 10), (14, 16), (21, 23)],
+             [(8, 10), (15, 16), (23, 24)], [(8, 10), (15, 16), (22, 25)], [(8, 9), (24, 24), (26, 26)], [(8, 8)]]
+
+
+def _gmt_paren(tz):
+    a = abs(tz)
+    return f"(GMT{'-' if tz < 0 else '+'}{a // 60:02d}:{a % 60:02d})"
+
+
+def _drop(sc, x, y):
+    sc.rect(x, y, 14, 14, X["BTN"])
+    for r in range(3):
+        sc.hline(x + 3 + r, y + 6 + r, 5 - 2 * r, X["WHITE"])
+
+
+def _spin(sc, x, y, h, c):
+    sc.rect(x, y, 12, h, X["BODY"])
+    mid = y + h // 2
+    sc.hline(x, mid, 12, X["FIELD_BORDER"])
+    for r in range(3):
+        sc.hline(x + 6 - r, y + 2 + r, 1 + 2 * r, c)
+        sc.hline(x + 4 + r, mid + 3 + r, 5 - 2 * r, c)
+
+
+def _drop_list(sc, x, y, w, labels, top, sel):
+    h = 2 + 9 * 13
+    sc.outline(x, y, w, h, X["BLACK"])
+    sc.rect(x + 1, y + 1, w - 2, h - 2, X["WHITE"])
+    sbx = x + w - 11
+    for r in range(9):
+        i = top + r
+        if i >= len(labels):
+            break
+        ry = y + 1 + r * 13
+        t = fit(sc, "JBMono-11", labels[i], sbx - x - 6)
+        if i == sel:
+            sc.rect(x + 1, ry, sbx - x - 1, 13, X["SELECT"])
+        sc.text("JBMono-11", t, x + 3, ry, X["WHITE"] if i == sel else X["BLACK"])
+    sc.rect(sbx, y + 1, 10, h - 2, hx("F4F3EE"))
+    for k in range(2):
+        by = y + h - 11 if k else y + 1
+        sc.rect(sbx, by, 10, 10, X["BTN_EDGE"])
+        sc.rect(sbx + 1, by + 1, 8, 8, X["BTN"])
+        if not k:
+            sc.pixel(sbx + 4, by + 4, X["WHITE"]); sc.hline(sbx + 3, by + 5, 3, X["WHITE"])
+        else:
+            sc.hline(sbx + 3, by + 4, 3, X["WHITE"]); sc.pixel(sbx + 4, by + 5, X["WHITE"])
+    n, track_y, track_h = len(labels), y + 11, h - 22
+    th = track_h * 9 // n if n > 9 else track_h
+    mx = max(n - 9, 0)
+    ty = track_y + ((track_h - th) * top // mx if mx else 0)
+    sc.rect(sbx, ty, 10, th, X["BTN_EDGE"])
+    sc.rect(sbx + 1, ty + 1, 8, th - 2, X["BTN"])
+
+
+def clock(sc, h=14, m=32, sec=15, h24=True, day=26, month=11, year=2026, wday_first=0, zone="GMT+7 · Hà Nội",
+          tab=0, chosen=0, month_list=False, zone_list=False, tz=420, **_old):
+    """ch_clock.cpp (P-2026-11-26.22 XP-Clock-Props / -Month / -Zone / -Net): Date and Time Properties."""
     window(sc, "Ngày và Giờ", "clock", False)
-    tabs(sc, ["Ngày và giờ", "Múi giờ"], 0)
+    tabs(sc, CLOCK_TABS, tab)
+    if tab == 1:
+        _clock_zone(sc, tz, zone_list)
+        taskbar(sc, active="clock", accent=T_AMBER, badge=0)
+        return
+    if tab == 2:
+        _clock_net(sc)
+        taskbar(sc, active="clock", accent=T_AMBER, badge=0)
+        return
     group_box(sc, 10, 54, 122, 128, "Ngày", X["WHITE"])
     group_box(sc, 136, 54, 94, 128, "Giờ", X["WHITE"])
-    field(sc, 14, 62, 114, 16)
-    sc.text("JBMono-11", f"{month:02d}/{year}", 17, 63, X["BLACK"])
-    sc.rect(113, 63, 14, 14, X["BTN"])
-    for r in range(3):
-        sc.hline(116 + r, 69 + r, 5 - 2 * r, X["WHITE"])
+    field(sc, 14, 62, 67, 16)
+    sc.text("JBMono-11", f"Thg {month}", 17, 63, X["BLACK"])
+    _drop(sc, 66, 63)
+    field(sc, 85, 62, 44, 16)
+    sc.text("JBMono-11", str(year), 87, 63, X["BLACK"])
+    _spin(sc, 116, 63, 14, X["BLACK"])
     for i, t in enumerate(["T2", "T3", "T4", "T5", "T6", "T7", "CN"]):
         sc.text("JBMono-11", t, 13 + 16 * i + 8, 82, X["GROUP_LABEL"], "TC")
     sc.hline(13, 96, 112, X["GROUP"])
@@ -1316,7 +1506,7 @@ def clock(sc, h=14, m=32, sec=15, h24=True, day=26, month=11, year=2026, wday_fi
         else:
             d, inm = i - lead - n + 1, False
         x, y = 13 + 16 * (i % 7), 98 + 13 * (i // 7)
-        today = inm and d == day
+        today = inm and d == (chosen or day)
         if today:
             sc.rect(x, y, 16, 13, X["SELECT"])
         sc.text("JBMono-11", str(d), x + 8, y, X["WHITE"] if today else X["BLACK"] if inm else X["DIM"], "TC")
@@ -1333,16 +1523,57 @@ def clock(sc, h=14, m=32, sec=15, h24=True, day=26, month=11, year=2026, wday_fi
         x, y = _p60(pos, ln)
         _thick(sc, 183, 106, x, y, t, c)
     sc.rect(182, 105, 3, 3, X["BLACK"])
-    field(sc, 145, 152, 76, 18)
-    sc.rect(208, 153, 12, 16, X["BODY"])
-    sc.hline(208, 160, 12, X["FIELD_BORDER"])
-    for r in range(3):
-        sc.hline(214 - r, 155 + r, 1 + 2 * r, X["BLACK"])
-        sc.hline(212 + r, 163 + r, 5 - 2 * r, X["BLACK"])
+    sc.outline(145, 152, 76, 18, X["FIELD_BORDER"])        # read-only: the time comes from the Internet
+    sc.rect(146, 153, 74, 16, X["BODY"])
+    _spin(sc, 208, 153, 16, X["DIM"])
     t = f"{h:02d}:{m:02d}:{sec:02d}" if h24 else f"{h % 12 or 12}:{m:02d} {'SA' if h < 12 else 'CH'}"
     sc.text("JBMono-12B", t, 148, 153, X["BLACK"])
     sc.text("JBMono-11", f"Múi giờ: {zone}", 12, 189, X["BLACK"])
+    if month_list:
+        _drop_list(sc, 14, 78, 67, [f"Thg {k}" for k in range(1, 13)], 3, month - 1)
     taskbar(sc, active="clock", accent=T_AMBER, badge=0)
+
+
+def _clock_zone(sc, tz, zone_list):
+    field(sc, 12, 50, 216, 18)
+    name = dict(ZONES).get(tz)
+    sc.text("JBMono-11", fit(sc, "JBMono-11", f"{_gmt_paren(tz)} {name}" if name else _gmt_paren(tz), 196), 15, 52,
+            X["BLACK"])
+    _drop(sc, 213, 52)
+    sc.outline(12, 74, 218, 90, X["FIELD_BORDER"])
+    col = min(26, max(0, ((tz * 10 // 4 + 1800) * 3 + 200) // 400))
+    for r in range(11):
+        for c in range(27):
+            land = any(a <= c <= b for a, b in LAND_ROWS[r])
+            sel = c == col
+            colour = ("8FCF5A" if sel else "5E9E36") if land else ("7FB0EE" if sel else "3C7FD8")
+            sc.rect(13 + 8 * c, 75 + 8 * r, 8, 8, hx(colour))
+    sc.outline(12, 172, 13, 13, X["DIM"])
+    sc.rect(13, 173, 11, 11, X["BODY"])
+    sc.text("JBMono-11", "Tự chỉnh giờ mùa hè", 30, 172, X["DIM"])
+    if zone_list:
+        _drop_list(sc, 12, 68, 216, [f"{_gmt_paren(z)} {n}" for z, n in ZONES], 3, [z for z, _ in ZONES].index(tz))
+
+
+def _clock_net(sc, last="14:00", date="26/11/2026", nxt="15:00"):
+    sc.outline(12, 52, 13, 13, X["FIELD_BORDER"])
+    sc.rect(13, 53, 11, 11, X["WHITE"])
+    for i, ty in enumerate((6, 7, 8, 7, 6, 5, 4)):
+        sc.rect(15 + i, 52 + ty - 1, 1, 3, X["CHECK"])
+    sc.text("JBMono-11", "Tự đồng bộ với máy chủ", 30, 52, X["BLACK"])
+    sc.text("JBMono-11", "Máy chủ:", 12, 77, X["BLACK"])
+    field(sc, 72, 74, 156, 18)
+    sc.text("JBMono-11", "pool.ntp.org", 75, 76, X["BLACK"])
+    _drop(sc, 213, 76)
+    sc.outline(125, 98, 103, 21, hx("003C74"))
+    for px, py in ((125, 98), (227, 98), (125, 118), (227, 118)):
+        sc.pixel(px, py, X["WHITE"])
+    sc.rect(126, 99, 101, 19, hx("F4F3EE"))
+    sc.rect(126, 116, 101, 2, hx("D6D0C5"))
+    sc.text("JBMono-11", "Cập nhật ngay", 176, 102, X["BLACK"], "TC")
+    sc.text("JBMono-11", f"Đã đồng bộ lúc {last}", 12, 130, X["BLACK"])
+    sc.text("JBMono-11", f"ngày {date}.", 12, 144, X["BLACK"])
+    sc.text("JBMono-11", f"Lần tới: {nxt}.", 12, 166, X["LABEL"])
 
 
 # ── Night (ch_night.cpp): no window, no taskbar ──────────────────────────────
@@ -1466,11 +1697,17 @@ SCREENS_B = [
     ("Desktop · vừa cài Đồng hồ", "XP-Desk-Selected · Đồng hồ đang chọn",
      lambda s: desktop(s, sel="Clock"), "XPDeskSelected"),
     ("Desktop · một cột", "XP-Desk-OneCol · chỉ chương trình đã cài",
-     lambda s: desktop(s, one_col=True), "XPDeskOneCol"),
+     lambda s: desktop(s, one_col=True, xp_icons=False), "XPDeskOneCol"),
+    ("Start menu", "XP-Start-Menu · app chạm start",
+     lambda s: (desktop(s, one_col=True), start_menu(s),
+                taskbar(s, windows=[], tray_weather=True, start_down=True)), "XPStartMenu"),
+    ("Start · Tất cả chương trình", "XP-Start-All · menu con",
+     lambda s: (desktop(s, one_col=True), start_menu(s, all_open=True),
+                taskbar(s, windows=[], tray_weather=True, start_down=True)), "XPStartAll"),
+    ("Desktop · biểu tượng XP", "XP-Desk-Icons · Command Prompt, My Pictures, Recycle Bin",
+     lambda s: desktop(s, one_col=True), "XPDeskIcons"),
     ("Desktop · khay thời tiết", "XP-Desk-Tray · không bong bóng, icon thời tiết ở khay",
      desktop, "XPDeskTray"),
-    ("Desktop · bong bóng", "XP-Desk-Balloon · hiện ~10 s khi vào desktop",
-     lambda s: desktop(s, balloon=True), "XPDeskBalloon"),
     ("Mở · nút lún trước", "XP-Open-1 · khôi phục Claude: nút lún, chưa vẽ gì khác",
      lambda s: desktop(s, windows=["Claude"], top="Claude", tray=False, balloon=True, badge=0), "XPOpen1"),
     ("Mở · thanh tiêu đề bay", "XP-Open-2 · 4 dải từ nút lên (0, 0)",
@@ -1525,10 +1762,14 @@ SCREENS_C = [
     ("Thời tiết · đang tải", "XP-Weather-Loading", weather_loading, "XPWeatherLoading"),
     ("Thời tiết · lỗi", "XP-Weather-Error · HTTP 500", weather_error, "XPWeatherError"),
     ("Thời tiết · cũ", "XP-Weather-Stale · 2 giờ",
-     lambda s: weather(s, stale=True, meta="cũ 2G"), None),
+     lambda s: weather(s, stale=True, meta="cũ 2G"), "XPWeatherStale"),
     ("Dự báo", "XP-Forecast-Details · tab Dự báo", forecast, "XPForecastDetails"),
-    ("Dự báo · chưa có", "XP-Forecast-Details · chưa có dữ liệu", lambda s: forecast(s, days=[]), None),
+    ("Dự báo · chưa có", "XP-Forecast-Empty · chưa có dữ liệu", lambda s: forecast(s, days=[]), "XPForecastEmpty"),
     ("Đồng hồ", "XP-Clock-Props · Ngày và Giờ", clock, "XPClockProps"),
+    ("Đồng hồ · danh sách tháng", "XP-Clock-Month · Thg 11 đang chọn",
+     lambda s: clock(s, month_list=True), "XPClockMonth"),
+    ("Đồng hồ · Múi giờ", "XP-Clock-Zone · bản đồ", lambda s: clock(s, tab=1), "XPClockZone"),
+    ("Đồng hồ · Internet", "XP-Clock-Net · đồng bộ giờ", lambda s: clock(s, tab=2), "XPClockNet"),
     ("Đêm", "XP-Night-Saver · khối nhảy chỗ", night, "XPNightSaver"),
     ("Thông tin", "XP-Info · không nút nào lõm", info, "XPInfo"),
     ("Cài đặt", "XP-Setup · chưa có khóa", setup, "XPSetup"),

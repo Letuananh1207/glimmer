@@ -15,6 +15,7 @@
 #include "xp_core.h"
 #include "photos_core.h"
 #include "control_core.h"
+#include "clock_core.h"
 #include "desk_wallpaper.h"
 #include "clawd_work_core.h"
 #include "clawd_work.h"
@@ -724,7 +725,7 @@ void test_taskbar_state_looks() {
 }
 
 // P-2026-11-26.15: weather skill on → tray from x 176 with the weather icon,
-// only 3 window buttons; the tray balloon shows ~10 s and pops up on weather news.
+// only 3 window buttons (P-2026-11-26.21: no balloon any more).
 void test_tray_weather_and_balloon() {
     using namespace XPCore;
     TEST_ASSERT_EQUAL(196, trayX(false));
@@ -740,29 +741,6 @@ void test_tray_weather_and_balloon() {
     TEST_ASSERT_EQUAL(PROG_NONE, s.prog[3]);
     TEST_ASSERT_EQUAL(2, s.pressed);
     TEST_ASSERT_TRUE(buttonX(2) + kBtnW <= kTrayXWeather);
-    // Balloon: 10 s from show, × hides at once, millis() wrap-safe.
-    Balloon b;
-    TEST_ASSERT_FALSE(balloonVisible(b, 1000));
-    balloonShow(b, 1000);
-    TEST_ASSERT_TRUE(balloonVisible(b, 1000));
-    TEST_ASSERT_TRUE(balloonVisible(b, 10999));
-    TEST_ASSERT_FALSE(balloonVisible(b, 11001));
-    balloonShow(b, 0xFFFFF000u);                       // across the 49-day wrap
-    TEST_ASSERT_TRUE(balloonVisible(b, 0x00000100u));
-    balloonHide(b);
-    TEST_ASSERT_FALSE(balloonVisible(b, 0x00000100u));
-    // News: another description, or ≥ 3°, or a reading appearing / going.
-    TEST_ASSERT_FALSE(weatherNews(true, true, 29.f, true, 30.9f));
-    TEST_ASSERT_TRUE(weatherNews(true, true, 29.f, true, 32.f));
-    TEST_ASSERT_TRUE(weatherNews(true, true, 29.f, true, 26.f));
-    TEST_ASSERT_TRUE(weatherNews(true, false, 29.f, true, 29.f));
-    TEST_ASSERT_TRUE(weatherNews(true, true, 29.f, false, 0.f));
-    TEST_ASSERT_TRUE(weatherNews(false, true, 0.f, true, 29.f));
-    TEST_ASSERT_FALSE(weatherNews(false, true, 0.f, false, 0.f));
-    // Erasing it repaints box + tail: x 96..235, y 138..211; an icon in column 1 row 4 is under it.
-    TEST_ASSERT_EQUAL(74, kBalAreaH);
-    TEST_ASSERT_TRUE(hits(120 - 18, 152 - 6, 36, 30, kBalAreaX, kBalAreaY, kBalAreaW, kBalAreaH));
-    TEST_ASSERT_FALSE(hits(40 - 18, 152 - 6, 36, 30, kBalAreaX, kBalAreaY, kBalAreaW, kBalAreaH));
 }
 
 // P-2026-11-26.16 (XP-Open): the title bar zooms between the taskbar button and
@@ -1102,10 +1080,49 @@ void test_menu_geometry() {
     menuClamp(MENU_DESKTOP, x, y);
     TEST_ASSERT_EQUAL(74, x);
     TEST_ASSERT_EQUAL(87, y);
+    // Start menu (P-2026-11-26.20): covers (0, 0)–(239, 213), never moved.
+    TEST_ASSERT_EQUAL(240, menuW(MENU_START));
+    TEST_ASSERT_EQUAL(214, menuH(MENU_START));
+    x = 50; y = 40;
+    menuClamp(MENU_START, x, y);
+    TEST_ASSERT_EQUAL(0, x);
+    TEST_ASSERT_EQUAL(0, y);
     x = 71; y = 100;                                 // window menu from the Claude button
     menuClamp(MENU_WINDOW, x, y);
     TEST_ASSERT_EQUAL(71, x);
     TEST_ASSERT_EQUAL(100, y);
+}
+
+
+// P-2026-11-26.22: Ngày và Giờ touched from the app.
+void test_clock_props_core() {
+    using namespace ClockCore;
+    char b[12];
+    monthShort(11, b); TEST_ASSERT_EQUAL_STRING("Thg 11", b);
+    monthShort(3, b);  TEST_ASSERT_EQUAL_STRING("Thg 3", b);
+    gmtParen(420, b);  TEST_ASSERT_EQUAL_STRING("(GMT+07:00)", b);
+    gmtParen(-180, b); TEST_ASSERT_EQUAL_STRING("(GMT-03:00)", b);
+    gmtParen(330, b);  TEST_ASSERT_EQUAL_STRING("(GMT+05:30)", b);
+    TEST_ASSERT_EQUAL(8, zoneIndex(420));          // Hà Nội
+    TEST_ASSERT_EQUAL(-1, zoneIndex(345));         // not listed
+    TEST_ASSERT_EQUAL(21, mapColumn(420));         // round((105 + 180) / 13.33)
+    TEST_ASSERT_EQUAL(14, mapColumn(0));
+    TEST_ASSERT_EQUAL(5, mapColumn(-480));         // 4.5 rounds up
+    TEST_ASSERT_TRUE(isLand(1, 20));               // Asia
+    TEST_ASSERT_FALSE(isLand(1, 0));               // sea
+    TEST_ASSERT_TRUE(isLand(5, 21));               // the 4th span of row 5
+    TEST_ASSERT_EQUAL(3, maxTop(LIST_MONTH));
+    TEST_ASSERT_EQUAL(3, clampTop(LIST_MONTH, 9));
+    TEST_ASSERT_EQUAL(0, clampTop(LIST_NONE, 2));
+    int ty, th;
+    thumb(LIST_MONTH, 0, 89, 97, ty, th);
+    TEST_ASSERT_EQUAL(72, th);
+    TEST_ASSERT_EQUAL(89, ty);
+    thumb(LIST_MONTH, 3, 89, 97, ty, th);
+    TEST_ASSERT_EQUAL(89 + 97 - 72, ty);
+    TEST_ASSERT_EQUAL(0, wdayOf(2026, 11, 1));     // 1/11/2026 is a Sunday
+    TEST_ASSERT_EQUAL(4, wdayOf(2026, 11, 26));    // Thursday
+    TEST_ASSERT_EQUAL(4, wdayOf(2024, 2, 29));
 }
 
 // ── Photos (P-2026-11-25.7) ─────────────────────────────────────────────────
@@ -1373,6 +1390,7 @@ int main(int, char**) {
     RUN_TEST(test_windows_adopt_and_prune);
     RUN_TEST(test_desk_icons_follow_skills);
     RUN_TEST(test_menu_geometry);
+    RUN_TEST(test_clock_props_core);
     RUN_TEST(test_photo_jpeg_header_check);
     RUN_TEST(test_photo_names_order_and_rotation);
     RUN_TEST(test_photo_room_limits);

@@ -48,10 +48,12 @@ void startText(int x, int y, uint16_t c) {
     }
 }
 
-void paintStart() {
+// Start button; pressed while the Start menu is open (P-2026-11-26.20): its rows go
+// xpStartHi → xpStartDark and xpStart → xpGreen.
+void paintStart(bool down = false) {
     for (int r = 0; r < Layout::TASKBAR_H; r++) {
         int edge = 67 - startInset(r);
-        uint16_t c = r <= 1 ? START_HI : r <= 22 ? START : START_DARK;
+        uint16_t c = r <= 1 ? (down ? START_DARK : START_HI) : r <= 22 ? (down ? GREEN : START) : START_DARK;
         tft.fillRect(0, kY + r, edge, 1, c);
         tft.drawPixel(edge, kY + r, START_DARK);
     }
@@ -134,7 +136,7 @@ void draw(const BarState& s, bool h24) {
     s_state = s;
     s_shown = true;
     bands(0, trayX(s.trayWeather), 0, 25);   // behind the start's rounded edge + gaps between buttons
-    paintStart();
+    paintStart(s.startDown);
     for (int i = 0; i < slotsFor(s.trayWeather); i++) if (s.prog[i] >= 0) paintSlot(i, s);
     clockText(h24, s_clock, sizeof(s_clock));
     paintTray(s.trayWeather);
@@ -144,6 +146,7 @@ void update(const BarState& s, bool h24) {
     if (!s_shown) return;
     // The weather skill turned on / off: the tray moved and a slot came or went.
     if (s.trayWeather != s_state.trayWeather) { draw(s, h24); return; }
+    if (s.startDown != s_state.startDown) paintStart(s.startDown);
     for (int i = 0; i < slotsFor(s.trayWeather); i++)
         if (slotChanged(i, s_state, s)) paintSlot(i, s);
     s_state = s;

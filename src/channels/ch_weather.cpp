@@ -12,8 +12,11 @@
 //   rows       label TL (14, 96 + 16i), value TL (112, …) JBMono-11 black:
 //              Cảm giác · Độ ẩm · Gió · Chỉ số UV; then (14, 171 + 16i):
 //              Cao / thấp · Mặt trời lặn (or mọc, the next one)
-// No status bar. Stale: every value xpDim. No data yet: XP::loading; error
-// before any data: warning dialog.
+// No status bar. No data yet: XP::loading. P-2026-11-26.23 (XP-Weather-Stale /
+// -Error): stale → values xpMuted (labels stay black), last row "Cập nhật:" +
+// "2 giờ trước" xpAmber; an error before any data → inside the Hiện tại tab:
+// XP warning triangle 24×21 (14, 52), "Chưa có thời tiết" 12B (46, 52), the
+// error (46, 72), rule y 96, "Đang tự thử lại..." xpLabel (14, 104).
 
 #include "channel.h"
 #include "display.h"
@@ -25,6 +28,7 @@
 #include "timeutil.h"
 #include "utf8.h"
 #include "xp.h"
+#include "warn_icon.h"
 #include <time.h>
 #include <math.h>
 
@@ -84,16 +88,27 @@ static uint32_t sigOf(const Settings& s) {
     return fnv(h, s.weatherPlace.c_str(), s.weatherPlace.length());
 }
 
+// Label black, value in [ink] (xpMuted while stale, P-2026-11-26.23).
 static void row(int y, const char* label, const char* value, uint16_t ink) {
-    tft.setTextColor(ink, C::WHITE);
+    tft.setTextColor(C::BLACK, C::WHITE);
     tft.drawString(label, 14, y);
+    tft.setTextColor(ink, C::WHITE);
     tft.drawString(value, 112, y);
+}
+
+// "2 giờ trước" / "14 phút trước" — how old the last reading is (the stale last row).
+static void ageText(char* v, size_t n) {
+    const long age = s_w.lastOk ? (long)(time(nullptr) - s_w.lastOk) : -1;
+    if (age < 0)            snprintf_P(v, n, PSTR("--"));
+    else if (age < 3600)    snprintf_P(v, n, PSTR("%ld phút trước"), age / 60);
+    else if (age < 172800L) snprintf_P(v, n, PSTR("%ld giờ trước"), age / 3600);
+    else                    snprintf_P(v, n, PSTR("%ld ngày trước"), age / 86400);
 }
 
 // The page's content (inside the white page, x 7..232, y 42..208).
 static void paintPage(const Settings& s) {
     const bool f = s.useFahrenheit, stale = Weather::isStale(s);
-    const uint16_t ink = stale ? C::DIM : C::BLACK;
+    const uint16_t ink = stale ? C::MUTED : C::BLACK;
     tft.fillRect(7, 42, 226, 167, C::WHITE);
 
     XP::weatherIcon(s_w.code, 14, 50, true);
@@ -107,7 +122,7 @@ static void paintPage(const Settings& s) {
         char place[40]; Utf8::copy(place, sizeof(place), s.weatherPlace.c_str());
         Display::useFont("JBMono-11");
         XP::fitText(place, 226 - 54 - 60);
-        tft.setTextColor(stale ? C::DIM : C::LABEL, C::WHITE);
+        tft.setTextColor(C::LABEL, C::WHITE);
         tft.drawString(place, 54, 71);
     }
     if (s_w.tempC > -900.0f) {
@@ -142,8 +157,16 @@ static void paintPage(const Settings& s) {
         snprintf_P(v, sizeof(v), PSTR("%.0f° / %.0f°"), Weather::toDisplay(d.tmax, f), Weather::toDisplay(d.tmin, f));
     else snprintf_P(v, sizeof(v), PSTR("--"));
     row(171, "Cao / thấp:", v, ink);
-    char sl[24]; sunRow(s, sl, sizeof(sl), v, sizeof(v));
-    row(187, sl, v, ink);
+    if (stale) {
+        ageText(v, sizeof(v));
+        tft.setTextColor(C::BLACK, C::WHITE);
+        tft.drawString("Cập nhật:", 14, 187);
+        tft.setTextColor(C::AMBER, C::WHITE);
+        tft.drawString(v, 112, 187);
+    } else {
+        char sl[24]; sunRow(s, sl, sizeof(sl), v, sizeof(v));
+        row(187, sl, v, ink);
+    }
     s_sig = sigOf(s);
 }
 
@@ -169,9 +192,24 @@ void chWeatherDraw(const ChannelCtx& ctx) {
             s_loadStep = 0;
             return;
         }
+        // Error before any data: inside the Hiện tại tab (XP-Weather-Error).
+        static const char* const kTabs[2] = {"Hiện tại", "Dự báo"};
+        XP::tabs(kTabs, 2, 0);
+        for (int k = 0; k < WarnIcon::kWarnRunCount; k++) {
+            WarnIcon::Run r;
+            memcpy_P(&r, &WarnIcon::kWarnRuns[k], sizeof(r));
+            tft.fillRect(14 + r.x, 52 + r.y, r.w, 1, pgm_read_word(&WarnIcon::kWarnPal[r.c]));
+        }
         char detail[40]; errorDetail(s_w.err, detail, sizeof(detail));
-        const char* lines[3] = { detail, "", "Đang tự thử lại..." };
-        XP::dialog(XP::DLG_WARN, "Chưa có thời tiết", lines, 3);
+        Display::useFont("JBMono-12B");
+        tft.setTextDatum(TL_DATUM);
+        tft.setTextColor(C::BLACK, C::WHITE);
+        tft.drawString("Chưa có thời tiết", 46, 52);
+        Display::useFont("JBMono-11");
+        tft.drawString(detail, 46, 72);
+        tft.drawFastHLine(12, 96, 216, C::GROUP);
+        tft.setTextColor(C::LABEL, C::WHITE);
+        tft.drawString("Đang tự thử lại...", 14, 104);
         return;
     }
     const Settings& s = *ctx.settings;

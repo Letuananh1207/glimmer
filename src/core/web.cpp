@@ -14,15 +14,15 @@
 //                        zooms down) | {"action":"next"|"prev"|"pause"|"resume"}
 //   POST /api/screen   — {"on":false|true} backlight off / on now (RAM only)
 //   POST /api/windows  — {"open":[…],"top":…|null,"min":[…],"sel":…|null} the app's open windows (RAM only)
+//   POST /api/clock    — {"tab","year","month","day","list","top","sync"} the Clock window as touched (RAM only)
 //   POST /api/menu     — {"kind":"desktop"|"window"|"none","x","y","minimized"} context menu (RAM only)
-//   POST /api/balloon  — {"show":true|false} desktop tray balloon: show 10 s / hide now (RAM only)
 //   POST /mcp          — JSON-RPC: push_card, clear_card, list_cards, get_state, show/next_channel
 //   GET  /api/photos   — photos on the device + limits; POST uploads one (multipart field
 //                        "photo", baseline JPEG 188×188); DELETE /api/photos?name=p3.jpg
 //   GET  /api/wallpaper — desktop wallpaper state + limits; POST uploads it (multipart field
 //                        "wallpaper", baseline JPEG 240×214 ≤ 40 KB); DELETE removes it
 //   The API token (when set) guards /push*, /hook, /mcp, /api/refresh, /api/channel,
-//   /api/screen, /api/windows, /api/menu, /api/balloon, photo and wallpaper upload / delete.
+//   /api/screen, /api/windows, /api/menu, photo and wallpaper upload / delete.
 //   POST /update       — OTA firmware + filesystem (ESP8266HTTPUpdateServer)
 
 #include "web.h"
@@ -36,6 +36,7 @@
 #include "photos.h"
 #include "wallpaper.h"
 #include "control_core.h"
+#include "clock_core.h"
 #include <ESP8266HTTPUpdateServer.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
@@ -75,8 +76,9 @@ extern const Control::Windows& mainWindows();
 extern void        mainSetWindows(const Control::Windows& w);
 extern const Control::Menu& mainMenu();
 extern bool        mainSetMenu(const Control::Menu& m);
-extern bool        mainSetBalloon(bool show);
-extern bool        mainBalloonShown();
+extern const ClockCore::View& mainClockView();
+extern void        mainSetClock(const ClockCore::View& v, bool sync);
+extern uint32_t    mainNtpLast();
 extern void        mainSettingsChanged();
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -200,8 +202,21 @@ static void handleApiState() {
         if (w.top >= 0) wo[F("top")] = XPCore::progName(w.top); else wo[F("top")] = nullptr;
         if (w.sel >= 0) wo[F("sel")] = XPCore::progName(w.sel); else wo[F("sel")] = nullptr;
         const XPCore::MenuKind k = mainMenu().kind;
-        d[F("menu")] = k == XPCore::MENU_DESKTOP ? "desktop" : k == XPCore::MENU_WINDOW ? "window" : "none";
-        d[F("balloon")] = mainBalloonShown();      // desktop tray balloon up now (P-2026-11-26.15)
+        d[F("menu")] = k == XPCore::MENU_DESKTOP ? "desktop" : k == XPCore::MENU_WINDOW ? "window"
+                     : k == XPCore::MENU_START ? "start" : "none";
+        // P-2026-11-26.21: no tray balloon any more; still reported (always false) so the app knows
+        // this firmware has the weather tray icon.
+        d[F("balloon")] = false;
+    }
+    // Clock window as touched + SNTP (P-2026-11-26.22).
+    {
+        const ClockCore::View& v = mainClockView();
+        JsonObject c = d[F("clock")].to<JsonObject>();
+        c[F("tab")] = v.tab; c[F("year")] = v.year; c[F("month")] = v.month; c[F("day")] = v.day;
+        c[F("list")] = v.list == ClockCore::LIST_MONTH ? "month" : v.list == ClockCore::LIST_ZONE ? "zone" : "none";
+        c[F("top")] = v.top;
+        d[F("ntp_last")] = mainNtpLast();
+        d[F("ntp_next")] = mainNtpLast() ? mainNtpLast() + ClockCore::kSyncEveryS : 0;
     }
     d[F("photos")]              = Photos::count();
     d[F("wallpaper")]           = Wallpaper::present();
@@ -1007,6 +1022,30 @@ void Web::begin(Settings& settings) {
         server.send_P(200, PSTR("application/json"), PSTR("{\"ok\":true}"));
     });
 
+    // The Clock window touched from the app (P-2026-11-26.22): every field
+    // optional, the rest keep their value; "sync": true asks the time servers now.
+    server.on("/api/clock",          HTTP_POST, []() {
+        if (!checkAuth()) { server.send_P(401, PSTR("application/json"), PSTR("{\"error\":\"unauthorized\"}")); return; }
+        JsonDocument d;
+        if (deserializeJson(d, server.arg("plain"))) {
+            server.send_P(400, PSTR("application/json"), PSTR("{\"error\":\"bad json\"}"));
+            return;
+        }
+        ClockCore::View v = mainClockView();
+        if (d[F("tab")].is<int>())   { const int t = d[F("tab")]; v.tab = (uint8_t)(t < 0 || t >= ClockCore::TAB_COUNT ? 0 : t); }
+        if (d[F("year")].is<int>())  { const int y = d[F("year")]; v.year = (uint16_t)(y < 1970 || y > 2099 ? 0 : y); }
+        if (d[F("month")].is<int>()) { const int m = d[F("month")]; v.month = (uint8_t)(m < 1 || m > 12 ? 0 : m); }
+        if (d[F("day")].is<int>())   { const int x = d[F("day")]; v.day = (uint8_t)(x < 1 || x > 31 ? 0 : x); }
+        if (d[F("list")].is<const char*>()) {
+            const char* l = d[F("list")];
+            v.list = !strcmp(l, "month") ? ClockCore::LIST_MONTH : !strcmp(l, "zone") ? ClockCore::LIST_ZONE : ClockCore::LIST_NONE;
+        }
+        if (d[F("top")].is<int>()) v.top = ClockCore::clampTop(v.list, d[F("top")].as<int>());
+        else v.top = ClockCore::clampTop(v.list, v.top);
+        mainSetClock(v, d[F("sync")] | false);
+        server.send_P(200, PSTR("application/json"), PSTR("{\"ok\":true}"));
+    });
+
     // Context menu (P-2026-11-26.14 XP-Menu): the app places it (top-left)
     // and picks the item itself; "none" closes it. 409 on a screen without one.
     server.on("/api/menu",           HTTP_POST, []() {
@@ -1019,7 +1058,9 @@ void Web::begin(Settings& settings) {
         const char* kind = d[F("kind")] | "none";
         Control::Menu m;
         m.kind = !strcmp(kind, "desktop") ? XPCore::MENU_DESKTOP
-               : !strcmp(kind, "window")  ? XPCore::MENU_WINDOW : XPCore::MENU_NONE;
+               : !strcmp(kind, "window")  ? XPCore::MENU_WINDOW
+               : !strcmp(kind, "start")   ? XPCore::MENU_START : XPCore::MENU_NONE;
+        m.all = d["all"] | false;            // Start menu: All Programs open
         int x = d[F("x")] | 0, y = d[F("y")] | 0;
         if (m.kind != XPCore::MENU_NONE) XPCore::menuClamp(m.kind, x, y);
         m.x = (int16_t)x;
@@ -1032,24 +1073,6 @@ void Web::begin(Settings& settings) {
         server.send_P(200, PSTR("application/json"), PSTR("{\"ok\":true}"));
     });
 
-    // Tray balloon (P-2026-11-26.15): the app taps the tray icon → show for
-    // 10 s; × → hide. 409 when the desktop is not on screen / weather skill off.
-    server.on("/api/balloon",        HTTP_POST, []() {
-        if (!checkAuth()) { server.send_P(401, PSTR("application/json"), PSTR("{\"error\":\"unauthorized\"}")); return; }
-        JsonDocument d;
-        if (deserializeJson(d, server.arg("plain")) || !d[F("show")].is<bool>()) {
-            server.send_P(400, PSTR("application/json"), PSTR("{\"error\":\"body must be {show: true|false}\"}"));
-            return;
-        }
-        if (!mainSetBalloon(d[F("show")].as<bool>())) {
-            server.send_P(409, PSTR("application/json"), PSTR("{\"error\":\"no balloon on this screen\"}"));
-            return;
-        }
-        JsonDocument r;
-        r[F("ok")]      = true;
-        r[F("balloon")] = mainBalloonShown();
-        sendJson(200, r);
-    });
 
     // Backlight off / on now, whatever the night window says (RAM only; an
     // approval / question / urgent card still lights an "off" screen).

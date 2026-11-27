@@ -132,6 +132,7 @@ struct BarState {
     bool   flash   = false;        // a card that needs the user holds the screen
     int8_t badge   = -1;           // badgeGlyph of the agents waiting
     bool   trayWeather = false;    // weather icon in the tray (weather skill on, P-2026-11-26.15)
+    bool   startDown   = false;    // the Start menu is open: start button pressed (P-2026-11-26.20)
 };
 
 // ── Tray (P-2026-11-26.15, XP-Desk-Tray): x 196–239 with the clock; with the
@@ -166,33 +167,6 @@ inline bool slotChanged(int i, const BarState& a, const BarState& b) {
     return a.prog[i] != b.prog[i] || lookOfSlot(i, a) != lookOfSlot(i, b) || badgeOnSlot(i, a) != badgeOnSlot(i, b);
 }
 
-// ── Tray balloon (P-2026-11-26.15, XP notification balloon tip) ──
-// Shows ~10 s when the desktop comes up, when the weather changes while it is
-// up, and when the app taps the tray icon; × (or a card taking the screen)
-// hides it at once. One balloon at a time. until = millis() it hides at, 0 = hidden.
-constexpr uint32_t kBalloonMs = 10000;
-struct Balloon { uint32_t until = 0; };
-inline void balloonShow(Balloon& b, uint32_t now) { b.until = (now + kBalloonMs) | 1u; }   // never 0
-inline void balloonHide(Balloon& b) { b.until = 0; }
-inline bool balloonVisible(const Balloon& b, uint32_t now) {
-    return b.until != 0 && (int32_t)(b.until - now) > 0;
-}
-// Worth a new balloon: the description changed, or the temperature moved ≥ 3°
-// (or a reading appeared / went away).
-inline bool weatherNews(bool validA, bool sameDesc, float tempA, bool validB, float tempB) {
-    if (validA != validB) return true;
-    if (!validA) return false;
-    const float d = tempA - tempB;
-    return !sameDesc || d >= 3.0f || d <= -3.0f;
-}
-
-// Balloon geometry (token themeXP.desktop.balloon): box 140×62 at (96, 138),
-// corners stepped 2 px, black border, xpInfoBar; the tail opens the bottom at
-// x 178..190 and narrows to its tip (190, 211), right edge straight.
-constexpr int kBalX = 96, kBalY = 138, kBalW = 140, kBalH = 62;
-constexpr int kBalTailX0 = 178, kBalTailX1 = 190, kBalTailTipY = 211;
-// What erasing it repaints: the box and the tail (x 96..235, y 138..211).
-constexpr int kBalAreaX = kBalX, kBalAreaY = kBalY, kBalAreaW = kBalW, kBalAreaH = kBalTailTipY - kBalY + 1;
 inline bool hits(int ax, int ay, int aw, int ah, int bx, int by, int bw, int bh) {
     return ax < bx + bw && bx < ax + aw && ay < by + bh && by < ay + ah;
 }
@@ -306,12 +280,14 @@ inline int deskIcons(const char* skillsOn, DeskIcon* out) {
 // ── Context menus (P-2026-11-26.14, XP-Menu) ──
 // XP Luna menu: 1-px border, 1-px pad, items 17 tall, separators 7 tall.
 // Placed by the app (top-left), kept inside x 0..239, y 0..213.
-enum MenuKind : uint8_t { MENU_NONE, MENU_DESKTOP, MENU_WINDOW };
+// MENU_START (P-2026-11-26.20): the XP Start menu, (0, 0)–(239, 213), never moved.
+enum MenuKind : uint8_t { MENU_NONE, MENU_DESKTOP, MENU_WINDOW, MENU_START };
 constexpr int kMenuItemH = 17, kMenuSepH = 7, kMenuPad = 2;
 constexpr int kMenuDeskW = 166, kMenuWinW = 128;
 // Desktop: 6 items, 3 separators → 127; window: 6 items, 1 separator → 113.
-inline int menuW(MenuKind k) { return k == MENU_DESKTOP ? kMenuDeskW : kMenuWinW; }
+inline int menuW(MenuKind k) { return k == MENU_START ? 240 : k == MENU_DESKTOP ? kMenuDeskW : kMenuWinW; }
 inline int menuH(MenuKind k) {
+    if (k == MENU_START) return 214;
     return k == MENU_DESKTOP ? 2 * kMenuPad + 6 * kMenuItemH + 3 * kMenuSepH
                              : 2 * kMenuPad + 6 * kMenuItemH + 1 * kMenuSepH;
 }
