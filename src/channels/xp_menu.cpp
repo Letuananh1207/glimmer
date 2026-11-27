@@ -71,18 +71,24 @@ void arrow(int x, int y, uint16_t c) {
     for (int k = 0; k < 4; k++) tft.drawFastVLine(x + k, y + k, 7 - 2 * k, c);
 }
 
-void rows(const Row* r, int n, int x, int y, int w) {
+// [hover] = the lit item (R-DK-18/19, as XP: xpSelect bar inside the frame,
+// white text; a dim item keeps its grey), counted without separators.
+void rows(const Row* r, int n, int x, int y, int w, int hover) {
     int iy = y + kMenuPad;
+    int item = 0;
     for (int i = 0; i < n; i++) {
         if (!r[i].label) {
             tft.drawFastHLine(x + 2, iy + 3, w - 4, MENU_BORDER);
             iy += kMenuSepH;
             continue;
         }
-        const uint16_t c = r[i].dim ? MENU_BORDER : BLACK;
+        const bool lit = item++ == hover;
+        const uint16_t bg = lit ? SELECT : WHITE;
+        const uint16_t c = r[i].dim ? MENU_BORDER : lit ? WHITE : BLACK;
+        tft.fillRect(x + kMenuPad, iy, w - 2 * kMenuPad, kMenuItemH, bg);
         Display::useFont(r[i].bold ? "JBMono-12B" : "JBMono-11");
         tft.setTextDatum(TL_DATUM);
-        tft.setTextColor(c, WHITE);
+        tft.setTextColor(c, bg);
         char t[32];
         strncpy_P(t, r[i].label, sizeof(t));
         t[sizeof(t) - 1] = 0;
@@ -105,7 +111,7 @@ void draw(const Control::Menu& m) {
     tft.fillRect(x, y, w, h, MENU_BORDER);
     tft.fillRect(x + 1, y + 1, w - 2, h - 2, WHITE);
     if (m.kind == MENU_DESKTOP) {
-        rows(kDesktop, sizeof(kDesktop) / sizeof(kDesktop[0]), x, y, w);
+        rows(kDesktop, sizeof(kDesktop) / sizeof(kDesktop[0]), x, y, w, m.hover);
         return;
     }
     const Row win[] = {
@@ -117,11 +123,12 @@ void draw(const Control::Menu& m) {
         {nullptr, false, false, false, G_NONE},
         {kCloseL, false, false, true, G_CLOSE},
     };
-    rows(win, sizeof(win) / sizeof(win[0]), x, y, w);
-    // "Alt+F4" right-aligned on the Đóng row (the last item).
+    rows(win, sizeof(win) / sizeof(win[0]), x, y, w, m.hover);
+    // "Alt+F4" right-aligned on the Đóng row (the last item, index 5).
+    const bool closeLit = m.hover == 5;
     Display::useFont("JBMono-11");
     tft.setTextDatum(TR_DATUM);
-    tft.setTextColor(BLACK, WHITE);
+    tft.setTextColor(closeLit ? WHITE : BLACK, closeLit ? SELECT : WHITE);
     char a[8]; strncpy_P(a, kAltF4, sizeof(a)); a[sizeof(a) - 1] = 0;
     tft.drawString(a, x + w - 17, y + h - kMenuPad - kMenuItemH + 2);
 }

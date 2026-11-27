@@ -106,6 +106,7 @@ char s_title[48] = "";
 Icon s_defaultIcon = XPCore::ICON_CLAWD;
 
 void paintTitleText(const char* text) {
+    if (!Display::clipHits(kTitleX, kTitleY, kTitleMaxW + 2, 16)) return;
     char t[64];
     Utf8::copy(t, sizeof(t), text);
     Display::useFont("JBMono-12B");
@@ -251,6 +252,7 @@ const char* title() { return s_title; }
 
 void titleBar(const char* t, Icon icon) {
     Utf8::copy(s_title, sizeof(s_title), t);
+    if (!Display::clipHits(0, 0, SCREEN_W, 22)) return;   // clipped repaint below the title bar
     titleBands(0, SCREEN_W);
     titleIcon(icon);
     paintTitleText(s_title);
@@ -279,6 +281,7 @@ void window(const char* t, Icon icon, bool status) {
 void statusBar(const char* left, const char* right, uint16_t leftColor, uint16_t rightColor) {
     using namespace Layout;
     const int y = XP_STATUS_Y;
+    if (!Display::clipHits(0, y, SCREEN_W, XP_BOTTOM - y)) return;
     tft.fillRect(XP_BODY_X, y, XP_BODY_W, 1, STATUS_LINE);
     tft.fillRect(XP_BODY_X, y + 1, XP_BODY_W, 1, WHITE);
     tft.fillRect(XP_BODY_X, y + 2, XP_BODY_W, XP_BOTTOM - y - 2, BODY);
@@ -328,7 +331,7 @@ void groupLabel(int x, int y, const char* label, int clearW, uint16_t bg) {
 
 void groupBox(int x, int y, int w, int h, const char* label, uint16_t bg) {
     tft.drawRect(x, y, w, h, GROUP);
-    groupLabel(x, y, label, 0, bg);
+    if (Display::clipHits(x, y - 7, w, 16)) groupLabel(x, y, label, 0, bg);
 }
 
 void tabs(const char* const* labels, int n, int selected) {
@@ -336,6 +339,7 @@ void tabs(const char* const* labels, int n, int selected) {
     tft.drawRect(6, 41, 228, 169, FIELD_BORDER);
     tft.fillRect(7, 42, 226, 167, WHITE);
     tft.fillRect(6, 26, 228, 15, BODY);                    // the strip above the page
+    if (!Display::clipHits(6, 26, 228, 16)) return;        // clipped repaint inside the page
     Display::useFont("JBMono-11");
     tft.setTextDatum(TL_DATUM);
     int x = 6, selX = 6, selW = 0;

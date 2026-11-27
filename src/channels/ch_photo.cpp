@@ -50,6 +50,15 @@ static void drawEmpty() {
 void chPhotoDraw(const ChannelCtx&) {
     XP::window("Ảnh", XPCore::ICON_PHOTO, false);
     const int n = Photos::total();
+    // Clipped repaint under the moving cursor: the photo on screen, no step.
+    if (Display::repainting()) {
+        const int i = Photos::current();
+        if (s_empty || i < 0 || !Photos::draw(i, kPhotoX, kPhotoY)) { drawEmpty(); return; }
+        char meta[12];
+        snprintf_P(meta, sizeof(meta), PSTR("%d/%d"), i + 1, n);
+        XP::titleMeta(meta);
+        return;
+    }
     for (int tries = 0; tries < n; tries++) {
         int i = Photos::advance();
         if (Photos::draw(i, kPhotoX, kPhotoY)) {

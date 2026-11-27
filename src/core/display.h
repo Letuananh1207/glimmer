@@ -59,6 +59,19 @@ namespace Display {
     // resetSystemScreens(): the taskbar pixels are gone, repaint it whole.
     bool systemScreenShown();
 
+    // Clipped repaint (the mouse cursor moved; the panel can't be read back):
+    // every drawing call is limited to (x, y, w, h) by the TFT viewport, in
+    // screen coordinates. A channel's draw() checks repainting() to skip side
+    // effects (stepping a slideshow, restarting an animation) and may use
+    // clipRect() to skip work outside it (a JPEG decode stops early).
+    void beginRepaint(int x, int y, int w, int h);
+    void endRepaint();
+    bool repainting();
+    void clipRect(int& x, int& y, int& w, int& h);   // the whole panel when not repainting
+    // (x, y, w, h) reaches into the clip — always true outside a clipped
+    // repaint. Blocks that miss skip their work (and their font load, ~30 ms).
+    bool clipHits(int x, int y, int w, int h);
+
     // Primitives reused by channels
     void clear();
     uint16_t usageColor(float pct);

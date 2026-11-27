@@ -19,6 +19,7 @@
 #include "desk_wallpaper.h"
 #include "clawd_work_core.h"
 #include "clawd_work.h"
+#include "cursor_core.h"
 #include <time.h>
 #include <initializer_list>
 #if defined(_WIN32)   // host tests on Windows (MinGW) lack the POSIX localtime_r
@@ -1389,6 +1390,106 @@ void test_clawd_work_timing() {
     TEST_ASSERT_EQUAL_INT(23, ClawdWorkBits::kCols);
 }
 
+// ── Mouse cursor (R-DK-17, app = mouse, device = screen) ────────────────────
+
+template <int H>
+static void checkRows(const char* const (&rows)[H], const CursorCore::Glyph& g) {
+    TEST_ASSERT_EQUAL(H, g.h);
+    TEST_ASSERT_TRUE(H <= CursorCore::kMaxH && g.w <= CursorCore::kMaxW);
+    for (int r = 0; r < H; r++) {
+        TEST_ASSERT_EQUAL_MESSAGE(g.w, (int)strlen(rows[r]), rows[r]);    // every row the glyph's width
+        for (const char* c = rows[r]; *c; c++) TEST_ASSERT_TRUE(*c == 'B' || *c == 'W' || *c == '.');
+        TEST_ASSERT_EQUAL_UINT16(0, g.blk[r] & g.wht[r]);
+    }
+    TEST_ASSERT_TRUE(g.hx < g.w && g.hy < g.h);
+}
+
+void test_cursor_glyphs_and_packets() {
+    using namespace CursorCore;
+    checkRows(kArrowRows, kGlyphs[SHAPE_ARROW]);
+    checkRows(kHandRows,  kGlyphs[SHAPE_HAND]);
+    checkRows(kWaitRows,  kGlyphs[SHAPE_WAIT]);
+    TEST_ASSERT_EQUAL_UINT16(0x8000, kGlyphs[SHAPE_ARROW].blk[0]);        // the tip: column 0, black
+    TEST_ASSERT_TRUE(boxOf(10, 10, kGlyphs[SHAPE_NONE]).empty());
+
+    // Round trip; anything else is dropped.
+    Packet k; k.seq = 0xBEEF; k.x = 239; k.y = 0; k.shape = SHAPE_HAND;
+    uint8_t b[kPacketLen]; encode(k, b);
+    Packet r;
+    TEST_ASSERT_TRUE(parse(b, sizeof(b), r));
+    TEST_ASSERT_EQUAL_UINT16(0xBEEF, r.seq); TEST_ASSERT_EQUAL(239, r.x); TEST_ASSERT_EQUAL(0, r.y);
+    TEST_ASSERT_EQUAL(SHAPE_HAND, r.shape);
+    TEST_ASSERT_FALSE(parse(b, 7, r));
+    b[6] = 240; TEST_ASSERT_FALSE(parse(b, sizeof(b), r));                  // off the panel
+    encode(k, b); b[3] = SHAPE_COUNT; TEST_ASSERT_FALSE(parse(b, sizeof(b), r));
+    encode(k, b); b[2] = 2; TEST_ASSERT_FALSE(parse(b, sizeof(b), r));     // another version
+    encode(k, b); b[0] = 'X'; TEST_ASSERT_FALSE(parse(b, sizeof(b), r));
+
+    // Sequence wraps; a late (reordered) packet is older.
+    TEST_ASSERT_TRUE(newer(5, 4));
+    TEST_ASSERT_TRUE(newer(2, 0xFFFE));
+    TEST_ASSERT_FALSE(newer(4, 5));
+    TEST_ASSERT_FALSE(newer(7, 7));
+    // A late packet is dropped; the app reopening (counting from 0) is taken.
+    TEST_ASSERT_FALSE(stillCurrent(4990, 5000));
+    TEST_ASSERT_TRUE(stillCurrent(0, 30000));
+    TEST_ASSERT_TRUE(stillCurrent(5001, 5000));
+}
+
+// R-DK-20: the app's power button. Off → shutting down → off; on → boot →
+// on; a press during the other transition turns around.
+void test_power_button_states() {
+    using namespace Control;
+    PowerState p;
+    TEST_ASSERT_EQUAL(POWER_ON, p.p);
+    TEST_ASSERT_FALSE(requestPower(p, true, 0));                 // already on
+    TEST_ASSERT_TRUE(requestPower(p, false, 1000));
+    TEST_ASSERT_EQUAL(POWER_SHUTTING, p.p);
+    TEST_ASSERT_FALSE(advancePower(p, 1000 + kShutMs - 1));
+    TEST_ASSERT_TRUE(advancePower(p, 1000 + kShutMs));
+    TEST_ASSERT_EQUAL(POWER_OFF, p.p);
+    TEST_ASSERT_EQUAL_STRING("off", powerName(p.p));
+    TEST_ASSERT_FALSE(requestPower(p, false, 5000));             // already off
+    TEST_ASSERT_TRUE(requestPower(p, true, 6000));
+    TEST_ASSERT_EQUAL(POWER_BOOTING, p.p);
+    TEST_ASSERT_TRUE(requestPower(p, false, 6100));              // off while booting: shuts down
+    TEST_ASSERT_EQUAL(POWER_SHUTTING, p.p);
+    TEST_ASSERT_TRUE(requestPower(p, true, 6200));               // on while shutting: boots again
+    TEST_ASSERT_TRUE(advancePower(p, 6200 + kBootMs));
+    TEST_ASSERT_EQUAL(POWER_ON, p.p);
+    TEST_ASSERT_EQUAL_STRING("on", powerName(p.p));
+}
+
+// R-DK-18/19: another item lit is the same menu (only the menu repaints).
+void test_menu_hover_same_menu() {
+    using namespace Control;
+    Menu a; a.kind = XPCore::MENU_WINDOW; a.x = 71; a.y = 100;
+    Menu b = a; b.hover = 3;
+    TEST_ASSERT_EQUAL(-1, a.hover);
+    TEST_ASSERT_TRUE(sameMenu(a, b));
+    b.y = 90;
+    TEST_ASSERT_FALSE(sameMenu(a, b));
+    Menu c = a; c.minimized = true;
+    TEST_ASSERT_FALSE(sameMenu(a, c));
+}
+
+void test_cursor_box_clipped() {
+    using namespace CursorCore;
+    const Glyph& a = kGlyphs[SHAPE_ARROW];
+    Box m = boxOf(100, 50, a);                                   // hotspot = tip (0, 0)
+    TEST_ASSERT_EQUAL(100, m.x); TEST_ASSERT_EQUAL(50, m.y);
+    TEST_ASSERT_EQUAL(12, m.w);  TEST_ASSERT_EQUAL(19, m.h);
+    Box e = boxOf(235, 230, a);                                  // runs off the bottom-right
+    TEST_ASSERT_EQUAL(5, e.w); TEST_ASSERT_EQUAL(10, e.h);
+    const Glyph& w = kGlyphs[SHAPE_WAIT];
+    Box t = boxOf(0, 0, w);                                      // hotspot (5, 7) at the corner
+    TEST_ASSERT_EQUAL(0, t.x); TEST_ASSERT_EQUAL(0, t.y);
+    TEST_ASSERT_EQUAL(6, t.w); TEST_ASSERT_EQUAL(8, t.h);
+    TEST_ASSERT_TRUE(overlaps(m, boxOf(105, 60, a)));
+    TEST_ASSERT_FALSE(overlaps(m, boxOf(112, 50, a)));           // side by side
+    TEST_ASSERT_FALSE(overlaps(m, Box()));
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_claude_limits_drive_windows_and_ignore_codenames);
@@ -1455,5 +1556,9 @@ int main(int, char**) {
     RUN_TEST(test_control_prev_and_pause);
     RUN_TEST(test_control_screen_off_wake);
     RUN_TEST(test_clawd_work_timing);
+    RUN_TEST(test_cursor_glyphs_and_packets);
+    RUN_TEST(test_cursor_box_clipped);
+    RUN_TEST(test_power_button_states);
+    RUN_TEST(test_menu_hover_same_menu);
     return UNITY_END();
 }

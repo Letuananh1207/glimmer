@@ -189,9 +189,17 @@ void chHomeDraw(const ChannelCtx& ctx) {
     // One decode paints the whole wallpaper and keeps the four label bands
     // for the text's anti-aliasing (~2 KB each; a failed malloc just means
     // that label blends against black).
+    // A clipped repaint (cursor moving) decodes only down to the clip and
+    // keeps the bands of the labels it touches.
+    int cx, cy, cw, ch;
+    Display::clipRect(cx, cy, cw, ch);
+    auto touches = [&](const Wallpaper::Cap& c) {
+        return c.x < cx + cw && cx < c.x + c.w && c.y < cy + ch && cy < c.y + c.h;
+    };
     if (Wallpaper::present()) Display::releaseFont();
-    for (int i = 0; i < s_iconN; i++) caps[i].buf = (uint16_t*)malloc((size_t)caps[i].w * caps[i].h * 2);
-    Wallpaper::paint(0, 0, Wallpaper::kW, Wallpaper::kH, caps, s_iconN);
+    for (int i = 0; i < s_iconN; i++)
+        if (touches(caps[i])) caps[i].buf = (uint16_t*)malloc((size_t)caps[i].w * caps[i].h * 2);
+    Wallpaper::paint(cx, cy, cw, ch, caps, s_iconN);
 
     for (int i = 0; i < s_iconN; i++) {
         drawIcon(i);

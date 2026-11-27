@@ -155,6 +155,16 @@ void update(const BarState& s, bool h24) {
     if (strcmp(c, s_clock)) { memcpy(s_clock, c, sizeof(s_clock)); paintClock(); }
 }
 
+// Clipped repaint under the moving cursor: exactly what was last painted
+// (state, clock text) — update() keeps catching up from there.
+void repaint() {
+    if (!s_shown) return;
+    bands(0, trayX(s_state.trayWeather), 0, 25);
+    paintStart(s_state.startDown);
+    for (int i = 0; i < slotsFor(s_state.trayWeather); i++) if (s_state.prog[i] >= 0) paintSlot(i, s_state);
+    paintTray(s_state.trayWeather);
+}
+
 void hide() { s_shown = false; }
 bool shown() { return s_shown; }
 const BarState& state() { return s_state; }

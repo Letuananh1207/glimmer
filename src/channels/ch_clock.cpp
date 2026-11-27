@@ -283,13 +283,16 @@ static void paintZoneLine(const Settings& s) {
 static void pageDate(const ChannelCtx& ctx, const struct tm& tmv) {
     XP::groupBox(10, 54, 122, 128, "Ngày", C::WHITE);
     XP::groupBox(136, 54, 94, 128, "Giờ", C::WHITE);
-    paintMonthYear(tmv);
-    paintCalendar(tmv);
-    paintFace(tmv);
-    paintTimeField();
-    timeText(tmv, ctx.settings->clock24h, s_lastTime, sizeof(s_lastTime));
-    paintTimeText(s_lastTime);
-    paintZoneLine(*ctx.settings);
+    // A clipped repaint (cursor moving) paints only the blocks it reaches.
+    if (Display::clipHits(14, 62, 117, 17)) paintMonthYear(tmv);
+    if (Display::clipHits(kCalX, 80, 7 * kCellW, kCalY + 6 * kCellH - 80)) paintCalendar(tmv);
+    if (Display::clipHits(kFaceX, kFaceY, kFaceW, kFaceH)) paintFace(tmv);
+    if (Display::clipHits(145, 152, 76, 18)) {
+        paintTimeField();
+        timeText(tmv, ctx.settings->clock24h, s_lastTime, sizeof(s_lastTime));
+        paintTimeText(s_lastTime);
+    }
+    if (Display::clipHits(12, 189, 216, 14)) paintZoneLine(*ctx.settings);
     if (mainClockView().list == LIST_MONTH) paintMonthList(tmv);    // over the calendar, as XP's drop-down
 }
 

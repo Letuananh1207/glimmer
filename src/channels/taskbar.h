@@ -25,6 +25,9 @@ namespace Taskbar {
 
     // A screen without a taskbar took over (Night): stop update() painting.
     void hide();
+    // Paint again exactly what was painted last (clipped repaint under the
+    // mouse cursor; no-op when hidden).
+    void repaint();
     bool shown();
 
     // Last state painted (meaningful while shown()).

@@ -38,6 +38,7 @@ bool chForecastEnabled(const ChannelCtx& ctx) {
 }
 
 static void paintHeader() {
+    if (!Display::clipHits(11, 49, 218, 17)) return;        // clipped repaint elsewhere
     tft.fillRect(11, 49, 218, 15, C::BODY);
     tft.drawFastHLine(11, 64, 218, C::GROUP);
     tft.drawFastHLine(11, 65, 218, C::DIM);
@@ -55,6 +56,7 @@ static void paintHeader() {
 static void paintRow(int i, const WeatherDay& day, bool f) {
     static const char* const kDay[kRows] = {"Hôm nay", "Mai", "Kia"};
     const int y = kRowY + i * kRowH;
+    if (!Display::clipHits(11, y, 218, kRowH)) return;      // clipped repaint elsewhere
     const bool sel = i == 0;
     const uint16_t bg = sel ? C::SELECT : C::WHITE, ink = sel ? C::WHITE : C::BLACK;
     tft.fillRect(11, y, 218, kRowH, bg);

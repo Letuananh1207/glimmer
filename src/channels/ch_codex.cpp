@@ -217,10 +217,15 @@ static void paintStrip(const CodexData& d) {
 
 void chCodexDraw(const ChannelCtx& ctx) {
     XP::window("Codex", XPCore::ICON_CLAWD, false);
-    s_meta = metaFor(ctx);
+    // A clipped repaint (cursor moving) keeps the caches tick() just
+    // refreshed and paints only the blocks it reaches.
+    const bool rp = Display::repainting();
+    if (!rp) s_meta = metaFor(ctx);
     XP::titleMeta(s_meta.text);
-    s_heroPct = -2.f; s_secPct = -2.f; s_credits = -2.f;
-    s_rightLine[0] = 0; s_secSub[0] = 0;
+    if (!rp) {
+        s_heroPct = -2.f; s_secPct = -2.f; s_credits = -2.f;
+        s_rightLine[0] = 0; s_secSub[0] = 0;
+    }
     s_loading = false;
 
     const CodexData& d = *ctx.codex;
@@ -240,23 +245,29 @@ void chCodexDraw(const ChannelCtx& ctx) {
     const Windows w = windowsFor(ctx);
     s_stale = Api::isStale(d.lastOk, *ctx.settings);
 
-    char heroLbl[24]; windowLabel(w.heroWin, heroLbl, sizeof(heroLbl));
-    Display::useFont("JBMono-11");
-    tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(LABEL, BODY);
-    tft.drawString(heroLbl, kL, 28);
+    if (Display::clipHits(kL, 28, kHeroClearR - kL, 12)) {
+        char heroLbl[24]; windowLabel(w.heroWin, heroLbl, sizeof(heroLbl));
+        Display::useFont("JBMono-11");
+        tft.setTextDatum(TL_DATUM);
+        tft.setTextColor(LABEL, BODY);
+        tft.drawString(heroLbl, kL, 28);
+    }
 
-    paintHero(w.heroPct);
-    paintRightColumn(d, w.heroRst);
+    if (Display::clipHits(kL, kHeroY, kR + 1 - kL, kBarY + 14 - kHeroY)) paintHero(w.heroPct);
+    if (Display::clipHits(kHeroClearR, 28, kR + 1 - kHeroClearR, kBarY - 28)) paintRightColumn(d, w.heroRst);
 
-    char secLbl[24]; windowLabel(w.secWin, secLbl, sizeof(secLbl));
-    XP::groupBox(kL, kSecY, kR + 1 - kL, kSecH, secLbl);
-    paintSecondary(d, w.secPct, w.secRst);
+    if (Display::clipHits(kL, kSecY - 7, kR + 1 - kL, kSecH + 7)) {
+        char secLbl[24]; windowLabel(w.secWin, secLbl, sizeof(secLbl));
+        XP::groupBox(kL, kSecY, kR + 1 - kL, kSecH, secLbl);
+        paintSecondary(d, w.secPct, w.secRst);
+    }
+    if (Display::clipHits(kL, kRstY - 7, kR + 1 - kL, kRstH + 7)) {
+        XP::groupBox(kL, kRstY, kR + 1 - kL, kRstH, "Đặt lại tuần");
+        paintResets(d);
+    }
+    if (Display::clipHits(Layout::XP_BODY_X, kStripY - 2, Layout::XP_BODY_W, Layout::XP_BOTTOM - kStripY + 2)) paintStrip(d);
 
-    XP::groupBox(kL, kRstY, kR + 1 - kL, kRstH, "Đặt lại tuần");
-    paintResets(d);
-    paintStrip(d);
-
+    if (rp) return;
     s_heroPct = (w.heroPct < 0) ? -2.f : w.heroPct;
     s_secPct  = (w.secPct  < 0) ? -2.f : w.secPct;
     s_credits = d.creditsRemain;

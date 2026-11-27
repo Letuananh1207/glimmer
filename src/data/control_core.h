@@ -121,6 +121,56 @@ struct Menu {
     int16_t x = 0, y = 0;          // top-left, clamped inside y ≤ 213
     bool minimized = false;        // window menu of a minimized window: Khôi phục lit, Thu nhỏ dim
     bool all = false;              // Start menu: All Programs open (P-2026-11-26.20)
+    // Item lit (R-DK-18/19): under the mouse cursor or chosen with the arrow
+    // keys — index among the items (separators not counted), -1 = none.
+    int8_t hover = -1;
 };
+
+// ── Power (R-DK-20): the app's power button ────────────────────────────────
+// Off = the "computer" is off: the screen goes dark (the device itself keeps
+// running, so it still takes commands and an urgent / approval card still
+// wakes it, like the screen-off of /api/screen). On = boot screen, then the
+// desktop with no window open (as a fresh start of the app).
+enum Power : uint8_t { POWER_ON = 0, POWER_SHUTTING, POWER_OFF, POWER_BOOTING };
+
+constexpr uint32_t kShutMs = 1500;    // shutting down → off (XP's "shutting down" screen: panel design)
+constexpr uint32_t kBootMs = 2400;    // boot screen → desktop (12 steps of the 200-ms block box)
+
+struct PowerState {
+    Power    p = POWER_ON;
+    uint32_t since = 0;               // millis the state began
+};
+
+// The power button: on / off asked. True when the state changed. Pressing
+// "off" while booting, or "on" while shutting down, turns around at once.
+inline bool requestPower(PowerState& s, bool on, uint32_t now) {
+    const bool isOn = s.p == POWER_ON || s.p == POWER_BOOTING;
+    if (on == isOn) return false;
+    s.p = on ? POWER_BOOTING : POWER_SHUTTING;
+    s.since = now;
+    return true;
+}
+
+// Time passing: shutting → off, booting → on. True when the state changed.
+inline bool advancePower(PowerState& s, uint32_t now) {
+    if (s.p == POWER_SHUTTING && now - s.since >= kShutMs) { s.p = POWER_OFF; s.since = now; return true; }
+    if (s.p == POWER_BOOTING  && now - s.since >= kBootMs) { s.p = POWER_ON;  s.since = now; return true; }
+    return false;
+}
+
+inline const char* powerName(Power p) {
+    switch (p) {
+        case POWER_SHUTTING: return "shutting";
+        case POWER_OFF:      return "off";
+        case POWER_BOOTING:  return "booting";
+        default:             return "on";
+    }
+}
+
+// Same menu in the same place, at most another item lit: only the menu
+// repaints (no repaint of the screen under it).
+inline bool sameMenu(const Menu& a, const Menu& b) {
+    return a.kind == b.kind && a.x == b.x && a.y == b.y && a.minimized == b.minimized && a.all == b.all;
+}
 
 }  // namespace Control

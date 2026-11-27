@@ -355,6 +355,30 @@ static int s_bootStep = -1;
 
 bool Display::systemScreenShown() { return s_sysScreen != SYS_NONE; }
 
+static bool    s_repaint = false;
+static int16_t s_clipX = 0, s_clipY = 0, s_clipW = 240, s_clipH = 240;
+
+void Display::beginRepaint(int x, int y, int w, int h) {
+    s_repaint = true;
+    s_clipX = (int16_t)x; s_clipY = (int16_t)y; s_clipW = (int16_t)w; s_clipH = (int16_t)h;
+    tft.setViewport(x, y, w, h, false);       // false: coordinates stay screen-absolute
+}
+
+void Display::endRepaint() {
+    tft.resetViewport();
+    s_repaint = false;
+    s_clipX = 0; s_clipY = 0; s_clipW = 240; s_clipH = 240;
+}
+
+bool Display::repainting() { return s_repaint; }
+
+void Display::clipRect(int& x, int& y, int& w, int& h) { x = s_clipX; y = s_clipY; w = s_clipW; h = s_clipH; }
+
+bool Display::clipHits(int x, int y, int w, int h) {
+    if (!s_repaint) return true;
+    return x < s_clipX + s_clipW && s_clipX < x + w && y < s_clipY + s_clipH && s_clipY < y + h;
+}
+
 void Display::resetSystemScreens() {
     s_sysScreen = SYS_NONE;
     s_bootStep = -1;

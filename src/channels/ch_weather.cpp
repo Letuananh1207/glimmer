@@ -90,6 +90,7 @@ static uint32_t sigOf(const Settings& s) {
 
 // Label black, value in [ink] (xpMuted while stale, P-2026-11-26.23).
 static void row(int y, const char* label, const char* value, uint16_t ink) {
+    if (!Display::clipHits(14, y, 214, 16)) return;          // clipped repaint elsewhere
     tft.setTextColor(C::BLACK, C::WHITE);
     tft.drawString(label, 14, y);
     tft.setTextColor(ink, C::WHITE);
@@ -110,8 +111,12 @@ static void paintPage(const Settings& s) {
     const bool f = s.useFahrenheit, stale = Weather::isStale(s);
     const uint16_t ink = stale ? C::MUTED : C::BLACK;
     tft.fillRect(7, 42, 226, 167, C::WHITE);
+    // A clipped repaint (cursor moving) paints only the blocks it reaches;
+    // a row is 16 px from its y.
+    auto hits = [](int x, int y, int w, int h) { return Display::clipHits(x, y, w, h); };
 
-    XP::weatherIcon(s_w.code, 14, 50, true);
+    if (hits(14, 50, 32, 32)) XP::weatherIcon(s_w.code, 14, 50, true);
+    if (hits(54, 52, 112, 32)) {
     char cond[32]; Utf8::copy(cond, sizeof(cond), Weather::describe(s_w.code));
     Display::useFont("JBMono-16B");
     XP::fitText(cond, 226 - 54 - 60);
@@ -125,7 +130,8 @@ static void paintPage(const Settings& s) {
         tft.setTextColor(C::LABEL, C::WHITE);
         tft.drawString(place, 54, 71);
     }
-    if (s_w.tempC > -900.0f) {
+    }
+    if (s_w.tempC > -900.0f && hits(160, 50, 68, 34)) {
         char t[12]; snprintf_P(t, sizeof(t), PSTR("%.0f°"), Weather::toDisplay(s_w.tempC, f));
         Display::useFont("VT323-44");
         tft.setTextDatum(TR_DATUM);
@@ -135,6 +141,8 @@ static void paintPage(const Settings& s) {
     tft.drawFastHLine(12, 90, 216, C::GROUP);
     tft.drawFastHLine(12, 164, 216, C::GROUP);
 
+    s_sig = sigOf(s);
+    if (!hits(7, 92, 226, 116)) return;
     Display::useFont("JBMono-11");
     tft.setTextDatum(TL_DATUM);
     char v[24];

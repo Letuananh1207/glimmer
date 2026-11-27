@@ -37,7 +37,7 @@ uint32_t             s_upBlock = 0;
 const char*          s_upErr   = "field";   // first error; "" = fine so far (set by uploadStart)
 
 // ── Decode ──
-struct DecodeCtx { File* f; int x, y; };
+struct DecodeCtx { File* f; int x, y; int stopY; bool stopped; };   // stopY: clipped repaint's bottom
 
 size_t jdIn(JDEC* jd, uint8_t* buf, size_t len) {
     File* f = ((DecodeCtx*)jd->device)->f;
@@ -47,6 +47,7 @@ size_t jdIn(JDEC* jd, uint8_t* buf, size_t len) {
 
 int jdOut(JDEC* jd, void* bitmap, JRECT* r) {
     DecodeCtx* c = (DecodeCtx*)jd->device;
+    if (c->y + r->top > c->stopY) { c->stopped = true; return 0; }   // below the clip: done
     tft.pushImage(c->x + r->left, c->y + r->top, r->right - r->left + 1, r->bottom - r->top + 1,
                   (uint16_t*)bitmap);
     return 1;
@@ -120,7 +121,10 @@ bool draw(int i, int x, int y) {
     File f = LittleFS.open(p, "r");
     bool ok = false;
     if (f) {
-        DecodeCtx c{&f, x, y};
+        // A clipped repaint (cursor moving) stops decoding below the clip.
+        int cx, cy, cw, ch;
+        Display::clipRect(cx, cy, cw, ch);
+        DecodeCtx c{&f, x, y, Display::repainting() ? cy + ch - 1 : 0x7FFF, false};
         JDEC jd;
         jd.swap = 0;                                   // jd_prepare keeps it
         JRESULT r = jd_prepare(&jd, jdIn, work, kWork, &c);
@@ -129,7 +133,7 @@ bool draw(int i, int x, int y) {
             tft.setSwapBytes(true);                    // decoder emits native-order RGB565
             r = jd_decomp(&jd, jdOut, 0);
             tft.setSwapBytes(sw);
-            ok = r == JDR_OK;
+            ok = r == JDR_OK || (r == JDR_INTR && c.stopped);
         }
         if (!ok) Serial.printf_P(PSTR("[photos] %s: decode failed (%d, %ux%u)\n"), p, (int)r,
                                  jd.width, jd.height);

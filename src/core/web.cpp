@@ -15,11 +15,13 @@
 //   POST /api/screen   — {"on":false|true} backlight off / on now (RAM only)
 //   POST /api/windows  — {"open":[…],"top":…|null,"min":[…],"sel":…|null} the app's open windows (RAM only)
 //   POST /api/clock    — {"tab","year","month","day","list","top","sync"} the Clock window as touched (RAM only)
-//   POST /api/menu     — {"kind":"desktop"|"window"|"none","x","y","minimized"} context menu (RAM only)
+//   POST /api/power    — {"on":false|true} the app's power button: shut down / boot (RAM only)
+//   POST /api/menu     — {"kind":"desktop"|"window"|"start"|"none","x","y","minimized","all","hover"} menu (RAM only)
 //   POST /mcp          — JSON-RPC: push_card, clear_card, list_cards, get_state, show/next_channel
 //   GET  /api/photos   — photos on the device + limits; POST uploads one (multipart field
 //                        "photo", baseline JPEG 188×188); DELETE /api/photos?name=p3.jpg
 //                        (or a sample photo, s2.jpg — listed apart in "samples")
+//   UDP  :4210         — mouse cursor from the app (cursor_core.h: 'G' 'C' 1 shape seq16 x y)
 //   GET  /api/wallpaper — desktop wallpaper state + limits; POST uploads it (multipart field
 //                        "wallpaper", baseline JPEG 240×214 ≤ 40 KB); DELETE removes it
 //   The API token (when set) guards /push*, /hook, /mcp, /api/refresh, /api/channel,
@@ -35,6 +37,7 @@
 #include "attention_json.h"
 #include "skill_core.h"
 #include "photos.h"
+#include "cursor.h"
 #include "wallpaper.h"
 #include "control_core.h"
 #include "clock_core.h"
@@ -77,6 +80,8 @@ extern const Control::Windows& mainWindows();
 extern void        mainSetWindows(const Control::Windows& w);
 extern const Control::Menu& mainMenu();
 extern bool        mainSetMenu(const Control::Menu& m);
+extern void        mainSetPower(bool on);
+extern const char* mainPowerName();
 extern const ClockCore::View& mainClockView();
 extern void        mainSetClock(const ClockCore::View& v, bool sync);
 extern uint32_t    mainNtpLast();
@@ -205,6 +210,7 @@ static void handleApiState() {
         const XPCore::MenuKind k = mainMenu().kind;
         d[F("menu")] = k == XPCore::MENU_DESKTOP ? "desktop" : k == XPCore::MENU_WINDOW ? "window"
                      : k == XPCore::MENU_START ? "start" : "none";
+        d[F("menu_hover")] = mainMenu().hover;
         // P-2026-11-26.21: no tray balloon any more; still reported (always false) so the app knows
         // this firmware has the weather tray icon.
         d[F("balloon")] = false;
@@ -221,6 +227,16 @@ static void handleApiState() {
     }
     d[F("photos")]              = Photos::count();
     d[F("photo_samples")]       = Photos::samples();
+    d[F("power")]               = mainPowerName();   // R-DK-20: on / shutting / off / booting
+    // Mouse (R-DK-17): the app sends the pointer over UDP to this port.
+    JsonObject cur = d[F("cursor")].to<JsonObject>();
+    cur[F("port")]  = CursorCore::kPort;
+    cur[F("x")]     = Cursor::x();
+    cur[F("y")]     = Cursor::y();
+    cur[F("shape")] = Cursor::shape();
+    cur[F("shown")] = Cursor::shown();
+    cur[F("repaint_ms")]  = Cursor::repaintMs();
+    cur[F("repaint_max")] = Cursor::repaintMax();
     d[F("wallpaper")]           = Wallpaper::present();
     d[F("next_fetch_s")]        = mainNextFetchInMs() / 1000;
     d[F("claude_configured")]   = pSettings && !pSettings->claudeKey.isEmpty();
@@ -1077,6 +1093,7 @@ void Web::begin(Settings& settings) {
         m.x = (int16_t)x;
         m.y = (int16_t)y;
         m.minimized = d[F("minimized")] | false;
+        m.hover = (int8_t)(d[F("hover")] | -1);
         if (!mainSetMenu(m)) {
             server.send_P(409, PSTR("application/json"), PSTR("{\"error\":\"no menu on this screen\"}"));
             return;
@@ -1087,6 +1104,22 @@ void Web::begin(Settings& settings) {
 
     // Backlight off / on now, whatever the night window says (RAM only; an
     // approval / question / urgent card still lights an "off" screen).
+    // The app's power button (R-DK-20): {"on": false} shuts the "computer"
+    // down (screen dark, device still running), {"on": true} boots it.
+    server.on("/api/power",          HTTP_POST, []() {
+        if (!checkAuth()) { server.send_P(401, PSTR("application/json"), PSTR("{\"error\":\"unauthorized\"}")); return; }
+        JsonDocument d;
+        if (deserializeJson(d, server.arg("plain")) || !d[F("on")].is<bool>()) {
+            server.send_P(400, PSTR("application/json"), PSTR("{\"error\":\"body must be {on: true|false}\"}"));
+            return;
+        }
+        mainSetPower(d[F("on")].as<bool>());
+        JsonDocument r;
+        r[F("ok")]    = true;
+        r[F("power")] = mainPowerName();
+        sendJson(200, r);
+    });
+
     server.on("/api/screen",         HTTP_POST, []() {
         if (!checkAuth()) { server.send_P(401, PSTR("application/json"), PSTR("{\"error\":\"unauthorized\"}")); return; }
         JsonDocument d;

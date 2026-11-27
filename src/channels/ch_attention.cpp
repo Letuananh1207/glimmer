@@ -346,8 +346,10 @@ static int pickHolder(int h[kMax], int n) {
 void chAttentionDraw(const ChannelCtx&) {
     int h[kMax], n = holders(h);
     if (!n) { XP::window("Tác tử", XPCore::ICON_CLAWD, false); return; }
-    s_cycleIdx = 0;                         // newest arrival: start from the top
-    s_cycleMs = millis();
+    if (!Display::repainting()) {           // a clipped repaint keeps the cycle
+        s_cycleIdx = 0;                     // newest arrival: start from the top
+        s_cycleMs = millis();
+    }
     paintCard(AttentionQueue::get().items[pickHolder(h, n)], n);
     s_shownRev = AttentionQueue::revision();
 }

@@ -39,6 +39,7 @@
 #include "xp_menu.h"
 #include "xp_start.h"
 #include "clock_core.h"
+#include "cursor.h"
 #include <coredecls.h>
 
 // ── Channel registry — declared in their own .cpp files ─────────────────────
@@ -116,6 +117,7 @@ static bool        g_screenOff   = false; // backlight off on the app's command
 // context menu drawn over the screen. The device never rotates channels.
 static Control::Windows g_windows;
 static Control::Menu    g_menu;
+static Control::PowerState g_power;      // the app's power button (R-DK-20)
 // The Clock window as the app touched it (P-2026-11-26.22) and the last SNTP sync.
 static ClockCore::View  g_clockView;
 static volatile uint32_t g_ntpLast = 0;
@@ -160,6 +162,7 @@ uint32_t mainNtpLast()      { return g_ntpLast; }
 const Control::Windows& mainWindows() { return g_windows; }
 const Control::Menu&    mainMenu()    { return g_menu; }
 bool     mainScreenOn()     { return !g_screenOff; }
+const char* mainPowerName() { return Control::powerName(g_power.p); }
 uint32_t mainHeapRefusals() { return g_heapRefusals; }
 uint32_t mainMinMaxBlock()  { return g_minMaxBlk; }
 
@@ -323,6 +326,7 @@ static void drawActive() {
         g_restoring = g_minimizing = XPCore::PROG_NONE;
         XP::drawNoChannels();                               // XP-NoChannels
         Taskbar::draw(barState(millis()), g_settings.clock24h);
+        Cursor::screenRepainted();
         return;
     }
     // Re-arm splash/connecting/OTA partial-redraw state in case we re-enter
@@ -370,6 +374,7 @@ static void drawActive() {
     if (!hasBar) Taskbar::hide();
     else if (!barKept) Taskbar::draw(bar, g_settings.clock24h);
     if (!g_contentDue) drawMenuOver(name);
+    Cursor::screenRepainted();
 }
 
 // 4. The content of a window whose empty frame is up (see drawActive).
@@ -380,6 +385,34 @@ static void drawDueContent(uint32_t now) {
     const char* name = kChannels[g_activeIdx[g_activePtr]].name;
     kChannels[g_activeIdx[g_activePtr]].draw(ctx);
     drawMenuOver(name);
+    Cursor::overlay();
+}
+
+// The screen again, clipped to (x, y, w, h): the mouse cursor left that box
+// and the panel can't be read back (cursor.h). The window's tick() runs first
+// so the values its draw() seeds are the ones the rest of the screen shows;
+// draw() sees Display::repainting() and skips its side effects.
+static void repaintRect(int x, int y, int w, int h) {
+    if (g_apMode || !g_activeCount) return;
+    const Channel& ch = kChannels[g_activeIdx[g_activePtr]];
+    if (!g_contentDue && g_menu.kind == XPCore::MENU_NONE && ch.tick) ch.tick(makeCtx());
+    Display::beginRepaint(x, y, w, h);
+    if (g_contentDue) {
+        const XPCore::WinFrame f = XPCore::frameOf(ch.name);
+        XP::emptyFrame(f.title, f.icon, f.status);
+    } else {
+        ch.draw(makeCtx());
+    }
+    if (y + h > Layout::TASKBAR_Y) Taskbar::repaint();
+    if (g_menu.kind != XPCore::MENU_NONE) paintMenu();
+    Display::endRepaint();
+}
+
+// Where the mouse cursor may show: a desktop / window / card on a lit screen.
+static bool cursorAllowed() {
+    return !g_apMode && g_activeCount && g_power.p == Control::POWER_ON && !g_nightFace && !g_screenOff
+        && !Display::systemScreenShown()
+        && strcmp(kChannels[g_activeIdx[g_activePtr]].name, "Night");
 }
 
 // /api/channel {"name":"Home","zoom":"min"} — the app's _ button: the window on
@@ -458,6 +491,38 @@ void mainSetScreenOn(bool on) {
     applyBrightness();
 }
 
+// The app's power button (R-DK-20). Off: the screen stays as it is while
+// shutting down (XP's "shutting down" screen waits for the panel design),
+// then goes dark. On: the boot screen, then the desktop with no window open.
+void mainSetPower(bool on) {
+    if (!Control::requestPower(g_power, on, millis())) return;
+    if (g_power.p == Control::POWER_BOOTING) {
+        g_screenOff = false;
+        g_menu = Control::Menu();
+        Taskbar::hide();
+        Display::resetSystemScreens();
+        Display::drawSplash("");
+        applyBrightness();
+    }
+}
+
+// Shutting down → off, booting → the desktop (called every loop pass).
+static void powerTick(uint32_t now) {
+    if (g_power.p == Control::POWER_BOOTING) Display::splashStep((now - g_power.since) / 200);
+    if (!Control::advancePower(g_power, now)) return;
+    if (g_power.p == Control::POWER_OFF) {
+        g_screenOff = true;
+        g_windows = Control::Windows();
+        g_menu = Control::Menu();
+        applyBrightness();
+    } else {                                   // on: a fresh start, like opening the app (R-DK-7)
+        g_windows = Control::Windows();
+        Display::resetSystemScreens();
+        if (!mainShowChannel("Home")) drawActive();
+        applyBrightness();
+    }
+}
+
 // The device does not rotate (P-2026-11-26.14): no slide to report.
 void mainSlideTiming(uint32_t& totalMs, uint32_t& leftMs) { totalMs = leftMs = 0; }
 
@@ -480,8 +545,11 @@ bool mainSetMenu(const Control::Menu& m) {
         && (XPCore::buttonFor(name) == XPCore::BTN_NO_BAR || !strcmp(name, "Attention"))) return false;
     const bool wasOpen = g_menu.kind != XPCore::MENU_NONE;
     const bool startToStart = wasOpen && g_menu.kind == XPCore::MENU_START && m.kind == XPCore::MENU_START;
+    const bool hoverOnly = wasOpen && Control::sameMenu(g_menu, m);
     g_menu = m;
-    if (m.kind != XPCore::MENU_NONE) {
+    if (hoverOnly) {
+        if (m.kind != XPCore::MENU_NONE) paintMenu();   // another item lit (cursor / arrow keys)
+    } else if (m.kind != XPCore::MENU_NONE) {
         // Start → Start (All Programs opened / closed): the menu covers its own area.
         if (wasOpen && !startToStart) drawActive();   // moved: repaint under the old one first
         else paintMenu();
@@ -489,6 +557,7 @@ bool mainSetMenu(const Control::Menu& m) {
         drawActive();
     }
     if (Taskbar::shown()) Taskbar::update(barState(millis()), g_settings.clock24h);   // start button
+    Cursor::overlay();
     return true;
 }
 
@@ -838,6 +907,7 @@ void setup() {
     }
 
     Web::begin(g_settings);
+    Cursor::begin();
 
     if (!g_apMode) {
         applyBrightness();
@@ -976,21 +1046,31 @@ void loop() {
     // (every 200 ms) to update only the regions that changed. NO full redraw
     // here — channels handle their own minimal repaints (see channel.h's
     // PARTIAL REDRAW DISCIPLINE comment).
-    drawDueContent(now);
+    powerTick(now);
+    const bool booting = g_power.p == Control::POWER_BOOTING;   // the boot screen owns the panel
+    if (!booting) drawDueContent(now);
     static uint32_t lastTick = 0;
-    if (!g_apMode && g_activeCount > 0 && !g_contentDue && now - lastTick >= 200) {
+    if (!g_apMode && !booting && g_activeCount > 0 && !g_contentDue && now - lastTick >= 200) {
         lastTick = now;
         auto tickFn = kChannels[g_activeIdx[g_activePtr]].tick;
         // A context menu is over the window: nothing may paint under / over it.
-        if (tickFn && g_menu.kind == XPCore::MENU_NONE) tickFn(makeCtx());
+        if (tickFn && g_menu.kind == XPCore::MENU_NONE) { tickFn(makeCtx()); Cursor::overlay(); }
     }
 
     // Taskbar ~4 Hz: repaints only a button whose window / look / badge
     // changed, and the tray clock once a minute (no-op on Night).
     static uint32_t lastBar = 0;
-    if (!g_apMode && now - lastBar >= 250) {
+    if (!g_apMode && !booting && now - lastBar >= 250) {
         lastBar = now;
         Taskbar::update(barState(now), g_settings.clock24h);
+        Cursor::overlay();
+    }
+
+    // Mouse cursor (R-DK-17): the app's latest position, drawn on top.
+    if (!g_apMode) {
+        Cursor::poll(now);
+        Cursor::setAllowed(cursorAllowed(), repaintRect);
+        Cursor::step(now, repaintRect);
     }
 
     delay(10);

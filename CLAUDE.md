@@ -324,6 +324,27 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
   `prev` / `pause` / `resume` still answer but nothing rotates. Screen off = backlight 0 on top of the night rules until an urgent /
   approval / question / user-error card holds the screen
   (`chAttentionWakesScreen`).
+- **Mouse, keyboard, power** (app plan `app/docs/tasks/2026-11-27-app-la-chuot-ban-phim-nguon.md`,
+  R-DK-17…21): the app is the mouse / keyboard / power button, the device
+  only the screen. **Cursor** (`cursor_core.h` pure + glyphs, `channels/cursor.cpp`):
+  the app sends `'G' 'C' 1 shape seq16 x y` over **UDP :4210** (~30 / s, on
+  change; a big backwards seq jump = the app reopened); `/api/state` `cursor`
+  `{port, x, y, shape, shown, repaint_ms, repaint_max}`. The panel has **no
+  MISO — no pixel read-back, no save-under**: moving the cursor calls
+  `repaintRect()` (`main.cpp`) = tick() first, then the window's `draw()` +
+  `Taskbar::repaint()` + the open menu under `Display::beginRepaint()` (TFT
+  viewport clip, screen coords). So every `draw()` must be **repaint-safe**:
+  under `Display::repainting()` keep caches / timers / slideshow (Photo,
+  Claude's Clawd T0, Attention cycle) and guard blocks with
+  `Display::clipHits(x, y, w, h)` — a font load is ~30 ms, a missed guard
+  makes the cursor crawl (measured: Claude 193 → 4–80 ms, Home 8 ms).
+  Anything that paints calls `Cursor::overlay()` after. No cursor on Night,
+  system screens, screen off, power off. **Menu hover**: `/api/menu {…,
+  hover}` (item index without separators) lights it xpSelect; same menu +
+  new hover repaints only the menu; `/api/state` `menu_hover`. **Power**:
+  `POST /api/power {on}` → `shutting` (1.5 s, screen as is until the panel
+  design's shutdown screen) → `off` (= screen off, windows cleared) /
+  `booting` (boot splash 2.4 s) → `on` (desktop, no windows); `/api/state` `power`.
 
 ## Attention queue (agents, push, device notices)
 
