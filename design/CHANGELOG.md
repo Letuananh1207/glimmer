@@ -5,6 +5,32 @@ widget và việc cần làm — không ghi đường dẫn file hay cách code.
 
 ---
 
+## 2026-11-27.10 — Màn Điều khiển: app là chuột, bàn phím, nút nguồn; bỏ ô màn trên app
+
+- **Điều khiển · `ControlScreen`** (`source/Control.dc.html`, `screen_specs.md` §8; ảnh 14 `Control*.png`, mới `ControlDragging.png`,
+  `ControlKeyAlt.png`, `ControlClickRight.png`, `ControlPoweringOff.png`, `ControlOff.png`, `ControlPoweringOn.png`; bỏ `ControlOpened`,
+  `ControlTwoOpen`, `ControlMinimized`, `ControlClosed`, `ControlInstalled`, `ControlStart`, `ControlAllPrograms`, `ControlScreenOff` và mọi
+  `source/DeviceXP*.dc.html`):
+  - Bỏ ô màn (`TouchMirror`) và mọi thứ vẽ màn XP trên app; bỏ `StartMenuSheet` / `AllProgramsSheet` (Start mở trên thiết bị bằng
+    phím Windows hoặc click nút start trên màn thật); bỏ nút tròn "Tắt màn" (trùng nút nguồn).
+  - `Trackpad` 280 cao + `MouseButtons` Trái / Phải liền dưới (như touchpad laptop); `KeyPad` phím vật lý: Windows, Alt+Tab, Alt+F4
+    (phím có sẵn, một chạm), Esc, Tab, Enter, Chữ (mờ, sắp có), 4 mũi tên; `PowerButton` ⏻ góc trên. Hàng cuối: độ sáng + đêm + Số liệu.
+  - Trạng thái nguồn: đang tắt / đã tắt (bàn rê thành nút "Bật máy" to) / đang khởi động; thẻ agent, đêm, độ sáng, lỗi lệnh,
+    firmware chưa có chuột, glimmer-setup, mất kết nối. Rung nhẹ khi click / bấm phím.
+- **Token:** mới `trackpadTop/Bottom`, `keyFaceTop/Bottom`, `keyEdge`, `keyPressed`; size `trackpad` 280, `mouseButton` 60, `key` 52,
+  `powerButton` 48, `controlSquare` 52; radius `trackpad` 20, `key` 10. **Bỏ** `deviceShellTop/Bottom`, `screenOff`, `xpStartTop/Bottom`,
+  `xpSelect`, size `deviceShell` / `deviceScreen` / `deviceScale`, radius `deviceShell`. **Chuỗi:** 26 khoá mới / đổi (`control…`,
+  `key…`, `power…`); `start…`, `allPrograms…`, `app…`, `controlScreen…` đánh dấu không dùng.
+- Phiếu: `app/docs/phieu_thiet_ke/2026-11-27-dieu-khien-chuot-ban-phim-nguon.md`
+- Đổi luật: theo R-DK-17…21 (phiếu); đề xuất ghi thêm: "Tắt màn" bỏ khỏi app (tắt = nút nguồn, R-DK-20); Start / Tất cả chương trình
+  của app bỏ (R-DK-19: phím Windows); rung nhẹ mỗi click / phím.
+- Cần firmware: `cursor` (UDP :4210) và `power` trong `/api/state`, phím qua lệnh thiết bị — firmware đang làm (phiếu). Màn thiết bị:
+  con trỏ, mục menu sáng, màn "đang tắt máy" — phiếu panel `docs/phieu_panel/2026-11-27-con-tro-va-tat-may.md`.
+
+**Việc cần làm trong code:**
+- `ControlScreen`: thay ô màn bằng `Trackpad` + `MouseButtons` + `KeyPad` + `PowerButton` + hàng độ sáng / đêm / Số liệu, đủ 14 trạng thái.
+- Xoá `TouchMirror`, `StartMenuSheet`, `AllProgramsSheet`, nút "Tắt màn"; token và chuỗi theo trên.
+
 ## 2026-11-26.9 — Đặt vị trí thời tiết từ điện thoại
 
 - **Vị trí thời tiết · `WeatherLocationScreen`** (màn mới; `source/WeatherLocation.dc.html`, `screen_specs.md` §9; ảnh

@@ -38,16 +38,20 @@
 | `ControlPad` | **2026-11-26.6: bỏ.** **2026-11-26.5:** 3 nút ≥ 64 bo 18 (kênh trước / dừng–tiếp tục / kênh sau), trạng thái sáng amber, mờ, ổ khoá. §8. |
 | `JumpTabBar` | **2026-11-26.6: bỏ.** **2026-11-26.5:** `DockTabBar` kiểu xếp dọc dùng làm nút nhảy kênh; sáng theo kênh thiết bị đang hiện. §8. |
 | `BrightnessSlider` | **2026-11-26.5:** thẻ độ sáng, núm 20 (kéo 28 + bong bóng %), phần sáng amber. §8. |
-| `RoundToggle` | **2026-11-26.5:** nút tròn 56 + nhãn; bật = tint + viền màu nhấn. §8. |
+| `RoundToggle` | **2026-11-27.10: bỏ.** **2026-11-26.5:** nút tròn 56 + nhãn; bật = tint + viền màu nhấn. §8. |
 | `HoldCardPanel` | **2026-11-26.5:** thẻ amber "thẻ agent đang chiếm màn" + nút "Bỏ thẻ khỏi màn"; không duyệt hộ. §8. |
 | `CommandSnackbar` | **2026-11-26.5:** thanh báo nổi trên thanh dưới khi thiết bị không nhận lệnh, có Thử lại. §8. |
-| `TouchMirror` | **2026-11-26.7:** thanh tác vụ trên ô màn = cửa sổ đang mở (lõm = trên cùng, nổi = thu nhỏ / phía sau), mới vào trống; không vòng chạm, không chip. **2026-11-26.6:** ô màn thiết bị 360 dp (240 px × 1.5) chạm được như chuột: nút cửa sổ, thanh tác vụ, start, biểu tượng desktop; giữ = chuột phải; vùng trúng nới 44. `screen_specs.md` §8. |
+| `TouchMirror` | **2026-11-27.10: bỏ.** **2026-11-26.7:** thanh tác vụ trên ô màn = cửa sổ đang mở (lõm = trên cùng, nổi = thu nhỏ / phía sau), mới vào trống; không vòng chạm, không chip. **2026-11-26.6:** ô màn thiết bị 360 dp (240 px × 1.5) chạm được như chuột: nút cửa sổ, thanh tác vụ, start, biểu tượng desktop; giữ = chuột phải; vùng trúng nới 44. `screen_specs.md` §8. |
 | `TapRipple` | **2026-11-26.7: bỏ.** **2026-11-26.6:** vòng 44 tại điểm chạm, viền trắng + viền ngoài `tapRing`. §8. |
 | `StatusChip` | **2026-11-26.7: bỏ.** **2026-11-26.6:** chip 28 trên góc trái vỏ máy: vòng xoay / dấu tích + chữ trạng thái lệnh. §8. |
 | `TouchLegend` | **2026-11-26.8: bỏ.** **2026-11-26.6:** thẻ "Chạm màn như dùng chuột", 6 ký hiệu 2 cột. §8. |
-| `DesktopIcon` | **2026-11-26.6:** biểu tượng skill trên desktop (icon dock trắng ×1.6 + nhãn bóng đen); chọn = nhãn nền `xpSelect` + viền chấm. §8. |
-| `StartMenuSheet` | **2026-11-26.6:** Start menu kiểu XP trong bảng dưới: đầu Clawd, 2 cột (ghim / hệ thống), Tất cả chương trình, Tắt màn · Khởi động lại. §8. |
-| `AllProgramsSheet` | **2026-11-26.6:** lưới chương trình theo skill, chấm mint = đang mở, cuối là Thêm / gỡ chương trình. §8. |
+| `DesktopIcon` | **2026-11-27.10: bỏ.** **2026-11-26.6:** biểu tượng skill trên desktop (icon dock trắng ×1.6 + nhãn bóng đen); chọn = nhãn nền `xpSelect` + viền chấm. §8. |
+| `StartMenuSheet` | **2026-11-27.10: bỏ.** **2026-11-26.6:** Start menu kiểu XP trong bảng dưới: đầu Clawd, 2 cột (ghim / hệ thống), Tất cả chương trình, Tắt màn · Khởi động lại. §8. |
+| `AllProgramsSheet` | **2026-11-27.10: bỏ.** **2026-11-26.6:** lưới chương trình theo skill, chấm mint = đang mở, cuối là Thêm / gỡ chương trình. §8. |
 | `LocationGpsButton` | **2026-11-26.9:** nút "Dùng vị trí hiện tại" — cao ≥ 68, bo 14, nền `skillWeatherWash`, viền 1 `skillWeather`, ô icon 40 + chữ 15/500 + phụ 12 + chevron; kiểu đang lấy có vòng xoay. Số đo `screen_specs.md` §9. |
 | `LocationSearchField` | **2026-11-26.9:** ô tìm cao 52 bo 12 nền `panel`, viền `line` / `skillWeather` khi có chữ, icon search, nút × 44, ghi chú quyền riêng tư dưới ô. |
 | `LocationConfirmSheet` | **2026-11-26.9:** bảng dưới xác nhận vị trí: ô tên ≤ 16 ký tự có bộ đếm, khung xem trước dòng trên thiết bị, nút Hủy + nút chính `skillWeather`; kiểu đang gửi / thiết bị không nhận / firmware cũ / sửa tên. |
+| `Trackpad` | **2026-11-27.10:** bàn rê 358 × 280 bo 20 trên, gradient tối, icon chuột mờ giữa; rê = di con trỏ trên thiết bị, chạm nhẹ = click; đang rê viền + vệt mint. `screen_specs.md` §8. |
+| `MouseButtons` | **2026-11-27.10:** hai nút Trái / Phải cao 60 liền dưới bàn rê (bo dưới 20); đang bấm lõm. §8. |
+| `KeyPad` | **2026-11-27.10:** phím vật lý cao 52 bo 10 có gờ dưới: Windows · Alt+Tab · Alt+F4 · Esc / Tab · Enter · Chữ (mờ) / ← ↑ ↓ →. §8. |
+| `PowerButton` | **2026-11-27.10:** nút nguồn tròn 48 góc phải đầu màn: viền mint (bật) / coral (tắt) / vòng quay (đang tắt, đang khởi động); máy tắt → nút "Bật máy" 120 giữa bàn rê. §8. |

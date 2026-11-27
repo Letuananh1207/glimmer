@@ -126,37 +126,37 @@
       "value": "rgba(143, 229, 116, 0.16)",
       "use": "Nền ô icon skill Ảnh; nền ô \"+ Thêm ảnh\" dùng mint 8 %"
     },
-    "deviceShellTop": {
-      "value": "#26232B",
-      "use": "Vỏ máy quanh ô màn (gradient 160°, trên)"
-    },
-    "deviceShellBottom": {
-      "value": "#141217",
-      "use": "Vỏ máy quanh ô màn (gradient 160°, dưới)"
-    },
     "snackbar": {
       "value": "#3A3048",
       "use": "Thanh báo nổi (lệnh không nhận)"
     },
-    "screenOff": {
-      "value": "#050507",
-      "use": "Ô màn khi màn thiết bị tắt"
-    },
-    "xpStartTop": {
-      "value": "#4CB04C",
-      "use": "Nút start (Start menu) — gradient trên, như XP"
-    },
-    "xpStartBottom": {
-      "value": "#2F8A2F",
-      "use": "Nút start — gradient dưới"
-    },
-    "xpSelect": {
-      "value": "#316AC5",
-      "use": "Nền nhãn biểu tượng desktop đang chọn (XP)"
-    },
     "skillWeatherWash": {
       "value": "rgba(84, 182, 255, 0.08)",
       "use": "Nền nút \"Dùng vị trí hiện tại\" (viền skillWeather)"
+    },
+    "trackpadTop": {
+      "value": "#221D2B",
+      "use": "Bàn rê — gradient trên"
+    },
+    "trackpadBottom": {
+      "value": "#1A1621",
+      "use": "Bàn rê — gradient dưới"
+    },
+    "keyFaceTop": {
+      "value": "#312A3B",
+      "use": "Mặt phím — gradient trên"
+    },
+    "keyFaceBottom": {
+      "value": "#262030",
+      "use": "Mặt phím — gradient dưới"
+    },
+    "keyEdge": {
+      "value": "#141118",
+      "use": "Gờ dưới phím (inset 3 px)"
+    },
+    "keyPressed": {
+      "value": "#1D1924",
+      "use": "Mặt phím / nút chuột đang bấm"
     }
   },
   "font": {
@@ -283,12 +283,14 @@
     "cropFrame": 260,
     "devicePreview": 180,
     "devicePreviewPhoto": 141,
-    "deviceShell": 376,
-    "deviceScreen": 360,
-    "deviceScale": 1.5,
     "roundButton": 56,
     "searchField": 52,
-    "locationNameMax": 16
+    "locationNameMax": 16,
+    "trackpad": 280,
+    "mouseButton": 60,
+    "key": 52,
+    "powerButton": 48,
+    "controlSquare": 52
   },
   "radius": {
     "card": 14,
@@ -305,9 +307,10 @@
     "badge": 4,
     "photoTile": 10,
     "sheet": 20,
-    "deviceShell": 20,
     "snackbar": 12,
-    "searchField": 12
+    "searchField": 12,
+    "trackpad": 20,
+    "key": 10
   },
   "border": {
     "hairline": 1
