@@ -59,12 +59,12 @@ int jdOut(JDEC* jd, void* bitmap, JRECT* r) {
     const int y0 = imax(r->top, c->clip.y0), y1 = imin(r->bottom, c->clip.y1);
     if (x0 > x1 || y0 > y1) return 1;
     if (x0 == r->left && x1 == r->right && y0 == r->top && y1 == r->bottom) {
-        tft.pushImage(r->left, r->top, bw, bh, (uint16_t*)px);
+        Display::pushImage(r->left, r->top, bw, bh, (uint16_t*)px);
     } else {
         // Only the inside: a block straddling the edge must not paint over
         // the icons / balloon next to the rectangle.
         for (int y = y0; y <= y1; y++)
-            tft.pushImage(x0, y, x1 - x0 + 1, 1, (uint16_t*)(px + (y - r->top) * bw + (x0 - r->left)));
+            Display::pushImage(x0, y, x1 - x0 + 1, 1, (uint16_t*)(px + (y - r->top) * bw + (x0 - r->left)));
     }
     return 1;
 }

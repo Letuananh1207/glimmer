@@ -95,4 +95,32 @@ Mức độ: `chặn dùng` · `khó chịu` · `nhỏ` (chữ, giao diện).
 
 ## Đã xong
 
-_(chưa có)_
+### L-8 · Di chuột trên cửa sổ Ảnh, Thời tiết...: chỗ con trỏ hiện ô trắng tạm thời
+
+- Trạng thái: xong · Mức độ: khó chịu (không thấy rõ con trỏ ở các cửa sổ đó; vẫn dùng được) · Phần: con trỏ chuột
+  (`cursor.cpp`, `repaintRect` của `main.cpp`, `display.cpp`) · Quy tắc: Mouse, keyboard, power (`CLAUDE.md`, R-DK-17)
+- Báo: 2026-11-27 — "khi di chuyển con chuột ở 1 số tab như ảnh, thời tiết, ... đang bị hiện ô trắng thay cho con
+  chuột"; hỏi thêm: "Nó chỉ là ô trắng tạm thời ở vị trí con trỏ"
+- Các bước: 1. Firmware 46a1450 (P-2026-11-27.24), app ở chế độ chuột. 2. Mở cửa sổ Ảnh hoặc Thời tiết. 3. Rê con trỏ.
+- Mong đợi / thực tế: con trỏ mũi tên đi theo, nền dưới nó giữ nguyên / chỗ con trỏ chớp ô trắng (nền) trong lúc đi.
+- Bằng chứng: `/api/state` `cursor.repaint_ms` 65, `repaint_max` 271 ms; chưa có ảnh.
+
+**Sửa**
+- Nguyên nhân: màn không đọc lại được điểm ảnh, nên dời con trỏ = vẽ lại ô cũ (`repaintRect`) thẳng lên màn: tô nền
+  trước (trang trắng của Thời tiết, thân cửa sổ của Ảnh) rồi mới nạp font (~30 ms mỗi font) / giải mã JPEG (tới 271 ms)
+  để vẽ chữ / ảnh → trong lúc đó ô nền lộ ra ngay chỗ con trỏ.
+- Test: chưa khoá được bằng test (kết xuất lên màn thật; host test không có TFT). Build + `pio test -e native` 71/71.
+- Code: `src/core/display.{h,cpp}` — vẽ lại dưới con trỏ vào sprite cỡ ô cắt (tạo khi vẽ lại, ~1 KB + đối tượng
+  ~0,4 KB, xoá ngay sau), đẩy lên màn một lần; `tft` thành `(*g_tft)` (panel hoặc sprite), font của sprite riêng
+  (font của màn giữ nguyên); `Display::pushImage` cho JPEG (`photos.cpp`, `wallpaper.cpp`). Không đủ heap tạo sprite
+  → vẽ thẳng như cũ. RAM tĩnh +24 B.
+- Thử máy: nạp firmware, rút điện cắm lại; mở Ảnh, rồi Thời tiết, rê con trỏ nhanh / chậm qua chữ và ảnh: không còn
+  ô trắng, chỗ cũ trở lại đúng nền / chữ / ảnh. Con trỏ có thể đi hơi trễ ở Ảnh (giải mã JPEG). Còn lỗi → quay video
+  màn thiết bị + gửi `/api/state` `cursor`.
+- Commit: …
+
+**Lịch sử**
+- 2026-11-27: ghi lỗi.
+- 2026-11-27: sửa, chờ thử máy.
+- 2026-11-27: thử máy (192.168.10.51) đạt → xong.
+

@@ -4,7 +4,14 @@
 #include "utf8.h"
 #include "xp_core.h"
 #include <LittleFS.h>
-TFT_eSPI tft = TFT_eSPI();
+#include <new>
+static TFT_eSPI s_panel = TFT_eSPI();
+TFT_eSPI* g_tft = &s_panel;
+// L-8: a clipped repaint draws here (at most the cursor's 21×22 box or a taskbar button: ~1 KB), then one push.
+// Made for the repaint only (the object ~0.4 KB + its pixels), so idle heap / static RAM stay as they were.
+static TFT_eSprite* s_spr = nullptr;
+static bool s_toSprite = false;
+static const char* s_sprFont = nullptr;   // the sprite's own VLW font (fonts are per TFT_eSPI object)
 
 // ── Typography — design-true VLW bitmap fonts ────────────────────────────
 //
@@ -35,19 +42,21 @@ static const char* nameFor(Display::FontTier t) {
 }
 
 void Display::useFont(const char* name) {
-    if (s_loadedFont && strcmp(s_loadedFont, name) == 0) return;
-    if (s_loadedFont) tft.unloadFont();
+    // The repaint sprite has its own font; the panel's stays loaded meanwhile (L-8).
+    const char*& loaded = s_toSprite ? s_sprFont : s_loadedFont;
+    if (loaded && strcmp(loaded, name) == 0) return;
+    if (loaded) tft.unloadFont();
     // VLW files live at /fonts/<name>.vlw on LittleFS. TFT_eSPI prepends '/'
     // and appends '.vlw', so pass "fonts/<name>". Also must pass LittleFS
     // explicitly because TFT_eSPI defaults to SPIFFS.
     String path = String("fonts/") + name;
     tft.loadFont(path, LittleFS);
-    s_loadedFont = name;
+    loaded = name;
 }
 
 // Drop the loaded VLW glyph cache to free heap before memory-hungry ops (TLS).
 void Display::releaseFont() {
-    if (s_loadedFont) { tft.unloadFont(); s_loadedFont = nullptr; }
+    if (s_loadedFont) { s_panel.unloadFont(); s_loadedFont = nullptr; }
 }
 
 // ── glimmer logo — 16×16 spark, direct-blit ──
@@ -387,13 +396,42 @@ static int16_t s_clipX = 0, s_clipY = 0, s_clipW = 240, s_clipH = 240;
 void Display::beginRepaint(int x, int y, int w, int h) {
     s_repaint = true;
     s_clipX = (int16_t)x; s_clipY = (int16_t)y; s_clipW = (int16_t)w; s_clipH = (int16_t)h;
-    tft.setViewport(x, y, w, h, false);       // false: coordinates stay screen-absolute
+    // L-8: off-screen, then one push — nothing half-painted shows under the cursor. The sprite's viewport datum
+    // (-x, -y) keeps screen coordinates. No heap for it → straight to the panel, clipped (as before).
+    s_spr = new (std::nothrow) TFT_eSprite(&s_panel);
+    if (s_spr) {
+        s_spr->setColorDepth(16);
+        if (!s_spr->createSprite(w, h)) { delete s_spr; s_spr = nullptr; }
+    }
+    if (s_spr) {
+        s_spr->setViewport(-x, -y, SCREEN_W, SCREEN_H, true);
+        g_tft = s_spr;
+        s_toSprite = true;
+    } else {
+        s_panel.setViewport(x, y, w, h, false);   // false: coordinates stay screen-absolute
+    }
 }
 
 void Display::endRepaint() {
-    tft.resetViewport();
+    if (s_toSprite) {
+        if (s_sprFont) { s_spr->unloadFont(); s_sprFont = nullptr; }
+        s_spr->resetViewport();
+        g_tft = &s_panel;
+        s_toSprite = false;
+        s_spr->pushSprite(s_clipX, s_clipY);
+        s_spr->deleteSprite();
+        delete s_spr;
+        s_spr = nullptr;
+    } else {
+        s_panel.resetViewport();
+    }
     s_repaint = false;
     s_clipX = 0; s_clipY = 0; s_clipW = 240; s_clipH = 240;
+}
+
+void Display::pushImage(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data) {
+    if (s_toSprite) s_spr->pushImage(x, y, w, h, data);
+    else s_panel.pushImage(x, y, w, h, data);
 }
 
 bool Display::repainting() { return s_repaint; }

@@ -3,7 +3,12 @@
 #include "config.h"
 #include "layout.h"
 
-extern TFT_eSPI tft;
+// Where drawing goes (L-8): the panel, or — during a clipped repaint under the mouse cursor — a small off-screen
+// sprite of the clip box, pushed to the panel in one go at endRepaint() so the background a window paints first
+// (white page, window body) never shows before its text / photo is on top. Every `tft.` call goes through it;
+// the drawing calls TFT_eSprite overrides are virtual. pushImage is not: use Display::pushImage.
+extern TFT_eSPI* g_tft;
+#define tft (*g_tft)
 
 namespace Display {
     void begin();                                  // tft.init + invertDisplay + backlight
@@ -69,6 +74,8 @@ namespace Display {
     void endRepaint();
     bool repainting();
     void clipRect(int& x, int& y, int& w, int& h);   // the whole panel when not repainting
+    // tft.pushImage to wherever drawing goes now (the panel or the repaint sprite; L-8).
+    void pushImage(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data);
     // (x, y, w, h) reaches into the clip — always true outside a clipped
     // repaint. Blocks that miss skip their work (and their font load, ~30 ms).
     bool clipHits(int x, int y, int w, int h);

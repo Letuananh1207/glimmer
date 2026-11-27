@@ -332,8 +332,9 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
   `{port, x, y, shape, shown, repaint_ms, repaint_max}`. The panel has **no
   MISO — no pixel read-back, no save-under**: moving the cursor calls
   `repaintRect()` (`main.cpp`) = tick() first, then the window's `draw()` +
-  `Taskbar::repaint()` + the open menu under `Display::beginRepaint()` (TFT
-  viewport clip, screen coords). So every `draw()` must be **repaint-safe**:
+  `Taskbar::repaint()` + the open menu under `Display::beginRepaint()` — drawn
+  into a sprite of the clip box (L-8: `tft` is `(*g_tft)`, the panel or that
+  sprite; JPEG blocks via `Display::pushImage`), pushed in one go, screen coords. So every `draw()` must be **repaint-safe**:
   under `Display::repainting()` keep caches / timers / slideshow (Photo,
   Claude's Clawd T0, Attention cycle) and guard blocks with
   `Display::clipHits(x, y, w, h)` — a font load is ~30 ms, a missed guard

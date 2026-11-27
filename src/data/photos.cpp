@@ -48,8 +48,8 @@ size_t jdIn(JDEC* jd, uint8_t* buf, size_t len) {
 int jdOut(JDEC* jd, void* bitmap, JRECT* r) {
     DecodeCtx* c = (DecodeCtx*)jd->device;
     if (c->y + r->top > c->stopY) { c->stopped = true; return 0; }   // below the clip: done
-    tft.pushImage(c->x + r->left, c->y + r->top, r->right - r->left + 1, r->bottom - r->top + 1,
-                  (uint16_t*)bitmap);
+    Display::pushImage(c->x + r->left, c->y + r->top, r->right - r->left + 1, r->bottom - r->top + 1,
+                       (uint16_t*)bitmap);
     return 1;
 }
 
