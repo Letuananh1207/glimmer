@@ -1,6 +1,7 @@
 # Phiếu màn thiết bị: con trỏ chuột, mục đang sáng, tắt máy
 
 - Trạng thái: chờ thiết kế
+- Đã vẽ: P-2026-11-27.24
 - Ngày: 2026-11-27 · Nguồn: kế hoạch `app/docs/tasks/2026-11-27-app-la-chuot-ban-phim-nguon.md` (bạn duyệt 2026-11-27)
 
 ## Dán vào canvas

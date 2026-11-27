@@ -2619,6 +2619,8 @@ Nguồn `source/XP-SetupMode.dc.html` · ảnh `screens/@2x/XPSetupMode.png`
 
 ### XP-OtaProgress — XP · đang cập nhật
 
+> **P-2026-11-27.24 — màn đang tắt máy** cùng kiểu (chrome welcome + chữ nghiêng tại (20, 96)): xem XP-Pointer.
+
 Nguồn `source/XP-OtaProgress.dc.html` · ảnh `screens/@2x/XPOtaProgress.png`
 
 | x, y | datum | font | nội dung | px |
@@ -2691,6 +2693,8 @@ Nguồn `source/XP-Desk-Agent.dc.html`, `XP-Desk-All.dc.html`, `XP-Desk-Selected
 
 ### XP-Start — Start menu (app chạm start)
 
+> **P-2026-11-27.24 — `Tắt màn` → `Tắt máy`, mục sáng:** nút dưới phải đổi chữ (mở hộp Tắt máy tính); mục dưới con trỏ tô xpSelect — xem XP-Pointer.
+
 > **P-2026-11-26.20 — Start menu kiểu XP trên thiết bị.**
 
 Nguồn `source/XP-Start-Menu.dc.html`, `XP-Start-All.dc.html` · ảnh `XPStartMenu.png`, `XPStartAll.png`. Token `themeXP.startMenu`.
@@ -2730,12 +2734,96 @@ cột phải xanh nhạt, dải *Log Off* / *Turn Off Computer*), menu con *All 
 
 ### XP-Menu — menu chuột phải (giữ ≥ 500 ms trên app)
 
+> **P-2026-11-27.24 — mục dưới con trỏ sáng:** thay câu "Không có mục đang trỏ" bên dưới — mục dưới con trỏ / chọn bằng phím tô xpSelect chữ white, mục mờ cũng sáng (chữ giữ xám); xem XP-Pointer.
+
 Nguồn `source/XP-Menu-Desktop.dc.html`, `XP-Menu-Window.dc.html` · ảnh `XPMenuDesktop.png`, `XPMenuWindow.png`. Token `themeXP.menu`.
 
 - Khung XP Luna: viền 1 px xpMenuBorder `#ACA899`, nền white, đệm trong 2 px, không bóng đổ. Mục cao 17: chữ JBMono-11 bg TL tại (x+17, mục+2); mục mờ chữ xpMenuBorder; mũi tên ▸ 4×7 tại (x+w−10, mục+5); vạch ngăn cao 7 (nét 1 px tại +3). Không có mục đang trỏ (chạm trên app chọn thẳng).
 - **Desktop** (giữ chỗ trống): mở tại điểm giữ (góc trên trái), dời vào trong y ≤ 213. Rộng 166, cao 129. Mục: Sắp xếp biểu tượng ▸ (126 px), Làm mới, —, Dán (mờ), Dán lối tắt (mờ, 77 px), —, Mới ▸ (mờ), —, Thuộc tính (70 px). Ảnh: mở tại (60, 30).
 - **Cửa sổ** (giữ nút thanh tác vụ: góc dưới trái tại (x nút, 213); giữ thanh tiêu đề: tại điểm giữ). Rộng 128, cao 113. Mục, ký hiệu 7×7 tại (x+5, mục+5): Khôi phục (mờ), Di chuyển (mờ), Kích thước (mờ, 70 px), Thu nhỏ, Phóng to (mờ), —, **Đóng** JBMono-12B (28 px) + `Alt+F4` JBMono-11 TR (x+w−17). Cửa sổ đang thu nhỏ: Khôi phục sáng, Thu nhỏ mờ.
 - Menu đóng khi chọn mục, chạm ngoài menu, hoặc một thẻ agent chen ngang. Thuộc tính → cửa sổ Thông tin; Làm mới → vẽ lại desktop; Sắp xếp biểu tượng ▸ (menu con chưa vẽ).
+
+### XP-Pointer — con trỏ, mục sáng, nút hot, tắt máy (app là chuột / bàn phím / nút nguồn)
+
+> **P-2026-11-27.24 — Con trỏ chuột, mục đang sáng, tắt máy theo XP thật.**
+
+Nguồn `source/XP-Cursor-Sheet.dc.html`, `XP-Hover-Menu.dc.html`, `XP-Hover-Start.dc.html`, `XP-Hot-Task.dc.html`,
+`XP-Hot-Close.dc.html`, `XP-Cursor-Link.dc.html`, `XP-ShutDown.dc.html`, `XP-TurnOff.dc.html` · ảnh `XPCursorSheet.png`,
+`XPHoverMenu.png`, `XPHoverStart.png`, `XPHotTask.png`, `XPHotClose.png`, `XPCursorLink.png`, `XPShutDown.png`,
+`XPTurnOff.png`. Token `themeXP.pointer`, `themeXP.hot`, `themeXP.shutDown`, `themeXP.turnOff`. Phiếu
+`docs/phieu_panel/2026-11-27-con-tro-va-tat-may.md`.
+
+Thành phần XP thật: con trỏ *Normal Select*, *Link Select*, *Working in Background* (bộ con trỏ mặc định của XP, cỡ thật,
+không bóng); mục menu dưới chuột tô *Selected Items* (menu ngữ cảnh, Start menu, All Programs); nút Luna *hot* khi chuột
+đứng trên (nút thanh tác vụ, nút tiêu đề); màn *Windows is shutting down...* của Welcome screen; hộp *Turn off computer*
+(Stand By / Turn Off / Restart + Cancel), mở bằng Start › Turn Off Computer hoặc Alt+F4 trên desktop.
+
+**Con trỏ** (`XPCursorSheet`; ×4 + 1:1 trên hình nền / thanh tiêu đề / menu / thanh tác vụ):
+
+| hình | cỡ | điểm nóng | khi nào |
+|---|---|---|---|
+| mũi tên | 12×19 | (0, 0) mũi | mặc định |
+| bàn tay | 16×19 | (5, 0) đầu ngón | trên link (chữ xpLink gạch chân) và 3 nút của hộp Tắt máy tính |
+| chờ = mũi tên + đồng hồ cát | 21×22 (đồng hồ cát 9×12 tại +10, +9; nằm ngang 12×9 tại +8, +11) | (0, 0) mũi | cửa sổ vừa mở (khung trống 200 ms) và đang tải; 4 khung × 200 ms như `themeXP.cursor` |
+
+- Màu: black viền, white thân, cát xpAmber `#C98A00`; không bóng (RGB565, không blend). Ô trong suốt giữ nguyên điểm ảnh
+  bên dưới. Pixel đúng bitmap trong `source/XP-Cursor-Sheet.dc.html` (mũi tên + bàn tay = bộ con trỏ firmware hiện có).
+- Vẽ đè trên mọi nền (desktop, thân cửa sổ, tiêu đề, menu, Start, thanh tác vụ). **Không có** trên màn Đêm, màn hệ thống
+  (khởi động, welcome, đăng nhập, cập nhật, đang tắt máy), khi tắt màn / tắt máy, và khi app không ở chế độ chuột.
+- **Thống nhất con trỏ chờ:** XP-Open bước 3–4 vẽ con trỏ chờ **tại chỗ chuột** (điểm nóng = vị trí con trỏ đang có) thay vì
+  ô cố định (132, 160); app không ở chế độ chuột → giữ ô cố định như cũ. Hết chờ → con trỏ trở lại hình app gửi.
+- App chọn hình và vị trí; thiết bị chỉ vẽ. Đổi hình tại chỗ = vẽ lại ô cũ rồi vẽ hình mới.
+
+**Mục sáng** (`XPHoverMenu`, `XPHoverStart`): mục dưới con trỏ, hoặc mục chọn bằng phím mũi tên.
+
+- Menu chuột phải (desktop / cửa sổ): nền xpSelect `#316AC5` (x+2, mục, w−4 × 17), chữ white, mũi tên ▸ / ký hiệu 7×7 white.
+  Ví dụ: `Làm mới` (62, 49, 162×17), chữ (77, 51).
+- Start menu, cột trái: hàng (2, hàng, 149×20) xpSelect, icon giữ màu, chữ white (ví dụ `Thời tiết` hàng y 119, chữ (28, 123)).
+  Ghim (Claude / Codex): (2, y, 149×28), tên + `mức dùng` white. `Tất cả chương trình` = như `XPStartAll`.
+  Cột phải: hàng (154, hàng, 84×21) xpSelect, chữ white. Dải dưới (`Khởi động lại`, `Tắt máy`): nút 16 sáng (hàng trên
+  white thay màu sáng của nút), chữ giữ white.
+- Menu con Tất cả chương trình: hàng (152, hàng, 87×20) xpSelect, chữ white.
+- **Mục mờ**: như XP — vẫn tô xpSelect khi chuột / phím đứng trên, chữ giữ xpMenuBorder; phím mũi tên đi qua cả mục mờ, bỏ
+  qua vạch ngăn. Chọn mục mờ = không làm gì.
+- Đổi mục sáng: chỉ vẽ lại 2 hàng (hàng cũ về thường, hàng mới sáng), không vẽ lại cả menu.
+
+**Nút hot** (`XPHotTask`, `XPHotClose`): chuột đứng trên → sáng; rời → về thường. Nút đang lún không đổi.
+
+- Nút thanh tác vụ: mặt 26×18 xpBtn → xpTaskHi `#5A9BF6`, viền giữ; icon giữ.
+- Nút × của tiêu đề: mặt 14×14 `#E0523C` → `#F06A50`, viền white + dấu × giữ. Nút _ : `#2B80F5` → xpTitleHi `#3D95FF`.
+  Nút □ (luôn tắt) không sáng.
+- Nút start: không đổi (hot của XP gần như không thấy ở 240 px).
+
+**Đang tắt máy** (`XPShutDown`, màn hệ thống): chrome welcome như `XP-Connecting` (không chữ `welcome`); chữ nghiêng
+`đang tắt máy...` bitmap 1-bit 145×18 từ JBMono-16B (nghiêng 1 px / 3 hàng) tại (20, 96), bóng xpWelcomeShadow tại (21, 97) —
+cùng kiểu, cùng chỗ với `đang cập nhật...`. Giữ 1,5 s (power `shutting`), rồi đèn tắt (power `off`). Không con trỏ, không
+thanh tác vụ. Thẻ agent khẩn vẫn đánh thức như tắt màn.
+
+**Bật lại** (power `booting`): màn khởi động `XP-Splash` (2,4 s) → welcome `XP-Connecting` 1 s → desktop, không cửa sổ
+nào mở (như XP thật: boot → Welcome → desktop).
+
+**Hộp Tắt máy tính** (`XPTurnOff`): mở bằng Start › `Tắt máy` hoặc Alt+F4 khi desktop đang hiện (không cửa sổ nào ở trên).
+
+| khối | tọa độ | màu / font | chữ, rộng đo (VLW) |
+|---|---|---|---|
+| màn phía sau | cả 240×240, điểm (x + y) chẵn → black | black | thay "xám dần" của XP (máy không đọc lại điểm ảnh) |
+| khung | (13, 49, 214×130) | black 1 px | — |
+| dải tiêu đề | (14, 50, 212×28) | xpWelcomeBand `#00309C` | `Tắt máy tính` JBMono-12B white TL (22, 57) 84 px |
+| cờ | 14×12 tại (204, 58) | xpFlagRed / Green / Blue / Yellow | — |
+| vạch | (14, 78, 212×1) | xpWelcomeLine `#7FA4F0` | — |
+| vùng nút | (14, 79, 212×66) | xpWelcome `#5A7EDC` | — |
+| 3 nút | 24×24 góc cắt 1 px, tâm x 50 / 120 / 190, y 90; viền black, viền trong white, mặt 20×20, hàng trên sáng; ký hiệu white 10×12 tại (+7, +6) | Chờ xpIconWarn `#F2C200` (sáng `#FFE680`); Tắt xpIconError `#D8341E` (`#F06A50`); Khởi động lại xpGreen `#2E8A2E` (xpStartHi) | nhãn JBMono-11 white TC tại y 117: `Chờ` 21, `Tắt` 21, `Khởi động` 63 + `lại` 21 (y 129) |
+| dải dưới | (14, 145, 212×33) | xpWelcomeBand | — |
+| nút Hủy | (164, 151, 54×21) viền `#003C74` góc cắt 1 px, nền `#F4F3EE`, 2 hàng đáy `#D6D0C5` | JBMono-11 black TC (191, 155) | `Hủy` 21 px |
+
+- Nút dưới con trỏ / đang chọn bằng phím: mặt đổi sang màu sáng, hàng trên white (ảnh: `Tắt`). Con trỏ bàn tay trên 3 nút.
+  Phím: ←/→ đổi nút, Enter chọn, Esc = Hủy.
+- **Chờ** = tắt màn như cũ (đèn 0, máy chạy, thẻ khẩn đánh thức). **Tắt** = đang tắt máy → tối. **Khởi động lại** = đang tắt
+  máy → bật lại (khởi động → welcome → desktop trống). **Hủy** / Esc → vẽ lại màn dưới bằng `draw()`.
+- Thẻ agent chen ngang → hộp đóng (như menu).
+
+**Start menu** (`XPStartMenu`, `XPStartAll`): nút dưới phải `Tắt màn` → **`Tắt máy`** (49 px, nút đỏ giữ) = *Turn Off Computer*
+của XP, mở hộp Tắt máy tính. `Khởi động lại` bên trái giữ như P-.20.
 
 ### XP-Desk-Tray — thời tiết ở khay, bong bóng XP
 
@@ -2749,6 +2837,8 @@ Nguồn `source/XP-Desk-Tray.dc.html`, `source/XP-Desk-Balloon.dc.html` · ảnh
 - **Khi hiện**: ~10 s khi vào desktop, và khi thời tiết đổi (mô tả khác hoặc nhiệt độ lệch ≥ 3°) lúc desktop đang hiện; rồi tự ẩn (vẽ lại hình nền + biểu tượng dưới hộp và đuôi). App chạm biểu tượng khay → hiện lại 10 s; chạm × → ẩn ngay. Thẻ agent chen ngang → ẩn. Mỗi lúc một bong bóng. Thời tiết chưa có / lỗi: thân `Chưa có thời tiết` xpDim.
 
 ### XP-Open — mở / khôi phục / thu nhỏ cửa sổ, đang tải
+
+> **P-2026-11-27.24 — con trỏ chờ tại chỗ chuột:** ở chế độ chuột, con trỏ chờ vẽ tại vị trí con trỏ (điểm nóng = mũi) thay ô cố định (132, 160); xem XP-Pointer.
 
 Nguồn `source/XP-Open-1|2|3.dc.html`, `XP-Open-Play.dc.html` (chạy thử 6 s), `XP-Load-Claude.dc.html` (động), `XP-Load-Static.dc.html` · ảnh `XPOpen1.png`, `XPOpen2.png`, `XPOpen3.png`, `XPLoad.png`. Token `themeXP.open`, `themeXP.cursor`, `themeXP.loading`.
 

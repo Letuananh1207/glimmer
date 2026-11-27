@@ -5,6 +5,44 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-27.24 — Con trỏ chuột, mục đang sáng, tắt máy (app là chuột / bàn phím / nút nguồn)
+
+- **Con trỏ** (`source/XP-Cursor-Sheet.dc.html`, `screen_specs.md` §17 XP-Pointer; ảnh `XPCursorSheet.png`):
+  - Ba hình của XP thật, pixel thật, đen / trắng, không bóng: mũi tên 12×19 (điểm nóng mũi), bàn tay 16×19 (đầu ngón
+    (5, 0)), chờ = mũi tên + đồng hồ cát 21×22 (cát xpAmber, 4 khung × 200 ms như XP-Open).
+  - Bàn tay trên link (`XPCursorLink`, `glimmer.local` của Cài đặt) và 3 nút hộp Tắt máy tính; chờ khi cửa sổ vừa mở / đang
+    tải — **gộp với con trỏ chờ của XP-Open**: vẽ tại chỗ chuột thay ô cố định (132, 160).
+  - Không con trỏ trên Đêm, màn hệ thống, khi tắt màn / tắt máy.
+  - Máy đang có: con trỏ tạm (mũi tên, bàn tay, đồng hồ cát 11×15 riêng).
+- **Mục sáng** (`XP-Hover-Menu`, `XP-Hover-Start`; ảnh `XPHoverMenu.png`, `XPHoverStart.png`): mục dưới con trỏ / chọn bằng
+  phím nền xpSelect chữ white — menu chuột phải (x+2, mục, w−4 × 17), Start cột trái (2, hàng, 149×20), cột phải (154, hàng,
+  84×21), menu con Tất cả chương trình. Mục mờ cũng sáng, chữ giữ xám (như XP).
+- **Nút hot** (`XP-Hot-Task`, `XP-Hot-Close`; ảnh `XPHotTask.png`, `XPHotClose.png`): nút thanh tác vụ mặt xpBtn → xpTaskHi;
+  nút × `#E0523C` → `#F06A50`; nút _ → xpTitleHi. Không màu mới.
+- **Đang tắt máy** (`XP-ShutDown`; ảnh `XPShutDown.png`): chrome welcome + chữ nghiêng `đang tắt máy...` 145×18 (JBMono-16B)
+  tại (20, 96), bóng (21, 97) — như `đang cập nhật...`; 1,5 s rồi tối. Bật lại: khởi động 2,4 s → welcome 1 s → desktop trống.
+- **Hộp Tắt máy tính** (`XP-TurnOff`; ảnh `XPTurnOff.png`; *Turn off computer* của XP): mở bằng Start › `Tắt máy` hoặc
+  Alt+F4 trên desktop. Màn sau phủ chấm đen 50 % ((x + y) chẵn). Hộp (14, 50, 212×128): dải tiêu đề `Tắt máy tính` 12B
+  84 px + cờ; 3 nút 24×24 `Chờ` 21 / `Tắt` 21 / `Khởi động` 63 + `lại`; nút `Hủy` 21 px. Nút dưới chuột sáng.
+- **Start menu** (`XP-Start-Menu`, `XP-Start-All`; ảnh `XPStartMenu.png`, `XPStartAll.png`): `Tắt màn` → `Tắt máy` (49 px).
+- Phiếu: `docs/phieu_panel/2026-11-27-con-tro-va-tat-may.md`
+- Đổi luật: Start › `Tắt máy` mở hộp Tắt máy tính thay vì tắt màn ngay; tắt màn chuyển thành nút `Chờ` trong hộp.
+  Con trỏ chờ của XP-Open đi theo chuột. Mục mờ sáng khi trỏ (khác gợi ý "mục mờ không sáng" của phiếu, theo XP thật).
+- Cần firmware: con trỏ tới 21×22 (giới hạn hiện 16×20) + màu cát; con trỏ chờ thay hourglass 11×15; hover cho Start menu,
+  menu con và nút hot (thanh tác vụ, × , _); màn đang tắt máy (bitmap nghiêng mới) và welcome 1 s khi bật lại; hộp Tắt máy
+  tính + lệnh mở / chọn nút (app gửi). Ảnh `@2x` ghép từ ảnh màn nền + chữ VLW thật.
+
+**Việc cần làm trong code:**
+- Con trỏ (mọi màn có XP): 3 hình theo XP-Pointer; hình `wait` = mũi tên + đồng hồ cát 4 khung, tự chạy khung khi đang hiện;
+  khi cửa sổ vừa mở / đang tải ở chế độ chuột, vẽ con trỏ chờ tại chỗ con trỏ thay (132, 160).
+- Menu chuột phải, Start menu, menu con Tất cả chương trình: hàng `hover` tô xpSelect chữ white (mục mờ: chữ xám); đổi hàng
+  chỉ vẽ lại hai hàng.
+- Thanh tác vụ, nút tiêu đề: trạng thái hot khi con trỏ đứng trên (app báo, hoặc thiết bị tự tính từ vị trí con trỏ).
+- Start menu: chữ `Tắt máy`.
+- Màn đang tắt máy khi power `shutting`; bật lại thêm welcome 1 s trước desktop.
+- Hộp Tắt máy tính: vẽ theo bảng XP-Pointer, nút sáng theo lệnh của app; Chờ / Tắt / Khởi động lại / Hủy = lệnh của app.
+- App (phiếu riêng phía app): nhãn `Tắt màn` → `Tắt máy` trong Start menu của app, mở hộp Tắt máy tính.
+
 ## P-2026-11-26.23 — Dọn thiết kế: bỏ màn lỗi thời, cập nhật màn dùng chung
 
 - **Bỏ 76 màn lỗi thời** khỏi canvas và `source/` (73 file; 3 phương án chưa từng chốt):

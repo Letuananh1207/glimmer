@@ -2820,6 +2820,241 @@
         "xpStartHi": "xpStartDark",
         "xpStart": "xpGreen"
       }
+    },
+    "pointer": {
+      "use": "P-2026-11-27.24 — con trỏ chuột từ app (XP Normal / Link / Working in Background)",
+      "source": "source/XP-Cursor-Sheet.dc.html",
+      "shapes": {
+        "arrow": {
+          "size": [
+            12,
+            19
+          ],
+          "hot": [
+            0,
+            0
+          ]
+        },
+        "hand": {
+          "size": [
+            16,
+            19
+          ],
+          "hot": [
+            5,
+            0
+          ]
+        },
+        "wait": {
+          "size": [
+            21,
+            22
+          ],
+          "hot": [
+            0,
+            0
+          ],
+          "hourglass": [
+            10,
+            9,
+            9,
+            12
+          ],
+          "hourglassFlat": [
+            8,
+            11,
+            12,
+            9
+          ],
+          "frames": 4,
+          "stepMs": 200
+        }
+      },
+      "colors": [
+        "black",
+        "white",
+        "xpAmber #C98A00"
+      ],
+      "shadow": false,
+      "hidden": [
+        "Night",
+        "màn hệ thống",
+        "tắt màn",
+        "tắt máy",
+        "app không ở chế độ chuột"
+      ],
+      "waitAtPointer": "con trỏ chờ của XP-Open vẽ tại chỗ con trỏ khi ở chế độ chuột"
+    },
+    "hot": {
+      "use": "P-2026-11-27.24 — mục / nút dưới con trỏ",
+      "menuItem": {
+        "bg": "xpSelect",
+        "text": "white",
+        "disabledText": "xpMenuBorder",
+        "rect": "(x+2, mục, w−4, 17)"
+      },
+      "startLeft": {
+        "bg": "xpSelect",
+        "rect": [
+          2,
+          "hàng",
+          149,
+          20
+        ],
+        "text": "white"
+      },
+      "startRight": {
+        "bg": "xpSelect",
+        "rect": [
+          154,
+          "hàng",
+          84,
+          21
+        ],
+        "text": "white"
+      },
+      "taskButton": {
+        "face": "xpTaskHi #5A9BF6",
+        "from": "xpBtn #3C81F3"
+      },
+      "close": {
+        "face": "#F06A50",
+        "from": "#E0523C"
+      },
+      "min": {
+        "face": "xpTitleHi #3D95FF",
+        "from": "#2B80F5"
+      }
+    },
+    "shutDown": {
+      "use": "P-2026-11-27.24 — màn đang tắt máy (Welcome: Windows is shutting down...)",
+      "chrome": "XP-Connecting không chữ welcome",
+      "italic": {
+        "text": "đang tắt máy...",
+        "font": "JBMono-16B",
+        "size": [
+          145,
+          18
+        ],
+        "at": [
+          20,
+          96
+        ],
+        "shadow": [
+          21,
+          97,
+          "xpWelcomeShadow"
+        ]
+      },
+      "holdMs": 1500,
+      "then": "off (đèn tắt)",
+      "boot": "XP-Splash 2,4 s → XP-Connecting 1 s → desktop trống"
+    },
+    "turnOff": {
+      "use": "P-2026-11-27.24 — hộp Tắt máy tính (Turn off computer)",
+      "source": "source/XP-TurnOff.dc.html",
+      "backdrop": "(x+y) chẵn → black",
+      "frame": [
+        13,
+        49,
+        214,
+        130
+      ],
+      "title": {
+        "rect": [
+          14,
+          50,
+          212,
+          28
+        ],
+        "bg": "xpWelcomeBand",
+        "text": "Tắt máy tính",
+        "font": "JBMono-12B",
+        "at": [
+          22,
+          57
+        ],
+        "w": 84
+      },
+      "flag": [
+        204,
+        58,
+        14,
+        12
+      ],
+      "line": [
+        14,
+        78,
+        212,
+        1,
+        "xpWelcomeLine"
+      ],
+      "body": [
+        14,
+        79,
+        212,
+        66,
+        "xpWelcome"
+      ],
+      "bottom": [
+        14,
+        145,
+        212,
+        33,
+        "xpWelcomeBand"
+      ],
+      "buttons": {
+        "size": 24,
+        "cx": [
+          50,
+          120,
+          190
+        ],
+        "y": 90,
+        "labels": [
+          [
+            "Chờ",
+            21
+          ],
+          [
+            "Tắt",
+            21
+          ],
+          [
+            "Khởi động / lại",
+            63
+          ]
+        ],
+        "labelY": [
+          117,
+          129
+        ],
+        "faces": {
+          "standby": [
+            "#F2C200",
+            "#FFE680"
+          ],
+          "off": [
+            "#D8341E",
+            "#F06A50"
+          ],
+          "restart": [
+            "#2E8A2E",
+            "#5CC15C"
+          ]
+        }
+      },
+      "cancel": {
+        "rect": [
+          164,
+          151,
+          54,
+          21
+        ],
+        "text": "Hủy",
+        "w": 21
+      },
+      "keys": "←/→ đổi nút, Enter chọn, Esc = Hủy"
     }
   }
 }
