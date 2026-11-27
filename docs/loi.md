@@ -117,7 +117,7 @@ Mức độ: `chặn dùng` · `khó chịu` · `nhỏ` (chữ, giao diện).
 - Thử máy: nạp firmware, rút điện cắm lại; mở Ảnh, rồi Thời tiết, rê con trỏ nhanh / chậm qua chữ và ảnh: không còn
   ô trắng, chỗ cũ trở lại đúng nền / chữ / ảnh. Con trỏ có thể đi hơi trễ ở Ảnh (giải mã JPEG). Còn lỗi → quay video
   màn thiết bị + gửi `/api/state` `cursor`.
-- Commit: …
+- Commit: 3f4ec11
 
 **Lịch sử**
 - 2026-11-27: ghi lỗi.
