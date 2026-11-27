@@ -50,9 +50,10 @@ void main() {
       expect(availableSkills(fresh), _all, reason: 'music has no pack in the app yet');
     });
 
-    test('R-SK-1 Ảnh is off by default; dock order Agent, Ảnh, Thời tiết, Đồng hồ', () {
-      expect(appSkills, ['agent', 'photo', 'weather', 'clock']);
+    test('R-SK-1 Ảnh, Giải trí are off by default; dock order Agent, Ảnh, Thời tiết, Đồng hồ, Giải trí', () {
+      expect(appSkills, ['agent', 'photo', 'weather', 'clock', 'fun']);
       expect(defaultSkillsOn, isNot(contains('photo')));
+      expect(defaultSkillsOn, isNot(contains('fun')));
       expect(orderSkills(const ['clock', 'photo', 'agent']), ['agent', 'photo', 'clock']);
     });
 

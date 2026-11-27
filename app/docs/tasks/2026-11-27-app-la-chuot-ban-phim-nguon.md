@@ -112,11 +112,11 @@ thẻ agent / bảng dự án, Cài đặt, Wi-Fi, ảnh. Dữ liệu người d
 - [x] 7. App: `cursor_service.dart` (UDP) + repository `power` / `hover` / đọc `cursor` · test gương ở `test/data/`.
 - [x] 8. App: use case + ViewModel — click / chuột phải tại con trỏ dùng `touchTargetAt` / `holdMenuAt` có sẵn; phím;
   nguồn · test: `test/ui/control/view_models/…`, `control_device_use_case_test.dart`.
-- [ ] 8b. Click vào **mục của Start menu trên thiết bị**: app chưa có luật trúng đích theo hình Start menu của
+- [x] 8b. Click vào **mục của Start menu trên thiết bị**: app chưa có luật trúng đích theo hình Start menu của
   panel (P-2026-11-26.20, `xp_start.cpp`) — đến khi có, mở Start bằng chuột / phím Windows được nhưng chọn mục vẫn
   qua sheet Start của app; mũi tên trong Start chờ phiếu panel (mục sáng).
-- [ ] 9. App: màn Điều khiển mới theo thiết kế — **chờ thiết kế: phiếu nhiệm vụ 2**.
-- [ ] 10. App: xoá ô màn + test + chuỗi / asset thành rác (sau nhiệm vụ 9).
+- [x] 9. App: màn Điều khiển mới theo thiết kế — **chờ thiết kế: phiếu nhiệm vụ 2**.
+- [x] 10. App: xoá ô màn + test + chuỗi / asset thành rác (sau nhiệm vụ 9).
 - [ ] 11. (đã: `../CLAUDE.md` mục Mouse/keyboard/power, `docs/backend/README.md`, bản đồ `/lead`) Cập nhật Bản đồ tính năng của `/lead` (dòng "Điều khiển: chuột, bàn phím, nguồn"), `../CLAUDE.md` (UDP con
   trỏ, nguồn), `docs/AGENTS-GLIMMER.md` nếu đổi API.
 

@@ -39,10 +39,12 @@ class ControlCaps {
     this.balloon = false,
     this.clock = false,
     this.mouse = false,
+    this.mines = false,
   });
 
   /// Everything (current firmware).
   static const all = ControlCaps(
+    mines: true,
     mouse: true,
     clock: true,
     touch: true,
@@ -60,6 +62,9 @@ class ControlCaps {
 
   /// The mouse pointer, menu hover and the power button (R-DK-17…21: `cursor` in `/api/state`).
   final bool mouse;
+
+  /// The firmware draws Dò mìn (R-DK-23: `mines` in `/api/state`).
+  final bool mines;
 
   /// The desktop's tray balloon comes and goes, the app shows / hides it (R-DK-13, `balloon` reported).
   final bool balloon;

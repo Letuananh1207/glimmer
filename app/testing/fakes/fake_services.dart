@@ -72,6 +72,9 @@ class FakeDeviceApiService implements DeviceApiService {
   Object? uploadFileAnswer;
   Uint8List? uploadedFile;
 
+  /// Answer per upload (several uploads in one test, e.g. the library's cache sync); wins over [uploadFileAnswer].
+  Object? Function(Uint8List bytes)? uploadFileAnswerFor;
+
   @override
   Future<Map<String, dynamic>> uploadFile(String baseUrl, String path,
       {required String field,
@@ -89,7 +92,7 @@ class FakeDeviceApiService implements DeviceApiService {
     if (holdUpload != null) await holdUpload!.future;
     if (cancel?.cancelled ?? false) throw const DeviceHttpException(-1, 'cancelled');
     onProgress?.call(1);
-    final a = uploadFileAnswer ?? {'ok': true, 'name': 'p1.jpg', 'count': 1};
+    final a = uploadFileAnswerFor?.call(bytes) ?? uploadFileAnswer ?? {'ok': true, 'name': 'p1.jpg', 'count': 1};
     if (a is Exception) throw a;
     return Map<String, dynamic>.from(a as Map);
   }

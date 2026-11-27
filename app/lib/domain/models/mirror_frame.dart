@@ -1,5 +1,5 @@
 // One picture of the device screen for the app's DeviceMirror (tab Điều khiển, design 2026-11-26.5). Built by
-// `mirrorFrameOf` (domain/rules/mirror_rules.dart); painted by ui/control/widgets/device_mirror/.
+// `mirrorFrameOf` (domain/rules/mirror_rules.dart); used by the hit rules (touch_rules.dart); the app no longer paints it (design 2026-11-27.10).
 import 'attention_card.dart';
 import 'device_state.dart';
 import 'mirror_agents.dart';

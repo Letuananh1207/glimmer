@@ -103,6 +103,9 @@ abstract class DeviceRepository extends ChangeNotifier {
   /// not sent (not connected, firmware without the mouse, no network); a lost one is fixed by the next.
   Future<bool> sendCursor(Uint8List datagram);
 
+  /// R-DK-23: the Dò mìn board to draw (`POST /api/mines {board, face, left, secs, run}`); the app keeps the game.
+  Future<Result<void>> setMines(Map<String, Object?> body);
+
   /// R-DK-20: the power button (`POST /api/power {on}`); [state] takes the answer. Ok(power after).
   Future<Result<PowerState>> setPower(bool on);
 
@@ -126,6 +129,9 @@ abstract class DeviceRepository extends ChangeNotifier {
 
   /// Delete photo [name]; returns the photos left. 404 → `photoNotFound`.
   Future<Result<int>> deletePhoto(String name);
+
+  /// R-AK-4: where the app serves its photo library — `POST /api/photos/source {host, port, key}`.
+  Future<Result<void>> setPhotoSource(Map<String, Object> body);
 
   /// Wait until the display answers again (after a reboot); null after [max].
   Future<DeviceState?> waitOnline({Duration max = const Duration(minutes: 3)});

@@ -1960,7 +1960,7 @@ abstract class AppLocalizations {
   /// **'Làm mới số liệu'**
   String get controlRefreshA11y;
 
-  /// Nhãn đọc màn hình ô màn chạm được
+  /// Không dùng từ 2026-11-27.10. Nhãn đọc màn hình ô màn chạm được
   ///
   /// In vi, this message translates to:
   /// **'Màn thiết bị đang hiện {app}. Chạm như chuột: nút cửa sổ, thanh tác vụ, start, biểu tượng'**
@@ -1984,19 +1984,19 @@ abstract class AppLocalizations {
   /// **'· đã dừng xoay, giữ kênh này'**
   String get controlPausedNote;
 
-  /// Dòng kênh khi màn tắt
+  /// Không dùng từ 2026-11-27.10. Dòng kênh khi màn tắt
   ///
   /// In vi, this message translates to:
   /// **'Màn đang tắt'**
   String get controlScreenOffTitle;
 
-  /// Dòng kênh khi màn tắt
+  /// Không dùng từ 2026-11-27.10. Dòng kênh khi màn tắt
   ///
   /// In vi, this message translates to:
   /// **'· bấm Bật màn để mở lại'**
   String get controlScreenOffNote;
 
-  /// Chữ mờ giữa ô màn tối
+  /// Không dùng từ 2026-11-27.10. Chữ mờ giữa ô màn tối
   ///
   /// In vi, this message translates to:
   /// **'MÀN ĐANG TẮT'**
@@ -2056,25 +2056,25 @@ abstract class AppLocalizations {
   /// **'Độ sáng'**
   String get controlBrightness;
 
-  /// Nút tròn
+  /// Không dùng từ 2026-11-27.10. Nút tròn
   ///
   /// In vi, this message translates to:
   /// **'Tắt màn'**
   String get controlScreenOff;
 
-  /// Nút tròn khi màn đang tắt (amber)
+  /// Không dùng từ 2026-11-27.10. Nút tròn khi màn đang tắt (amber)
   ///
   /// In vi, this message translates to:
   /// **'Bật màn'**
   String get controlScreenOn;
 
-  /// Nút tròn (lilac khi bật)
+  /// Không dùng từ 2026-11-27.10. Nút tròn (lilac khi bật)
   ///
   /// In vi, this message translates to:
   /// **'Chế độ đêm'**
   String get controlNight;
 
-  /// Nút tròn → màn Số liệu
+  /// Không dùng từ 2026-11-27.10. Nút tròn → màn Số liệu
   ///
   /// In vi, this message translates to:
   /// **'Số liệu'**
@@ -2131,13 +2131,13 @@ abstract class AppLocalizations {
   /// Thanh báo firmware cũ
   ///
   /// In vi, this message translates to:
-  /// **'Firmware chưa nhận chạm'**
+  /// **'Firmware chưa có chuột'**
   String get controlOldFwTitle;
 
   /// Thanh báo firmware cũ
   ///
   /// In vi, this message translates to:
-  /// **'Thiết bị đang chạy {version}: chạm trên màn chưa dùng được, chỉ mở app qua Start.'**
+  /// **'Thiết bị đang chạy {version}: chưa nhận chuột, phím và nút nguồn từ app.'**
   String controlOldFwBody(String version);
 
   /// Nút trong thanh báo → tab Thiết bị
@@ -2212,6 +2212,12 @@ abstract class AppLocalizations {
   /// **'Mở {app}'**
   String devControlCmdOpen(String app);
 
+  /// Điều khiển · tên lệnh trong controlFailed khi Start → Desktop (thu nhỏ hết) không được
+  ///
+  /// In vi, this message translates to:
+  /// **'Desktop'**
+  String get devControlCmdDesktop;
+
   /// Điều khiển · tên lệnh trong controlFailed khi tắt app (×) không được
   ///
   /// In vi, this message translates to:
@@ -2224,1013 +2230,11 @@ abstract class AppLocalizations {
   /// **'Thu nhỏ {app}'**
   String devControlCmdMinimize(String app);
 
-  /// Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)
-  ///
-  /// In vi, this message translates to:
-  /// **'Sắp xếp biểu tượng'**
-  String get devXpMenuArrange;
-
-  /// Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)
-  ///
-  /// In vi, this message translates to:
-  /// **'Làm mới'**
-  String get devXpMenuRefresh;
-
-  /// Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)
-  ///
-  /// In vi, this message translates to:
-  /// **'Dán'**
-  String get devXpMenuPaste;
-
-  /// Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)
-  ///
-  /// In vi, this message translates to:
-  /// **'Dán lối tắt'**
-  String get devXpMenuPasteShortcut;
-
-  /// Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)
-  ///
-  /// In vi, this message translates to:
-  /// **'Mới'**
-  String get devXpMenuNew;
-
-  /// Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)
-  ///
-  /// In vi, this message translates to:
-  /// **'Thuộc tính'**
-  String get devXpMenuProperties;
-
-  /// Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)
-  ///
-  /// In vi, this message translates to:
-  /// **'Khôi phục'**
-  String get devXpMenuRestore;
-
-  /// Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)
-  ///
-  /// In vi, this message translates to:
-  /// **'Di chuyển'**
-  String get devXpMenuMove;
-
-  /// Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)
-  ///
-  /// In vi, this message translates to:
-  /// **'Kích thước'**
-  String get devXpMenuSize;
-
-  /// Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)
-  ///
-  /// In vi, this message translates to:
-  /// **'Thu nhỏ'**
-  String get devXpMenuMinimize;
-
-  /// Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)
-  ///
-  /// In vi, this message translates to:
-  /// **'Phóng to'**
-  String get devXpMenuMaximize;
-
-  /// Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)
-  ///
-  /// In vi, this message translates to:
-  /// **'Đóng'**
-  String get devXpMenuClose;
-
-  /// Màn thiết bị · phím tắt cạnh Đóng trong menu cửa sổ
-  ///
-  /// In vi, this message translates to:
-  /// **'Alt+F4'**
-  String get devXpMenuAltF4;
-
-  /// Màn thiết bị · Ngày và Giờ (panel P-2026-11-26.22)
-  ///
-  /// In vi, this message translates to:
-  /// **'Internet'**
-  String get devXpTabInternet;
-
-  /// Màn thiết bị · Ngày và Giờ (panel P-2026-11-26.22)
-  ///
-  /// In vi, this message translates to:
-  /// **'Thg {month}'**
-  String devXpMonthShort(int month);
-
   /// Màn thiết bị · Ngày và Giờ (panel P-2026-11-26.22)
   ///
   /// In vi, this message translates to:
   /// **'{index, select, 0{Los Angeles} 1{New York} 2{Brasília} 3{London} 4{Paris, Berlin} 5{Moskva} 6{Dubai} 7{New Delhi} 8{Hà Nội} 9{Singapore} 10{Tokyo, Seoul} other{Sydney}}'**
   String devXpZoneName(String index);
-
-  /// Màn thiết bị · Ngày và Giờ (panel P-2026-11-26.22)
-  ///
-  /// In vi, this message translates to:
-  /// **'Tự chỉnh giờ mùa hè'**
-  String get devXpDst;
-
-  /// Màn thiết bị · Ngày và Giờ (panel P-2026-11-26.22)
-  ///
-  /// In vi, this message translates to:
-  /// **'Tự đồng bộ với máy chủ'**
-  String get devXpNetAuto;
-
-  /// Màn thiết bị · Ngày và Giờ (panel P-2026-11-26.22)
-  ///
-  /// In vi, this message translates to:
-  /// **'Máy chủ:'**
-  String get devXpNetServerLabel;
-
-  /// Màn thiết bị · Ngày và Giờ (panel P-2026-11-26.22)
-  ///
-  /// In vi, this message translates to:
-  /// **'pool.ntp.org'**
-  String get devXpNetServer;
-
-  /// Màn thiết bị · Ngày và Giờ (panel P-2026-11-26.22)
-  ///
-  /// In vi, this message translates to:
-  /// **'Cập nhật ngay'**
-  String get devXpNetUpdate;
-
-  /// Màn thiết bị · Ngày và Giờ (panel P-2026-11-26.22)
-  ///
-  /// In vi, this message translates to:
-  /// **'Đã đồng bộ lúc {time}'**
-  String devXpNetSynced(String time);
-
-  /// Màn thiết bị · Ngày và Giờ (panel P-2026-11-26.22)
-  ///
-  /// In vi, this message translates to:
-  /// **'ngày {date}.'**
-  String devXpNetDate(String date);
-
-  /// Màn thiết bị · Ngày và Giờ (panel P-2026-11-26.22)
-  ///
-  /// In vi, this message translates to:
-  /// **'Lần tới: {time}.'**
-  String devXpNetNext(String time);
-
-  /// Màn thiết bị · Ngày và Giờ (panel P-2026-11-26.22)
-  ///
-  /// In vi, this message translates to:
-  /// **'Chưa đồng bộ.'**
-  String get devXpNetNever;
-
-  /// Ô màn thiết bị: thứ kiểu tiêu đề như firmware ClockFmt::weekdayTitle (day = DateTime.weekday)
-  ///
-  /// In vi, this message translates to:
-  /// **'{day, select, 1{Thứ Hai} 2{Thứ Ba} 3{Thứ Tư} 4{Thứ Năm} 5{Thứ Sáu} 6{Thứ Bảy} other{Chủ Nhật}}'**
-  String devXpWeekday(String day);
-
-  /// Ô màn thiết bị: tiêu đề cửa sổ XP của kênh (firmware XP::window)
-  ///
-  /// In vi, this message translates to:
-  /// **'AI hôm nay'**
-  String get devXpTitleAi;
-
-  /// Ô màn thiết bị: tiêu đề cửa sổ XP của kênh (firmware XP::window)
-  ///
-  /// In vi, this message translates to:
-  /// **'Tác tử'**
-  String get devXpTitleAgents;
-
-  /// Ô màn thiết bị: tiêu đề cửa sổ XP của kênh (firmware XP::window)
-  ///
-  /// In vi, this message translates to:
-  /// **'Đồng hồ'**
-  String get devXpTitleClock;
-
-  /// Ô màn thiết bị: tiêu đề cửa sổ XP của kênh (firmware XP::window)
-  ///
-  /// In vi, this message translates to:
-  /// **'Dự báo'**
-  String get devXpTitleForecast;
-
-  /// Ô màn thiết bị: tiêu đề cửa sổ XP của kênh (firmware XP::window)
-  ///
-  /// In vi, this message translates to:
-  /// **'Thông tin'**
-  String get devXpTitleInfo;
-
-  /// Ô màn thiết bị: tiêu đề cửa sổ XP của kênh (firmware XP::window)
-  ///
-  /// In vi, this message translates to:
-  /// **'Ảnh'**
-  String get devXpTitlePhoto;
-
-  /// Ô màn thiết bị: tiêu đề cửa sổ XP của kênh (firmware XP::window)
-  ///
-  /// In vi, this message translates to:
-  /// **'Cài đặt'**
-  String get devXpTitleSetup;
-
-  /// Ô màn thiết bị: tiêu đề cửa sổ XP của kênh (firmware XP::window)
-  ///
-  /// In vi, this message translates to:
-  /// **'Xu hướng'**
-  String get devXpTitleTrend;
-
-  /// Ô màn thiết bị: tiêu đề cửa sổ XP của kênh (firmware XP::window)
-  ///
-  /// In vi, this message translates to:
-  /// **'Thời tiết'**
-  String get devXpTitleWeather;
-
-  /// Ô màn thiết bị: tiêu đề thẻ agent (ch_attention paintCard)
-  ///
-  /// In vi, this message translates to:
-  /// **'Cần bạn duyệt'**
-  String get devXpCardNeedApproval;
-
-  /// Ô màn thiết bị: tiêu đề thẻ agent (ch_attention paintCard)
-  ///
-  /// In vi, this message translates to:
-  /// **'Xong rồi!'**
-  String get devXpCardDoneTitle;
-
-  /// Ô màn thiết bị: tiêu đề thẻ tiến độ (ch_attention cardTitle)
-  ///
-  /// In vi, this message translates to:
-  /// **'Đang chạy {pct}%'**
-  String devXpCardRunningPct(int pct);
-
-  /// Ô màn thiết bị: dòng chi tiết khi agent báo xong (ch_attention bodyText)
-  ///
-  /// In vi, this message translates to:
-  /// **'{name} đã xong'**
-  String devXpCardFinished(String name);
-
-  /// Ô màn thiết bị: dòng chi tiết thẻ câu hỏi (ch_attention bodyText)
-  ///
-  /// In vi, this message translates to:
-  /// **'{name} đang chờ câu trả lời'**
-  String devXpCardWaitingAnswer(String name);
-
-  /// Ô màn thiết bị: trạng thái thẻ chờ bạn (ch_attention statusText)
-  ///
-  /// In vi, this message translates to:
-  /// **'chờ bạn · {age}'**
-  String devXpCardWaitStatus(String age);
-
-  /// Ô màn thiết bị: thời gian dưới một phút (ch_attention statusText)
-  ///
-  /// In vi, this message translates to:
-  /// **'{n} giây'**
-  String devXpSeconds(int n);
-
-  /// Ô màn thiết bị: thời lượng ngắn P phút / G giờ / NG ngày (TimeUtil::shortDuration)
-  ///
-  /// In vi, this message translates to:
-  /// **'{n}{unit, select, minutes{P} hours{G} other{NG}}'**
-  String devXpShortDur(int n, String unit);
-
-  /// Ô màn thiết bị: dòng danh sách Tác tử: thẻ cần duyệt (ch_attention listRow)
-  ///
-  /// In vi, this message translates to:
-  /// **'Cần bạn'**
-  String get devXpRowNeedYou;
-
-  /// Ô màn thiết bị: dòng danh sách Tác tử: tiêu đề hook WAITING FOR YOU
-  ///
-  /// In vi, this message translates to:
-  /// **'Đang chờ bạn'**
-  String get devXpRowWaitingYou;
-
-  /// Ô màn thiết bị: dòng danh sách Tác tử: loại thẻ khi không có tiêu đề (ch_attention kindLabel, viết hoa đầu câu)
-  ///
-  /// In vi, this message translates to:
-  /// **'{kind, select, approval{Phê duyệt} error{Lỗi} input{Chờ bạn} progress{Tiến độ} warning{Cảnh báo} success{Xong} other{Thông tin}}'**
-  String devXpKindWord(String kind);
-
-  /// Ô màn thiết bị: danh sách Tác tử: số thẻ không vẽ
-  ///
-  /// In vi, this message translates to:
-  /// **'+ {n} mục khác'**
-  String devXpMoreItems(int n);
-
-  /// Ô màn thiết bị: thanh trạng thái Tác tử: số thẻ
-  ///
-  /// In vi, this message translates to:
-  /// **'{n} mục'**
-  String devXpItems(int n);
-
-  /// Ô màn thiết bị: thanh trạng thái Tác tử
-  ///
-  /// In vi, this message translates to:
-  /// **'{n} cần duyệt'**
-  String devXpNApprovals(int n);
-
-  /// Ô màn thiết bị: thanh trạng thái Tác tử
-  ///
-  /// In vi, this message translates to:
-  /// **'{n} lượt bạn'**
-  String devXpNInputs(int n);
-
-  /// Ô màn thiết bị: thanh trạng thái Tác tử khi không thẻ nào chờ bạn
-  ///
-  /// In vi, this message translates to:
-  /// **'không mục nào chờ'**
-  String get devXpNoneWaiting;
-
-  /// Ô màn thiết bị: nhãn biểu tượng màn desktop (ch_home)
-  ///
-  /// In vi, this message translates to:
-  /// **'Thùng rác'**
-  String get devXpDeskTrash;
-
-  /// Ô màn thiết bị: bóng thời tiết màn desktop: dòng 1 (ch_home balloonText)
-  ///
-  /// In vi, this message translates to:
-  /// **'{temp}° · {desc}'**
-  String devXpDeskNow(int temp, String desc);
-
-  /// Ô màn thiết bị: bóng thời tiết màn desktop: dòng 2
-  ///
-  /// In vi, this message translates to:
-  /// **'cảm giác {temp}°'**
-  String devXpDeskFeels(int temp);
-
-  /// Ô màn thiết bị: bóng thời tiết màn desktop khi chưa có số đo
-  ///
-  /// In vi, this message translates to:
-  /// **'chưa có thời tiết'**
-  String get devXpDeskNoWeather;
-
-  /// Ô màn thiết bị: kênh Cài đặt (ch_setup)
-  ///
-  /// In vi, this message translates to:
-  /// **'Hoàn tất cài đặt'**
-  String get devXpSetupHead;
-
-  /// Ô màn thiết bị: kênh Cài đặt: số bước còn lại
-  ///
-  /// In vi, this message translates to:
-  /// **'Còn {n} bước nữa là xong.'**
-  String devXpSetupLeft(int n);
-
-  /// Ô màn thiết bị: kênh Cài đặt: mục danh sách
-  ///
-  /// In vi, this message translates to:
-  /// **'Khóa Claude'**
-  String get devXpSetupClaude;
-
-  /// Ô màn thiết bị: kênh Cài đặt: mục danh sách
-  ///
-  /// In vi, this message translates to:
-  /// **'Token Codex'**
-  String get devXpSetupCodex;
-
-  /// Ô màn thiết bị: kênh Cài đặt: mục danh sách
-  ///
-  /// In vi, this message translates to:
-  /// **'Thời tiết, vị trí, giờ'**
-  String get devXpSetupWeather;
-
-  /// Ô màn thiết bị: kênh Cài đặt: nhãn khung nhóm
-  ///
-  /// In vi, this message translates to:
-  /// **'Mở trong trình duyệt'**
-  String get devXpSetupOpen;
-
-  /// Ô màn thiết bị: kênh Ảnh khi trống (ch_photo drawEmpty)
-  ///
-  /// In vi, this message translates to:
-  /// **'Chưa có ảnh'**
-  String get devXpPhotoEmpty;
-
-  /// Ô màn thiết bị: kênh Ảnh khi trống
-  ///
-  /// In vi, this message translates to:
-  /// **'Gửi ảnh từ app glimmer'**
-  String get devXpPhotoSend;
-
-  /// Ô màn thiết bị: kênh Ảnh khi trống
-  ///
-  /// In vi, this message translates to:
-  /// **'hoặc'**
-  String get devXpPhotoOr;
-
-  /// Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)
-  ///
-  /// In vi, this message translates to:
-  /// **'Đang tải thời tiết...'**
-  String get devXpWeatherLoading;
-
-  /// Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)
-  ///
-  /// In vi, this message translates to:
-  /// **'Chưa có thời tiết'**
-  String get devXpWeatherErrorHead;
-
-  /// Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)
-  ///
-  /// In vi, this message translates to:
-  /// **'Máy chủ trả lỗi {code}.'**
-  String devXpWeatherErrHttp(int code);
-
-  /// Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)
-  ///
-  /// In vi, this message translates to:
-  /// **'Không kết nối được.'**
-  String get devXpWeatherErrConnect;
-
-  /// Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)
-  ///
-  /// In vi, this message translates to:
-  /// **'Không mở được kết nối.'**
-  String get devXpWeatherErrBegin;
-
-  /// Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)
-  ///
-  /// In vi, this message translates to:
-  /// **'Dữ liệu lỗi.'**
-  String get devXpWeatherErrJson;
-
-  /// Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)
-  ///
-  /// In vi, this message translates to:
-  /// **'Thiếu số liệu hiện tại.'**
-  String get devXpWeatherErrNoCurrent;
-
-  /// Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)
-  ///
-  /// In vi, this message translates to:
-  /// **'Không rõ lỗi.'**
-  String get devXpWeatherErrUnknown;
-
-  /// Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)
-  ///
-  /// In vi, this message translates to:
-  /// **'Đang tự thử lại...'**
-  String get devXpWeatherRetrying;
-
-  /// Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)
-  ///
-  /// In vi, this message translates to:
-  /// **'cảm giác {t}°'**
-  String devXpWeatherFeels(int t);
-
-  /// Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)
-  ///
-  /// In vi, this message translates to:
-  /// **'ẩm {n}%'**
-  String devXpWeatherHumidity(int n);
-
-  /// Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)
-  ///
-  /// In vi, this message translates to:
-  /// **'gió {n}km'**
-  String devXpWeatherWind(int n);
-
-  /// Ô màn thiết bị (Dự báo, ch_forecast.cpp / XP-Forecast*)
-  ///
-  /// In vi, this message translates to:
-  /// **'Nay'**
-  String get devXpDayToday;
-
-  /// Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)
-  ///
-  /// In vi, this message translates to:
-  /// **'Mai'**
-  String get devXpDayTomorrow;
-
-  /// Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)
-  ///
-  /// In vi, this message translates to:
-  /// **'Kia'**
-  String get devXpDayAfter;
-
-  /// Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)
-  ///
-  /// In vi, this message translates to:
-  /// **'{event, select, set{Mặt trời lặn} other{Mặt trời mọc}} {time}'**
-  String devXpWeatherSun(String event, String time);
-
-  /// Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)
-  ///
-  /// In vi, this message translates to:
-  /// **'Cập nhật {age} trước'**
-  String devXpWeatherUpdated(String age);
-
-  /// Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)
-  ///
-  /// In vi, this message translates to:
-  /// **'cũ {age}'**
-  String devXpStaleMeta(String age);
-
-  /// Ô màn thiết bị: khoảng thời gian như firmware TimeUtil::shortDuration
-  ///
-  /// In vi, this message translates to:
-  /// **'{unit, select, minutes{{n}P} hours{{n}G} other{{n}NG}}'**
-  String devXpSpanShort(String unit, int n);
-
-  /// Ô màn thiết bị: khoảng thời gian như firmware TimeUtil::shortDuration
-  ///
-  /// In vi, this message translates to:
-  /// **'{unit, select, minutes{{n} phút} hours{{n} giờ} other{{n} ngày}}'**
-  String devXpSpanLong(String unit, int n);
-
-  /// Ô màn thiết bị (Dự báo, ch_forecast.cpp / XP-Forecast*)
-  ///
-  /// In vi, this message translates to:
-  /// **'Chưa có dự báo'**
-  String get devXpForecastEmpty;
-
-  /// Ô màn thiết bị (Dự báo, ch_forecast.cpp / XP-Forecast*)
-  ///
-  /// In vi, this message translates to:
-  /// **'3 ngày tới'**
-  String get devXpForecastNext3;
-
-  /// Ô màn thiết bị (Đồng hồ, ch_clock.cpp / XP-Clock)
-  ///
-  /// In vi, this message translates to:
-  /// **'{slot, select, night{ngủ ngon nhé} morning{chào buổi sáng} afternoon{chào buổi chiều} evening{chào buổi tối} other{nghỉ ngơi thôi}}, {name}'**
-  String devXpClockGreeting(String slot, String name);
-
-  /// Ô màn thiết bị (Đồng hồ, ch_clock.cpp / XP-Clock)
-  ///
-  /// In vi, this message translates to:
-  /// **'bạn'**
-  String get devXpClockYou;
-
-  /// Ô màn thiết bị (Đồng hồ, ch_clock.cpp / XP-Clock)
-  ///
-  /// In vi, this message translates to:
-  /// **'Tuần {n}'**
-  String devXpClockWeek(int n);
-
-  /// Ô màn thiết bị (Thông tin, ch_info.cpp / XP-Info)
-  ///
-  /// In vi, this message translates to:
-  /// **'{row, select, ip{IP} ssid{SSID} rssi{Sóng} up{Đã chạy} heap{Bộ nhớ} block{Khối lớn} fw{Firmware} channels{Kênh} updated{Cập nhật} other{Lần tới}}'**
-  String devXpInfoLabels(String row);
-
-  /// Ô màn thiết bị (Thông tin, ch_info.cpp / XP-Info)
-  ///
-  /// In vi, this message translates to:
-  /// **'{n}P'**
-  String devXpInfoMinutes(int n);
-
-  /// Ô màn thiết bị (Thông tin, ch_info.cpp / XP-Info)
-  ///
-  /// In vi, this message translates to:
-  /// **'{n}K trống'**
-  String devXpInfoHeap(int n);
-
-  /// Ô màn thiết bị (Thông tin, ch_info.cpp / XP-Info)
-  ///
-  /// In vi, this message translates to:
-  /// **'{n}P trước'**
-  String devXpInfoAgo(int n);
-
-  /// Ô màn thiết bị (Thông tin, ch_info.cpp / XP-Info)
-  ///
-  /// In vi, this message translates to:
-  /// **'sau {n}P'**
-  String devXpInfoNext(int n);
-
-  /// Ô màn thiết bị (màn hệ thống, display.cpp / XP-SetupMode, XP-OtaProgress)
-  ///
-  /// In vi, this message translates to:
-  /// **'Để bắt đầu,'**
-  String get devXpSetupLine1;
-
-  /// Ô màn thiết bị (màn hệ thống, display.cpp / XP-SetupMode, XP-OtaProgress)
-  ///
-  /// In vi, this message translates to:
-  /// **'kết nối Wi-Fi'**
-  String get devXpSetupLine2;
-
-  /// Ô màn thiết bị (màn hệ thống, display.cpp / XP-SetupMode, XP-OtaProgress)
-  ///
-  /// In vi, this message translates to:
-  /// **'Cài đặt Wi-Fi'**
-  String get devXpSetupPower;
-
-  /// Ô màn thiết bị (màn hệ thống, display.cpp / XP-SetupMode, XP-OtaProgress)
-  ///
-  /// In vi, this message translates to:
-  /// **'Đừng tắt hay rút điện máy.'**
-  String get devXpOtaWarn;
-
-  /// Ô màn thiết bị (chưa có kênh, xp.cpp drawNoChannels / XP-NoChannels)
-  ///
-  /// In vi, this message translates to:
-  /// **'Chưa có kênh'**
-  String get devXpNoChannelsHead;
-
-  /// Ô màn thiết bị (chưa có kênh, xp.cpp drawNoChannels / XP-NoChannels)
-  ///
-  /// In vi, this message translates to:
-  /// **'Bật kênh trên trang web:'**
-  String get devXpNoChannelsLine;
-
-  /// Ô màn thiết bị: tiêu đề cửa sổ thẻ agent theo loại (ch_attention windowTitle)
-  ///
-  /// In vi, this message translates to:
-  /// **'Cần duyệt'**
-  String get devXpCardApproval;
-
-  /// Ô màn thiết bị: tiêu đề cửa sổ thẻ agent theo loại (ch_attention windowTitle)
-  ///
-  /// In vi, this message translates to:
-  /// **'Lượt bạn'**
-  String get devXpCardInput;
-
-  /// Ô màn thiết bị: tiêu đề cửa sổ thẻ agent theo loại (ch_attention windowTitle)
-  ///
-  /// In vi, this message translates to:
-  /// **'Xong'**
-  String get devXpCardDone;
-
-  /// Ô màn thiết bị: tiêu đề cửa sổ thẻ agent theo loại (ch_attention windowTitle)
-  ///
-  /// In vi, this message translates to:
-  /// **'Lỗi'**
-  String get devXpCardError;
-
-  /// Ô màn thiết bị: tiêu đề cửa sổ thẻ agent theo loại (ch_attention windowTitle)
-  ///
-  /// In vi, this message translates to:
-  /// **'Đang chạy'**
-  String get devXpCardProgress;
-
-  /// Ô màn thiết bị: tiêu đề cửa sổ thẻ agent theo loại (ch_attention windowTitle)
-  ///
-  /// In vi, this message translates to:
-  /// **'Cảnh báo'**
-  String get devXpCardWarning;
-
-  /// Ô màn thiết bị: tiêu đề cửa sổ thẻ agent theo loại (ch_attention windowTitle)
-  ///
-  /// In vi, this message translates to:
-  /// **'Thông tin'**
-  String get devXpCardInfo;
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'{h}G {m}P'**
-  String devXpSpanHourMin(int h, int m);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'{kind, select, keyBad{khóa lỗi} blocked{bị chặn} maintenance{bảo trì} minor{chập chờn} other{sự cố}}'**
-  String devXpMeta(String kind);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'hạn {left}'**
-  String devXpMetaExpiring(String left);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Đang tải...'**
-  String get devXpLoading;
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'{kind, select, week{Hạn mức tuần} day{Hạn mức ngày} hours{Phiên {n} giờ} minutes{Phiên {n} phút} other{Hạn mức}}'**
-  String devXpWindow(String kind, int n);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'{state, select, approval{Cần duyệt} input{Chờ bạn} error{Lỗi} working{Đang chạy} other{Xong}}'**
-  String devXpProjState(String state);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Chưa có hoạt động project'**
-  String get devXpNoProject;
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'{kind, select, claude{khóa} other{token}}'**
-  String devXpCredNoun(String kind);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'{kind, select, claude{Khóa} other{Token}}'**
-  String devXpCredNounCap(String kind);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'{kind, select, claude{Khóa Claude} other{Token Codex}}'**
-  String devXpCredWho(String kind);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'{kind, select, claude{khóa Claude} other{token Codex}}'**
-  String devXpCredWhoLower(String kind);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'{noun} {state, select, expired{hết hạn} other{bị từ chối}} · {host}'**
-  String devXpBanner(String noun, String state, String host);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'{state, select, expired{Hết hạn} other{Bị từ chối}} · {host}'**
-  String devXpBannerShort(String state, String host);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Bị chặn · {noun} vẫn tốt · thử lại'**
-  String devXpBannerBlocked(String noun);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Bị chặn · {noun} vẫn tốt'**
-  String devXpBannerBlockedShort(String noun);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'{noun} bị từ chối'**
-  String devXpCredHeadRejected(String noun);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'{host} từ chối {noun}.'**
-  String devXpCredRejectedLine(String host, String noun);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Nhập {noun} mới tại:'**
-  String devXpCredEnterNew(String noun);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'{noun} hết hạn'**
-  String devXpCredHeadExpired(String noun);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Hết hạn ngày {date}.'**
-  String devXpCredExpiredOn(String date);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Đã hết hạn.'**
-  String get devXpCredExpired;
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Bị chặn'**
-  String get devXpCredHeadBlocked;
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'{host} chặn máy này.'**
-  String devXpCredBlockedLine(String host);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'{noun} vẫn tốt.'**
-  String devXpCredStillGood(String noun);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Thử lại mỗi 15 phút.'**
-  String get devXpCredRetry15;
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Chưa có {noun}'**
-  String devXpCredHeadNotSet(String noun);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Nhập {noun} tại:'**
-  String devXpCredEnter(String noun);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Mất mạng'**
-  String get devXpCredHeadOffline;
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Không tới được {host}.'**
-  String devXpCredUnreachable(String host);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Không tới {host}.'**
-  String devXpCredUnreachableShort(String host);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Kiểm tra Wi-Fi.'**
-  String get devXpCredCheckWifi;
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Không đọc được'**
-  String get devXpCredHeadUpstream;
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'{host} trả lỗi:'**
-  String devXpCredUpstreamLine(String host);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Đang tự động thử lại...'**
-  String get devXpCredAutoRetry;
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Chưa có {who}'**
-  String devXpCredStatusNotSet(String who);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'{who} hết hạn'**
-  String devXpCredStatusExpired(String who);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'{who} bị từ chối'**
-  String devXpCredStatusRejected(String who);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'{host} chặn máy này'**
-  String devXpCredStatusBlocked(String host);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'đặt lại sau'**
-  String get devXpResetIn;
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'tín dụng'**
-  String get devXpCredits;
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Đã dùng'**
-  String get devXpUsed;
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Không có'**
-  String get devXpNone;
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Đặt lại tuần'**
-  String get devXpWeekResets;
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Chưa có lượt'**
-  String get devXpNoResets;
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'còn {n}'**
-  String devXpResetsLeft(int n);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'còn {n} · {span}'**
-  String devXpResetsLeftIn(int n, String span);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'còn {n} · đến {date}'**
-  String devXpResetsLeftUntil(int n, String date);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'hết sau {span}'**
-  String devXpPaceEmpty(String span);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'~{pct}% khi đặt lại'**
-  String devXpPaceAtReset(int pct);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Tín dụng Codex còn'**
-  String get devXpAiHero;
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'{kind, select, blocked{Chặn} other{Khóa}}'**
-  String devXpAiBad(String kind);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'CL {cl} · CX {cx}'**
-  String devXpAiResets(String cl, String cx);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Dùng {name}'**
-  String devXpAdviceUse(String name);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'{name} có {n} lượt đặt lại'**
-  String devXpAdviceResets(String name, int n);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Cả hai sắp hết'**
-  String get devXpAdviceBothLow;
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'7 ngày · % hạn mức tuần'**
-  String get devXpTrendLabel;
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Hôm nay'**
-  String get devXpTrendToday;
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Đỉnh {day}'**
-  String devXpTrendPeak(String day);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Có {n} / 7 ngày'**
-  String devXpTrendHave(int n);
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'Đang thu thập...'**
-  String get devXpTrendCollecting;
-
-  /// Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)
-  ///
-  /// In vi, this message translates to:
-  /// **'cuối {d}/{m}'**
-  String devXpTrendLast(int d, int m);
 
   /// Không dùng từ 2026-11-26.7. Dòng dưới ô màn
   ///
@@ -3352,341 +2356,209 @@ abstract class AppLocalizations {
   /// **'chuột phải'**
   String get controlLegendHold;
 
-  /// Đầu Start menu, dưới "glimmer"
+  /// Không dùng từ 2026-11-27.10. Đầu Start menu, dưới "glimmer"
   ///
   /// In vi, this message translates to:
   /// **'Start · mở chương trình trên thiết bị'**
   String get startSubtitle;
 
-  /// Nhãn đọc màn hình nút / bảng Start
+  /// Không dùng từ 2026-11-27.10. Nhãn đọc màn hình nút / bảng Start
   ///
   /// In vi, this message translates to:
   /// **'Start'**
   String get startA11y;
 
-  /// Dòng phụ Claude trong Start
+  /// Không dùng từ 2026-11-27.10. Dòng phụ Claude trong Start
   ///
   /// In vi, this message translates to:
   /// **'mức dùng, project'**
   String get startClaudeSub;
 
-  /// Dòng phụ Codex trong Start
+  /// Không dùng từ 2026-11-27.10. Dòng phụ Codex trong Start
   ///
   /// In vi, this message translates to:
   /// **'mức dùng'**
   String get startCodexSub;
 
-  /// Start, cột phải
+  /// Không dùng từ 2026-11-27.10. Start, cột phải
   ///
   /// In vi, this message translates to:
   /// **'Desktop'**
   String get startDesktop;
 
-  /// Start, cột phải → màn Số liệu
+  /// Không dùng từ 2026-11-27.10. Start, cột phải → màn Số liệu
   ///
   /// In vi, this message translates to:
   /// **'Số liệu'**
   String get startDetails;
 
-  /// Start, cột phải → Cài đặt
+  /// Không dùng từ 2026-11-27.10. Start, cột phải → Cài đặt
   ///
   /// In vi, this message translates to:
   /// **'Bảng điều khiển'**
   String get startControlPanel;
 
-  /// Dòng phụ
+  /// Không dùng từ 2026-11-27.10. Dòng phụ
   ///
   /// In vi, this message translates to:
   /// **'Cài đặt'**
   String get startControlPanelSub;
 
-  /// Start, cột phải → Skill
+  /// Không dùng từ 2026-11-27.10. Start, cột phải → Skill
   ///
   /// In vi, this message translates to:
   /// **'Thêm / gỡ'**
   String get startAddRemove;
 
-  /// Dòng phụ
+  /// Không dùng từ 2026-11-27.10. Dòng phụ
   ///
   /// In vi, this message translates to:
   /// **'chương trình · Skill'**
   String get startAddRemoveSub;
 
-  /// Start, cột phải → Thiết bị
+  /// Không dùng từ 2026-11-27.10. Start, cột phải → Thiết bị
   ///
   /// In vi, this message translates to:
   /// **'Thiết bị'**
   String get startDevice;
 
-  /// Dòng phụ
+  /// Không dùng từ 2026-11-27.10. Dòng phụ
   ///
   /// In vi, this message translates to:
   /// **'firmware, sao lưu'**
   String get startDeviceSub;
 
-  /// Hàng cuối Start → bảng Tất cả chương trình
+  /// Không dùng từ 2026-11-27.10. Hàng cuối Start → bảng Tất cả chương trình
   ///
   /// In vi, this message translates to:
   /// **'Tất cả chương trình'**
   String get startAllPrograms;
 
-  /// Chân Start (amber)
+  /// Không dùng từ 2026-11-27.10. Chân Start (amber)
   ///
   /// In vi, this message translates to:
   /// **'Tắt màn'**
   String get startTurnOff;
 
-  /// Chân Start (coral) → POST /api/reboot
+  /// Không dùng từ 2026-11-27.10. Chân Start (coral) → POST /api/reboot
   ///
   /// In vi, this message translates to:
   /// **'Khởi động lại'**
   String get startRestart;
 
-  /// Tiêu đề bảng
+  /// Không dùng từ 2026-11-27.10. Tiêu đề bảng
   ///
   /// In vi, this message translates to:
   /// **'Tất cả chương trình'**
   String get allProgramsTitle;
 
-  /// Nút quay lại
+  /// Không dùng từ 2026-11-27.10. Nút quay lại
   ///
   /// In vi, this message translates to:
   /// **'Về Start'**
   String get allProgramsBackA11y;
 
-  /// Nhóm
+  /// Không dùng từ 2026-11-27.10. Nhóm
   ///
   /// In vi, this message translates to:
   /// **'AGENT'**
   String get allProgramsGroupAgent;
 
-  /// Nhóm
+  /// Không dùng từ 2026-11-27.10. Nhóm
   ///
   /// In vi, this message translates to:
   /// **'THỜI TIẾT · ĐỒNG HỒ · ẢNH'**
   String get allProgramsGroupOther;
 
-  /// Nhóm
+  /// Không dùng từ 2026-11-27.10. Nhóm
   ///
   /// In vi, this message translates to:
   /// **'HỆ THỐNG'**
   String get allProgramsGroupSystem;
 
-  /// Chú thích chấm mint
+  /// Không dùng từ 2026-11-27.10. Chú thích chấm mint
   ///
   /// In vi, this message translates to:
   /// **'● = đang mở'**
   String get allProgramsOpenLegend;
 
-  /// Hàng cuối bảng → Skill
+  /// Không dùng từ 2026-11-27.10. Hàng cuối bảng → Skill
   ///
   /// In vi, this message translates to:
   /// **'Thêm / gỡ chương trình'**
   String get allProgramsAddRemove;
 
-  /// Dòng phụ
+  /// Không dùng từ 2026-11-27.10. Dòng phụ
   ///
   /// In vi, this message translates to:
   /// **'bật skill mới: {names} sắp có'**
   String allProgramsAddRemoveSub(String names);
 
-  /// Tên chương trình
+  /// Không dùng từ 2026-11-27.10. Tên chương trình
   ///
   /// In vi, this message translates to:
   /// **'Claude'**
   String get appClaude;
 
-  /// Tên chương trình
+  /// Không dùng từ 2026-11-27.10. Tên chương trình
   ///
   /// In vi, this message translates to:
   /// **'Codex'**
   String get appCodex;
 
-  /// Tên chương trình
+  /// Không dùng từ 2026-11-27.10. Tên chương trình
   ///
   /// In vi, this message translates to:
   /// **'AI'**
   String get appAi;
 
-  /// Tên chương trình
+  /// Không dùng từ 2026-11-27.10. Tên chương trình
   ///
   /// In vi, this message translates to:
   /// **'Xu hướng'**
   String get appTrend;
 
-  /// Tên chương trình
+  /// Không dùng từ 2026-11-27.10. Tên chương trình
   ///
   /// In vi, this message translates to:
   /// **'Agents'**
   String get appAgents;
 
-  /// Tên chương trình
+  /// Không dùng từ 2026-11-27.10. Tên chương trình
   ///
   /// In vi, this message translates to:
   /// **'Ảnh'**
   String get appPhoto;
 
-  /// Tên chương trình
+  /// Không dùng từ 2026-11-27.10. Tên chương trình
   ///
   /// In vi, this message translates to:
   /// **'Thời tiết'**
   String get appWeather;
 
-  /// Tên chương trình
+  /// Không dùng từ 2026-11-27.10. Tên chương trình
   ///
   /// In vi, this message translates to:
   /// **'Dự báo'**
   String get appForecast;
 
-  /// Tên chương trình
+  /// Không dùng từ 2026-11-27.10. Tên chương trình
   ///
   /// In vi, this message translates to:
   /// **'Đồng hồ'**
   String get appClock;
 
-  /// Tên chương trình
+  /// Không dùng từ 2026-11-27.10. Tên chương trình
   ///
   /// In vi, this message translates to:
   /// **'Thông tin'**
   String get appInfo;
 
-  /// Tên chương trình (skill sắp có)
+  /// Không dùng từ 2026-11-27.10. Tên chương trình (skill sắp có)
   ///
   /// In vi, this message translates to:
   /// **'Tin nhắn'**
   String get appChat;
-
-  /// Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)
-  ///
-  /// In vi, this message translates to:
-  /// **'Ngày và Giờ'**
-  String get devXpTitleDateTime;
-
-  /// Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)
-  ///
-  /// In vi, this message translates to:
-  /// **'Hiện tại'**
-  String get devXpTabNow;
-
-  /// Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)
-  ///
-  /// In vi, this message translates to:
-  /// **'Dự báo'**
-  String get devXpTabForecast;
-
-  /// Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)
-  ///
-  /// In vi, this message translates to:
-  /// **'Ngày và giờ'**
-  String get devXpTabDateTime;
-
-  /// Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)
-  ///
-  /// In vi, this message translates to:
-  /// **'Múi giờ'**
-  String get devXpTabTimeZone;
-
-  /// Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)
-  ///
-  /// In vi, this message translates to:
-  /// **'Ngày'**
-  String get devXpGroupDate;
-
-  /// Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)
-  ///
-  /// In vi, this message translates to:
-  /// **'Giờ'**
-  String get devXpGroupTime;
-
-  /// Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)
-  ///
-  /// In vi, this message translates to:
-  /// **'{day, select, 1{T2} 2{T3} 3{T4} 4{T5} 5{T6} 6{T7} other{CN}}'**
-  String devXpWeekdayShort(String day);
-
-  /// Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)
-  ///
-  /// In vi, this message translates to:
-  /// **'Múi giờ: {zone}'**
-  String devXpClockZone(String zone);
-
-  /// Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)
-  ///
-  /// In vi, this message translates to:
-  /// **'Cảm giác:'**
-  String get devXpRowFeels;
-
-  /// Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)
-  ///
-  /// In vi, this message translates to:
-  /// **'Độ ẩm:'**
-  String get devXpRowHumidity;
-
-  /// Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)
-  ///
-  /// In vi, this message translates to:
-  /// **'Gió:'**
-  String get devXpRowWind;
-
-  /// Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)
-  ///
-  /// In vi, this message translates to:
-  /// **'Chỉ số UV:'**
-  String get devXpRowUv;
-
-  /// Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)
-  ///
-  /// In vi, this message translates to:
-  /// **'Cao / thấp:'**
-  String get devXpRowHiLo;
-
-  /// Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)
-  ///
-  /// In vi, this message translates to:
-  /// **'{event, select, set{Mặt trời lặn:} other{Mặt trời mọc:}}'**
-  String devXpRowSun(String event);
-
-  /// Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)
-  ///
-  /// In vi, this message translates to:
-  /// **'{n} · {level, select, low{thấp} moderate{trung bình} high{cao} veryHigh{rất cao} other{cực cao}}'**
-  String devXpUvValue(int n, String level);
-
-  /// Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)
-  ///
-  /// In vi, this message translates to:
-  /// **'{n} km/h'**
-  String devXpWindValue(int n);
-
-  /// Ô màn thiết bị (Thời tiết tab Dự báo, ch_forecast.cpp / XP-Forecast-Details, panel P-2026-11-26.17)
-  ///
-  /// In vi, this message translates to:
-  /// **'Ngày'**
-  String get devXpColDay;
-
-  /// Ô màn thiết bị (Thời tiết tab Dự báo, ch_forecast.cpp / XP-Forecast-Details, panel P-2026-11-26.17)
-  ///
-  /// In vi, this message translates to:
-  /// **'Trời'**
-  String get devXpColSky;
-
-  /// Ô màn thiết bị (Thời tiết tab Dự báo, ch_forecast.cpp / XP-Forecast-Details, panel P-2026-11-26.17)
-  ///
-  /// In vi, this message translates to:
-  /// **'Thấp'**
-  String get devXpColLow;
-
-  /// Ô màn thiết bị (Thời tiết tab Dự báo, ch_forecast.cpp / XP-Forecast-Details, panel P-2026-11-26.17)
-  ///
-  /// In vi, this message translates to:
-  /// **'Cao'**
-  String get devXpColHigh;
-
-  /// Ô màn thiết bị (Thời tiết tab Dự báo, ch_forecast.cpp / XP-Forecast-Details, panel P-2026-11-26.17)
-  ///
-  /// In vi, this message translates to:
-  /// **'Hôm nay'**
-  String get devXpDayTodayLong;
 
   /// Nhóm Cài đặt
   ///
@@ -3993,6 +2865,150 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Xoá'**
   String get weatherLocationClearOk;
+
+  /// Nhãn đọc màn hình bàn rê
+  ///
+  /// In vi, this message translates to:
+  /// **'Bàn rê: rê một ngón để di chuột trên thiết bị, chạm nhẹ để click'**
+  String get controlTrackpadA11y;
+
+  /// Nút chuột trái dưới bàn rê
+  ///
+  /// In vi, this message translates to:
+  /// **'Trái'**
+  String get controlMouseLeft;
+
+  /// Nút chuột phải dưới bàn rê
+  ///
+  /// In vi, this message translates to:
+  /// **'Phải'**
+  String get controlMouseRight;
+
+  /// Nhãn đọc màn hình
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuột trái'**
+  String get controlMouseLeftA11y;
+
+  /// Nhãn đọc màn hình
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuột phải'**
+  String get controlMouseRightA11y;
+
+  /// Nhóm phím
+  ///
+  /// In vi, this message translates to:
+  /// **'Phím'**
+  String get controlKeysA11y;
+
+  /// Phím Windows (lá cờ) — mở / đóng Start trên thiết bị
+  ///
+  /// In vi, this message translates to:
+  /// **'Windows'**
+  String get keyWindows;
+
+  /// Phím tổ hợp có sẵn — cửa sổ kế
+  ///
+  /// In vi, this message translates to:
+  /// **'Alt+Tab'**
+  String get keyAltTab;
+
+  /// Phím tổ hợp có sẵn — đóng cửa sổ trên cùng
+  ///
+  /// In vi, this message translates to:
+  /// **'Alt+F4'**
+  String get keyAltF4;
+
+  /// Phím
+  ///
+  /// In vi, this message translates to:
+  /// **'Esc'**
+  String get keyEsc;
+
+  /// Phím
+  ///
+  /// In vi, this message translates to:
+  /// **'Tab'**
+  String get keyTab;
+
+  /// Phím
+  ///
+  /// In vi, this message translates to:
+  /// **'Enter'**
+  String get keyEnter;
+
+  /// Nhãn đọc màn hình phím mũi tên
+  ///
+  /// In vi, this message translates to:
+  /// **'Trái'**
+  String get keyLeft;
+
+  /// Nhãn đọc màn hình phím mũi tên
+  ///
+  /// In vi, this message translates to:
+  /// **'Lên'**
+  String get keyUp;
+
+  /// Nhãn đọc màn hình phím mũi tên
+  ///
+  /// In vi, this message translates to:
+  /// **'Xuống'**
+  String get keyDown;
+
+  /// Nhãn đọc màn hình phím mũi tên
+  ///
+  /// In vi, this message translates to:
+  /// **'Phải'**
+  String get keyRight;
+
+  /// Phím mở bàn phím chữ (chưa dùng, mờ)
+  ///
+  /// In vi, this message translates to:
+  /// **'Chữ'**
+  String get keyText;
+
+  /// Dòng phụ dưới phím Chữ
+  ///
+  /// In vi, this message translates to:
+  /// **'sắp có'**
+  String get keyTextSoon;
+
+  /// Nhãn đọc màn hình nút nguồn khi đang bật
+  ///
+  /// In vi, this message translates to:
+  /// **'Tắt máy'**
+  String get powerOff;
+
+  /// Nút nguồn khi máy tắt; nút to giữa bàn rê
+  ///
+  /// In vi, this message translates to:
+  /// **'Bật máy'**
+  String get powerOn;
+
+  /// Nhãn đọc màn hình nút nguồn khi đang tắt
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tắt máy'**
+  String get powerShutting;
+
+  /// Nhãn đọc màn hình nút nguồn khi đang khởi động
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang khởi động'**
+  String get powerBooting;
+
+  /// Nút vuông chế độ đêm
+  ///
+  /// In vi, this message translates to:
+  /// **'Chế độ đêm'**
+  String get controlNightA11y;
+
+  /// Nút vuông → màn Số liệu
+  ///
+  /// In vi, this message translates to:
+  /// **'Số liệu'**
+  String get controlDetailsA11y;
 }
 
 class _AppLocalizationsDelegate

@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:glimmer_app/domain/models/device_state.dart';
 import 'package:glimmer_app/domain/use_cases/control_device_use_case.dart';
 import 'package:glimmer_app/l10n/app_localizations.dart';
 import 'package:glimmer_app/ui/control/view_models/control_view_model.dart';
-import 'package:glimmer_app/domain/rules/mirror_rules.dart';
 import 'package:glimmer_app/ui/control/widgets/control_screen.dart';
-import 'package:glimmer_app/ui/control/widgets/device_mirror/touch_mirror.dart';
-import 'package:glimmer_app/ui/control/widgets/device_mirror/mirror_channel.dart';
 import 'package:glimmer_app/ui/control/widgets/hold_card_panel.dart';
-import 'package:glimmer_app/ui/control/widgets/start_menu_sheet.dart';
+import 'package:glimmer_app/ui/control/widgets/key_pad.dart';
+import 'package:glimmer_app/ui/control/widgets/power_button.dart';
+import 'package:glimmer_app/ui/control/widgets/trackpad.dart';
 import 'package:glimmer_app/ui/core/themes/app_theme.dart';
 
 import '../../../../testing/fakes/fake_repositories.dart';
@@ -24,6 +22,8 @@ Map<String, dynamic> _state({
   bool screenOn = true,
   String wifi = 'connected',
   bool night = false,
+  bool mouse = true,
+  String power = 'on',
 }) => {
   'fw': current ? '0.25.0' : '0.24.0',
   'wifi': wifi,
@@ -35,6 +35,11 @@ Map<String, dynamic> _state({
   'skills_on': ['agent', 'photo', 'weather', 'clock'],
   'claude_usage': {'weekly_used': 38, 'session_used': 12},
   if (current) ...{'paused': false, 'screen_on': screenOn, 'slide_ms': 8000, 'slide_left_ms': 6000},
+  if (current) 'windows': <String, Object?>{},
+  if (current && mouse) ...{
+    'cursor': {'port': 4210, 'x': 120, 'y': 120, 'shape': 1, 'shown': true},
+    'power': power,
+  },
 };
 
 Widget _app(Widget home) => MaterialApp(
@@ -98,51 +103,51 @@ void main() {
     await _frames(t);
   }
 
-  testWidgets('normal: touch mirror, brightness, toggles; no legend, no status line, no rotation buttons', (t) async {
+  testWidgets('normal: power button, trackpad, mouse buttons, keys, bottom row; no picture of the screen', (t) async {
     await pump(t, _state());
-    expect(find.byType(TouchMirror), findsOneWidget);
-    expect(find.textContaining(_vi.controlOpenOnDevice, findRichText: true), findsNothing);
-    expect(find.text(_vi.controlLegendTitle), findsNothing);
-    expect(find.text(_vi.controlPrev), findsNothing);
-    expect(find.text(_vi.controlPause), findsNothing);
+    expect(find.byType(PowerButton), findsOneWidget);
+    expect(find.byType(Trackpad), findsOneWidget);
+    expect(find.byType(MouseButtons), findsOneWidget);
+    expect(find.byType(KeyPad), findsOneWidget);
+    expect(find.text(_vi.controlMouseLeft), findsOneWidget);
+    expect(find.text(_vi.keyAltTab), findsOneWidget);
     expect(find.text('80%'), findsOneWidget);
-    expect(find.text(_vi.controlDetails), findsOneWidget);
-    expect(find.byIcon(Icons.lock_outline), findsNothing);
-    await t.tap(find.text(_vi.controlDetails));
+    expect(find.text(_vi.powerOn), findsNothing, reason: 'on: no big Bật máy');
+    await t.tap(find.bySemanticsLabel(_vi.controlDetailsA11y));
     await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
     expect(opened, [null]);
     await t.binding.setSurfaceSize(null);
   });
 
-  testWidgets('R-DK-3 R-DK-10 old firmware: banner + lock, a touch on × sends nothing', (t) async {
-    await pump(t, _state(current: false));
-    expect(find.text(_vi.controlOldFwTitle), findsOneWidget);
-    expect(find.text(_vi.controlOldFwBody('0.24.0')), findsOneWidget);
-    expect(find.byIcon(Icons.lock_outline), findsOneWidget);
-    final mirror = t.getTopLeft(find.byType(TouchMirror));
-    // × at device (228, 11) → shell pad 6 + screen pad 2 + × 1.5.
-    await t.tapAt(mirror + const Offset(8 + 228 * 1.5, 8 + 11 * 1.5));
-    await _frames(t);
-    expect(rig.posts(), isEmpty);
+  testWidgets('R-DK-19 R-DK-15 the Windows key opens Start on the device', (t) async {
+    await pump(t, _state());
+    rig.api.on(_url, 'POST', '/api/menu', {'ok': true});
+    await t.tap(find.text(_vi.keyWindows));
+    await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
+    expect(rig.posts('/api/menu').single.body, {'kind': 'start', 'all': false});
     await t.binding.setSurfaceSize(null);
   });
 
-  testWidgets('R-DK-8 start on the mirror opens Start; Bảng điều khiển → Cài đặt', (t) async {
-    await pump(t, _state());
-    final mirror = t.getTopLeft(find.byType(TouchMirror));
-    await t.tapAt(mirror + const Offset(8 + 30 * 1.5, 8 + 227 * 1.5));
+  testWidgets('R-DK-21 firmware without the mouse: banner, keys send nothing', (t) async {
+    await pump(t, _state(mouse: false));
+    expect(find.text(_vi.controlOldFwTitle), findsOneWidget);
+    expect(find.text(_vi.controlOldFwBody('0.25.0')), findsOneWidget);
+    await t.tap(find.text(_vi.keyWindows), warnIfMissed: false);
+    await t.tap(find.byType(PowerButton), warnIfMissed: false);
     await _frames(t);
-    expect(find.byType(StartMenuSheet), findsOneWidget);
-    expect(find.text(_vi.startAllPrograms), findsOneWidget);
-    await t.tap(find.text(_vi.startAllPrograms));
-    await _frames(t);
-    expect(find.text(_vi.allProgramsTitle), findsOneWidget);
-    expect(find.text(_vi.appForecast), findsOneWidget);
-    await t.tap(find.byTooltip(_vi.allProgramsBackA11y));
-    await _frames(t);
-    await t.tap(find.text(_vi.startControlPanel));
-    await _frames(t);
-    expect(opened, ['settings']);
+    expect(rig.posts('/api/menu'), isEmpty);
+    expect(rig.posts('/api/power'), isEmpty);
+    await t.binding.setSurfaceSize(null);
+  });
+
+  testWidgets('R-DK-20 off: Bật máy in the trackpad, a tap boots the device', (t) async {
+    await pump(t, _state(power: 'off'));
+    expect(find.text(_vi.powerOn), findsOneWidget);
+    rig.api.on(_url, 'POST', '/api/power', {'ok': true, 'power': 'booting'});
+    await t.tap(find.text(_vi.powerOn));
+    await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
+    await t.pump(const Duration(milliseconds: 50));
+    expect(rig.posts('/api/power').single.body, {'on': true});
     await t.binding.setSurfaceSize(null);
   });
 
@@ -158,20 +163,7 @@ void main() {
     expect(find.text(_vi.controlCardLabel), findsOneWidget);
     expect(find.text(_vi.controlDismissCard), findsOneWidget);
     expect(find.text(_vi.stateApproval), findsNothing, reason: 'the app never approves');
-    await t.binding.setSurfaceSize(null);
-  });
-
-  testWidgets('screen off: title + note, power lit as Bật màn', (t) async {
-    await pump(t, _state(screenOn: false));
-    expect(find.textContaining(_vi.controlScreenOffTitle, findRichText: true), findsOneWidget);
-    expect(find.text(_vi.controlScreenOffOverlay), findsOneWidget);
-    expect(find.text(_vi.controlScreenOn), findsOneWidget);
-    await t.binding.setSurfaceSize(null);
-  });
-
-  testWidgets('night face: night line', (t) async {
-    await pump(t, _state(channel: 'Night', night: true));
-    expect(find.textContaining(_vi.controlNightNote('00:00'), findRichText: true), findsOneWidget);
+    expect(t.getSize(find.byType(Trackpad)).height, 190 + 6, reason: 'shorter under the card (+ top margin)');
     await t.binding.setSurfaceSize(null);
   });
 
@@ -182,7 +174,7 @@ void main() {
     await t.binding.setSurfaceSize(null);
   });
 
-  testWidgets('offline: coral banner, overlay on the last picture', (t) async {
+  testWidgets('offline: coral banner', (t) async {
     await pump(t, _state());
     await t.runAsync(() async {
       rig.api.gone(_url);
@@ -190,7 +182,6 @@ void main() {
     });
     await _frames(t);
     expect(find.text(_vi.controlOfflineTitle), findsOneWidget);
-    expect(find.text(_vi.controlOfflineOverlayNote), findsOneWidget);
     await t.binding.setSurfaceSize(null);
   });
 
@@ -201,32 +192,5 @@ void main() {
     expect(find.text(_vi.controlFailed(_vi.devControlCmdOpen(_vi.appClock))), findsOneWidget);
     expect(find.text(_vi.commonRetry), findsOneWidget);
     await t.binding.setSurfaceSize(null);
-  });
-
-  testWidgets('DeviceMirror foundation: every registered channel and the night face paint', (t) async {
-    final s = DeviceState.fromJson(_state());
-    for (final name in mirrorChannels.keys) {
-      final frame = mirrorFrameOf(s, channel: name, now: DateTime(2026), settings: const {'tzMinutes': 420});
-      await t.pumpWidget(
-        _app(
-          Center(
-            child: TouchMirror(frame: frame, semanticLabel: name),
-          ),
-        ),
-      );
-      await t.pump();
-      expect(t.takeException(), isNull, reason: name);
-    }
-    final unknown = mirrorFrameOf(s, channel: 'Music', now: DateTime(2026));
-    await t.pumpWidget(
-      _app(
-        Center(
-          child: TouchMirror(frame: unknown, semanticLabel: 'x', dim: 0.4, offline: true),
-        ),
-      ),
-    );
-    await t.pump();
-    expect(t.takeException(), isNull);
-    expect(find.text(_vi.controlOfflineOverlay), findsOneWidget);
   });
 }

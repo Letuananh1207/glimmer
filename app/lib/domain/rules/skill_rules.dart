@@ -26,10 +26,10 @@ const skillCatalog = [
   SkillInfo(SkillIds.photo, hasPack: true),
   SkillInfo(SkillIds.weather, hasPack: true),
   SkillInfo(SkillIds.clock, hasPack: true),
+  SkillInfo(SkillIds.fun, hasPack: true), // Giải trí = Dò mìn (panel P-2026-11-27.25)
   SkillInfo(SkillIds.chat, hasPack: false),
   SkillInfo(SkillIds.music, hasPack: false),
   SkillInfo(SkillIds.social, hasPack: false),
-  SkillInfo(SkillIds.fun, hasPack: false),
 ];
 
 /// Các skill app có gói, theo thứ tự dock.

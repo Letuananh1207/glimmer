@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
 
-import '../../../l10n/app_localizations.dart';
 import '../../core/themes/app_colors.dart';
 import '../../core/themes/app_text.dart';
 import '../../core/widgets/clawd.dart';
 
-/// Đầu màn Điều khiển (§8): đệm 10 16 4 20, cách 12 — Clawd ×1.75 + "glimmer" 16/700 / chấm 7 + mạng · IP 11 muted;
-/// nút refresh 44 inkDim (`controlRefreshA11y`) lấn 8 vào lề phải.
+/// Đầu màn Điều khiển (§8, design 2026-11-27.10): đệm 10 16 6 20, cách 12 — Clawd ×1.75 + "glimmer" 16/700 / chấm 7 +
+/// mạng · IP 11 muted; bên phải [trailing] (`PowerButton`, lề phải −4).
 class ControlHeader extends StatelessWidget {
-  const ControlHeader({super.key, required this.network, required this.dot, required this.onRefresh});
+  const ControlHeader({super.key, required this.network, required this.dot, required this.trailing});
 
   /// "Nhà-2G · 192.168.1.50".
   final String network;
 
   /// Mint online, amber setup, coral offline.
   final Color dot;
-  final VoidCallback? onRefresh;
+  final Widget trailing;
 
   static const _clawd = 18 * 1.75;
   static const _title = 16.0;
@@ -23,14 +22,13 @@ class ControlHeader extends StatelessWidget {
   static const _dot = 7.0;
   static const _dotGap = 6.0;
   static const _lineGap = 2.0;
-  static const _nudge = 8.0;
-  static const _padTop = 10.0;
+  static const _nudge = 4.0;
+  static const _padTop = 10.0, _padBottom = 6.0;
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpace.xl, _padTop, AppSpace.l - _nudge, AppSpace.xs),
+      padding: const EdgeInsets.fromLTRB(AppSpace.xl, _padTop, AppSpace.l - _nudge, _padBottom),
       child: Row(
         children: [
           const Clawd(size: _clawd),
@@ -64,13 +62,8 @@ class ControlHeader extends StatelessWidget {
               ],
             ),
           ),
-          IconButton(
-            onPressed: onRefresh,
-            tooltip: l.controlRefreshA11y,
-            constraints: const BoxConstraints.tightFor(width: AppSize.tapMin, height: AppSize.tapMin),
-            padding: EdgeInsets.zero,
-            icon: const Icon(Icons.refresh, color: AppColors.inkDim),
-          ),
+          const SizedBox(width: AppSpace.m),
+          trailing,
         ],
       ),
     );
@@ -138,56 +131,3 @@ class ControlBanner extends StatelessWidget {
   );
 }
 
-/// Dòng dưới ô màn (§8): đệm 12 24 0, cách 8 — ô 8 bo 2 màu [accent] + tiêu đề 13/700 ink + ghi chú 13 ([noteColor]).
-/// Từ 2026-11-26.7 chỉ còn khi màn tắt / ban đêm.
-class ChannelLine extends StatelessWidget {
-  const ChannelLine({
-    super.key,
-    required this.title,
-    required this.note,
-    required this.accent,
-    this.noteColor = AppColors.muted,
-  });
-
-  final String title, note;
-  final Color accent, noteColor;
-
-  static const _size = 13.0;
-  static const _box = 8.0;
-  static const _boxRadius = 2.0;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(AppSpace.xxl, AppSpace.m, AppSpace.xxl, 0),
-    child: Row(
-      children: [
-        Container(
-          width: _box,
-          height: _box,
-          decoration: BoxDecoration(color: accent, borderRadius: BorderRadius.circular(_boxRadius)),
-        ),
-        const SizedBox(width: AppSpace.s),
-        Expanded(
-          child: Text.rich(
-            TextSpan(
-              children: [
-                TextSpan(
-                  text: title,
-                  style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.ink),
-                ),
-                if (note.isNotEmpty)
-                  TextSpan(
-                    text: ' $note',
-                    style: TextStyle(color: noteColor),
-                  ),
-              ],
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontFamily: AppFonts.family, fontSize: _size),
-          ),
-        ),
-      ],
-    ),
-  );
-}

@@ -389,7 +389,7 @@ void main() {
       // 4 tabs, opened on tab 1 = Điều khiển.
       expect(find.text(_vi.navControl), findsOneWidget);
       expect(find.text(_vi.navSkills), findsOneWidget);
-      expect(find.byTooltip(_vi.controlRefreshA11y), findsOneWidget);
+      expect(find.bySemanticsLabel(_vi.controlTrackpadA11y), findsOneWidget);
       rig.repo.forget();
       for (var i = 0; i < 10; i++) {
         await t.pump(const Duration(milliseconds: 100));

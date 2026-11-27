@@ -1,6 +1,6 @@
 # Phiếu thiết kế: Màn Điều khiển — app là chuột, bàn phím, nút nguồn
 
-- Trạng thái: chờ thiết kế
+- Trạng thái: đã áp (2026-11-27.10)
 - Đã vẽ: 2026-11-27.10
 - Ngày: 2026-11-27 · Nguồn: kế hoạch `docs/tasks/2026-11-27-app-la-chuot-ban-phim-nguon.md` (bạn duyệt 2026-11-27)
 

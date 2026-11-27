@@ -61,20 +61,20 @@ abstract final class AppColors {
   static const Color skillPhoto = Color(0xFF8FE574);
   /// Nền ô icon skill Ảnh; nền ô "+ Thêm ảnh" dùng mint 8 %
   static const Color skillPhotoTint = Color(0x298FE574);
-  /// Vỏ máy quanh ô màn (gradient 160°, trên)
-  static const Color deviceShellTop = Color(0xFF26232B);
-  /// Vỏ máy quanh ô màn (gradient 160°, dưới)
-  static const Color deviceShellBottom = Color(0xFF141217);
   /// Thanh báo nổi (lệnh không nhận)
   static const Color snackbar = Color(0xFF3A3048);
-  /// Ô màn khi màn thiết bị tắt
-  static const Color screenOff = Color(0xFF050507);
-  /// Nút start (Start menu) — gradient trên, như XP
-  static const Color xpStartTop = Color(0xFF4CB04C);
-  /// Nút start — gradient dưới
-  static const Color xpStartBottom = Color(0xFF2F8A2F);
-  /// Nền nhãn biểu tượng desktop đang chọn (XP)
-  static const Color xpSelect = Color(0xFF316AC5);
   /// Nền nút "Dùng vị trí hiện tại" (viền skillWeather)
   static const Color skillWeatherWash = Color(0x1454B6FF);
+  /// Bàn rê — gradient trên
+  static const Color trackpadTop = Color(0xFF221D2B);
+  /// Bàn rê — gradient dưới
+  static const Color trackpadBottom = Color(0xFF1A1621);
+  /// Mặt phím — gradient trên
+  static const Color keyFaceTop = Color(0xFF312A3B);
+  /// Mặt phím — gradient dưới
+  static const Color keyFaceBottom = Color(0xFF262030);
+  /// Gờ dưới phím (inset 3 px)
+  static const Color keyEdge = Color(0xFF141118);
+  /// Mặt phím / nút chuột đang bấm
+  static const Color keyPressed = Color(0xFF1D1924);
 }

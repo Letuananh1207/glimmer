@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:ui' as ui;
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 
@@ -9,7 +9,7 @@ import '../../../domain/models/attention_card.dart';
 import '../../../domain/models/clock_view.dart';
 import '../../../domain/models/control.dart';
 import '../../../domain/models/cursor.dart';
-import '../../../domain/models/device_photo.dart';
+import '../../../domain/models/mines_game.dart';
 import '../../../domain/models/device_state.dart';
 import '../../../domain/models/mirror_frame.dart';
 import '../../../domain/models/touch.dart';
@@ -19,10 +19,11 @@ import '../../../domain/rules/clock_rules.dart';
 import '../../../domain/rules/control_rules.dart' as rules;
 import '../../../domain/rules/cursor_rules.dart';
 import '../../../domain/rules/keyboard_rules.dart';
+import '../../../domain/rules/mines_rules.dart';
+import '../../../domain/rules/start_rules.dart';
 import '../../../domain/rules/mirror_rules.dart';
 import '../../../domain/rules/touch_rules.dart';
 import '../../../domain/use_cases/control_device_use_case.dart';
-import '../../../domain/use_cases/load_photos_use_case.dart';
 import '../../../utils/result.dart';
 import '../../../utils/safe_notifier.dart';
 
@@ -41,13 +42,20 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
   ControlViewModel({
     required DeviceRepository device,
     required ControlDeviceUseCase control,
-    LoadPhotosUseCase? loadPhotos,
     DateTime Function() now = DateTime.now,
+    math.Random? random,
     this.failureFor = const Duration(seconds: 6),
   }) : _device = device,
        _control = control,
-       _loadPhotos = loadPhotos,
-       _now = now {
+       _now = now,
+       _random = random ?? math.Random() {
+    // R-DK-7 (L-7): back on the tab in the same run of the app → the windows as they were, no `Home`.
+    final kept = control.session;
+    if (kept != null) {
+      _windows = kept;
+      _sentWindows = kept;
+      _started = true;
+    }
     _device.addListener(_onDevice);
     _onDevice();
     unawaited(reload());
@@ -56,12 +64,13 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
   final DeviceRepository _device;
   final ControlDeviceUseCase _control;
 
-  /// The device's photos + the app's copies (Photo channel of the mirror); null = not wired (tests).
-  final LoadPhotosUseCase? _loadPhotos;
-  PhotoGallery? _gallery;
-  ui.Image? _photoImage;
-  Uint8List? _photoJpeg;
   final DateTime Function() _now;
+
+  /// Where Dò mìn's mines go (R-DK-23); seeded in tests.
+  final math.Random _random;
+
+  /// R-DK-23: the Dò mìn game the app keeps (the device draws it).
+  MinesGame _minesGame = MinesGame.fresh;
 
   /// How long the "not done" snackbar stays.
   final Duration failureFor;
@@ -106,6 +115,7 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
   Cursor _cursor = Cursor.home;
   MenuItem? _lit;
   bool _startOpen = false;
+  bool _startAll = false;
   PowerState? _pendingPower;
   DateTime? _cursorSentAt;
   Timer? _cursorTimer;
@@ -195,7 +205,6 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
       windows: _windows,
       menu: _menu,
       clockView: _clockView,
-      gallery: _gallery,
     );
   }
 
@@ -275,7 +284,6 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
       _follow(s.activeChannel);
     }
     _pushWindows();
-    await _reloadPhotos();
     notifyListeners();
   }
 
@@ -296,33 +304,6 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
     _rotationStopped = true;
     final r = await _control.stopRotation(_settings);
     if (r is Ok<ControlOutcome>) _settings = {...?_settings, 'autoRotate': false};
-  }
-
-  /// The app's copy of the photo the mirror's Photo channel draws, decoded; null = none.
-  ui.Image? get photoImage => _photoImage;
-
-  /// Photo skill on: the device's photo list and the app's copies (the device cannot send its photos back).
-  Future<void> _reloadPhotos() async {
-    final load = _loadPhotos;
-    if (load == null || !(_device.state?.skillsOn.contains('photo') ?? false)) return;
-    final r = await load();
-    if (r is! Ok<PhotoGallery>) return;
-    _gallery = r.value;
-    final jpeg = frame?.agents.photo.jpeg;
-    if (identical(jpeg, _photoJpeg)) return;
-    _photoJpeg = jpeg;
-    ui.Image? img;
-    if (jpeg != null) {
-      try {
-        final codec = await ui.instantiateImageCodec(jpeg);
-        img = (await codec.getNextFrame()).image;
-        codec.dispose();
-      } on Exception {
-        img = null;
-      }
-    }
-    _photoImage?.dispose();
-    _photoImage = img;
   }
 
   // ── commands ──
@@ -533,6 +514,7 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
     final win = _windowOf(program);
     if (win == 'Clock' && channel != 'Clock') _clockView = ClockView.today; // XP's dialog opens on today
     final show = win == 'Weather' && _real && program == 'Weather' ? _weatherTab : program;
+    if (win == 'Mines') unawaited(_sendMines()); // the device draws the game the app keeps (R-DK-23)
     final before = _windows;
     _windows = _windows.opened(win);
     _pendingChannel = show;
@@ -641,15 +623,6 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
     await _control.restart();
   }
 
-  /// Tắt / bật màn now.
-  Future<void> toggleScreen() async {
-    final on = screenOff;
-    final c = on ? ControlCommand.screenOn : ControlCommand.screenOff;
-    if (!_can(c)) return;
-    _pendingScreen = on;
-    await _run(c, () => _control.screen(on));
-  }
-
   /// Chế độ đêm: `nightMode` 0 ↔ the last mode used (default 2, clock face).
   Future<void> toggleNight() async {
     if (!_can(ControlCommand.night)) return;
@@ -703,10 +676,10 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
 
   @override
   void dispose() {
+    _control.session = _windows;
     _device.removeListener(_onDevice);
     _failureTimer?.cancel();
     _cursorTimer?.cancel();
-    _photoImage?.dispose();
     super.dispose();
   }
 }

@@ -154,7 +154,8 @@ String? programOf(String channel) =>
       'Weather',
       'Forecast',
       'Clock',
-      'Info', //
+      'Info',
+      'Mines', //
     }.contains(channel)
     ? channel
     : null;

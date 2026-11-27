@@ -94,8 +94,16 @@ firmware chưa có chuột → `ControlCaps.mouse` false), `DeviceState.power` (
 `booting`, `PowerState` trong `lib/domain/models/cursor.dart`). Trong RAM: `Cursor` (vị trí px thiết bị + hình,
 `CursorShape`), `ControlKey`. Lệnh: con trỏ qua **UDP** (`CursorService`, gói 8 byte do `cursorPacket` dựng, không
 chờ trả lời), `POST /api/power {on}` (`setPower`, vá `state.power`), `POST /api/menu {…, hover}` (mục đang sáng).
+Thiết kế 2026-11-27.10: bỏ ô màn — `MirrorFrame` / `UsageMirror` còn giữ làm dữ liệu cho luật trúng đích, app không vẽ
+chúng nữa; `StartPick` / `AppScreen` (`lib/domain/models/start_pick.dart`) = mục Start trên thiết bị được click (R-DK-22).
 Không di trú, backend (nếu có) không cần đồng bộ.
 
+**Dò mìn, Start đủ chương trình (panel P-2026-11-27.25, R-DK-22 / R-DK-23):** không lưu gì trên máy. Trong RAM của
+`ControlViewModel`: `MinesGame` (`lib/domain/models/mines_game.dart` — mìn, ô đã mở, cờ, trạng thái, giờ bắt đầu /
+kết thúc; luật `lib/domain/rules/mines_rules.dart`), gửi cả bảng `POST /api/mines {board, face, left, secs, run}`
+(`setMines`). Đọc từ thiết bị: `DeviceState.startRecent` (`start_recent`, 3 chương trình mở gần nhất),
+`DeviceState.minesApi` (`mines` có trong `/api/state` → `ControlCaps.mines`). Skill `fun` (Giải trí) thành gói.
+Không di trú.
 ## Vị trí thời tiết (2026-11-26.9, R-VT-1…5)
 
 Không lưu gì trên điện thoại: vị trí chỉ nằm trên thiết bị, đọc / ghi qua `/api/settings` — `weatherLat`,
@@ -103,3 +111,13 @@ Không lưu gì trên điện thoại: vị trí chỉ nằm trên thiết bị,
 `WeatherLocation`, `PlaceResult`, `GpsOutcome` (`lib/domain/models/weather_location.dart`); `LocationRepository`
 (`lib/data/repositories/location/`) gọi `PositionService` (geolocator + geocoding, chỉ khi bấm "Dùng vị trí hiện tại")
 và `GeoSearchService` (Open-Meteo geocoding, `language=vi`, ≤ 10 kết quả; tên gõ được gửi tới Open-Meteo).
+
+## Kho ảnh (2026-11-27, R-AK-1…5)
+
+App là bộ nhớ, thiết bị trỏ vào lấy (kế hoạch `docs/tasks/2026-11-27-kho-anh-tren-app.md`). Lưu trên máy:
+`<app documents>/library/<mã>.jpg` (JPEG 188×188 ≤ 40 KB, đã cắt) + `library.json`
+`[{id, added (ms), size, cachedAs?}]` — `id` tăng dần không dùng lại, `cachedAs` = tên ảnh trên thiết bị khi ảnh đang
+trong bộ đệm (8 ảnh mới nhất). Ghi qua file tạm rồi đổi tên. `PhotoLibraryService` (file), `PhotoLibraryRepository`
+(`lib/data/repositories/photo/`), `PhotoServerService` (HTTP thường cổng 8787, `GET /p/<khoá>/next?after=<id>`),
+`PhotoSourceUseCase` (gửi `POST /api/photos/source {host, port, key}`, đồng bộ bộ đệm). Bản sao cũ
+(`<app documents>/photos/`, hình xem trước của tab Ảnh) giữ nguyên.

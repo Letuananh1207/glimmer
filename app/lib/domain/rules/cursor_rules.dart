@@ -26,7 +26,13 @@ Cursor moveCursor(Cursor c, double dx, double dy, Duration dt) {
 /// R-DK-17: the hourglass while a window is opening ([waiting]); the hand over something that does something when
 /// clicked — a lit item of the open [menu], or a target of [frame] ([overTarget] adds targets the caller knows, e.g.
 /// the Clock window's); the arrow elsewhere.
-CursorShape cursorShapeAt(Cursor c, MirrorFrame? frame, {MenuView? menu, bool waiting = false, bool overTarget = false}) {
+CursorShape cursorShapeAt(
+  Cursor c,
+  MirrorFrame? frame, {
+  MenuView? menu,
+  bool waiting = false,
+  bool overTarget = false,
+}) {
   if (waiting) return CursorShape.wait;
   if (overTarget) return CursorShape.hand;
   final x = c.px.toDouble(), y = c.py.toDouble();
@@ -43,13 +49,5 @@ int menuHoverIndex(MenuView menu, MenuItem? item) =>
     item == null ? -1 : menu.rows.whereType<MenuItem>().toList().indexOf(item);
 
 /// The datagram: 'G' 'C' version 1, shape, sequence (16 bits, big-endian), x, y.
-Uint8List cursorPacket(int seq, Cursor c) => Uint8List.fromList([
-  0x47,
-  0x43,
-  1,
-  c.shape.index,
-  (seq >> 8) & 0xFF,
-  seq & 0xFF,
-  c.px,
-  c.py,
-]);
+Uint8List cursorPacket(int seq, Cursor c) =>
+    Uint8List.fromList([0x47, 0x43, 1, c.shape.index, (seq >> 8) & 0xFF, seq & 0xFF, c.px, c.py]);

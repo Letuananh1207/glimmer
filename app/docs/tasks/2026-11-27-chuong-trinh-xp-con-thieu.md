@@ -20,8 +20,8 @@ an toàn khi vẽ lại ô dưới con trỏ (`../CLAUDE.md` mục Mouse) · app
 
 | # | Chương trình | Vì sao | Phiếu |
 |---|---|---|---|
-| 0 | Start đủ chương trình (AI hôm nay, Xu hướng, Agents) | mọi chương trình mới cần chỗ mở | `../docs/phieu_panel/2026-11-27-start-du-chuong-trinh.md` |
-| 1 | **Minesweeper** (skill Giải trí `fun`) | thể hiện chuột tốt nhất; trạng thái vài chục byte | `../docs/phieu_panel/2026-11-27-minesweeper.md` |
+| 0 ✅ | Start đủ chương trình (AI hôm nay, Xu hướng, Agents) — P-2026-11-27.25 | mọi chương trình mới cần chỗ mở | `../docs/phieu_panel/2026-11-27-start-du-chuong-trinh.md` |
+| 1 ✅ | **Minesweeper** (skill Giải trí `fun`) — P-2026-11-27.25, R-DK-23 | thể hiện chuột tốt nhất; trạng thái vài chục byte | `../docs/phieu_panel/2026-11-27-minesweeper.md` |
 | 2 | Task Manager (Ctrl+Alt+Del) | số liệu thật đã có trong `/api/state` | chưa |
 | 3 | My Computer / Explorer + mở Thùng rác | quản lý ảnh mẫu / ảnh của bạn trên màn | chưa |
 | 4 | Display Properties | gom hình nền, screen saver, độ sáng | chưa |

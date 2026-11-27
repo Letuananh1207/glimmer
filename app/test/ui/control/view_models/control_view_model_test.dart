@@ -34,7 +34,11 @@ void main() {
   late ControlViewModel vm;
   var now = DateTime(2026, 11, 26, 14, 32);
 
-  Future<ControlViewModel> make({Map<String, dynamic>? state, Map<String, dynamic>? settings}) async {
+  Future<ControlViewModel> make({
+    Map<String, dynamic>? state,
+    Map<String, dynamic>? settings,
+    ControlDeviceUseCase? control,
+  }) async {
     await rig.connect(_url, state ?? _state());
     rig.api.on(
       _url,
@@ -44,7 +48,7 @@ void main() {
     );
     final v = ControlViewModel(
       device: rig.repo,
-      control: ControlDeviceUseCase(device: rig.repo),
+      control: control ?? ControlDeviceUseCase(device: rig.repo),
       now: () => now,
     );
     await v.reload();
@@ -85,6 +89,28 @@ void main() {
     expect(vm.frame!.taskbar.buttons, isEmpty);
     await vm.reload();
     expect(sent(), ['Home'], reason: 'only once');
+  });
+
+  test('R-DK-7 (L-7): back on the Điều khiển tab in the same run → the windows stay, no Home sent', () async {
+    final control = ControlDeviceUseCase(device: rig.repo);
+    vm = await make(control: control);
+    rig.api.on(_url, 'POST', '/api/windows', {'ok': true});
+    answer('Weather');
+    await vm.openProgram('Weather');
+    expect(vm.windows.open, ['Weather']);
+    vm.dispose(); // another tab of the app
+    rig.api.device(_url, _state(channel: 'Weather'));
+    await rig.repo.refresh();
+    final before = sent().length;
+    vm = await make(
+      state: _state(channel: 'Weather'),
+      control: control,
+    );
+    await Future<void>.delayed(Duration.zero);
+    expect(sent().length, before, reason: 'no Home: the device keeps its window');
+    expect(vm.windows.open, ['Weather']);
+    expect(vm.windows.top, 'Weather');
+    expect(vm.channel, 'Weather');
   });
 
   test('R-DK-7 autoRotate on → off, once', () async {
@@ -245,7 +271,6 @@ void main() {
     expect(vm.tap(30, 227).kind, TouchKind.start, reason: 'Start is the app\'s');
     await vm.minimizeTop();
     await vm.closeTop();
-    await vm.toggleScreen();
     expect(rig.posts(), isEmpty);
     expect(vm.failed, isNull);
   });
@@ -299,19 +324,6 @@ void main() {
     rig.api.on(_url, 'POST', '/push/clear', {'cleared': 1});
     await vm.dismissCard();
     expect(rig.posts('/push/clear').single.body, {'id': 'c1'});
-  });
-
-  test('screen off: optimistic, frame dark; taskbar of the open windows', () async {
-    vm = await make();
-    answer('Claude');
-    await vm.openProgram('Claude');
-    rig.api.on(_url, 'POST', '/api/screen', {'ok': true, 'screen_on': false});
-    final f = vm.toggleScreen();
-    expect(vm.screenOff, isTrue);
-    expect(vm.frame!.screenOff, isTrue);
-    await f;
-    expect(vm.screenOff, isTrue);
-    expect(vm.frame!.taskbar.buttons, [TaskButton.claude]);
   });
 
   test('offline: the last picture stays, mode offline', () async {
@@ -401,6 +413,7 @@ void main() {
       vm.dispose();
       vm = await make(state: withTray(channel: 'Clock'));
       answer('Weather');
+      await pumpEventQueue(); // the start's "back to the desktop" (R-DK-7) has settled
       vm.tap(188, 227);
       await pumpEventQueue();
       expect(sent().last, 'Weather');

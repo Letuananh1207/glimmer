@@ -4,10 +4,12 @@ import '../models/app_error.dart';
 import '../models/clock_view.dart';
 import '../models/control.dart';
 import '../models/cursor.dart';
+import '../models/mines_game.dart';
 import '../models/touch.dart';
 import '../models/windows.dart';
 import '../rules/control_rules.dart';
 import '../rules/cursor_rules.dart';
+import '../rules/mines_rules.dart';
 
 /// The app remote (tab Điều khiển, R-DK-1…10): sends one command, once, and says whether the device did what was
 /// asked. Optimistic display is the caller's; this only reconciles (R-DK-1: no automatic retry). A command the
@@ -17,6 +19,10 @@ class ControlDeviceUseCase {
 
   final DeviceRepository _device;
   int _cursorSeq = 0;
+
+  /// R-DK-7 (L-7): the open windows of this run of the app. The Điều khiển tab's ViewModel goes away with the tab;
+  /// coming back to it is not "the app just opened" — it takes these back instead of sending the desktop.
+  WindowStack? session;
 
   /// R-DK-3: what the connected firmware supports.
   ControlCaps get caps => controlCaps(_device.state);
@@ -80,6 +86,12 @@ class ControlDeviceUseCase {
     if (!caps.mouse) return false;
     _cursorSeq = (_cursorSeq + 1) & 0xFFFF;
     return _device.sendCursor(cursorPacket(_cursorSeq, c));
+  }
+
+  /// R-DK-23: the Dò mìn game [g] at [now] goes down to be drawn. Nothing on firmware without it.
+  Future<Result<void>> mines(MinesGame g, DateTime now) async {
+    if (!caps.mines) return const Result.ok(null);
+    return _device.setMines(minesBody(g, now));
   }
 
   /// R-DK-20: the power button. Refused without the mouse firmware (R-DK-21).

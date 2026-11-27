@@ -335,6 +335,10 @@ class DeviceRepositoryLocal extends DeviceRepository with _ControlCalls {
     return r;
   }
 
+  @override
+  Future<Result<void>> setPhotoSource(Map<String, Object> body) =>
+      _call(() => _json('POST', '/api/photos/source', body: body, tries: 1));
+
   /// Photo calls: the device's `{"error": code}` → photo error kinds; 404 → [AppErrorKind.photoNotFound].
   Future<Result<T>> _photoCall<T>(Future<T> Function() f, {String name = ''}) async {
     try {

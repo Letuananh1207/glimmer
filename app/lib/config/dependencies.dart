@@ -28,6 +28,13 @@ import '../domain/use_cases/delete_photo_use_case.dart';
 import '../domain/use_cases/load_photos_use_case.dart';
 import '../domain/use_cases/send_photo_use_case.dart';
 import '../domain/use_cases/toggle_skill_use_case.dart';
+import '../data/repositories/photo/photo_library_repository.dart';
+import '../data/repositories/photo/photo_library_repository_local.dart';
+import '../data/repositories/photo/photo_server_repository_local.dart';
+import '../data/services/network_service.dart';
+import '../data/services/photo_library_service.dart';
+import '../data/services/photo_server_service.dart';
+import '../domain/use_cases/photo_source_use_case.dart';
 
 /// The one place that picks implementations and creates them.
 class Dependencies {
@@ -37,6 +44,8 @@ class Dependencies {
     required this.backups,
     required this.skills,
     required this.photos,
+    required this.library,
+    required this.photoSource,
   });
 
   final DeviceRepository device;
@@ -45,14 +54,29 @@ class Dependencies {
   final SkillRepository skills;
   final PhotoRepository photos;
 
+  /// R-AK-1: the photo library (the app is the memory, the device points at it).
+  final PhotoLibraryRepository library;
+
+  /// R-AK-4: serves [library] on the home network and keeps the device's cache.
+  final PhotoSourceUseCase photoSource;
+
   static Future<Dependencies> create() async {
     final store = await LocalStoreService.open();
+    final device = DeviceRepositoryLocal(
+      api: DeviceApiService(),
+      discovery: DiscoveryService(),
+      store: store,
+      wifi: WifiService(),
+    );
+    final library = PhotoLibraryRepositoryLocal(files: PhotoLibraryService());
     return Dependencies(
-      device: DeviceRepositoryLocal(
-        api: DeviceApiService(),
-        discovery: DiscoveryService(),
-        store: store,
-        wifi: WifiService(),
+      device: device,
+      library: library,
+      photoSource: PhotoSourceUseCase(
+        device: device,
+        library: library,
+        server: PhotoServerRepositoryLocal(server: PhotoServerService()),
+        phoneIps: NetworkService().ipv4,
       ),
       releases: ReleaseRepositoryLocal(releases: ReleasesService(), store: store),
       backups: BackupRepositoryLocal(files: FileService()),
@@ -62,18 +86,28 @@ class Dependencies {
   }
 
   List<SingleChildWidget> get providers => [
-        ChangeNotifierProvider<DeviceRepository>.value(value: device),
-        Provider<ReleaseRepository>.value(value: releases),
-        Provider<BackupRepository>.value(value: backups),
-        ChangeNotifierProvider<SkillRepository>.value(value: skills),
-        Provider<ToggleSkillUseCase>(create: (_) => ToggleSkillUseCase(skills: skills, device: device)),
-        Provider<PhotoRepository>.value(value: photos),
-        Provider<LoadPhotosUseCase>(create: (_) => LoadPhotosUseCase(device: device, photos: photos)),
-        Provider<SendPhotoUseCase>(create: (_) => SendPhotoUseCase(device: device, photos: photos)),
-        Provider<ControlDeviceUseCase>(create: (_) => ControlDeviceUseCase(device: device)),
-        Provider<DeletePhotoUseCase>(create: (_) => DeletePhotoUseCase(device: device, photos: photos)),
-        Provider<LocationRepository>(
-          create: (_) => LocationRepositoryRemote(position: PositionService(), search: GeoSearchService()),
-        ),
-      ];
+    ChangeNotifierProvider<DeviceRepository>.value(value: device),
+    Provider<ReleaseRepository>.value(value: releases),
+    Provider<BackupRepository>.value(value: backups),
+    ChangeNotifierProvider<SkillRepository>.value(value: skills),
+    Provider<ToggleSkillUseCase>(
+      create: (_) => ToggleSkillUseCase(skills: skills, device: device),
+    ),
+    Provider<PhotoRepository>.value(value: photos),
+    Provider<LoadPhotosUseCase>(
+      create: (_) => LoadPhotosUseCase(device: device, photos: photos),
+    ),
+    Provider<PhotoLibraryRepository>.value(value: library),
+    Provider<PhotoSourceUseCase>.value(value: photoSource),
+    Provider<SendPhotoUseCase>(
+      create: (_) => SendPhotoUseCase(device: device, photos: photos, library: library, source: photoSource),
+    ),
+    Provider<ControlDeviceUseCase>(create: (_) => ControlDeviceUseCase(device: device)),
+    Provider<DeletePhotoUseCase>(
+      create: (_) => DeletePhotoUseCase(device: device, photos: photos, library: library, source: photoSource),
+    ),
+    Provider<LocationRepository>(
+      create: (_) => LocationRepositoryRemote(position: PositionService(), search: GeoSearchService()),
+    ),
+  ];
 }

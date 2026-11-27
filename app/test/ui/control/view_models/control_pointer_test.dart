@@ -1,5 +1,8 @@
+import 'dart:math' as math;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:glimmer_app/domain/models/cursor.dart';
+import 'package:glimmer_app/domain/rules/start_rules.dart';
 import 'package:glimmer_app/domain/use_cases/control_device_use_case.dart';
 import 'package:glimmer_app/ui/control/view_models/control_view_model.dart';
 
@@ -7,13 +10,13 @@ import '../../../../testing/fakes/fake_repositories.dart';
 
 const _url = 'http://192.168.1.50';
 
-Map<String, dynamic> _state({String channel = 'Home', bool mouse = true, String power = 'on'}) => {
+Map<String, dynamic> _state({String channel = 'Home', bool mouse = true, String power = 'on', bool fun = false}) => {
   'fw': '0.31.0',
   'wifi': 'connected',
   'ip': '192.168.1.50',
   'time': 1795500000,
   'active_channel': channel,
-  'skills_on': ['agent', 'weather', 'clock'],
+  'skills_on': ['agent', 'weather', 'clock', if (fun) 'fun'],
   'paused': false,
   'screen_on': true,
   'slide_ms': 0,
@@ -23,6 +26,7 @@ Map<String, dynamic> _state({String channel = 'Home', bool mouse = true, String 
   if (mouse) ...{
     'cursor': {'port': 4210, 'x': 120, 'y': 120, 'shape': 1, 'shown': false},
     'power': power,
+    'mines': {'face': 'smile', 'left': 10, 'secs': 0, 'run': false},
   },
 };
 
@@ -36,7 +40,12 @@ void main() {
     rig.api.on(_url, 'GET', '/api/settings', {'brightness': 50, 'nightMode': 0, 'weatherPlace': 'Hà Nội'});
     rig.api.on(_url, 'POST', '/api/menu', {'ok': true});
     rig.api.on(_url, 'POST', '/api/windows', {'ok': true});
-    final v = ControlViewModel(device: rig.repo, control: ControlDeviceUseCase(device: rig.repo), now: () => now);
+    final v = ControlViewModel(
+      device: rig.repo,
+      control: ControlDeviceUseCase(device: rig.repo),
+      now: () => now,
+      random: math.Random(7),
+    );
     await v.reload();
     return v;
   }
@@ -105,6 +114,66 @@ void main() {
     answer('Home');
     await vm.pressKey(ControlKey.altF4);
     expect((rig.posts('/api/channel').last.body as Map)['name'], 'Home');
+  });
+
+  test('R-DK-22 Start open: click on Claude opens it; on Cài đặt the phone screen comes back to the screen', () async {
+    answer('Claude');
+    vm = await make();
+    await vm.pressKey(ControlKey.windows);
+    vm.movePointer(-120, -140, const Duration(seconds: 10)); // (120, 120) → ≈ (58, 48): Claude row
+    expect(vm.cursor.shape, CursorShape.hand);
+    expect(await vm.clickLeft(), isNull);
+    expect((rig.posts('/api/channel').last.body as Map)['name'], 'Claude');
+    expect(vm.startOpen, isFalse);
+    await vm.pressKey(ControlKey.windows);
+    vm.movePointer(260, 100, const Duration(seconds: 10)); // → ≈ (190, 99): Cài đặt
+    final pick = await vm.clickLeft();
+    expect(pick, const StartPick(StartPickKind.appScreen, screen: AppScreen.settings));
+    expect(menus().last, {'kind': 'none'});
+  });
+
+  test('R-DK-22 Tất cả chương trình opens the sub-menu (all: true), a click outside closes Start', () async {
+    vm = await make();
+    await vm.pressKey(ControlKey.windows);
+    vm.movePointer(-120, 110, const Duration(seconds: 10)); // → ≈ (58, 176)
+    await vm.clickLeft();
+    expect(menus().last, {'kind': 'start', 'all': true});
+    vm.movePointer(0, 200, const Duration(seconds: 10)); // → the taskbar
+    await vm.clickLeft();
+    expect(menus().last, {'kind': 'none'});
+    expect(vm.startOpen, isFalse);
+  });
+
+  test('R-DK-23 Dò mìn: opening it sends the board; a click opens a cell, a right click flags, the face restarts',
+      () async {
+    answer('Mines');
+    vm = await make(state: _state(fun: true));
+    rig.api.on(_url, 'POST', '/api/mines', {'ok': true});
+    await vm.openProgram('Mines');
+    await Future<void>.delayed(Duration.zero);
+    List<Map> sent() => [for (final c in rig.posts('/api/mines')) c.body as Map];
+    expect(sent().single, {'board': '.' * 81, 'face': 'smile', 'left': 10, 'secs': 0, 'run': false});
+    vm.movePointer(0, 32, const Duration(seconds: 10)); // (120, 120) → (120, 136): cell (4, 4)
+    await vm.clickLeft();
+    await Future<void>.delayed(Duration.zero);
+    final first = sent().last;
+    expect((first['board'] as String)[40], isNot('.'), reason: 'opened, never a mine on the first click');
+    expect(first['run'], true);
+    expect(vm.minesGame.mines.contains(40), isFalse);
+    // A right click on a closed cell flags it.
+    final closed = (first['board'] as String).indexOf('.');
+    final cx = 48 + 16 * (closed % 9) + 8, cy = 64 + 16 * (closed ~/ 9) + 8;
+    vm.movePointer((cx - vm.cursor.x) * 2, (cy - vm.cursor.y) * 2, const Duration(seconds: 100));
+    await vm.clickRight();
+    await Future<void>.delayed(Duration.zero);
+    expect((sent().last['board'] as String)[closed], 'F');
+    expect(sent().last['left'], 9);
+    expect(rig.posts('/api/menu'), isEmpty, reason: 'not the window menu');
+    // The face: a new game.
+    vm.movePointer((120 - vm.cursor.x) * 2, (42 - vm.cursor.y) * 2, const Duration(seconds: 100));
+    await vm.clickLeft();
+    await Future<void>.delayed(Duration.zero);
+    expect(sent().last['board'], '.' * 81);
   });
 
   test('R-DK-20 power off: POST {on: false}; then the pointer sends nothing', () async {

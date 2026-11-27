@@ -58,7 +58,6 @@ Widget controlScreen({
       create: (c) => ControlViewModel(
         device: c.read<DeviceRepository>(),
         control: c.read<ControlDeviceUseCase>(),
-        loadPhotos: c.read<LoadPhotosUseCase>(),
       ),
       builder: (_, vm) => ControlScreen(
         viewModel: vm,

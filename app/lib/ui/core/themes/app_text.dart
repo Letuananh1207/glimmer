@@ -87,16 +87,18 @@ abstract final class AppSize {
   static const double cropFrame = 260;
   static const double devicePreview = 180;
   static const double devicePreviewPhoto = 141;
-  static const double deviceShell = 376;
-  static const double deviceScreen = 360;
-
-  /// Màn thiết bị 240 px × 1.5 = 360 (TouchMirror, design 2026-11-26.6).
-  static const double deviceScale = 1.5;
   static const double roundButton = 56;
 
   /// Ô tìm thành phố (LocationSearchField, 2026-11-26.9) và độ dài tối đa tên nơi trên thiết bị.
   static const double searchField = 52;
   static const int locationNameMax = 16;
+
+  // Điều khiển (design 2026-11-27.10): app = chuột, bàn phím, nút nguồn.
+  static const double trackpad = 280;
+  static const double mouseButton = 60;
+  static const double key = 52;
+  static const double powerButton = 48;
+  static const double controlSquare = 52;
 
   static const double radiusCard = 14;
   static const double radiusButton = 20;
@@ -112,9 +114,10 @@ abstract final class AppSize {
   static const double radiusBadge = 4;
   static const double radiusPhotoTile = 10;
   static const double radiusSheet = 20;
-  static const double radiusDeviceShell = 20;
   static const double radiusSearchField = 12;
   static const double radiusSnackbar = 12;
+  static const double radiusTrackpad = 20;
+  static const double radiusKey = 10;
 
   static const double hairline = 1;
 }

@@ -161,9 +161,14 @@ List<DeskIcon> deskIconsOf(List<String> skillsOn, {bool oneColumn = false}) {
   final col0 = <String?>[
     if (skillsOn.contains(SkillIds.agent)) ...['Claude', 'Codex'],
     if (skillsOn.contains(SkillIds.photo)) 'Photo',
-    null,
   ];
+  // P-2026-11-27.25: Dò mìn before the trash, or column 2 when column 1 already has 4 (XP Auto Arrange).
+  final fun = skillsOn.contains(SkillIds.fun);
+  final funCol0 = fun && col0.length + 2 <= 4;
+  if (funCol0) col0.add('Mines');
+  col0.add(null);
   final col1 = [
+    if (fun && !funCol0) 'Mines',
     if (!oneColumn && skillsOn.contains(SkillIds.weather)) 'Weather',
     if (!oneColumn && skillsOn.contains(SkillIds.clock)) 'Clock',
   ];
