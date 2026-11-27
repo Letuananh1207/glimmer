@@ -350,7 +350,11 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
 - **Project board** (`projects_core.h`, owned in `attention.cpp`): latest
   state per project from every `/hook` event + pushed cards with a
   `project`; drawn in the Claude screen's bottom rows (replaced resets and
-  per-model rows). Hooks are installed per computer with
+  per-model rows). Persisted (`/projects.bin`), so a wait (approval / input)
+  whose session went silent — e.g. on a computer that left the network —
+  must not live forever (L-5): it yields to a newer session of the same
+  project + agent ≥ 10 min later, and expires after 2 h with no event.
+  Hooks are installed per computer with
   `node tools/agents/install.mjs` (Node only, `glimmer.local` by default).
 - Keep `docs/AGENTS-GLIMMER.md` in sync with `attention_json.h`,
   `attention_core.h` and the MCP schema in `web.cpp`.

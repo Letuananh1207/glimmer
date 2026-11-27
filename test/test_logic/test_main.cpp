@@ -974,6 +974,43 @@ void test_projects_sessions_merge_per_project() {
     TEST_ASSERT_EQUAL(Projects::P_APPROVAL, b.e[ord[0]].state);
 }
 
+// (L-5) A session left waiting on another computer (it left the network, so
+// its next event never came) must not pin the project to "Cần duyệt": a newer
+// session of the same project and agent, active ≥ kSupersedeS after it, wins;
+// and any wait with no event for kWaitS is dropped.
+void test_projects_stale_wait_released() {
+    Projects::Board b; Projects::clearAll(b);
+    const uint32_t t = 3000000;
+    Attention::HookEvent oldPc = hev("Notification", "C:/src/glimmer", "permission_prompt", "Bash");
+    oldPc.session = "sess-pc-a";
+    Attention::HookEvent newPc = hev("PostToolUse", "D:/work/glimmer", "", "Edit");
+    newPc.session = "sess-pc-b";
+    Projects::noteHook(b, Attention::AGENT_CLAUDE, oldPc, t);
+    int ord[Projects::kMax];
+    // A parallel session busy a few minutes later: the approval still shows.
+    Projects::noteHook(b, Attention::AGENT_CLAUDE, newPc, t + 60);
+    TEST_ASSERT_EQUAL(1, Projects::ordered(b, ord, t + 61));
+    TEST_ASSERT_EQUAL(Projects::P_APPROVAL, b.e[ord[0]].state);
+    // The other session is still active ≥ 10 min after the wait's last event:
+    // the stale approval steps aside, the row follows the live session.
+    Projects::noteHook(b, Attention::AGENT_CLAUDE, newPc, t + Projects::kSupersedeS);
+    TEST_ASSERT_EQUAL(1, Projects::ordered(b, ord, t + Projects::kSupersedeS + 1));
+    TEST_ASSERT_EQUAL(Projects::P_WORKING, b.e[ord[0]].state);
+    // Another agent in the same repo doesn't release Claude's wait.
+    Projects::Board c; Projects::clearAll(c);
+    Projects::noteHook(c, Attention::AGENT_CLAUDE, oldPc, t);
+    Attention::HookEvent codex = hev("PostToolUse", "D:/work/glimmer", "", "Bash");
+    codex.session = "codex-1";
+    Projects::noteHook(c, Attention::AGENT_CODEX, codex, t + Projects::kSupersedeS + 5);
+    Projects::ordered(c, ord, t + Projects::kSupersedeS + 6);
+    TEST_ASSERT_EQUAL(Projects::P_APPROVAL, c.e[ord[0]].state);
+    // Alone, a wait with no event for kWaitS is dropped (survives a reboot otherwise).
+    Projects::Board d; Projects::clearAll(d);
+    Projects::noteHook(d, Attention::AGENT_CLAUDE, oldPc, t);
+    TEST_ASSERT_EQUAL(1, Projects::ordered(d, ord, t + Projects::kWaitS - 1));
+    TEST_ASSERT_EQUAL(0, Projects::ordered(d, ord, t + Projects::kWaitS));
+}
+
 void test_projects_from_pushed_cards() {
     Projects::Board b; Projects::clearAll(b);
     Attention::Item it;
@@ -1402,6 +1439,7 @@ int main(int, char**) {
     RUN_TEST(test_projects_follow_hook_events);
     RUN_TEST(test_projects_order_idle_and_eviction);
     RUN_TEST(test_projects_sessions_merge_per_project);
+    RUN_TEST(test_projects_stale_wait_released);
     RUN_TEST(test_projects_from_pushed_cards);
     RUN_TEST(test_skill_filter_and_default);
     RUN_TEST(test_taskbar_buttons_follow_enabled_skills);
