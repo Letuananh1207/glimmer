@@ -86,3 +86,11 @@ trong ngày; < 0 hoặc thiếu = null, firmware cũ); `weatherPlace` trong `/ap
 khoá này nghĩa là firmware cửa sổ XP thật (`xpReal`). Model ô màn: `MirrorWeather.code` / `uv` / `place`,
 `MirrorDay.code`, `MirrorClock.place` (`lib/domain/models/mirror_ambient.dart`); chạm mới `TouchKind.trayClock` /
 `balloonBody` / `tab` (`lib/domain/models/touch.dart`). Không di trú, backend (nếu có) không cần đồng bộ.
+
+## Vị trí thời tiết (2026-11-26.9, R-VT-1…5)
+
+Không lưu gì trên điện thoại: vị trí chỉ nằm trên thiết bị, đọc / ghi qua `/api/settings` — `weatherLat`,
+`weatherLon` (0, 0 = chưa đặt), `weatherPlace` (tên ≤ 16 ký tự; firmware không có khoá này → chỉ gửi toạ độ). Model
+`WeatherLocation`, `PlaceResult`, `GpsOutcome` (`lib/domain/models/weather_location.dart`); `LocationRepository`
+(`lib/data/repositories/location/`) gọi `PositionService` (geolocator + geocoding, chỉ khi bấm "Dùng vị trí hiện tại")
+và `GeoSearchService` (Open-Meteo geocoding, `language=vi`, ≤ 10 kết quả; tên gõ được gửi tới Open-Meteo).

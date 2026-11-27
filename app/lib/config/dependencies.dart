@@ -5,6 +5,8 @@ import '../data/repositories/backup/backup_repository.dart';
 import '../data/repositories/backup/backup_repository_local.dart';
 import '../data/repositories/device/device_repository.dart';
 import '../data/repositories/device/device_repository_local.dart';
+import '../data/repositories/location/location_repository.dart';
+import '../data/repositories/location/location_repository_remote.dart';
 import '../data/repositories/photo/photo_repository.dart';
 import '../data/repositories/photo/photo_repository_local.dart';
 import '../data/repositories/release/release_repository.dart';
@@ -14,9 +16,11 @@ import '../data/repositories/skill/skill_repository_local.dart';
 import '../data/services/device_api_service.dart';
 import '../data/services/discovery_service.dart';
 import '../data/services/file_service.dart';
+import '../data/services/geo_search_service.dart';
 import '../data/services/local_store_service.dart';
 import '../data/services/photo_picker_service.dart';
 import '../data/services/photo_store_service.dart';
+import '../data/services/position_service.dart';
 import '../data/services/releases_service.dart';
 import '../data/services/wifi_service.dart';
 import '../domain/use_cases/control_device_use_case.dart';
@@ -68,5 +72,8 @@ class Dependencies {
         Provider<SendPhotoUseCase>(create: (_) => SendPhotoUseCase(device: device, photos: photos)),
         Provider<ControlDeviceUseCase>(create: (_) => ControlDeviceUseCase(device: device)),
         Provider<DeletePhotoUseCase>(create: (_) => DeletePhotoUseCase(device: device, photos: photos)),
+        Provider<LocationRepository>(
+          create: (_) => LocationRepositoryRemote(position: PositionService(), search: GeoSearchService()),
+        ),
       ];
 }

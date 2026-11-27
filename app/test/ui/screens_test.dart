@@ -264,7 +264,7 @@ void main() {
   group('Cài đặt', () {
     testWidgets('error: message + retry', (t) async {
       await t.runAsync(() => rig.connect(_url, _state()));
-      await t.pumpWidget(_app(rig, settingsScreen()));
+      await t.pumpWidget(_app(rig, settingsScreen(onOpenWeatherLocation: () async {})));
       await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
       await _frames(t);
       expect(find.text(_vi.devErrUnreachable('TimeoutException')), findsOneWidget);
@@ -274,7 +274,7 @@ void main() {
     testWidgets('R-CD-1 R-CD-3 a change shows the save bar; night rows follow the mode', (t) async {
       await t.runAsync(() => rig.connect(_url, _state()));
       rig.api.on(_url, 'GET', '/api/settings', {'brightness': 60, 'nightMode': 2, 'idleDim': false});
-      await t.pumpWidget(_app(rig, settingsScreen()));
+      await t.pumpWidget(_app(rig, settingsScreen(onOpenWeatherLocation: () async {})));
       await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
       await _frames(t);
       expect(find.text(_vi.devSliderValue(_vi.settingsBrightness, 60)), findsOneWidget);

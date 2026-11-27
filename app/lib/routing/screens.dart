@@ -1,4 +1,7 @@
 // Dựng mỗi màn kèm ViewModel — router và test widget gọi cùng các hàm này.
+import '../data/repositories/location/location_repository.dart';
+import '../ui/weather_location/view_models/weather_location_view_model.dart';
+import '../ui/weather_location/widgets/weather_location_screen.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
@@ -108,9 +111,15 @@ Widget photoCropScreen(PhotoCropArgs args, {required VoidCallback onClose}) => V
       builder: (_, vm) => PhotoCropScreen(viewModel: vm, onClose: onClose),
     );
 
-Widget settingsScreen() => ViewModelHost(
+Widget settingsScreen({required Future<void> Function() onOpenWeatherLocation}) => ViewModelHost(
       create: (c) => SettingsViewModel(device: c.read<DeviceRepository>()),
-      builder: (_, vm) => SettingsScreen(viewModel: vm),
+      builder: (_, vm) => SettingsScreen(viewModel: vm, onOpenWeatherLocation: onOpenWeatherLocation),
+    );
+
+/// Vị trí thời tiết (screen_specs §9).
+Widget weatherLocationScreen({required VoidCallback onBack}) => ViewModelHost(
+      create: (c) => WeatherLocationViewModel(device: c.read<DeviceRepository>(), location: c.read<LocationRepository>()),
+      builder: (_, vm) => WeatherLocationScreen(viewModel: vm, onBack: onBack),
     );
 
 Widget deviceScreen({required VoidCallback onChangeWifi}) => ViewModelHost(

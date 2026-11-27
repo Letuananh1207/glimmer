@@ -830,7 +830,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Thiết bị cần vĩ độ / kinh độ để lấy thời tiết và dự báo.';
 
   @override
-  String get weatherSetLocation => 'Đặt vị trí trong Cài đặt';
+  String get weatherSetLocation => 'Đặt vị trí thời tiết';
 
   @override
   String get clockTitle => 'ĐỒNG HỒ';
@@ -2323,4 +2323,186 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get devXpDayTodayLong => 'Hôm nay';
+
+  @override
+  String get settingsSectionWeather => 'THỜI TIẾT';
+
+  @override
+  String get settingsWeatherLocation => 'Vị trí thời tiết';
+
+  @override
+  String get settingsWeatherLocationNone => 'chưa đặt';
+
+  @override
+  String get weatherLocationTitle => 'Vị trí thời tiết';
+
+  @override
+  String get weatherLocationCurrent => 'THIẾT BỊ ĐANG DÙNG';
+
+  @override
+  String weatherLocationCoords(String lat, String lon) {
+    return '$lat, $lon';
+  }
+
+  @override
+  String get weatherLocationRename => 'Sửa tên';
+
+  @override
+  String get weatherLocationClear => 'Xoá vị trí';
+
+  @override
+  String get weatherLocationUnsetBody =>
+      'Thiết bị chưa lấy được thời tiết. Chọn một nơi bên dưới.';
+
+  @override
+  String get weatherLocationOldFwNote =>
+      'Firmware này chưa hiện tên nơi — thiết bị chỉ nhận toạ độ. Cập nhật firmware để thấy tên trên màn Thời tiết và Đồng hồ.';
+
+  @override
+  String get weatherLocationUseGps => 'Dùng vị trí hiện tại';
+
+  @override
+  String get weatherLocationUseGpsSub =>
+      'Chỉ lấy khi bạn bấm, rồi hỏi lại trước khi gửi.';
+
+  @override
+  String get weatherLocationGpsLoading => 'Đang lấy vị trí…';
+
+  @override
+  String get weatherLocationGpsLoadingSub =>
+      'Chờ định vị của điện thoại, vài giây.';
+
+  @override
+  String get weatherLocationGpsDeniedTitle => 'Chưa cho phép vị trí';
+
+  @override
+  String get weatherLocationGpsDeniedBody =>
+      'App cần quyền vị trí để lấy toạ độ của điện thoại. Hoặc tìm thành phố bên dưới.';
+
+  @override
+  String get weatherLocationOpenAppSettings => 'Mở cài đặt điện thoại';
+
+  @override
+  String get weatherLocationGpsOffTitle => 'Định vị đang tắt';
+
+  @override
+  String get weatherLocationGpsOffBody =>
+      'Bật định vị (GPS) của điện thoại rồi bấm lại.';
+
+  @override
+  String get weatherLocationTurnOnGps => 'Bật định vị';
+
+  @override
+  String get weatherLocationGpsFailTitle => 'Không lấy được vị trí';
+
+  @override
+  String get weatherLocationGpsFailBody =>
+      'Điện thoại chưa định vị được (trong nhà, sóng yếu). Thử lại hoặc tìm thành phố.';
+
+  @override
+  String get weatherLocationSearchSection => 'HOẶC TÌM THÀNH PHỐ';
+
+  @override
+  String get weatherLocationSearchHint => 'Tên thành phố, vd Đà Nẵng';
+
+  @override
+  String get weatherLocationSearchPrivacy =>
+      'Chữ bạn gõ được gửi tới Open-Meteo để tìm (như trang web của thiết bị).';
+
+  @override
+  String get weatherLocationSearchClearA11y => 'Xoá chữ';
+
+  @override
+  String get weatherLocationSearching => 'Đang tìm…';
+
+  @override
+  String weatherLocationResultSub(String area, String lat, String lon) {
+    return '$area · $lat, $lon';
+  }
+
+  @override
+  String weatherLocationNoResultsTitle(String query) {
+    return 'Không thấy “$query”';
+  }
+
+  @override
+  String get weatherLocationNoResultsBody =>
+      'Kiểm tra chính tả, hoặc thử tên không dấu / tên tiếng Anh.';
+
+  @override
+  String get weatherLocationSearchErrorTitle => 'Không tìm được';
+
+  @override
+  String get weatherLocationSearchErrorBody =>
+      'Điện thoại không tới được Open-Meteo. Kiểm tra mạng rồi thử lại.';
+
+  @override
+  String get weatherLocationConfirmTitle => 'Đặt vị trí này?';
+
+  @override
+  String get weatherLocationRenameTitle => 'Sửa tên nơi';
+
+  @override
+  String get weatherLocationNameLabel => 'TÊN HIỆN TRÊN THIẾT BỊ';
+
+  @override
+  String weatherLocationNameCount(String n) {
+    return '$n/16';
+  }
+
+  @override
+  String get weatherLocationNameHint =>
+      'Tối đa 16 ký tự để vừa khe trên màn thiết bị.';
+
+  @override
+  String get weatherLocationPreview => 'TRÊN THIẾT BỊ';
+
+  @override
+  String weatherLocationPreviewWeather(String desc, String place) {
+    return 'Thời tiết: $desc · $place';
+  }
+
+  @override
+  String weatherLocationPreviewClock(String offset, String place) {
+    return 'Đồng hồ: Múi giờ: GMT$offset · $place';
+  }
+
+  @override
+  String get weatherLocationApply => 'Đặt cho thiết bị';
+
+  @override
+  String get weatherLocationApplyCoords => 'Đặt toạ độ cho thiết bị';
+
+  @override
+  String get weatherLocationSaveName => 'Lưu tên';
+
+  @override
+  String get weatherLocationSending => 'Đang gửi…';
+
+  @override
+  String get weatherLocationRejectedTitle => 'Thiết bị không nhận';
+
+  @override
+  String get weatherLocationRejectedBody =>
+      'Vị trí trên thiết bị chưa đổi. Kiểm tra thiết bị còn cùng mạng rồi thử lại.';
+
+  @override
+  String get weatherLocationOldFwSheet =>
+      'Firmware này chưa hiện tên nơi: thiết bị chỉ nhận toạ độ.';
+
+  @override
+  String weatherLocationDone(String place) {
+    return 'Đã đặt $place cho thiết bị.';
+  }
+
+  @override
+  String get weatherLocationClearTitle => 'Xoá vị trí thời tiết?';
+
+  @override
+  String weatherLocationClearBody(String place) {
+    return 'Thiết bị sẽ không lấy thời tiết và dự báo nữa, tên “$place” cũng bỏ khỏi màn Thời tiết và Đồng hồ. Mọi điện thoại cùng thấy thay đổi này.';
+  }
+
+  @override
+  String get weatherLocationClearOk => 'Xoá';
 }

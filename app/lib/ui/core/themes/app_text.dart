@@ -94,6 +94,10 @@ abstract final class AppSize {
   static const double deviceScale = 1.5;
   static const double roundButton = 56;
 
+  /// Ô tìm thành phố (LocationSearchField, 2026-11-26.9) và độ dài tối đa tên nơi trên thiết bị.
+  static const double searchField = 52;
+  static const int locationNameMax = 16;
+
   static const double radiusCard = 14;
   static const double radiusButton = 20;
   static const double radiusDialog = 28;
@@ -109,6 +113,7 @@ abstract final class AppSize {
   static const double radiusPhotoTile = 10;
   static const double radiusSheet = 20;
   static const double radiusDeviceShell = 20;
+  static const double radiusSearchField = 12;
   static const double radiusSnackbar = 12;
 
   static const double hairline = 1;

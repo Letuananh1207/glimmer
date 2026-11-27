@@ -1504,10 +1504,10 @@ abstract class AppLocalizations {
   /// **'Thiết bị cần vĩ độ / kinh độ để lấy thời tiết và dự báo.'**
   String get weatherNoLocationBody;
 
-  /// Nút viền → Cài đặt
+  /// Nút ở tab Thời tiết khi chưa đặt vị trí → màn Vị trí thời tiết (đổi 2026-11-26.9)
   ///
   /// In vi, this message translates to:
-  /// **'Đặt vị trí trong Cài đặt'**
+  /// **'Đặt vị trí thời tiết'**
   String get weatherSetLocation;
 
   /// Nhãn thẻ tab Đồng hồ
@@ -3687,6 +3687,312 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Hôm nay'**
   String get devXpDayTodayLong;
+
+  /// Nhóm Cài đặt
+  ///
+  /// In vi, this message translates to:
+  /// **'THỜI TIẾT'**
+  String get settingsSectionWeather;
+
+  /// Dòng Cài đặt → màn Vị trí thời tiết; phụ = tên nơi hoặc settingsWeatherLocationNone
+  ///
+  /// In vi, this message translates to:
+  /// **'Vị trí thời tiết'**
+  String get settingsWeatherLocation;
+
+  /// Phụ khi thiết bị chưa có vị trí
+  ///
+  /// In vi, this message translates to:
+  /// **'chưa đặt'**
+  String get settingsWeatherLocationNone;
+
+  /// Tiêu đề thanh trên
+  ///
+  /// In vi, this message translates to:
+  /// **'Vị trí thời tiết'**
+  String get weatherLocationTitle;
+
+  /// Nhãn thẻ vị trí hiện tại
+  ///
+  /// In vi, this message translates to:
+  /// **'THIẾT BỊ ĐANG DÙNG'**
+  String get weatherLocationCurrent;
+
+  /// Toạ độ, 2 số lẻ
+  ///
+  /// In vi, this message translates to:
+  /// **'{lat}, {lon}'**
+  String weatherLocationCoords(String lat, String lon);
+
+  /// Nút chữ → bảng sửa tên
+  ///
+  /// In vi, this message translates to:
+  /// **'Sửa tên'**
+  String get weatherLocationRename;
+
+  /// Nút chữ coral → hỏi xoá
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá vị trí'**
+  String get weatherLocationClear;
+
+  /// Thẻ khi chưa đặt (tiêu đề dùng weatherNoLocationTitle)
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiết bị chưa lấy được thời tiết. Chọn một nơi bên dưới.'**
+  String get weatherLocationUnsetBody;
+
+  /// Thẻ hiện tại, firmware không có weatherPlace
+  ///
+  /// In vi, this message translates to:
+  /// **'Firmware này chưa hiện tên nơi — thiết bị chỉ nhận toạ độ. Cập nhật firmware để thấy tên trên màn Thời tiết và Đồng hồ.'**
+  String get weatherLocationOldFwNote;
+
+  /// Nút GPS
+  ///
+  /// In vi, this message translates to:
+  /// **'Dùng vị trí hiện tại'**
+  String get weatherLocationUseGps;
+
+  /// Phụ nút GPS
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ lấy khi bạn bấm, rồi hỏi lại trước khi gửi.'**
+  String get weatherLocationUseGpsSub;
+
+  /// Nút GPS khi đang lấy
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang lấy vị trí…'**
+  String get weatherLocationGpsLoading;
+
+  /// Phụ khi đang lấy
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ định vị của điện thoại, vài giây.'**
+  String get weatherLocationGpsLoadingSub;
+
+  /// Thanh báo amber
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa cho phép vị trí'**
+  String get weatherLocationGpsDeniedTitle;
+
+  /// Thanh báo
+  ///
+  /// In vi, this message translates to:
+  /// **'App cần quyền vị trí để lấy toạ độ của điện thoại. Hoặc tìm thành phố bên dưới.'**
+  String get weatherLocationGpsDeniedBody;
+
+  /// Nút viền khi quyền bị từ chối hẳn
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở cài đặt điện thoại'**
+  String get weatherLocationOpenAppSettings;
+
+  /// Thanh báo amber
+  ///
+  /// In vi, this message translates to:
+  /// **'Định vị đang tắt'**
+  String get weatherLocationGpsOffTitle;
+
+  /// Thanh báo
+  ///
+  /// In vi, this message translates to:
+  /// **'Bật định vị (GPS) của điện thoại rồi bấm lại.'**
+  String get weatherLocationGpsOffBody;
+
+  /// Nút viền → cài đặt vị trí của hệ thống
+  ///
+  /// In vi, this message translates to:
+  /// **'Bật định vị'**
+  String get weatherLocationTurnOnGps;
+
+  /// Thanh báo coral
+  ///
+  /// In vi, this message translates to:
+  /// **'Không lấy được vị trí'**
+  String get weatherLocationGpsFailTitle;
+
+  /// Thanh báo; nút commonRetry
+  ///
+  /// In vi, this message translates to:
+  /// **'Điện thoại chưa định vị được (trong nhà, sóng yếu). Thử lại hoặc tìm thành phố.'**
+  String get weatherLocationGpsFailBody;
+
+  /// Nhãn nhóm
+  ///
+  /// In vi, this message translates to:
+  /// **'HOẶC TÌM THÀNH PHỐ'**
+  String get weatherLocationSearchSection;
+
+  /// Chữ mờ ô tìm
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên thành phố, vd Đà Nẵng'**
+  String get weatherLocationSearchHint;
+
+  /// Ghi chú dưới ô tìm
+  ///
+  /// In vi, this message translates to:
+  /// **'Chữ bạn gõ được gửi tới Open-Meteo để tìm (như trang web của thiết bị).'**
+  String get weatherLocationSearchPrivacy;
+
+  /// Nhãn đọc màn hình nút × trong ô tìm
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá chữ'**
+  String get weatherLocationSearchClearA11y;
+
+  /// Dòng khi đang tìm
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tìm…'**
+  String get weatherLocationSearching;
+
+  /// Dòng phụ kết quả; area = "Tỉnh, Nước"
+  ///
+  /// In vi, this message translates to:
+  /// **'{area} · {lat}, {lon}'**
+  String weatherLocationResultSub(String area, String lat, String lon);
+
+  /// Không có kết quả
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thấy “{query}”'**
+  String weatherLocationNoResultsTitle(String query);
+
+  /// Không có kết quả
+  ///
+  /// In vi, this message translates to:
+  /// **'Kiểm tra chính tả, hoặc thử tên không dấu / tên tiếng Anh.'**
+  String get weatherLocationNoResultsBody;
+
+  /// Lỗi mạng, coral
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm được'**
+  String get weatherLocationSearchErrorTitle;
+
+  /// Lỗi mạng; nút commonRetry
+  ///
+  /// In vi, this message translates to:
+  /// **'Điện thoại không tới được Open-Meteo. Kiểm tra mạng rồi thử lại.'**
+  String get weatherLocationSearchErrorBody;
+
+  /// Tiêu đề bảng xác nhận
+  ///
+  /// In vi, this message translates to:
+  /// **'Đặt vị trí này?'**
+  String get weatherLocationConfirmTitle;
+
+  /// Tiêu đề bảng khi bấm Sửa tên
+  ///
+  /// In vi, this message translates to:
+  /// **'Sửa tên nơi'**
+  String get weatherLocationRenameTitle;
+
+  /// Nhãn ô tên
+  ///
+  /// In vi, this message translates to:
+  /// **'TÊN HIỆN TRÊN THIẾT BỊ'**
+  String get weatherLocationNameLabel;
+
+  /// Bộ đếm ký tự
+  ///
+  /// In vi, this message translates to:
+  /// **'{n}/16'**
+  String weatherLocationNameCount(String n);
+
+  /// Dưới ô tên
+  ///
+  /// In vi, this message translates to:
+  /// **'Tối đa 16 ký tự để vừa khe trên màn thiết bị.'**
+  String get weatherLocationNameHint;
+
+  /// Nhãn khung xem trước
+  ///
+  /// In vi, this message translates to:
+  /// **'TRÊN THIẾT BỊ'**
+  String get weatherLocationPreview;
+
+  /// Xem trước dòng cửa sổ Thời tiết
+  ///
+  /// In vi, this message translates to:
+  /// **'Thời tiết: {desc} · {place}'**
+  String weatherLocationPreviewWeather(String desc, String place);
+
+  /// Xem trước dòng múi giờ
+  ///
+  /// In vi, this message translates to:
+  /// **'Đồng hồ: Múi giờ: GMT{offset} · {place}'**
+  String weatherLocationPreviewClock(String offset, String place);
+
+  /// Nút chính bảng xác nhận
+  ///
+  /// In vi, this message translates to:
+  /// **'Đặt cho thiết bị'**
+  String get weatherLocationApply;
+
+  /// Nút chính khi firmware cũ
+  ///
+  /// In vi, this message translates to:
+  /// **'Đặt toạ độ cho thiết bị'**
+  String get weatherLocationApplyCoords;
+
+  /// Nút chính bảng sửa tên
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu tên'**
+  String get weatherLocationSaveName;
+
+  /// Nút chính khi đang gửi
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang gửi…'**
+  String get weatherLocationSending;
+
+  /// Thanh báo trong bảng, coral
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiết bị không nhận'**
+  String get weatherLocationRejectedTitle;
+
+  /// Thanh báo; nút chính thành commonRetry
+  ///
+  /// In vi, this message translates to:
+  /// **'Vị trí trên thiết bị chưa đổi. Kiểm tra thiết bị còn cùng mạng rồi thử lại.'**
+  String get weatherLocationRejectedBody;
+
+  /// Bảng xác nhận, firmware cũ (thay ô tên)
+  ///
+  /// In vi, this message translates to:
+  /// **'Firmware này chưa hiện tên nơi: thiết bị chỉ nhận toạ độ.'**
+  String get weatherLocationOldFwSheet;
+
+  /// Thông báo nhỏ sau khi thiết bị nhận
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đặt {place} cho thiết bị.'**
+  String weatherLocationDone(String place);
+
+  /// Hộp thoại
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá vị trí thời tiết?'**
+  String get weatherLocationClearTitle;
+
+  /// Hộp thoại
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiết bị sẽ không lấy thời tiết và dự báo nữa, tên “{place}” cũng bỏ khỏi màn Thời tiết và Đồng hồ. Mọi điện thoại cùng thấy thay đổi này.'**
+  String weatherLocationClearBody(String place);
+
+  /// Nút coral hộp thoại
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá'**
+  String get weatherLocationClearOk;
 }
 
 class _AppLocalizationsDelegate

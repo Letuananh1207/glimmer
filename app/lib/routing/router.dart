@@ -59,7 +59,7 @@ GoRouter buildRouter(DeviceRepository device) {
                     child: dashboardScreen(
                       initialTab: s.uri.queryParameters['tab'],
                       onBack: () => context.pop(),
-                      onOpenSettings: () => context.go(Routes.settings),
+                      onOpenSettings: () => context.push(Routes.weatherLocation),
                       onCropPhoto: (args) => context.push(Routes.photoCrop, extra: args),
                     ),
                   ),
@@ -85,7 +85,21 @@ GoRouter buildRouter(DeviceRepository device) {
               ),
             ),
           ),
-          GoRoute(path: Routes.settings, pageBuilder: (_, s) => _tab(s, settingsScreen())),
+          GoRoute(
+            path: Routes.settings,
+            pageBuilder: (context, s) =>
+                _tab(s, settingsScreen(onOpenWeatherLocation: () => context.push(Routes.weatherLocation))),
+            routes: [
+              // Vị trí thời tiết: pushed above the tabs (no bottom bar).
+              GoRoute(
+                path: Routes.weatherLocationName,
+                parentNavigatorKey: root,
+                builder: (context, s) => Scaffold(
+                  body: SafeArea(child: weatherLocationScreen(onBack: () => context.pop())),
+                ),
+              ),
+            ],
+          ),
           GoRoute(
             path: Routes.device,
             pageBuilder: (context, s) =>
