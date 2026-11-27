@@ -32,6 +32,7 @@
 #include "wallpaper.h"
 #include "desk_wallpaper.h"
 #include "desk_icons.h"
+#include "mines_icons.h"
 #include <time.h>
 #include <math.h>
 
@@ -92,6 +93,7 @@ static void labelText(int i, const ChannelCtx& ctx, char* out, size_t n) {
         case XPCore::PROG_PHOTO:   Utf8::copy(out, n, "Ảnh"); break;
         case XPCore::PROG_WEATHER: Utf8::copy(out, n, "Thời tiết"); break;
         case XPCore::PROG_CLOCK:   Utf8::copy(out, n, "Đồng hồ"); break;
+        case XPCore::PROG_MINES:   Utf8::copy(out, n, "Dò mìn"); break;
         default:                   Utf8::copy(out, n, "Thùng rác"); break;
     }
 }
@@ -144,9 +146,10 @@ static int measure(const char* text) {
 
 // An XP colour icon (P-2026-11-26.19, desk_icons.h) at real pixels; transparent cells keep the wallpaper.
 // Selected: every colour → xpSelectIcon on the (x+y)-even cells (dither for XP's 50 % select tint).
-static void drawRuns(const DeskIcons::Run* runs, int n, const uint16_t* pal, int x0, int y0, bool sel) {
+template <typename Run>
+static void drawRuns(const Run* runs, int n, const uint16_t* pal, int x0, int y0, bool sel) {
     for (int k = 0; k < n; k++) {
-        DeskIcons::Run r;
+        Run r;
         memcpy_P(&r, &runs[k], sizeof(r));
         const int x = x0 + r.x, y = y0 + r.y;
         tft.fillRect(x, y, r.w, 1, pgm_read_word(&pal[r.c]));
@@ -166,6 +169,9 @@ static void drawIcon(int i) {
             break;
         case XPCore::PROG_CODEX: drawRuns(kCodexRuns, kCodexRunCount, kCodexPal, cx - 16, y, sel); break;   // Command Prompt
         case XPCore::PROG_PHOTO: drawRuns(kPhotoRuns, kPhotoRunCount, kPhotoPal, cx - 16, y, sel); break;   // My Pictures
+        case XPCore::PROG_MINES:                                                                        // P-2026-11-27.25
+            drawRuns(MinesIcons::kDeskMinesRuns, MinesIcons::kDeskMinesRunCount, MinesIcons::kDeskMinesPal, cx - 16, y, sel);
+            break;
         default:                 drawRuns(kTrashRuns, kTrashRunCount, kTrashPal, cx - 16, y, sel); break;   // Recycle Bin
     }
 }

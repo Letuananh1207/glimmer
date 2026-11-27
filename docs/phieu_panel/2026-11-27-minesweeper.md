@@ -1,6 +1,6 @@
 # Phiếu màn thiết bị: Dò mìn (Minesweeper)
 
-- Trạng thái: chờ thiết kế
+- Trạng thái: đã áp (P-2026-11-27.25) — firmware + app (R-DK-22, R-DK-23)
 - Ngày: 2026-11-27 · Nguồn: lộ trình `app/docs/tasks/2026-11-27-chuong-trinh-xp-con-thieu.md` (bạn đồng ý 2026-11-27), mục 1
 - Đã vẽ: P-2026-11-27.25
 

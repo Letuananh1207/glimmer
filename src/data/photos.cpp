@@ -1,5 +1,7 @@
 #include "photos.h"
 #include <LittleFS.h>
+#include <WiFiClient.h>
+#include <ESP8266HTTPClient.h>
 #include "display.h"
 #include "tjpgd.h"
 
@@ -7,6 +9,10 @@ namespace {
 
 const char* const kDir = "/photos";
 const char* const kTmp = "/photos/up.tmp";
+const char* const kCur = "/photos/cur.jpg";      // the app's photo on screen
+const char* const kCurTmp = "/photos/cur.tmp";
+
+PhotoSource::Source s_src;
 
 uint32_t s_ids[Photos::kMax];            // user photos p<N>, ascending
 int      s_n   = 0;
@@ -65,6 +71,8 @@ void begin() {
     s_cur = -1;
     LittleFS.mkdir(kDir);
     LittleFS.remove(kTmp);               // a reboot mid-upload
+    LittleFS.remove(kCurTmp);            // … or mid-fetch
+    LittleFS.remove(kCur);               // the app's photo of the last run: the app says again where it is
     Dir d = LittleFS.openDir(kDir);
     while (d.next()) {
         if (d.fileSize() == 0) continue;
@@ -110,9 +118,8 @@ uint32_t fsTotal() {
 int advance() { return s_cur = nextIndex(s_cur, s_n + s_ns); }
 int current() { return s_cur < s_n + s_ns ? s_cur : -1; }
 
-bool draw(int i, int x, int y) {
-    char p[32];
-    if (!pathAt(i, p, sizeof(p))) return false;
+// Decode the JPEG at [p] (kSide²) with its top-left at (x, y).
+static bool drawPath(const char* p, int x, int y) {
     // Workspace + file handle ≈ 3.7 KB. The VLW font (2-5 KB of glyph
     // metrics) is the only big thing we can drop to make room.
     if (ESP.getMaxFreeBlockSize() < kWork + 1024) Display::releaseFont();
@@ -141,6 +148,94 @@ bool draw(int i, int x, int y) {
     }
     free(work);
     return ok;
+}
+
+bool draw(int i, int x, int y) {
+    char p[32];
+    if (!pathAt(i, p, sizeof(p))) return false;
+    return drawPath(p, x, y);
+}
+
+// ── The app's library ───────────────────────────────────────────────────────
+
+PhotoSource::Source& source() { return s_src; }
+
+bool drawCurrent(int x, int y) {
+    if (!s_src.remote || !LittleFS.exists(kCur)) return false;
+    return drawPath(kCur, x, y);
+}
+
+Fetch fetchNext(uint32_t now) {
+    using namespace PhotoSource;
+    // Plain HTTP (no TLS): a socket + 512 B of stack; leave room for the decoder after it.
+    if (ESP.getMaxFreeBlockSize() < 8000) return FETCH_SKIP;
+    char path[64];
+    if (nextPath(s_src, path, sizeof(path)) < 0) { fetchFailed(s_src, now); return FETCH_FAIL; }
+    WiFiClient client;
+    HTTPClient http;
+    http.setTimeout(kFetchTimeoutMs);
+    http.setReuse(false);
+    if (!http.begin(client, s_src.host, s_src.port, path)) { fetchFailed(s_src, now); return FETCH_FAIL; }
+    static const char* kHeaders[] = {"X-Photo-Id", "X-Photo-Index", "X-Photo-Count"};
+    http.collectHeaders(kHeaders, 3);
+    const int code = http.GET();
+    if (code == 204) {
+        http.end();
+        emptyLibrary(s_src);
+        return FETCH_EMPTY;
+    }
+    const int len = http.getSize();
+    const uint32_t id = headerNumber(http.header("X-Photo-Id").c_str());
+    FSInfo fi;
+    const bool roomOk = LittleFS.info(fi)
+        && room(0, len > 0 ? (uint32_t)len : 0, fi.totalBytes > fi.usedBytes ? fi.totalBytes - fi.usedBytes : 0,
+                fi.blockSize) == ROOM_OK;
+    if (code != 200 || len <= 0 || (uint32_t)len > kMaxBytes || !id || !roomOk) {
+        Serial.printf_P(PSTR("[photos] app %s:%u → %d, %d B, id %lu\n"), s_src.host, s_src.port, code, len,
+                        (unsigned long)id);
+        http.end();
+        fetchFailed(s_src, now);
+        return FETCH_FAIL;
+    }
+    const uint16_t index = (uint16_t)headerNumber(http.header("X-Photo-Index").c_str());
+    const uint16_t count = (uint16_t)headerNumber(http.header("X-Photo-Count").c_str());
+    File f = LittleFS.open(kCurTmp, "w");
+    WiFiClient* in = http.getStreamPtr();
+    JpegSniffer sniff;
+    bool ok = f && in;
+    int got = 0;
+    uint8_t buf[512];
+    uint32_t lastData = millis();
+    while (ok && got < len) {
+        const int avail = in->available();
+        if (avail <= 0) {
+            if (!in->connected() || millis() - lastData > kFetchTimeoutMs) { ok = false; break; }
+            delay(1);                                    // yields to Wi-Fi
+            continue;
+        }
+        const int n = in->read(buf, (size_t)min(avail, (int)min((int)sizeof(buf), len - got)));
+        if (n <= 0) continue;
+        lastData = millis();
+        const JpegVerdict v = sniff.feed(buf, (size_t)n);
+        if (v != JPEG_PENDING && v != JPEG_OK) { ok = false; break; }
+        if (f.write(buf, (size_t)n) != (size_t)n) { ok = false; break; }
+        got += n;
+    }
+    if (f) f.close();
+    http.end();
+    ok = ok && got == len && sniff.finish() == JPEG_OK;
+    if (ok) {
+        LittleFS.remove(kCur);
+        ok = LittleFS.rename(kCurTmp, kCur);
+    }
+    if (!ok) {
+        LittleFS.remove(kCurTmp);
+        Serial.printf_P(PSTR("[photos] app photo %lu: bad / cut (%d of %d B)\n"), (unsigned long)id, got, len);
+        fetchFailed(s_src, now);
+        return FETCH_FAIL;
+    }
+    fetched(s_src, id, index, count);
+    return FETCH_OK;
 }
 
 // ── Upload ──────────────────────────────────────────────────────────────────

@@ -146,8 +146,17 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
   `skillsOn` array in `/api/settings`, `skills_on` + `skills` (+ legacy
   `skill` = first on) in `/api/state`. Channels of enabled skills can show, plus
   `skill = nullptr` system channels (Attention, Night, Info). Weather +
-  Forecast = `weather`, Clock = `clock`, Photo = `photo`. New pack = id in `Skill::kAll` +
-  program(s) in `XPCore::Prog` + desktop icon (`XPCore::deskIcons`) + tag its channels. App rules `R-SK-*`.
+  Forecast = `weather`, Clock = `clock`, Photo = `photo`, Mines = `fun` (Giải trí, default off). New pack = id in
+  `Skill::kAll` + program(s) in `XPCore::Prog` + desktop icon (`XPCore::deskIcons`) + Start rows
+  (`PointerCore::startLayout`, `XPCore::installed`) + tag its channels. App rules `R-SK-*`.
+- **Start lists** (P-2026-11-27.25): left column = pinned Claude / Codex + the **3 programs opened last**
+  (`XPCore::noteRecent` in `mainShowChannel`, RAM; filled Ảnh, Thời tiết, Đồng hồ, Dò mìn, AI, Xu hướng,
+  Agents); All Programs = every installed program, (144, top, 96 wide), top y 62 or moved up so the bottom
+  is ≤ 213. Icons: `tools/minesicons.py` → `src/ui/mines_icons.h` (cut from the P-.25 full-screen artboards).
+- **Dò mìn** (`ch_mines.cpp`, `mines_core.h`, P-2026-11-27.25): **the app keeps the game** (mines, flood
+  open, win / loss); `POST /api/mines {board: 81 chars '.' 'F' 'P' '0'..'8' 'M' 'X' 'W', face, left, secs,
+  run}` → the device repaints only the changed cells / face / LED and runs the seconds itself;
+  `/api/state` `mines` (present = this firmware draws it). No menu bar, no `?` (P-.25).
 - `draw(ctx)` — full repaint on activation, may `Display::clear()`.
 - `tick(ctx)` — 5 Hz while active. **Never** `Display::clear()` /
   `tft.fillScreen()`. File-static caches with sentinels (`-1`, `-2.f`) +
@@ -238,6 +247,15 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
   `Display::resetSystemScreens()` from non-system entry points.
 
 ## Photos (skill `photo`, `src/data/photos.{h,cpp}`, `photos_core.h`)
+
+- **The app's library** (app plan `app/docs/tasks/2026-11-27-kho-anh-tren-app.md`, R-AK-*;
+  `photo_source_core.h`, tested in `test/test_photo_source`): the app is the memory, the device points at it.
+  `POST /api/photos/source {host, port, key}` (RAM; `{clear}`) — each slide asks
+  `GET http://host:port/p/<key>/next?after=<id on screen>` (plain HTTP, 3 s timeout; 200 = JPEG + `X-Photo-Id /
+  -Index / -Count`, 204 = empty), written to `/photos/cur.jpg` then drawn (repaints never ask again). The device keeps
+  only the pointer (id). A failed ask → the cache (the `p<N>.jpg` user photos = the app's 8 newest, then samples),
+  asked again after 60 s. A slide moves only when `main.cpp` calls `chPhotoRequestStep()` (slideshow tick); any
+  other `draw()` shows the photo on screen again. `/api/state` `photo_source {state, remote, index, count}`.
 
 - Baseline JPEG, exactly 188×188 (the device never scales), ≤ 8 photos, ≤ 40
   KB each, upload refused if LittleFS would keep < 64 KB + 1 block free. The

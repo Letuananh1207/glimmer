@@ -8,6 +8,7 @@
 #include "utf8.h"
 #include "cursor.h"
 #include "pointer_core.h"
+#include "mines_icons.h"
 
 using namespace Theme::XP;
 using XPCore::Icon;
@@ -88,6 +89,7 @@ IconBits bitsOf(Icon i) {
         case XPCore::ICON_WEATHER: return {16, 14, kWeatherBits};
         case XPCore::ICON_CLOCK:   return {16, 14, kClockBits};
         case XPCore::ICON_INFO:    return {6, 9, kInfoBits};
+        case XPCore::ICON_MINES:   return {13, 13, MinesIcons::kMineMask};   // P-2026-11-27.25
         default:                   return {0, 0, nullptr};
     }
 }
@@ -125,6 +127,14 @@ void titleIcon(Icon icon) {
         case XPCore::ICON_NONE: return;
         case XPCore::ICON_CLAWD: XP::drawIcon(icon, 4, 6, 1, Display::CLAWD_ORANGE); return;
         case XPCore::ICON_INFO:  XP::drawIcon(icon, 8, 6, 1, WHITE); return;   // XP-Info
+        case XPCore::ICON_MINES: {                                              // XP-Mines: black mine + glint
+            using namespace MinesIcons;
+            for (int k = 0; k < kTitleMineRunCount; k++) {
+                Run r; memcpy_P(&r, &kTitleMineRuns[k], sizeof(r));
+                tft.fillRect(6 + r.x, 5 + r.y, r.w, 1, pgm_read_word(&kTitleMinePal[r.c]));
+            }
+            return;
+        }
         default: {
             int w, h; XP::iconSize(icon, w, h);
             XP::drawIcon(icon, 13 - w / 2, 11 - h / 2, 1, WHITE);   // centred on (13, 11)

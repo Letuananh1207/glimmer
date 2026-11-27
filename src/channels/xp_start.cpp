@@ -5,10 +5,13 @@
 #include "theme.h"
 #include "start_icons.h"
 #include "desk_icons.h"
+#include "mines_icons.h"
 #include "skill_core.h"
 #include "pointer_core.h"
 
 using namespace Theme::XP;
+
+extern PointerCore::StartInputs mainStartInputs();   // main.cpp: installed programs + the 3 opened last
 
 namespace {
 
@@ -33,6 +36,10 @@ const char kUsage[] PROGMEM = "mức dùng";
 const char kPhoto[] PROGMEM = "Ảnh";
 const char kWeather[] PROGMEM = "Thời tiết";
 const char kClock[] PROGMEM = "Đồng hồ";
+const char kAi[] PROGMEM = "AI hôm nay";      // P-2026-11-27.25
+const char kTrend[] PROGMEM = "Xu hướng";
+const char kAgents[] PROGMEM = "Agents";
+const char kMines[] PROGMEM = "Dò mìn";
 const char kAll[] PROGMEM = "Tất cả chương trình";
 const char kDesktop[] PROGMEM = "Desktop";
 const char kStats[] PROGMEM = "Số liệu";
@@ -82,10 +89,8 @@ void userBand() {
 using PointerCore::StartLayout;
 using namespace PointerCore;
 
-void layoutOf(const char* on, StartLayout& L) {
-    startLayout(Skill::inList(on, "agent"), Skill::inList(on, "photo"), Skill::inList(on, "weather"),
-                Skill::inList(on, "clock"), L);
-}
+// P-2026-11-27.25: installed programs + the 3 opened last ([on] kept for the callers' signature).
+void layoutOf(const char*, StartLayout& L) { startLayout(mainStartInputs(), L); }
 
 // A colour icon with its top highlight row white (a lit bottom-band button, as XP): runs of palette
 // entry 1 on the icon's first row of that colour.
@@ -118,6 +123,10 @@ void paintItem(const StartLayout& L, int i, bool lit) {
         case S_PHOTO:
         case S_WEATHER:
         case S_CLOCK:
+        case S_MINES:
+        case S_AI:
+        case S_TREND:
+        case S_AGENTS:
         case S_ALL: {
             const uint16_t bg = lit ? SELECT : WHITE;
             tft.fillRect(r.x, r.y, r.w, r.h, bg);
@@ -135,6 +144,10 @@ void paintItem(const StartLayout& L, int i, bool lit) {
                 case S_PHOTO:   ICON(StartIcons, Photo, 6, y + 3);   text(kPhoto, "JBMono-11", 28, y + 4, fg, bg);   break;
                 case S_WEATHER: ICON(StartIcons, Weather, 6, y + 2); text(kWeather, "JBMono-11", 28, y + 4, fg, bg); break;
                 case S_CLOCK:   ICON(StartIcons, Clock, 6, y + 2);   text(kClock, "JBMono-11", 28, y + 4, fg, bg);   break;
+                case S_MINES:   ICON(MinesIcons, StartMines, 6, y + 2);  text(kMines, "JBMono-11", 28, y + 4, fg, bg);  break;
+                case S_AI:      ICON(MinesIcons, StartAi, 6, y + 2);     text(kAi, "JBMono-11", 28, y + 4, fg, bg);     break;
+                case S_TREND:   ICON(MinesIcons, StartTrend, 6, y + 2);  text(kTrend, "JBMono-11", 28, y + 4, fg, bg);  break;
+                case S_AGENTS:  ICON(MinesIcons, StartAgents, 6, y + 2); text(kAgents, "JBMono-11", 28, y + 4, fg, bg); break;
                 default:
                     text(kAll, "JBMono-12B", 4, 170, fg, bg);
                     ICON(StartIcons, AllArrow, 138, 171);
@@ -163,7 +176,7 @@ void paintItem(const StartLayout& L, int i, bool lit) {
     }
 }
 
-// One All Programs row (152, row, 87x20).
+// One All Programs row (lit band (145, row, 94×20); icon (147, row + 2), label (166, row + 4) — P-2026-11-27.25).
 void paintSub(const StartLayout& L, int i, bool lit) {
     if (i < 0 || i >= L.subN) return;
     const Rect r = L.subRow[i];
@@ -171,12 +184,16 @@ void paintSub(const StartLayout& L, int i, bool lit) {
     const uint16_t bg = lit ? SELECT : WHITE, fg = lit ? WHITE : BLACK;
     tft.fillRect(r.x, r.y, r.w, r.h, bg);
     switch (L.sub[i]) {
-        case SUB_CLAUDE:  ICON(StartIcons, SmallClawd, 154, y + 5); text(kClaude, "JBMono-11", 173, y + 4, fg, bg);  break;
-        case SUB_CODEX:   ICON(StartIcons, SmallCodex, 154, y + 4); text(kCodex, "JBMono-11", 173, y + 4, fg, bg);   break;
-        case SUB_PHOTO:   ICON(StartIcons, Photo, 154, y + 3);      text(kPhoto, "JBMono-11", 173, y + 4, fg, bg);   break;
-        case SUB_WEATHER: ICON(StartIcons, Weather, 154, y + 2);    text(kWeather, "JBMono-11", 173, y + 4, fg, bg); break;
-        case SUB_CLOCK:   ICON(StartIcons, Clock, 154, y + 2);      text(kClock, "JBMono-11", 173, y + 4, fg, bg);   break;
-        default:          ICON(StartIcons, AddRemove, 154, y + 2);  text(kAddRemove, "JBMono-11", 173, y + 4, fg, bg);
+        case SUB_CLAUDE:  ICON(StartIcons, SmallClawd, 147, y + 5);  text(kClaude, "JBMono-11", 166, y + 4, fg, bg);  break;
+        case SUB_CODEX:   ICON(StartIcons, SmallCodex, 147, y + 4);  text(kCodex, "JBMono-11", 166, y + 4, fg, bg);   break;
+        case SUB_AI:      ICON(MinesIcons, StartAi, 147, y + 2);     text(kAi, "JBMono-11", 166, y + 4, fg, bg);      break;
+        case SUB_TREND:   ICON(MinesIcons, StartTrend, 147, y + 2);  text(kTrend, "JBMono-11", 166, y + 4, fg, bg);   break;
+        case SUB_AGENTS:  ICON(MinesIcons, StartAgents, 147, y + 2); text(kAgents, "JBMono-11", 166, y + 4, fg, bg);  break;
+        case SUB_PHOTO:   ICON(StartIcons, Photo, 147, y + 3);       text(kPhoto, "JBMono-11", 166, y + 4, fg, bg);   break;
+        case SUB_WEATHER: ICON(StartIcons, Weather, 147, y + 2);     text(kWeather, "JBMono-11", 166, y + 4, fg, bg); break;
+        case SUB_CLOCK:   ICON(StartIcons, Clock, 147, y + 2);       text(kClock, "JBMono-11", 166, y + 4, fg, bg);   break;
+        case SUB_MINES:   ICON(MinesIcons, StartMines, 147, y + 2);  text(kMines, "JBMono-11", 166, y + 4, fg, bg);   break;
+        default:          ICON(StartIcons, AddRemove, 147, y + 2);   text(kAddRemove, "JBMono-11", 166, y + 4, fg, bg);
     }
 }
 
@@ -202,14 +219,14 @@ void bottomBand(const StartLayout& L, const Control::Menu& m) {
     paintItem(L, t, m.hover == t);
 }
 
-// All Programs sub-menu (151, 62, 89 wide): installed programs, separator, Thêm / gỡ.
+// All Programs sub-menu (144, top, 96 wide — P-2026-11-27.25): every installed program, separator, Thêm / gỡ.
 void allPrograms(const StartLayout& L, const Control::Menu& m) {
     const Rect b = L.subBox;
     tft.fillRect(b.x, b.y, b.w, b.h, MENU_BORDER);
     tft.fillRect(b.x + 1, b.y + 1, b.w - 2, b.h - 2, WHITE);
     for (int i = 0; i < L.subN; i++) paintSub(L, i, i == m.sub);
     const Rect add = L.subRow[L.subN - 1];
-    tft.drawFastHLine(155, add.y - 4, 81, MENU_BORDER);
+    tft.drawFastHLine(148, add.y - 4, 88, MENU_BORDER);
 }
 
 }  // namespace
@@ -237,9 +254,17 @@ void relight(const Control::Menu& was, const Control::Menu& now, const char* ski
     auto hidden = [&](int i) {
         return now.all && i >= 0 && i < L.n && L.item[i] >= S_DESKTOP && L.item[i] <= S_DEVICE;
     };
+    // The open sub-menu also lies over x 144..151 of the left column: paint those rows clipped.
+    auto paint = [&](int i, bool lit) {
+        if (hidden(i)) return;
+        const bool clip = now.all && i >= 0 && i < L.n && L.item[i] <= S_ALL;
+        if (clip) tft.setViewport(0, 0, L.subBox.x, 240, false);
+        paintItem(L, i, lit);
+        if (clip) tft.resetViewport();
+    };
     if (was.hover != now.hover) {
-        if (!hidden(was.hover)) paintItem(L, was.hover, litItem(L, now, was.hover));
-        if (!hidden(now.hover)) paintItem(L, now.hover, true);
+        paint(was.hover, litItem(L, now, was.hover));
+        paint(now.hover, true);
     }
     if (now.all && was.sub != now.sub) {
         paintSub(L, was.sub, false);

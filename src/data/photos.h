@@ -9,6 +9,7 @@
 // a channel draw() in loop(), so never alongside a TLS fetch.
 #include <Arduino.h>
 #include "photos_core.h"
+#include "photo_source_core.h"
 
 namespace Photos {
 
@@ -47,5 +48,17 @@ void        uploadAbort();
 
 // Delete a user (p<N>) or sample (s<N>) photo by name. false = no such photo.
 bool remove(const char* name);
+
+// ── The app's library (photo_source_core.h; app plan 2026-11-27 kho ảnh trên app) ──
+// The device points at the app's library: each slide it asks for the photo after the one on screen and keeps it
+// in /photos/cur.jpg (one file, overwritten) so a repaint never asks again. The user photos above are the cache
+// the app keeps (its 8 newest), shown while the app is away.
+PhotoSource::Source& source();
+enum Fetch : uint8_t { FETCH_OK, FETCH_EMPTY, FETCH_FAIL, FETCH_SKIP };
+// Ask the app for the next photo (blocks ≤ ~kFetchTimeoutMs per step). OK = in cur.jpg, source() updated;
+// EMPTY = 204; FAIL = app away / bad answer (source() marked, retried after kRetryMs); SKIP = no heap now.
+Fetch fetchNext(uint32_t now);
+// Decode the app's photo on screen (cur.jpg). false = none / unreadable.
+bool drawCurrent(int x, int y);
 
 }  // namespace Photos

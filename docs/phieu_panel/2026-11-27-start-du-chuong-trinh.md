@@ -1,6 +1,6 @@
 # Phiếu màn thiết bị: Start menu có đủ mọi chương trình
 
-- Trạng thái: chờ thiết kế
+- Trạng thái: đã áp (P-2026-11-27.25) — firmware + app (R-DK-22, R-DK-23)
 - Ngày: 2026-11-27 · Nguồn: áp thiết kế app 2026-11-27.10 (`app/docs/tasks/2026-11-27-thiet-ke-2026-11-27.10.md`)
 - Đã vẽ: P-2026-11-27.25
 

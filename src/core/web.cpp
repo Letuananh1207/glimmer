@@ -40,6 +40,7 @@
 #include "skill_core.h"
 #include "photos.h"
 #include "cursor.h"
+#include "mines_core.h"
 #include "wallpaper.h"
 #include "control_core.h"
 #include "clock_core.h"
@@ -83,6 +84,8 @@ extern void        mainSetWindows(const Control::Windows& w);
 extern const Control::Menu& mainMenu();
 extern bool        mainSetMenu(const Control::Menu& m);
 extern void        mainSetPower(bool on);
+extern void        mainSetMines(const Mines::View& v);
+extern const Mines::View& chMinesView();
 extern void        mainRestart();
 extern int         mainHot();
 extern const char* mainPowerName();
@@ -233,7 +236,29 @@ static void handleApiState() {
     }
     d[F("photos")]              = Photos::count();
     d[F("photo_samples")]       = Photos::samples();
-    d[F("power")]               = mainPowerName();   // R-DK-20: on / shutting / off / booting
+    {   // The app's library (kho ảnh trên app): none / online / offline + the place of the photo on screen.
+        const PhotoSource::Source& ps = Photos::source();
+        JsonObject o = d[F("photo_source")].to<JsonObject>();
+        o[F("state")] = PhotoSource::stateName(PhotoSource::stateOf(ps));
+        o[F("remote")] = ps.remote;
+        o[F("index")] = ps.index;
+        o[F("count")] = ps.count;
+    }
+    d[F("power")]               = mainPowerName();
+    {   // Dò mìn (P-2026-11-27.25): present = this firmware draws it; the app keeps the game.
+        const Mines::View& mv = chMinesView();
+        JsonObject mo = d[F("mines")].to<JsonObject>();
+        mo[F("face")] = Mines::faceName(mv.face);
+        mo[F("left")] = mv.left;
+        mo[F("secs")] = mv.secs;
+        mo[F("run")]  = mv.run;
+    }
+    {   // Start's "most frequently used" (P-2026-11-27.25), newest first — the app's hit rules need them.
+        extern const int8_t* mainRecent();
+        JsonArray sr = d[F("start_recent")].to<JsonArray>();
+        const int8_t* r = mainRecent();
+        for (int i = 0; i < XPCore::kRecentN; i++) if (r[i] >= 0) sr.add(XPCore::progName(r[i]));
+    }   // R-DK-20: on / shutting / off / booting
     // Mouse (R-DK-17): the app sends the pointer over UDP to this port.
     JsonObject cur = d[F("cursor")].to<JsonObject>();
     cur[F("port")]  = CursorCore::kPort;
@@ -895,6 +920,28 @@ static void handlePhotoUploadDone() {
     sendJson(200, d);
 }
 
+// The app's photo library (app plan 2026-11-27 kho ảnh trên app): where the app serves it — {host, port, key} —
+// or {"clear": true}. RAM only: the app says it again whenever it opens. 400 = bad host / port / key.
+static void handlePhotoSource() {
+    if (!checkAuth()) { server.send_P(401, PSTR("application/json"), PSTR("{\"error\":\"unauthorized\"}")); return; }
+    JsonDocument d;
+    if (deserializeJson(d, server.arg("plain"))) {
+        server.send_P(400, PSTR("application/json"), PSTR("{\"error\":\"bad json\"}"));
+        return;
+    }
+    PhotoSource::Source& s = Photos::source();
+    if (d[F("clear")] | false) {
+        PhotoSource::clearSource(s);
+    } else if (!PhotoSource::setSource(s, d[F("host")] | "", d[F("port")] | 0L, d[F("key")] | "")) {
+        server.send_P(400, PSTR("application/json"), PSTR("{\"error\":\"host (IPv4), port, key (8-32 letters/digits)\"}"));
+        return;
+    }
+    JsonDocument r;
+    r[F("ok")] = true;
+    r[F("state")] = PhotoSource::stateName(PhotoSource::stateOf(s));
+    sendJson(200, r);
+}
+
 static void handlePhotoDelete() {
     if (!checkAuth()) { server.send_P(401, PSTR("application/json"), PSTR("{\"error\":\"unauthorized\"}")); return; }
     if (!Photos::remove(server.arg("name").c_str())) {
@@ -1057,6 +1104,30 @@ void Web::begin(Settings& settings) {
 
     // The Clock window touched from the app (P-2026-11-26.22): every field
     // optional, the rest keep their value; "sync": true asks the time servers now.
+    // Dò mìn (P-2026-11-27.25): the app keeps the game and sends the board to draw —
+    // {"board": 81 chars ('.' 'F' 'P' '0'..'8' 'M' 'X' 'W'), "face": smile|wow|cool|dead,
+    //  "left": mines left, "secs": seconds now, "run": the clock runs on}.
+    server.on("/api/mines",          HTTP_POST, []() {
+        if (!checkAuth()) { server.send_P(401, PSTR("application/json"), PSTR("{\"error\":\"unauthorized\"}")); return; }
+        JsonDocument d;
+        if (deserializeJson(d, server.arg("plain"))) {
+            server.send_P(400, PSTR("application/json"), PSTR("{\"error\":\"bad json\"}"));
+            return;
+        }
+        Mines::View v = chMinesView();
+        if (!d[F("board")].isNull() && !Mines::parseBoard(d[F("board")] | "", v.cell)) {
+            server.send_P(400, PSTR("application/json"), PSTR("{\"error\":\"board must be 81 cells\"}"));
+            return;
+        }
+        const int f = Mines::faceOf(d[F("face")] | "");
+        if (f >= 0) v.face = (uint8_t)f;
+        if (d[F("left")].is<int>()) v.left = (int16_t)d[F("left")].as<int>();
+        if (d[F("secs")].is<int>()) { const int s = d[F("secs")]; v.secs = (uint16_t)(s < 0 ? 0 : s > Mines::kSecsMax ? Mines::kSecsMax : s); }
+        if (d[F("run")].is<bool>()) v.run = d[F("run")];
+        mainSetMines(v);
+        server.send_P(200, PSTR("application/json"), PSTR("{\"ok\":true}"));
+    });
+
     server.on("/api/clock",          HTTP_POST, []() {
         if (!checkAuth()) { server.send_P(401, PSTR("application/json"), PSTR("{\"error\":\"unauthorized\"}")); return; }
         JsonDocument d;
@@ -1153,6 +1224,7 @@ void Web::begin(Settings& settings) {
     server.on("/api/photos",         HTTP_GET,    handlePhotoList);
     server.on("/api/photos",         HTTP_POST,   handlePhotoUploadDone, handlePhotoUploadChunk);
     server.on("/api/photos",         HTTP_DELETE, handlePhotoDelete);
+    server.on("/api/photos/source",  HTTP_POST,   handlePhotoSource);
     server.on("/api/wallpaper",      HTTP_GET,    handleWallpaperGet);
     server.on("/api/wallpaper",      HTTP_POST,   handleWallpaperUploadDone, handleWallpaperChunk);
     server.on("/api/wallpaper",      HTTP_DELETE, handleWallpaperDelete);

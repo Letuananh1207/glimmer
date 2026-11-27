@@ -40,6 +40,7 @@
 #include "xp_start.h"
 #include "xp_turnoff.h"
 #include "pointer_core.h"
+#include "mines_core.h"
 #include "clock_core.h"
 #include "cursor.h"
 #include <coredecls.h>
@@ -60,6 +61,7 @@ extern bool chNightEnabled   (const ChannelCtx&); extern void chNightDraw   (con
 extern bool chSetupEnabled   (const ChannelCtx&); extern void chSetupDraw   (const ChannelCtx&);
 extern bool chPhotoEnabled   (const ChannelCtx&); extern void chPhotoDraw   (const ChannelCtx&);
 extern bool chPhotoEmpty();
+extern void chPhotoRequestStep();   // the slideshow's next draw() moves to the next photo
 extern void chAttentionTick  (const ChannelCtx&);
 extern void chAgentsTick     (const ChannelCtx&);
 extern void chClockTick      (const ChannelCtx&);
@@ -72,6 +74,9 @@ extern void chForecastTick   (const ChannelCtx&);
 extern void chTrendTick      (const ChannelCtx&);
 extern void chInfoTick       (const ChannelCtx&);
 extern void chNightTick      (const ChannelCtx&);
+extern bool chMinesEnabled   (const ChannelCtx&); extern void chMinesDraw   (const ChannelCtx&);
+extern void chMinesTick      (const ChannelCtx&);
+extern void chMinesSet(const Mines::View& v, bool onScreen);
 extern bool chAttentionNeedsYou();
 extern bool chAttentionWakesScreen();
 
@@ -90,6 +95,7 @@ static const Channel kChannels[] = {
     { "Weather",  chWeatherEnabled,  chWeatherDraw,  chWeatherTick,  "weather" },
     { "Forecast", chForecastEnabled, chForecastDraw, chForecastTick, "weather" },
     { "Clock",    chClockEnabled,    chClockDraw,    chClockTick,    "clock" },
+    { "Mines",    chMinesEnabled,    chMinesDraw,    chMinesTick,    "fun" },     // Dò mìn (P-2026-11-27.25)
     { "Info",     chInfoEnabled,     chInfoDraw,     chInfoTick     },
 };
 static constexpr int kChannelCount = sizeof(kChannels) / sizeof(kChannels[0]);
@@ -119,7 +125,9 @@ static bool        g_screenOff   = false; // backlight off on the app's command
 // context menu drawn over the screen. The device never rotates channels.
 static Control::Windows g_windows;
 static Control::Menu    g_menu;
-static Control::PowerState g_power;      // the app's power button (R-DK-20)
+static Control::PowerState g_power;
+// Start's "most frequently used" (P-2026-11-27.25): programs opened last, newest first (RAM).
+static int8_t g_recent[XPCore::kRecentN] = {XPCore::PROG_NONE, XPCore::PROG_NONE, XPCore::PROG_NONE};      // the app's power button (R-DK-20)
 // The Clock window as the app touched it (P-2026-11-26.22) and the last SNTP sync.
 static ClockCore::View  g_clockView;
 static volatile uint32_t g_ntpLast = 0;
@@ -164,6 +172,14 @@ uint32_t mainNtpLast()      { return g_ntpLast; }
 const Control::Windows& mainWindows() { return g_windows; }
 const Control::Menu&    mainMenu()    { return g_menu; }
 bool     mainScreenOn()     { return !g_screenOff; }
+// What the Start menu lists (P-2026-11-27.25): installed programs + the 3 opened last.
+PointerCore::StartInputs mainStartInputs() {
+    PointerCore::StartInputs si;
+    si.in = XPCore::installedOf(g_settings.skillsOn.c_str(), g_settings.showAgents);
+    for (int i = 0; i < XPCore::kRecentN; i++) si.recent[i] = g_recent[i];
+    return si;
+}
+const int8_t* mainRecent() { return g_recent; }
 const char* mainPowerName() { return Control::powerName(g_power.p); }
 int mainHot() { return XP::hot(); }
 uint32_t mainHeapRefusals() { return g_heapRefusals; }
@@ -480,6 +496,7 @@ bool mainShowChannel(const char* name) {
             // A minimized window coming back up zooms from its button (XP).
             if (p >= 0 && (g_windows.minMask >> p & 1)) g_restoring = (int8_t)p;
             Control::adopt(g_windows, p);
+            XPCore::noteRecent(g_recent, p);
             drawActive();
             markSlide(millis());
             return true;
@@ -644,9 +661,7 @@ static void pointerTick() {
     int8_t hv = -1, sb = -1;
     if (mouse && g_menu.kind == XPCore::MENU_START) {
         PointerCore::StartLayout L;
-        const char* on = g_settings.skillsOn.c_str();
-        PointerCore::startLayout(Skill::inList(on, "agent"), Skill::inList(on, "photo"),
-                                 Skill::inList(on, "weather"), Skill::inList(on, "clock"), L);
+        PointerCore::startLayout(mainStartInputs(), L);
         hv = (int8_t)PointerCore::startHit(L, g_menu.all, x, y);
         sb = (int8_t)PointerCore::subHit(L, g_menu.all, x, y);
     } else if (mouse && g_menu.kind == XPCore::MENU_TURNOFF) {
@@ -688,6 +703,15 @@ void mainSetClock(const ClockCore::View& v, bool sync) {
     }
     if (g_activeCount && !strcmp(kChannels[g_activeIdx[g_activePtr]].name, "Clock") && g_menu.kind == XPCore::MENU_NONE)
         drawActive();
+}
+
+// A Dò mìn board from the app (POST /api/mines, P-2026-11-27.25): the app keeps the game; on screen
+// (no menu over it) only the cells / face / LEDs that changed repaint.
+void mainSetMines(const Mines::View& v) {
+    const bool onScreen = g_activeCount && !strcmp(kChannels[g_activeIdx[g_activePtr]].name, "Mines")
+                       && g_menu.kind == XPCore::MENU_NONE && !g_contentDue;
+    chMinesSet(v, onScreen);
+    if (onScreen) Cursor::overlay();
 }
 
 // A new / deleted wallpaper: repaint the desktop if it is on screen.
@@ -1155,6 +1179,7 @@ void loop() {
     }
     if (!g_apMode && photoSlideshow() && g_menu.kind == XPCore::MENU_NONE && now - g_lastSlide >= slideMs()) {
         markSlide(now);
+        chPhotoRequestStep();
         drawActive();
     }
 

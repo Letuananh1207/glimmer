@@ -283,6 +283,8 @@ def title_bar(sc, t, icon="clawd"):
         draw_icon(sc, "clawd", 4, 6, 1, CLAWD_ORANGE)
     elif icon == "info":
         draw_icon(sc, "info", 8, 6, 1, X["WHITE"])
+    elif icon == "mines":                                   # P-2026-11-27.25: black mine + glint at (6, 5)
+        run_icon(sc, _mines_icon("TitleMine"), 6, 5)
     elif icon:
         w, h, _ = ICONS[icon]
         draw_icon(sc, icon, 13 - w // 2, 11 - h // 2, 1, X["WHITE"])
@@ -598,7 +600,8 @@ def task_bands(sc, x, w, r0, r1):
 
 
 # main.cpp barState / XPCore::fillBar (P-2026-11-26.14): one button per open window.
-PROG_ICON = {"Photo": "photo", "Weather": "weather", "Forecast": "weather", "Clock": "clock", "Info": "info"}
+PROG_ICON = {"Photo": "photo", "Weather": "weather", "Forecast": "weather", "Clock": "clock", "Info": "info",
+             "Mines": "mines"}
 _BTN_PROG = {"claude": "Claude", "photo": "Photo", "weather": "Weather", "clock": "Clock"}
 
 
@@ -635,6 +638,11 @@ def taskbar(sc, *, active="claude", windows=None, top=None, flash=False, badge=1
         icon = PROG_ICON.get(prog, "clawd")
         if icon == "clawd":
             draw_icon(sc, "clawd", x + 5, 222, 1, X["WHITE"] if look == "flash" else CLAWD_ORANGE)
+        elif icon == "mines":                               # white mine at (button + 7, 220)
+            pal, runs = _mines_icon("TitleMine")
+            for xx, yy, ww, c in runs:
+                if pal[c] == hx("000000"):
+                    sc.rect(x + 7 + xx, 220 + yy, ww, 1, X["WHITE"])
         else:
             w, h, _ = ICONS[icon]
             draw_icon(sc, icon, x + 14 - w // 2, 227 - h // 2, 1, X["WHITE"])
@@ -1000,8 +1008,14 @@ DESK_TRASH = [0x07F8, 0x0FFC, 0x1FFE, 0x0AA8, 0x0AA8, 0x0AA8, 0x0AA8, 0x0AA8, 0x
 
 # XPCore::deskIcons (P-2026-11-26.14 XP-Desk): column 0 Claude, Codex, Ảnh, trash; column 1 Thời tiết, Đồng hồ.
 def desk_icons(skills, one_col=True):
-    """XPCore::deskIcons — P-2026-11-26.17: one column x 40, no Weather / Clock (older designs: one_col=False)."""
-    col0 = (["Claude", "Codex"] if "agent" in skills else []) + (["Photo"] if "photo" in skills else []) + [None]
+    """XPCore::deskIcons — P-2026-11-26.17: one column x 40, no Weather / Clock (older designs: one_col=False).
+    P-2026-11-27.25: Dò mìn before the trash, or column 2 (120, 8) when column 1 has 4 already."""
+    col0 = (["Claude", "Codex"] if "agent" in skills else []) + (["Photo"] if "photo" in skills else [])
+    if "fun" in skills and len(col0) + 2 <= 4:
+        col0.append("Mines")
+    col0.append(None)
+    if "fun" in skills and "Mines" not in col0:
+        return [(p, 40, 8 + 48 * i) for i, p in enumerate(col0)] + [("Mines", 120, 8)]
     col1 = [] if one_col else (["Weather"] if "weather" in skills else []) + (["Clock"] if "clock" in skills else [])
     return [(p, 40, 8 + 48 * i) for i, p in enumerate(col0)] + [(p, 120, 8 + 48 * i) for i, p in enumerate(col1)]
 
@@ -1049,7 +1063,27 @@ def _desk_icon(name):
     return pal, runs
 
 
-DESK_XP = {"Codex": _desk_icon("Codex"), "Photo": _desk_icon("Photo"), None: _desk_icon("Trash")}
+# src/ui/mines_icons.h (P-2026-11-27.25, tools/minesicons.py).
+_SRC_MINESICONS = (ROOT / "src" / "ui" / "mines_icons.h").read_text(encoding="utf-8")
+
+
+def _mines_icon(name):
+    pal_src = re.search(rf"k{name}Pal\[\] PROGMEM = \{{(.*?)\}};", _SRC_MINESICONS, re.S).group(1)
+    pal = [hx(h) for h in re.findall(r"/\* #([0-9A-F]{6}) \*/", pal_src)]
+    runs_src = re.search(rf"k{name}Runs\[\] PROGMEM = \{{(.*?)\n\}};", _SRC_MINESICONS, re.S).group(1)
+    return pal, [tuple(int(v) for v in m) for m in re.findall(r"\{(\d+), (\d+), (\d+), (\d+)\}", runs_src)]
+
+
+def _mines_segs():
+    out = []
+    for k in "ABCDEFG":
+        src = re.search(rf"kSeg{k}\[\] PROGMEM = \{{(.*?)\n\}};", _SRC_MINESICONS, re.S).group(1)
+        out.append([tuple(int(v) for v in m[:3]) for m in re.findall(r"\{(\d+), (\d+), (\d+), (\d+)\}", src)])
+    return out
+
+
+DESK_XP = {"Codex": _desk_icon("Codex"), "Photo": _desk_icon("Photo"), None: _desk_icon("Trash"),
+           "Mines": _mines_icon("DeskMines")}
 
 
 def desk_icon_xp(sc, prog, x0, y0, selected=False):
@@ -1078,10 +1112,30 @@ def run_icon(sc, icon, x0, y0):
         sc.rect(x0 + x, y0 + y, w, 1, pal[c])
 
 
-def start_menu(sc, skills=("agent", "photo", "weather", "clock"), all_open=False, hover=None):
-    """XPStart::draw; hover = the label of the lit row (P-2026-11-27.24)."""
+START_FILL = ["Photo", "Weather", "Clock", "Mines", "AI", "Trend", "Agents"]   # XPCore::recentRows
+START_ROW = {   # program → (icon source, icon name, label, icon dy) — channels/xp_start.cpp
+    "Photo": ("start", "Photo", "Ảnh", 3), "Weather": ("start", "Weather", "Thời tiết", 2),
+    "Clock": ("start", "Clock", "Đồng hồ", 2), "Mines": ("mines", "StartMines", "Dò mìn", 2),
+    "AI": ("mines", "StartAi", "AI hôm nay", 2), "Trend": ("mines", "StartTrend", "Xu hướng", 2),
+    "Agents": ("mines", "StartAgents", "Agents", 2),
+    "Claude": ("start", "SmallClawd", "Claude", 5), "Codex": ("start", "SmallCodex", "Codex", 4),
+}
+
+
+def _installed(skills, show_agents):
+    on = {"Claude": "agent", "Codex": "agent", "AI": "agent", "Trend": "agent", "Agents": "agent",
+          "Photo": "photo", "Weather": "weather", "Clock": "clock", "Mines": "fun"}
+    return lambda p: on[p] in skills and (p != "Agents" or show_agents)
+
+
+def start_menu(sc, skills=("agent", "photo", "weather", "clock"), all_open=False, hover=None, recent=(),
+               show_agents=False):
+    """XPStart::draw; hover = the label of the lit row (P-2026-11-27.24); recent = programs opened last
+    (P-2026-11-27.25: 3 rows, filled in START_FILL order)."""
     si = _start_icon
     sel = X["SELECT"]
+    inst = _installed(skills, show_agents)
+    icon = lambda src, n: si(n) if src == "start" else _mines_icon(n)
     for (y0, y1), c in zip(((0, 6), (6, 11), (11, 16), (16, 22), (22, 27), (27, 32)),
                            ("3D95FF", "2B80F5", "1C6BE8", "0F5BDC", "0A50D2", "0B4CC8")):
         sc.rect(0, y0, 240, y1 - y0, hx(c))
@@ -1103,14 +1157,17 @@ def start_menu(sc, skills=("agent", "photo", "weather", "clock"), all_open=False
         sc.text("JBMono-12B", "Codex", 42, 66, X["BLACK"]); sc.text("JBMono-11", "mức dùng", 42, 80, X["MUTED"])
         sc.hline(6, 95, 140, X["ROW_LINE"])
         y = 99
-    for sk, name, label, dy in (("photo", "Photo", "Ảnh", 3), ("weather", "Weather", "Thời tiết", 2),
-                                ("clock", "Clock", "Đồng hồ", 2)):
-        if sk in skills:
-            lit = hover == label
-            if lit:
-                sc.rect(2, y, 149, 20, sel)
-            run_icon(sc, si(name), 6, y + dy)
-            sc.text("JBMono-11", label, 28, y + 4, X["WHITE"] if lit else X["BLACK"]); y += 20
+    rows = []
+    for p in [r for r in recent if r not in ("Claude", "Codex")] + START_FILL:
+        if len(rows) < 3 and inst(p) and p not in rows:
+            rows.append(p)
+    for p in rows:
+        src, name, label, dy = START_ROW[p]
+        lit = hover == label
+        if lit:
+            sc.rect(2, y, 149, 20, sel)
+        run_icon(sc, icon(src, name), 6, y + dy)
+        sc.text("JBMono-11", label, 28, y + 4, X["WHITE"] if lit else X["BLACK"]); y += 20
     sc.hline(6, 163, 140, X["ROW_LINE"])
     if all_open:
         sc.rect(2, 167, 149, 20, X["SELECT"])
@@ -1128,18 +1185,19 @@ def start_menu(sc, skills=("agent", "photo", "weather", "clock"), all_open=False
     sc.hline(0, 190, 240, X["TASK_HI"])
     run_icon(sc, si("Restart"), 8, 194); sc.text("JBMono-11", "Khởi động lại", 27, 196, X["WHITE"])
     run_icon(sc, si("Power"), 165, 194); sc.text("JBMono-11", "Tắt máy", 184, 196, X["WHITE"])
-    if all_open:
-        progs = ([("SmallClawd", "Claude", 5), ("SmallCodex", "Codex", 4)] if "agent" in skills else []) + \
-            [(n, l, d) for sk, n, l, d in (("photo", "Photo", "Ảnh", 3), ("weather", "Weather", "Thời tiết", 2),
-                                          ("clock", "Clock", "Đồng hồ", 2)) if sk in skills]
+    if all_open:   # P-2026-11-27.25: every installed program, (144, top, 96 wide), moved up when tall
+        progs = [p for p in ("Claude", "Codex", "AI", "Trend", "Agents", "Photo", "Weather", "Clock", "Mines")
+                 if inst(p)]
         h = 4 + 20 * len(progs) + 7 + 20
-        sc.rect(151, 62, 89, h, X["MENU_BORDER"]); sc.rect(152, 63, 87, h - 2, X["WHITE"])
-        y = 64
-        for name, label, dy in progs:
-            run_icon(sc, si(name), 154, y + dy); sc.text("JBMono-11", label, 173, y + 4, X["BLACK"]); y += 20
-        sc.hline(155, y + 3, 81, X["MENU_BORDER"])
+        top = min(62, 213 - h)
+        sc.rect(144, top, 96, h, X["MENU_BORDER"]); sc.rect(145, top + 1, 94, h - 2, X["WHITE"])
+        y = top + 2
+        for p in progs:
+            src, name, label, dy = START_ROW[p]
+            run_icon(sc, icon(src, name), 147, y + dy); sc.text("JBMono-11", label, 166, y + 4, X["BLACK"]); y += 20
+        sc.hline(148, y + 3, 88, X["MENU_BORDER"])
         y += 7
-        run_icon(sc, si("AddRemove"), 154, y + 2); sc.text("JBMono-11", "Thêm / gỡ", 173, y + 4, X["BLACK"])
+        run_icon(sc, si("AddRemove"), 147, y + 2); sc.text("JBMono-11", "Thêm / gỡ", 166, y + 4, X["BLACK"])
 
 
 # ── Tắt máy tính (channels/xp_turnoff.cpp, P-2026-11-27.24) ──
@@ -1206,13 +1264,14 @@ def desktop(sc, *, cl="Claude", cx="Codex", line1=f"29° {DOT} Ít mây", line2=
     """tray=None: the weather tray icon when the weather skill is on (P-2026-11-26.15); the older
     design images (before .15) are drawn with tray=False."""
     sc.img.paste(_desk_wallpaper(), (0, 0))
-    labels = {"Claude": cl, "Codex": cx, "Photo": "Ảnh", "Weather": "Thời tiết", "Clock": "Đồng hồ", None: "Thùng rác"}
+    labels = {"Claude": cl, "Codex": cx, "Photo": "Ảnh", "Weather": "Thời tiết", "Clock": "Đồng hồ", None: "Thùng rác",
+              "Mines": "Dò mìn"}
     for prog, x, y in desk_icons(skills, one_col):
         selected = sel is not None and prog == sel
         white = X["SELECT_ICON"] if selected else X["WHITE"]
         if prog == "Claude":
             draw_icon(sc, "clawd", x - 18, y + 1, 2, X["SELECT_CLAWD"] if selected else CLAWD_ORANGE)
-        elif xp_icons and prog in ("Codex", "Photo", None):     # P-2026-11-26.19
+        elif xp_icons and prog in ("Codex", "Photo", None, "Mines"):     # P-2026-11-26.19, .25
             desk_icon_xp(sc, prog, x - 16, y, selected)
         elif prog == "Codex":
             sc.bits(DESK_TERM, 16, x - 16, y, white, 2)
@@ -1714,6 +1773,101 @@ def setup(sc, done=(False, False, True)):
 
 
 # ── Photo (ch_photo.cpp) ─────────────────────────────────────────────────────
+# ── Dò mìn (channels/ch_mines.cpp, mines_core.h; P-2026-11-27.25 XP-Mines) ──
+MINES_N = {"1": "0000FF", "2": "008000", "3": "FF0000", "4": "000080", "5": "800000", "6": "008080",
+           "7": "000000", "8": "808080"}
+SEG_DIGIT = [0x7E, 0x30, 0x6D, 0x79, 0x33, 0x5B, 0x5F, 0x70, 0x7F, 0x7B]
+MINES_CROSS = [(3, 3, 2), (3, 12, 2), (4, 4, 2), (4, 11, 2), (5, 5, 2), (5, 10, 2), (6, 6, 2), (6, 9, 2),
+               (7, 7, 3), (8, 7, 3), (9, 6, 2), (9, 9, 2), (10, 5, 2), (10, 10, 2), (11, 4, 2), (11, 11, 2),
+               (12, 3, 2), (12, 12, 2), (13, 2, 2), (13, 13, 2)]
+
+
+def _bevel(sc, x, y, w, h, t, raised):
+    tl, br = (X["WHITE"], hx("808080")) if raised else (hx("808080"), X["WHITE"])
+    for i in range(t):
+        sc.hline(x, y + i, w - i, tl); sc.vline(x + i, y, h - i, tl)
+        sc.hline(x + i + 1, y + h - 1 - i, w - i - 1, br); sc.vline(x + w - 1 - i, y + i + 1, h - i - 1, br)
+
+
+def _led(sc, x, v):
+    _bevel(sc, x, 30, 41, 25, 1, False)
+    sc.rect(x + 1, 31, 39, 23, X["BLACK"])
+    v = min(v, 999)
+    if v < 0:
+        a = min(-v, 99); d = [0x01, SEG_DIGIT[a // 10], SEG_DIGIT[a % 10]]
+    else:
+        d = [SEG_DIGIT[v // 100], SEG_DIGIT[v // 10 % 10], SEG_DIGIT[v % 10]]
+    for k in range(3):
+        for i, seg in enumerate(_mines_segs()):
+            col = hx("FF0000") if d[k] >> (6 - i) & 1 else hx("480000")
+            for xx, yy, ww in seg:
+                sc.rect(x + 1 + 13 * k + xx, 31 + yy, ww, 1, col)
+
+
+def mines(sc, board="." * 81, face="smile", left=10, secs=0, windows=("Mines",)):
+    window(sc, "Dò mìn", icon="mines")
+    sc.rect(2, 22, 236, 192, hx("C0C0C0"))
+    _bevel(sc, 45, 26, 150, 31, 2, False)
+    _led(sc, 51, left)
+    run_icon(sc, _mines_icon({"smile": "FaceSmile", "wow": "FaceWow", "cool": "FaceCool", "dead": "FaceDead"}[face]),
+             107, 29)
+    _led(sc, 148, secs)
+    _bevel(sc, 45, 61, 150, 150, 3, False)
+    for i, c in enumerate(board):
+        x, y = 48 + 16 * (i % 9), 64 + 16 * (i // 9)
+        if c in ".F":
+            sc.rect(x, y, 16, 16, hx("C0C0C0")); _bevel(sc, x, y, 16, 16, 2, True)
+            if c == "F":
+                run_icon(sc, _mines_icon("Flag"), x + 4, y + 3)
+            continue
+        sc.rect(x, y, 16, 16, hx("FF0000") if c == "X" else hx("C0C0C0"))
+        sc.hline(x, y, 16, hx("808080")); sc.vline(x, y, 16, hx("808080"))
+        if c in MINES_N:
+            sc.text("JBMono-16B", c, x + 8, y + 8, hx(MINES_N[c]), "MC")
+        elif c in "MXW":
+            run_icon(sc, _mines_icon("Mine"), x + 2, y + 2)
+            if c == "W":    # ch_mines.cpp kCross
+                for row, cx, w in MINES_CROSS:
+                    sc.rect(x + cx, y + row, w, 1, hx("FF0000"))
+    taskbar(sc, windows=list(windows), top="Mines", badge=0, tray_weather=True)
+
+
+def _mines_from_design(name):
+    """The board / face / LEDs a design artboard shows (source/<name>.dc.html) — to draw the same game."""
+    h = (ROOT / "design" / "panel" / "source" / f"{name}.dc.html").read_text(encoding="utf-8")
+    px = {}
+    for fill, d in re.findall(r'<path fill="#([0-9A-Fa-f]{6})" d="([^"]*)"', h):
+        for x, y, w in re.findall(r"M(\d+) (\d+)h(\d+)v1h-\d+z", d):
+            for i in range(int(w)):
+                px[(int(x) + i, int(y))] = fill.upper()
+    cells = []
+    for i in range(81):
+        x, y = 48 + 16 * (i % 9), 64 + 16 * (i // 9)
+        inner = [px.get((x + a, y + b)) for a in range(2, 14) for b in range(2, 14)]
+        if px.get((x + 1, y + 1)) == "FFFFFF":
+            cells.append("F" if "FF0000" in inner else ".")
+        elif px.get((x + 1, y + 1)) == "FF0000":
+            cells.append("X")
+        elif inner.count("000000") > 40:
+            cells.append("W" if "FF0000" in inner else "M")
+        else:
+            cells.append(next((n for n, c in MINES_N.items() if n != "7" and c in inner), "0"))
+
+    def led(x0):
+        v = ""
+        for k in range(3):
+            pat = 0
+            for i, seg in enumerate(_mines_segs()):
+                xx, yy, ww = seg[len(seg) // 2]
+                if px.get((x0 + 1 + 13 * k + xx + ww // 2, 31 + yy)) == "FF0000":
+                    pat |= 1 << (6 - i)
+            v += "-" if pat == 0x01 else str(SEG_DIGIT.index(pat)) if pat in SEG_DIGIT else "?"
+        return -int(v[1:]) if v[0] == "-" else int(v)
+
+    face = {"XP-Mines-Play": "wow", "XP-Mines-Win": "cool", "XP-Mines-Lose": "dead"}.get(name, "smile")
+    return dict(board="".join(cells), face=face, left=led(51), secs=led(148))
+
+
 def sample_photo():
     """Placeholder for a user photo: a 188x188 gradient with a sun and hills."""
     im = Image.new("RGB", (188, 188))
@@ -1871,6 +2025,7 @@ SCREENS_C = [
 
 
 # ── the catalogue: (title, note, draw, design image under design/panel/screens/@2x) ──
+FUN5 = ("agent", "photo", "weather", "clock", "fun")
 SCREENS = [
     *SCREENS_A, *SCREENS_B, *SCREENS_C,
     ("Khởi động", "XP-Splash · ô 3 khối chạy (bước 3)", splash, "XPSplash"),
@@ -1892,6 +2047,20 @@ SCREENS = [
      lambda s: (desktop(s, one_col=True, windows=["Claude"]), turnoff(s, lit=1), cursor(s, "hand", 121, 99)),
      "XPTurnOff"),
     ("Chưa có kênh", "XP-NoChannels · mọi kênh tắt", no_channels, "XPNoChannels"),
+    # P-2026-11-27.25
+    ("Start · Tất cả chương trình đủ", "XP-Start-All-Full · mọi skill, Agents bật",
+     lambda s: (desktop(s, one_col=True, skills=FUN5),
+                start_menu(s, skills=FUN5, all_open=True, show_agents=True),
+                taskbar(s, windows=[], tray_weather=True, start_down=True)), "XPStartAllFull"),
+    ("Start · hay dùng", "XP-Start-Recent · Dò mìn mở gần nhất, bù Ảnh, Thời tiết",
+     lambda s: (desktop(s, one_col=True, skills=FUN5),
+                start_menu(s, skills=FUN5, recent=("Mines",)),
+                taskbar(s, windows=[], tray_weather=True, start_down=True)), "XPStartRecent"),
+    ("Desktop · Dò mìn", "XP-Desk-Fun · cột 2", lambda s: desktop(s, one_col=True, skills=FUN5), "XPDeskFun"),
+    ("Dò mìn", "XP-Mines · ván mới", lambda s: mines(s, **_mines_from_design("XP-Mines")), "XPMines"),
+    ("Dò mìn · đang chơi", "XP-Mines-Play", lambda s: mines(s, **_mines_from_design("XP-Mines-Play")), "XPMinesPlay"),
+    ("Dò mìn · thắng", "XP-Mines-Win", lambda s: mines(s, **_mines_from_design("XP-Mines-Win")), "XPMinesWin"),
+    ("Dò mìn · thua", "XP-Mines-Lose", lambda s: mines(s, **_mines_from_design("XP-Mines-Lose")), "XPMinesLose"),
 ]
 
 
