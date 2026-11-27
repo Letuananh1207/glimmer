@@ -23,6 +23,7 @@ class StartActions {
     required this.onTurnOff,
     required this.onRestart,
     this.programsEnabled = true,
+    this.onAllPrograms,
   });
 
   /// R-DK-9: installed programs by group.
@@ -36,6 +37,9 @@ class StartActions {
 
   final ValueChanged<String> onOpen;
   final VoidCallback onDesktop, onDetails, onControlPanel, onAddRemove, onDevice, onTurnOff, onRestart;
+
+  /// Tất cả chương trình opened (true) / back to Start (false) — the device draws its sub-menu (R-DK-15).
+  final ValueChanged<bool>? onAllPrograms;
 }
 
 /// Opens Start (`StartMenuSheet`, with Tất cả chương trình one level in) above the whole screen, bottom bar included.
@@ -80,14 +84,20 @@ class _StartHostState extends State<_StartHost> {
         child: _all
             ? AllProgramsSheet(
                 actions: a,
-                onBack: () => setState(() => _all = false),
+                onBack: () {
+                  setState(() => _all = false);
+                  a.onAllPrograms?.call(false);
+                },
                 onProgram: open,
                 onAddRemove: _then(a.onAddRemove),
               )
             : StartMenuSheet(
                 actions: a,
                 onProgram: open,
-                onAllPrograms: () => setState(() => _all = true),
+                onAllPrograms: () {
+                  setState(() => _all = true);
+                  a.onAllPrograms?.call(true);
+                },
                 onDesktop: _then(a.onDesktop),
                 onDetails: _then(a.onDetails),
                 onControlPanel: _then(a.onControlPanel),

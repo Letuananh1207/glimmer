@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../domain/models/control.dart';
@@ -114,7 +116,14 @@ class ControlScreen extends StatelessWidget {
     if (vm.tap(x, y).kind == TouchKind.start) _start(context, vm);
   }
 
-  void _start(BuildContext context, ControlViewModel vm) => showStartMenu(
+  /// R-DK-15 (panel P-2026-11-26.20): the device draws XP's Start menu while the sheet is open.
+  Future<void> _start(BuildContext context, ControlViewModel vm) async {
+    unawaited(vm.startMenu(true));
+    await _startSheet(context, vm);
+    await vm.startMenu(false);
+  }
+
+  Future<void> _startSheet(BuildContext context, ControlViewModel vm) => showStartMenu(
     context,
     StartActions(
       programs: vm.programs,
@@ -128,6 +137,7 @@ class ControlScreen extends StatelessWidget {
       onDevice: onUpdateFirmware,
       onTurnOff: vm.toggleScreen,
       onRestart: () => _confirmRestart(context, vm),
+      onAllPrograms: (all) => vm.startMenu(true, all: all),
     ),
   );
 

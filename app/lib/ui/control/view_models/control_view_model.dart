@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import '../../../data/repositories/device/device_repository.dart';
 import '../../../domain/models/app_error.dart';
 import '../../../domain/models/attention_card.dart';
+import '../../../domain/models/clock_view.dart';
 import '../../../domain/models/control.dart';
 import '../../../domain/models/device_photo.dart';
 import '../../../domain/models/device_state.dart';
@@ -13,6 +14,7 @@ import '../../../domain/models/mirror_frame.dart';
 import '../../../domain/models/touch.dart';
 import '../../../domain/models/windows.dart';
 import '../../../domain/rules/board_rules.dart';
+import '../../../domain/rules/clock_rules.dart';
 import '../../../domain/rules/control_rules.dart' as rules;
 import '../../../domain/rules/mirror_rules.dart';
 import '../../../domain/rules/touch_rules.dart';
@@ -179,6 +181,7 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
       now: _now(),
       windows: _windows,
       menu: _menu,
+      clockView: _clockView,
       gallery: _gallery,
     );
   }
@@ -218,6 +221,10 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
       }),
     );
   }
+
+  /// R-DK-16: the Ngày và Giờ window as the user touched it here (the device keeps the same, POST /api/clock).
+  ClockView _clockView = ClockView.today;
+  ClockView get clockView => _clockView;
 
   /// R-DK-11: the menu on screen.
   MenuView? get menu => _menu;
@@ -382,6 +389,14 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
       _menuTap(m, x, y);
       return TouchTarget.none;
     }
+    if (f.channel == 'Clock' && touchable && caps.clock) {
+      final d = f.deviceNow;
+      final h = clockHitAt(x, y, _clockView, year: d.year, month: d.month);
+      if (h.kind != ClockHitKind.none) {
+        unawaited(_clockTouch(h, d));
+        return TouchTarget.none;
+      }
+    }
     final t = touchTargetAt(x, y, f);
     if (!touchable) return t.kind == TouchKind.start ? t : TouchTarget.none;
     switch (t.kind) {
@@ -393,12 +408,10 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
         unawaited(taskbar(t.program!));
       case TouchKind.icon:
         unawaited(openProgram(t.program!));
-      case TouchKind.tray when f.channel == 'Home':
-        unawaited(balloon(true));
+      case TouchKind.tray:
+        unawaited(openProgram('Weather')); // R-DK-13 (P-2026-11-26.21): the tray icon opens the Weather window
       case TouchKind.balloonClose:
         unawaited(balloon(false));
-      case TouchKind.tray:
-        break; // the balloon belongs to the desktop (R-DK-13)
       case TouchKind.trayClock:
         unawaited(openProgram('Clock')); // R-DK-14: XP's tray clock opens Date and Time Properties
       case TouchKind.balloonBody:
@@ -438,6 +451,17 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
       _menu = null;
       notifyListeners();
     }
+  }
+
+  /// R-DK-15: the app's Start sheet opened / switched to Tất cả chương trình ([all]) / closed — the device draws XP's
+  /// Start menu meanwhile (it only draws; the sheet picks). A context menu on screen gives way to it.
+  Future<void> startMenu(bool open, {bool all = false}) async {
+    if (!touchable || !caps.windows) return;
+    if (open && _menu != null) {
+      _menu = null;
+      notifyListeners();
+    }
+    await _control.startMenu(open, all: all);
   }
 
   /// Close the menu without choosing (a tap outside it, XP).
@@ -489,11 +513,51 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
   Future<void> openProgram(String program) async {
     if (_device.state == null || !usable || !_can(ControlCommand.open)) return;
     final win = _windowOf(program);
+    if (win == 'Clock' && channel != 'Clock') _clockView = ClockView.today; // XP's dialog opens on today
     final show = win == 'Weather' && _real && program == 'Weather' ? _weatherTab : program;
     final before = _windows;
     _windows = _windows.opened(win);
     _pendingChannel = show;
     await _run(ControlCommand.open, () => _control.open(show), app: win, undo: () => _windows = before);
+  }
+
+  /// R-DK-16: a touch on the Ngày và Giờ window — the view changes at once (the device draws the same), a picked
+  /// zone goes to the settings (`tzMinutes`), "Cập nhật ngay" asks the time servers again.
+  Future<void> _clockTouch(ClockHit h, DateTime today) async {
+    final v = _clockView;
+    final year = v.year ?? today.year, month = v.month ?? today.month;
+    final zone = clockZones.indexOf((_settings?['tzMinutes'] as num?)?.toInt() ?? 0);
+    var sync = false;
+    int? newZone;
+    _clockView = switch (h.kind) {
+      ClockHitKind.tab => v.copyWith(tab: ClockTab.values[h.value], list: ClockList.none),
+      ClockHitKind.monthList =>
+        v.list == ClockList.month
+            ? v.copyWith(list: ClockList.none)
+            : v.copyWith(list: ClockList.month, top: listTopFor(ClockList.month, month - 1)),
+      ClockHitKind.yearUp => v.copyWith(year: (year + 1).clamp(1970, 2099), month: month, clearDay: true),
+      ClockHitKind.yearDown => v.copyWith(year: (year - 1).clamp(1970, 2099), month: month, clearDay: true),
+      ClockHitKind.day => v.copyWith(year: year, month: month, day: h.value),
+      ClockHitKind.pickMonth => v.copyWith(year: year, month: h.value, list: ClockList.none, clearDay: true),
+      ClockHitKind.zoneList =>
+        v.list == ClockList.zone
+            ? v.copyWith(list: ClockList.none)
+            : v.copyWith(list: ClockList.zone, top: listTopFor(ClockList.zone, zone < 0 ? 0 : zone)),
+      ClockHitKind.pickZone => v.copyWith(list: ClockList.none),
+      ClockHitKind.scrollUp => v.copyWith(top: (v.top - 1).clamp(0, listMaxTop(v.list))),
+      ClockHitKind.scrollDown => v.copyWith(top: (v.top + 1).clamp(0, listMaxTop(v.list))),
+      ClockHitKind.closeList => v.copyWith(list: ClockList.none),
+      ClockHitKind.sync || ClockHitKind.none => v,
+    };
+    if (h.kind == ClockHitKind.sync) sync = true;
+    if (h.kind == ClockHitKind.pickZone) newZone = clockZones[h.value];
+    notifyListeners();
+    await _control.clock(_clockView, sync: sync);
+    if (newZone != null) {
+      final r = await _control.timeZone(newZone);
+      if (r is Ok<ControlOutcome>) _settings = {...?_settings, 'tzMinutes': newZone};
+      notifyListeners();
+    }
   }
 
   /// R-DK-14: a tab of the Weather window (Weather = Hiện tại, Forecast = Dự báo); the shown tab does nothing.

@@ -37,13 +37,24 @@ class ControlCaps {
     this.dismissCard = false,
     this.windows = false,
     this.balloon = false,
+    this.clock = false,
   });
 
   /// Everything (current firmware).
-  static const all = ControlCaps(touch: true, screen: true, dismissCard: true, windows: true, balloon: true);
+  static const all = ControlCaps(
+    clock: true,
+    touch: true,
+    screen: true,
+    dismissCard: true,
+    windows: true,
+    balloon: true,
+  );
 
   /// The device draws the app's open windows on its taskbar and context menus (R-DK-11).
   final bool windows;
+
+  /// The Ngày và Giờ window takes touches (R-DK-16).
+  final bool clock;
 
   /// The desktop's tray balloon comes and goes, the app shows / hides it (R-DK-13, `balloon` reported).
   final bool balloon;

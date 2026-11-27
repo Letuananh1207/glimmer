@@ -2,6 +2,7 @@ import '../models/attention_card.dart';
 import '../models/device_photo.dart';
 import '../models/device_state.dart';
 import '../models/mirror_frame.dart';
+import '../models/clock_view.dart';
 import '../models/touch.dart';
 import '../models/windows.dart';
 import 'ambient_rules.dart';
@@ -21,6 +22,7 @@ MirrorFrame mirrorFrameOf(
   required DateTime now,
   WindowStack windows = WindowStack.empty,
   MenuView? menu,
+  ClockView clockView = ClockView.today,
   PhotoGallery? gallery,
 }) {
   final shown = state.inSetupMode ? MirrorFrame.setupScreen : (channel ?? state.activeChannel);
@@ -40,6 +42,8 @@ MirrorFrame mirrorFrameOf(
     agents: agentsMirrorOf(state, cards, settings, gallery: gallery),
     windows: windows,
     menu: menu,
+    clockView: clockView,
+    ntpLast: state.ntpLast > 0 ? deviceLocal(state.ntpLast, tz) : null,
   );
 }
 

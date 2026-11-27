@@ -37,6 +37,15 @@ abstract final class XpColors {
   static const Color bootBlock = Color(0xFF2F6FE6);
   static const Color select = Color(0xFF316AC5);
 
+  /// Ngày và Giờ (P-2026-11-26.22): world map sea / land, the zone's column lighter; XP push button.
+  static const Color mapSea = Color(0xFF3C7FD8);
+  static const Color mapLand = Color(0xFF5E9E36);
+  static const Color mapSeaSel = Color(0xFF7FB0EE);
+  static const Color mapLandSel = Color(0xFF8FCF5A);
+  static const Color pushLine = Color(0xFF003C74);
+  static const Color pushFace = Color(0xFFF4F3EE);
+  static const Color pushFoot = Color(0xFFD6D0C5);
+
   /// xpSelectIcon — a selected desktop icon (P-2026-11-26.14)
   static const Color selectIcon = Color(0xFF98B4E2);
 

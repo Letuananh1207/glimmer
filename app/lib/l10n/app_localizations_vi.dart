@@ -1317,6 +1317,66 @@ class AppLocalizationsVi extends AppLocalizations {
   String get devXpMenuAltF4 => 'Alt+F4';
 
   @override
+  String get devXpTabInternet => 'Internet';
+
+  @override
+  String devXpMonthShort(int month) {
+    return 'Thg $month';
+  }
+
+  @override
+  String devXpZoneName(String index) {
+    String _temp0 = intl.Intl.selectLogic(index, {
+      '0': 'Los Angeles',
+      '1': 'New York',
+      '2': 'Brasília',
+      '3': 'London',
+      '4': 'Paris, Berlin',
+      '5': 'Moskva',
+      '6': 'Dubai',
+      '7': 'New Delhi',
+      '8': 'Hà Nội',
+      '9': 'Singapore',
+      '10': 'Tokyo, Seoul',
+      'other': 'Sydney',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get devXpDst => 'Tự chỉnh giờ mùa hè';
+
+  @override
+  String get devXpNetAuto => 'Tự đồng bộ với máy chủ';
+
+  @override
+  String get devXpNetServerLabel => 'Máy chủ:';
+
+  @override
+  String get devXpNetServer => 'pool.ntp.org';
+
+  @override
+  String get devXpNetUpdate => 'Cập nhật ngay';
+
+  @override
+  String devXpNetSynced(String time) {
+    return 'Đã đồng bộ lúc $time';
+  }
+
+  @override
+  String devXpNetDate(String date) {
+    return 'ngày $date.';
+  }
+
+  @override
+  String devXpNetNext(String time) {
+    return 'Lần tới: $time.';
+  }
+
+  @override
+  String get devXpNetNever => 'Chưa đồng bộ.';
+
+  @override
   String devXpWeekday(String day) {
     String _temp0 = intl.Intl.selectLogic(day, {
       '1': 'Thứ Hai',

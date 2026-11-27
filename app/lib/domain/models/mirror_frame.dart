@@ -4,6 +4,7 @@ import 'attention_card.dart';
 import 'device_state.dart';
 import 'mirror_agents.dart';
 import 'mirror_ambient.dart';
+import 'clock_view.dart';
 import 'touch.dart';
 import 'usage_mirror.dart';
 import 'windows.dart';
@@ -67,6 +68,8 @@ class MirrorFrame {
     this.agents = const AgentsMirror(),
     this.windows = WindowStack.empty,
     this.menu,
+    this.clockView = ClockView.today,
+    this.ntpLast,
   });
 
   /// Pseudo channel of the setup-AP "log-on" screen (`XP-SetupMode`).
@@ -112,6 +115,12 @@ class MirrorFrame {
 
   /// The context menu over the screen (R-DK-11), or null.
   final MenuView? menu;
+
+  /// The Ngày và Giờ window as touched on the app (R-DK-16).
+  final ClockView clockView;
+
+  /// Device-local wall clock of the last time sync (`ntp_last`, read through the UTC fields); null = none yet.
+  final DateTime? ntpLast;
 
   bool get clockSynced => deviceNow.year > 2000;
 

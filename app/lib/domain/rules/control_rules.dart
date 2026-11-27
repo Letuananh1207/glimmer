@@ -93,6 +93,7 @@ ControlCaps controlCaps(DeviceState? s) => s == null
         dismissCard: s.paused != null,
         screen: s.screenOn != null,
         windows: s.windowsApi,
+        clock: s.clockApi,
         balloon: s.balloon != null,
       );
 

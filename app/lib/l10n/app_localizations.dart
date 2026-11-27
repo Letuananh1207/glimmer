@@ -2302,6 +2302,78 @@ abstract class AppLocalizations {
   /// **'Alt+F4'**
   String get devXpMenuAltF4;
 
+  /// Màn thiết bị · Ngày và Giờ (panel P-2026-11-26.22)
+  ///
+  /// In vi, this message translates to:
+  /// **'Internet'**
+  String get devXpTabInternet;
+
+  /// Màn thiết bị · Ngày và Giờ (panel P-2026-11-26.22)
+  ///
+  /// In vi, this message translates to:
+  /// **'Thg {month}'**
+  String devXpMonthShort(int month);
+
+  /// Màn thiết bị · Ngày và Giờ (panel P-2026-11-26.22)
+  ///
+  /// In vi, this message translates to:
+  /// **'{index, select, 0{Los Angeles} 1{New York} 2{Brasília} 3{London} 4{Paris, Berlin} 5{Moskva} 6{Dubai} 7{New Delhi} 8{Hà Nội} 9{Singapore} 10{Tokyo, Seoul} other{Sydney}}'**
+  String devXpZoneName(String index);
+
+  /// Màn thiết bị · Ngày và Giờ (panel P-2026-11-26.22)
+  ///
+  /// In vi, this message translates to:
+  /// **'Tự chỉnh giờ mùa hè'**
+  String get devXpDst;
+
+  /// Màn thiết bị · Ngày và Giờ (panel P-2026-11-26.22)
+  ///
+  /// In vi, this message translates to:
+  /// **'Tự đồng bộ với máy chủ'**
+  String get devXpNetAuto;
+
+  /// Màn thiết bị · Ngày và Giờ (panel P-2026-11-26.22)
+  ///
+  /// In vi, this message translates to:
+  /// **'Máy chủ:'**
+  String get devXpNetServerLabel;
+
+  /// Màn thiết bị · Ngày và Giờ (panel P-2026-11-26.22)
+  ///
+  /// In vi, this message translates to:
+  /// **'pool.ntp.org'**
+  String get devXpNetServer;
+
+  /// Màn thiết bị · Ngày và Giờ (panel P-2026-11-26.22)
+  ///
+  /// In vi, this message translates to:
+  /// **'Cập nhật ngay'**
+  String get devXpNetUpdate;
+
+  /// Màn thiết bị · Ngày và Giờ (panel P-2026-11-26.22)
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đồng bộ lúc {time}'**
+  String devXpNetSynced(String time);
+
+  /// Màn thiết bị · Ngày và Giờ (panel P-2026-11-26.22)
+  ///
+  /// In vi, this message translates to:
+  /// **'ngày {date}.'**
+  String devXpNetDate(String date);
+
+  /// Màn thiết bị · Ngày và Giờ (panel P-2026-11-26.22)
+  ///
+  /// In vi, this message translates to:
+  /// **'Lần tới: {time}.'**
+  String devXpNetNext(String time);
+
+  /// Màn thiết bị · Ngày và Giờ (panel P-2026-11-26.22)
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa đồng bộ.'**
+  String get devXpNetNever;
+
   /// Ô màn thiết bị: thứ kiểu tiêu đề như firmware ClockFmt::weekdayTitle (day = DateTime.weekday)
   ///
   /// In vi, this message translates to:

@@ -1,6 +1,7 @@
 import '../../data/repositories/device/device_repository.dart';
 import '../../utils/result.dart';
 import '../models/app_error.dart';
+import '../models/clock_view.dart';
 import '../models/control.dart';
 import '../models/touch.dart';
 import '../models/windows.dart';
@@ -72,6 +73,22 @@ class ControlDeviceUseCase {
   Future<Result<bool>> balloon(bool show) async {
     if (!caps.balloon) return Result.error(AppError(AppErrorKind.controlUnsupported, detail: 'balloon'));
     return _device.setBalloon(show);
+  }
+
+  /// R-DK-16: the Ngày và Giờ window as touched ([sync]: ask the time servers again now). Nothing on older firmware.
+  Future<Result<void>> clock(ClockView v, {bool sync = false}) async {
+    if (!caps.clock) return const Result.ok(null);
+    return _device.setClock({...v.toJson(), if (sync) 'sync': true});
+  }
+
+  /// R-DK-16: the device's time zone picked in the Múi giờ list (`tzMinutes`, as Cài đặt).
+  Future<Result<ControlOutcome>> timeZone(int minutes) => _setting({'tzMinutes': minutes});
+
+  /// R-DK-15: XP's Start menu on the device (panel P-2026-11-26.20) — open ([all] = Tất cả chương trình) or closed.
+  /// Nothing on firmware without menus.
+  Future<Result<void>> startMenu(bool open, {bool all = false}) async {
+    if (!caps.windows) return const Result.ok(null);
+    return _device.setMenu(open ? {'kind': 'start', 'all': all} : const {'kind': 'none'});
   }
 
   /// Start → Khởi động lại (asked again by the screen first).

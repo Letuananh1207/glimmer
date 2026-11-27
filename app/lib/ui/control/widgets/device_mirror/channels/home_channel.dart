@@ -1,6 +1,7 @@
 import '../../../../../domain/models/mirror_frame.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../core/themes/xp_colors.dart';
+import '../desk_icons_xp.dart';
 import '../mirror_channel.dart';
 import '../xp_canvas.dart';
 import '../xp_paint.dart';
@@ -45,9 +46,34 @@ class HomeChannel extends MirrorChannel {
     }
   }
 
-  /// Icon of [program] (null = trash) ×2 in the cell at ([cx], [y]).
-  void _icon(XpCanvas c, String? program, int cx, int y, {bool sel = false}) {
+  /// An XP colour icon (P-2026-11-26.19) at real pixels; selected → xpSelectIcon on (x+y)-even cells.
+  static void _runs(XpCanvas c, XpRunIcon icon, int x0, int y0, bool sel) {
+    for (final (x, y, w, k) in icon.runs) {
+      c.fill(x0 + x, y0 + y, w, 1, icon.palette[k]);
+      if (!sel) continue;
+      for (var i = (x0 + x + y0 + y) & 1; i < w; i += 2) {
+        c.pixel(x0 + x + i, y0 + y, XpColors.selectIcon);
+      }
+    }
+  }
+
+  /// Icon of [program] (null = trash) in the cell at ([cx], [y]); [xp] = firmware with the XP colour icons.
+  void _icon(XpCanvas c, String? program, int cx, int y, {bool sel = false, bool xp = false}) {
     final white = sel ? XpColors.selectIcon : XpColors.white;
+    if (xp && program != 'Claude' && program != 'Weather' && program != 'Clock') {
+      _runs(
+        c,
+        switch (program) {
+          'Codex' => DeskIconsXp.codex,
+          'Photo' => DeskIconsXp.photo,
+          _ => DeskIconsXp.trash,
+        },
+        cx - 16,
+        y,
+        sel,
+      );
+      return;
+    }
     switch (program) {
       case 'Claude':
         Xp.clawd(c, cx - 18, y + 1, scale: 2, color: sel ? XpColors.selectClawd : PanelColors.clawd);
@@ -148,10 +174,12 @@ class HomeChannel extends MirrorChannel {
     wallpaper(c);
     for (final ic in d.icons) {
       final sel = ic.program != null && ic.program == f.windows.sel;
-      _icon(c, ic.program, ic.cx, ic.y, sel: sel);
+      // Firmware of P-2026-11-26.18 / .19 (it reports `clock`): XP colour icons, labels are just the names.
+      final xp = f.state.clockApi;
+      _icon(c, ic.program, ic.cx, ic.y, sel: sel, xp: xp);
       final label = switch (ic.program) {
-        'Claude' => d.claudePct == null ? 'Claude' : 'Claude ${d.claudePct}%',
-        'Codex' => d.codexPct == null ? 'Codex' : 'Codex ${d.codexPct}%',
+        'Claude' => xp || d.claudePct == null ? 'Claude' : 'Claude ${d.claudePct}%',
+        'Codex' => xp || d.codexPct == null ? 'Codex' : 'Codex ${d.codexPct}%',
         'Photo' => l.devXpTitlePhoto,
         'Weather' => l.devXpTitleWeather,
         'Clock' => l.devXpTitleClock,

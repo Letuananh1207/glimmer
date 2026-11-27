@@ -32,6 +32,10 @@ mixin _ControlCalls on DeviceRepository {
       _call(() async => _json('POST', '/api/windows', body: body, tries: 1));
 
   @override
+  Future<Result<void>> setClock(Map<String, Object?> body) =>
+      _call(() async => _json('POST', '/api/clock', body: body, tries: 1));
+
+  @override
   Future<Result<void>> setMenu(Map<String, Object?> body) =>
       _call(() async => _json('POST', '/api/menu', body: body, tries: 1));
 

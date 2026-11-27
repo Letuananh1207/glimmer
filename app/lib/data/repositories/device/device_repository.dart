@@ -97,6 +97,9 @@ abstract class DeviceRepository extends ChangeNotifier {
 
   /// `POST /api/menu`: draw / close a context menu over the device screen (R-DK-11).
   Future<Result<void>> setMenu(Map<String, Object?> body);
+
+  /// `POST /api/clock`: the Ngày và Giờ window as touched on the app (R-DK-16), RAM only on the device.
+  Future<Result<void>> setClock(Map<String, Object?> body);
   Future<Result<void>> clearAllCards();
   Future<Result<void>> clearProjects();
 

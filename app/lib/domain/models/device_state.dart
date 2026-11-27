@@ -46,6 +46,8 @@ class DeviceState {
     this.codexConfigured = false,
     this.sources = const DeviceSources(),
     this.windowsApi = false,
+    this.clockApi = false,
+    this.ntpLast = 0,
   });
 
   factory DeviceState.fromJson(Map<String, dynamic> j) => DeviceState(
@@ -88,47 +90,51 @@ class DeviceState {
     codexConfigured: jsonBool(j['codex_configured']),
     sources: DeviceSources.fromJson(j),
     windowsApi: j['windows'] is Map,
+    clockApi: j['clock'] is Map,
+    ntpLast: jsonInt(j['ntp_last']),
   );
 
   /// The same state with what a control command changed (answer of `/api/channel`, `/api/screen`).
   DeviceState withControl({String? activeChannel, bool? paused, bool? screenOn, int? slideLeftMs, bool? balloon}) =>
       DeviceState(
-    fw: fw,
-    build: build,
-    wifi: wifi,
-    ip: ip,
-    ssid: ssid,
-    activeChannel: activeChannel ?? this.activeChannel,
-    resetReason: resetReason,
-    rssi: rssi,
-    uptimeS: uptimeS,
-    heap: heap,
-    maxBlock: maxBlock,
-    heapRefusals: heapRefusals,
-    nextFetchS: nextFetchS,
-    time: time,
-    claudeConfigured: claudeConfigured,
-    claudeValid: claudeValid,
-    claudeErr: claudeErr,
-    usage: usage,
-    projects: projects,
-    skill: skill,
-    skills: skills,
-    skillsOn: skillsOn,
-    weatherConfigured: weatherConfigured,
-    weather: weather,
-    photos: photos,
-    nightFace: nightFace,
-    paused: paused ?? this.paused,
-    screenOn: screenOn ?? this.screenOn,
-    balloon: balloon ?? this.balloon,
-    slideMs: slideMs,
-    slideLeftMs: slideLeftMs ?? this.slideLeftMs,
-    wallpaper: wallpaper,
-    codexConfigured: codexConfigured,
-    sources: sources,
-    windowsApi: windowsApi,
-  );
+        fw: fw,
+        build: build,
+        wifi: wifi,
+        ip: ip,
+        ssid: ssid,
+        activeChannel: activeChannel ?? this.activeChannel,
+        resetReason: resetReason,
+        rssi: rssi,
+        uptimeS: uptimeS,
+        heap: heap,
+        maxBlock: maxBlock,
+        heapRefusals: heapRefusals,
+        nextFetchS: nextFetchS,
+        time: time,
+        claudeConfigured: claudeConfigured,
+        claudeValid: claudeValid,
+        claudeErr: claudeErr,
+        usage: usage,
+        projects: projects,
+        skill: skill,
+        skills: skills,
+        skillsOn: skillsOn,
+        weatherConfigured: weatherConfigured,
+        weather: weather,
+        photos: photos,
+        nightFace: nightFace,
+        paused: paused ?? this.paused,
+        screenOn: screenOn ?? this.screenOn,
+        balloon: balloon ?? this.balloon,
+        slideMs: slideMs,
+        slideLeftMs: slideLeftMs ?? this.slideLeftMs,
+        wallpaper: wallpaper,
+        codexConfigured: codexConfigured,
+        sources: sources,
+        windowsApi: windowsApi,
+        clockApi: clockApi,
+        ntpLast: ntpLast,
+      );
 
   final String fw, build, wifi, ip, ssid, activeChannel, resetReason;
   final int rssi, uptimeS, heap, maxBlock, heapRefusals, nextFetchS, time;
@@ -164,6 +170,12 @@ class DeviceState {
   /// The firmware takes the app's open windows and context menus (`windows` in `/api/state`, panel
   /// P-2026-11-26.14): `POST /api/windows`, `POST /api/menu`.
   final bool windowsApi;
+
+  /// The firmware takes touches on the Ngày và Giờ window (`clock` in `/api/state`, panel P-2026-11-26.22, R-DK-16).
+  final bool clockApi;
+
+  /// Epoch of the device's last time sync (`ntp_last`), 0 = none yet / unknown.
+  final int ntpLast;
 
   /// Backlight on; null = firmware without `/api/screen` (R-DK-3).
   final bool? screenOn;
