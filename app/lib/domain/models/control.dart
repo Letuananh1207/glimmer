@@ -38,10 +38,12 @@ class ControlCaps {
     this.windows = false,
     this.balloon = false,
     this.clock = false,
+    this.mouse = false,
   });
 
   /// Everything (current firmware).
   static const all = ControlCaps(
+    mouse: true,
     clock: true,
     touch: true,
     screen: true,
@@ -55,6 +57,9 @@ class ControlCaps {
 
   /// The Ngày và Giờ window takes touches (R-DK-16).
   final bool clock;
+
+  /// The mouse pointer, menu hover and the power button (R-DK-17…21: `cursor` in `/api/state`).
+  final bool mouse;
 
   /// The desktop's tray balloon comes and goes, the app shows / hides it (R-DK-13, `balloon` reported).
   final bool balloon;

@@ -78,6 +78,15 @@ thẻ agent / bảng dự án, Cài đặt, Wi-Fi, ảnh. Dữ liệu người d
 - **Firmware cũ** (không có `cursor` trong `/api/state`) → màn Điều khiển báo cần cập nhật firmware (theo mẫu
   R-DK-3), không có chế độ chạm cũ để lùi về (ô màn đã bỏ).
 
+## Phát hiện khi làm (2026-11-27)
+
+- **Panel không có MISO → không đọc ngược điểm ảnh, không save-under.** Bạn chọn: vẽ lại ô nhỏ dưới con trỏ
+  (`repaintRect` = tick rồi `draw()` của cửa sổ trong viewport TFT). Mọi `draw()` phải "an toàn khi vẽ lại":
+  giữ cache / bộ đếm, chặn khối ngoài ô bằng `Display::clipHits` (nạp font ~30 ms). Đo trên máy (ms / lần di):
+  Desktop 8 · Ảnh 20–60 · Claude 4–80 (trước 193) · Đồng hồ 1–98 (trước 150) · Thời tiết / Dự báo 0–87 (trước 185).
+  Codex, AI, Xu hướng, Thông tin, thẻ agent chưa đo (kênh tắt trên máy) — Codex đã chặn khối.
+- Màn "đang tắt máy" và mục sáng của Start menu: chờ phiếu panel; tạm: đang tắt giữ màn hiện tại 1,5 s rồi tối.
+
 ## Phiếu thiết kế (thiết kế trước, code sau)
 
 - **App** (`/ui-apply phieu`): màn Điều khiển mới — bàn rê + 2 nút chuột, bàn phím điều khiển, nút nguồn, trạng thái
@@ -92,21 +101,32 @@ thẻ agent / bảng dự án, Cài đặt, Wi-Fi, ảnh. Dữ liệu người d
 - [x] 2. Soạn 2 phiếu thiết kế (app + màn thiết bị), đẩy GitHub · xong khi: phiếu có trong `docs/phieu_thiet_ke/`
   và `../docs/phieu_panel/`. → `docs/phieu_thiet_ke/2026-11-27-dieu-khien-chuot-ban-phim-nguon.md`,
   `../docs/phieu_panel/2026-11-27-con-tro-va-tat-may.md`.
-- [ ] 3. Firmware: `cursor_core.h` (gói UDP, kẹp, save-under rect) + test host — `src/data/` · test: `test_logic` ·
+- [x] 3. Firmware: `cursor_core.h` (gói UDP, kẹp, save-under rect) + test host — `src/data/` · test: `test_logic` ·
   xong khi: `pio test` xanh.
-- [ ] 4. Firmware: `Cursor` vẽ / ẩn / hiện + UDP + móc vào `main.cpp`; `/api/state` `cursor` — vẽ hình con trỏ tạm
+- [x] 4. Firmware: `Cursor` vẽ / ẩn / hiện + UDP + móc vào `main.cpp`; `/api/state` `cursor` — vẽ hình con trỏ tạm
   theo XP thật đến khi có thiết kế · xong khi: `pio run` OK, RAM tăng ≤ 3 KB, gửi UDP thử bằng tay thấy con trỏ chạy,
   kênh vẽ lại không để vệt.
-- [ ] 5. Firmware: nguồn (`/api/power`, máy trạng thái, màn tắt máy — chờ thiết kế panel) + `hover` của menu.
-- [ ] 6. App: `cursor.dart`, `cursor_rules.dart`, `keyboard_rules.dart` (domain) · test: `test/domain/rules/cursor_rules_test.dart`,
+- [x] 5. Firmware: nguồn (`/api/power`, máy trạng thái, màn tắt máy — chờ thiết kế panel) + `hover` của menu.
+- [x] 6. App: `cursor.dart`, `cursor_rules.dart`, `keyboard_rules.dart` (domain) · test: `test/domain/rules/cursor_rules_test.dart`,
   `keyboard_rules_test.dart` ghi mã R-DK-17…19.
-- [ ] 7. App: `cursor_service.dart` (UDP) + repository `power` / `hover` / đọc `cursor` · test gương ở `test/data/`.
-- [ ] 8. App: use case + ViewModel — click / chuột phải tại con trỏ dùng `touchTargetAt` / `holdMenuAt` có sẵn; phím;
+- [x] 7. App: `cursor_service.dart` (UDP) + repository `power` / `hover` / đọc `cursor` · test gương ở `test/data/`.
+- [x] 8. App: use case + ViewModel — click / chuột phải tại con trỏ dùng `touchTargetAt` / `holdMenuAt` có sẵn; phím;
   nguồn · test: `test/ui/control/view_models/…`, `control_device_use_case_test.dart`.
+- [ ] 8b. Click vào **mục của Start menu trên thiết bị**: app chưa có luật trúng đích theo hình Start menu của
+  panel (P-2026-11-26.20, `xp_start.cpp`) — đến khi có, mở Start bằng chuột / phím Windows được nhưng chọn mục vẫn
+  qua sheet Start của app; mũi tên trong Start chờ phiếu panel (mục sáng).
 - [ ] 9. App: màn Điều khiển mới theo thiết kế — **chờ thiết kế: phiếu nhiệm vụ 2**.
 - [ ] 10. App: xoá ô màn + test + chuỗi / asset thành rác (sau nhiệm vụ 9).
-- [ ] 11. Cập nhật Bản đồ tính năng của `/lead` (dòng "Điều khiển: chuột, bàn phím, nguồn"), `../CLAUDE.md` (UDP con
+- [ ] 11. (đã: `../CLAUDE.md` mục Mouse/keyboard/power, `docs/backend/README.md`, bản đồ `/lead`) Cập nhật Bản đồ tính năng của `/lead` (dòng "Điều khiển: chuột, bàn phím, nguồn"), `../CLAUDE.md` (UDP con
   trỏ, nguồn), `docs/AGENTS-GLIMMER.md` nếu đổi API.
+
+Đã làm (2026-11-27): domain `lib/domain/models/cursor.dart`, `rules/cursor_rules.dart`, `rules/keyboard_rules.dart`;
+`data/services/cursor_service.dart` (UDP); repository `sendCursor` / `setPower` (+ `DeviceState.cursorPort` /
+`power`, `ControlCaps.mouse`); use case `cursor` / `power` / `menu(hover)`; ViewModel
+`ui/control/view_models/control_pointer.dart` (part, extension `ControlPointer`: `movePointer`, `clickLeft`,
+`clickRight`, `pressKey`, `pressPower`). Test: `cursor_rules_test`, `keyboard_rules_test`,
+`control_device_use_case_test` (nhóm mouse firmware), `control_pointer_test`. Cột App của R-DK-17…21 vẫn `sửa`
+tới khi màn (nhiệm vụ 9) xong.
 
 ## Kiểm tra cuối
 

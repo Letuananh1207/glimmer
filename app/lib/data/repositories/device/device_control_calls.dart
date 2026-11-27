@@ -9,6 +9,8 @@ mixin _ControlCalls on DeviceRepository {
 
   Future<Map<String, dynamic>> _json(String method, String path, {Object? body, int tries});
 
+  CursorService get _cursor;
+
   @override
   Future<Result<ChannelAnswer>> channel({String? name, String? action, bool zoomMin = false}) => _call(() async {
     final a = ChannelAnswer.fromJson(
@@ -49,6 +51,26 @@ mixin _ControlCalls on DeviceRepository {
       notifyListeners();
     }
     return shown;
+  });
+
+  @override
+  Future<bool> sendCursor(Uint8List datagram) async {
+    final port = _state?.cursorPort;
+    final host = Uri.tryParse(url)?.host ?? '';
+    if (port == null || host.isEmpty) return false;
+    return _cursor.send(host, port, datagram);
+  }
+
+  @override
+  Future<Result<PowerState>> setPower(bool on) => _call(() async {
+    final j = await _json('POST', '/api/power', body: {'on': on}, tries: 1);
+    final p = PowerState.fromName(j['power']) ?? (on ? PowerState.booting : PowerState.shutting);
+    final s = _state;
+    if (s != null) {
+      _state = s.withControl(power: p);
+      notifyListeners();
+    }
+    return p;
   });
 
   @override

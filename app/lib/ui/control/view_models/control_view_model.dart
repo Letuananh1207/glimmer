@@ -8,6 +8,7 @@ import '../../../domain/models/app_error.dart';
 import '../../../domain/models/attention_card.dart';
 import '../../../domain/models/clock_view.dart';
 import '../../../domain/models/control.dart';
+import '../../../domain/models/cursor.dart';
 import '../../../domain/models/device_photo.dart';
 import '../../../domain/models/device_state.dart';
 import '../../../domain/models/mirror_frame.dart';
@@ -16,12 +17,16 @@ import '../../../domain/models/windows.dart';
 import '../../../domain/rules/board_rules.dart';
 import '../../../domain/rules/clock_rules.dart';
 import '../../../domain/rules/control_rules.dart' as rules;
+import '../../../domain/rules/cursor_rules.dart';
+import '../../../domain/rules/keyboard_rules.dart';
 import '../../../domain/rules/mirror_rules.dart';
 import '../../../domain/rules/touch_rules.dart';
 import '../../../domain/use_cases/control_device_use_case.dart';
 import '../../../domain/use_cases/load_photos_use_case.dart';
 import '../../../utils/result.dart';
 import '../../../utils/safe_notifier.dart';
+
+part 'control_pointer.dart';
 
 /// Whole-screen situation of the remote (screen_specs §8 `setup` / `offline`).
 enum ControlMode { normal, setup, offline }
@@ -96,6 +101,14 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
 
   /// Skills on at the last state read (R-DK-9: a skill turned on → its desktop icon selected).
   List<String>? _skillsBefore;
+
+  // R-DK-17…20 (control_pointer.dart): the pointer, the lit menu item, Start open, the power button pressed.
+  Cursor _cursor = Cursor.home;
+  MenuItem? _lit;
+  bool _startOpen = false;
+  PowerState? _pendingPower;
+  DateTime? _cursorSentAt;
+  Timer? _cursorTimer;
 
   // ── what the device shows ──
 
@@ -480,6 +493,11 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
     }
     final item = menuItemAt(m, x, y);
     if (item == null || !m.enabled(item)) return;
+    _menuDo(m, item);
+  }
+
+  /// Item [item] of menu [m] chosen (a tap / click on it, Enter on the lit one — R-DK-19).
+  void _menuDo(MenuView m, MenuItem item) {
     final p = m.program;
     switch (item) {
       case MenuItem.refresh:
@@ -687,6 +705,7 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
   void dispose() {
     _device.removeListener(_onDevice);
     _failureTimer?.cancel();
+    _cursorTimer?.cancel();
     _photoImage?.dispose();
     super.dispose();
   }

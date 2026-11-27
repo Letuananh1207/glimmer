@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../../../domain/models/app_error.dart';
 import '../../../domain/models/attention_card.dart';
 import '../../../domain/models/control.dart';
+import '../../../domain/models/cursor.dart';
 import '../../../domain/models/device_photo.dart';
 import '../../../domain/models/device_state.dart';
 import '../../../utils/cancel_token.dart';
@@ -95,8 +96,15 @@ abstract class DeviceRepository extends ChangeNotifier {
   /// `POST /api/windows`: the app's open windows (panel P-2026-11-26.14), RAM only on the device.
   Future<Result<void>> setWindows(Map<String, Object?> body);
 
-  /// `POST /api/menu`: draw / close a context menu over the device screen (R-DK-11).
+  /// `POST /api/menu`: draw / close a context menu over the device screen (R-DK-11), `hover` = the lit item (R-DK-18).
   Future<Result<void>> setMenu(Map<String, Object?> body);
+
+  /// R-DK-17: one mouse-pointer datagram to the device (UDP, port from `/api/state` `cursor`). Best effort: false =
+  /// not sent (not connected, firmware without the mouse, no network); a lost one is fixed by the next.
+  Future<bool> sendCursor(Uint8List datagram);
+
+  /// R-DK-20: the power button (`POST /api/power {on}`); [state] takes the answer. Ok(power after).
+  Future<Result<PowerState>> setPower(bool on);
 
   /// `POST /api/clock`: the Ngày và Giờ window as touched on the app (R-DK-16), RAM only on the device.
   Future<Result<void>> setClock(Map<String, Object?> body);

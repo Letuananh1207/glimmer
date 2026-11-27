@@ -87,6 +87,15 @@ khoá này nghĩa là firmware cửa sổ XP thật (`xpReal`). Model ô màn: `
 `MirrorDay.code`, `MirrorClock.place` (`lib/domain/models/mirror_ambient.dart`); chạm mới `TouchKind.trayClock` /
 `balloonBody` / `tab` (`lib/domain/models/touch.dart`). Không di trú, backend (nếu có) không cần đồng bộ.
 
+## Chuột, bàn phím, nguồn (R-DK-17…21, kế hoạch 2026-11-27)
+
+Không lưu gì trên điện thoại. Model đọc từ thiết bị: `DeviceState.cursorPort` (`cursor.port` của `/api/state`, null =
+firmware chưa có chuột → `ControlCaps.mouse` false), `DeviceState.power` (`power`: `on` / `shutting` / `off` /
+`booting`, `PowerState` trong `lib/domain/models/cursor.dart`). Trong RAM: `Cursor` (vị trí px thiết bị + hình,
+`CursorShape`), `ControlKey`. Lệnh: con trỏ qua **UDP** (`CursorService`, gói 8 byte do `cursorPacket` dựng, không
+chờ trả lời), `POST /api/power {on}` (`setPower`, vá `state.power`), `POST /api/menu {…, hover}` (mục đang sáng).
+Không di trú, backend (nếu có) không cần đồng bộ.
+
 ## Vị trí thời tiết (2026-11-26.9, R-VT-1…5)
 
 Không lưu gì trên điện thoại: vị trí chỉ nằm trên thiết bị, đọc / ghi qua `/api/settings` — `weatherLat`,

@@ -15,9 +15,10 @@ import 'fake_services.dart';
 /// A real [DeviceRepositoryLocal] over fake services — the ViewModel tests drive the device through
 /// [api] (answers) and [wifi] (phone Wi-Fi), with instant delays.
 class DeviceRig {
-  DeviceRig._(this.api, this.nsd, this.wifi, this.delay, this.repo);
+  DeviceRig._(this.api, this.nsd, this.wifi, this.delay, this.repo, this.cursor);
 
   final FakeDeviceApiService api;
+  final FakeCursorService cursor;
   final FakeDiscoveryService nsd;
   final FakeWifiService wifi;
   final FakeDelay delay;
@@ -26,15 +27,17 @@ class DeviceRig {
   static Future<DeviceRig> create({Map<String, Object> saved = const {}}) async {
     final api = FakeDeviceApiService(), nsd = FakeDiscoveryService(), wifi = FakeWifiService();
     final delay = FakeDelay();
+    final cursor = FakeCursorService();
     final repo = DeviceRepositoryLocal(
       api: api,
       discovery: nsd,
       store: await fakeStore(saved),
       wifi: wifi,
+      cursor: cursor,
       delay: delay.call,
       pollEvery: const Duration(hours: 1),
     );
-    return DeviceRig._(api, nsd, wifi, delay, repo);
+    return DeviceRig._(api, nsd, wifi, delay, repo, cursor);
   }
 
   /// Device answering at [url] with [state]; connected.

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:glimmer_app/data/services/cursor_service.dart';
 import 'package:glimmer_app/data/services/device_api_service.dart';
 import 'package:glimmer_app/data/services/discovery_service.dart';
 import 'package:glimmer_app/data/services/local_store_service.dart';
@@ -127,6 +128,20 @@ class FakePhotoPickerService implements PhotoPickerService {
 
   @override
   Future<Uint8List?> retrieveLost() async => null;
+}
+
+/// Records the pointer datagrams instead of sending them (R-DK-17).
+class FakeCursorService implements CursorService {
+  final sent = <({String host, int port, Uint8List datagram})>[];
+
+  @override
+  Future<bool> send(String host, int port, Uint8List datagram) async {
+    sent.add((host: host, port: port, datagram: datagram));
+    return true;
+  }
+
+  @override
+  void close() {}
 }
 
 class FakeDiscoveryService implements DiscoveryService {

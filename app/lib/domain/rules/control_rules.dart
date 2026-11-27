@@ -95,6 +95,7 @@ ControlCaps controlCaps(DeviceState? s) => s == null
         windows: s.windowsApi,
         clock: s.clockApi,
         balloon: s.balloon != null,
+        mouse: s.cursorPort != null,
       );
 
 /// The agent card holding the device screen (approval / input on the Attention channel), or null.

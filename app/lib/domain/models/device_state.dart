@@ -1,5 +1,6 @@
 // Shapes of the display's JSON API (see src/core/web.cpp in the firmware).
 import '../../utils/json.dart';
+import 'cursor.dart';
 import 'device_sources.dart';
 import 'device_weather.dart';
 import 'project.dart';
@@ -48,6 +49,8 @@ class DeviceState {
     this.windowsApi = false,
     this.clockApi = false,
     this.ntpLast = 0,
+    this.cursorPort,
+    this.power,
   });
 
   factory DeviceState.fromJson(Map<String, dynamic> j) => DeviceState(
@@ -92,10 +95,19 @@ class DeviceState {
     windowsApi: j['windows'] is Map,
     clockApi: j['clock'] is Map,
     ntpLast: jsonInt(j['ntp_last']),
+    cursorPort: j['cursor'] is Map && (j['cursor'] as Map)['port'] is num ? ((j['cursor'] as Map)['port'] as num).toInt() : null,
+    power: PowerState.fromName(j['power']),
   );
 
   /// The same state with what a control command changed (answer of `/api/channel`, `/api/screen`).
-  DeviceState withControl({String? activeChannel, bool? paused, bool? screenOn, int? slideLeftMs, bool? balloon}) =>
+  DeviceState withControl({
+    String? activeChannel,
+    bool? paused,
+    bool? screenOn,
+    int? slideLeftMs,
+    bool? balloon,
+    PowerState? power,
+  }) =>
       DeviceState(
         fw: fw,
         build: build,
@@ -133,6 +145,8 @@ class DeviceState {
         sources: sources,
         windowsApi: windowsApi,
         clockApi: clockApi,
+        cursorPort: cursorPort,
+        power: power ?? this.power,
         ntpLast: ntpLast,
       );
 
@@ -176,6 +190,13 @@ class DeviceState {
 
   /// Epoch of the device's last time sync (`ntp_last`), 0 = none yet / unknown.
   final int ntpLast;
+
+  /// UDP port the device takes the mouse pointer on (`cursor.port`, R-DK-17); null = firmware without the mouse
+  /// (R-DK-21).
+  final int? cursorPort;
+
+  /// The "computer" on / off (`power`, R-DK-20); null = firmware without the power button.
+  final PowerState? power;
 
   /// Backlight on; null = firmware without `/api/screen` (R-DK-3).
   final bool? screenOn;

@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:glimmer_app/data/services/device_api_service.dart';
 import 'package:glimmer_app/domain/models/app_error.dart';
 import 'package:glimmer_app/domain/models/control.dart';
+import 'package:glimmer_app/domain/models/cursor.dart';
+import 'package:glimmer_app/domain/models/touch.dart';
 import 'package:glimmer_app/domain/use_cases/control_device_use_case.dart';
 import 'package:glimmer_app/utils/result.dart';
 
@@ -109,5 +111,54 @@ void main() {
     expect(rig.posts('/api/settings').single.body, {'brightness': 80});
     expect((r as Ok<ControlOutcome>).value.matched, isTrue);
     expect(rig.repo.state!.screenOn, isFalse);
+  });
+
+  group('mouse firmware', () {
+    Map<String, dynamic> mouse() => {
+      ..._state(),
+      'windows': {'open': <String>[]},
+      'cursor': {'port': 4210, 'x': 120, 'y': 120, 'shape': 1, 'shown': false},
+      'power': 'on',
+    };
+
+    test('R-DK-17 the pointer goes out as a datagram to the reported port, sequence counting up', () async {
+      await rig.connect(_url, mouse());
+      expect(control.caps.mouse, isTrue);
+      expect(await control.cursor(const Cursor(x: 10, y: 20, shape: CursorShape.hand)), isTrue);
+      await control.cursor(const Cursor(x: 11, y: 20));
+      final sent = rig.cursor.sent;
+      expect(sent.map((p) => (p.host, p.port)), [('192.168.1.50', 4210), ('192.168.1.50', 4210)]);
+      expect(sent[0].datagram, [0x47, 0x43, 1, 2, 0, 1, 10, 20]);
+      expect(sent[1].datagram.sublist(4), [0, 2, 11, 20]);
+    });
+
+    test('R-DK-18 the lit menu item goes as hover (index without separators)', () async {
+      await rig.connect(_url, mouse());
+      rig.api.on(_url, 'POST', '/api/menu', {'ok': true});
+      const m = MenuView(MenuKind.window, 71, 100, program: 'Claude');
+      await control.menu(m, hover: MenuItem.close);
+      expect((rig.posts('/api/menu').single.body as Map)['hover'], 5);
+    });
+
+    test('R-DK-20 the power button: POST {on}, the answer goes into the state', () async {
+      await rig.connect(_url, mouse());
+      rig.api.on(_url, 'POST', '/api/power', {'ok': true, 'power': 'shutting'});
+      final r = await control.power(false);
+      expect((r as Ok<PowerState>).value, PowerState.shutting);
+      expect(rig.posts('/api/power').single.body, {'on': false});
+      expect(rig.repo.state!.power, PowerState.shutting);
+    });
+
+    test('R-DK-21 firmware without the mouse: no datagram, power refused, no hover', () async {
+      await rig.connect(_url, {..._state(), 'windows': {'open': <String>[]}});
+      expect(control.caps.mouse, isFalse);
+      expect(await control.cursor(Cursor.home), isFalse);
+      expect(rig.cursor.sent, isEmpty);
+      expect(await control.power(false), isA<Error<PowerState>>());
+      expect(rig.posts('/api/power'), isEmpty);
+      rig.api.on(_url, 'POST', '/api/menu', {'ok': true});
+      await control.menu(const MenuView(MenuKind.desktop, 10, 10), hover: MenuItem.refresh);
+      expect((rig.posts('/api/menu').single.body as Map).containsKey('hover'), isFalse);
+    });
   });
 }

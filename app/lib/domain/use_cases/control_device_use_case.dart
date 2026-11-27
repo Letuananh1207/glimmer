@@ -3,9 +3,11 @@ import '../../utils/result.dart';
 import '../models/app_error.dart';
 import '../models/clock_view.dart';
 import '../models/control.dart';
+import '../models/cursor.dart';
 import '../models/touch.dart';
 import '../models/windows.dart';
 import '../rules/control_rules.dart';
+import '../rules/cursor_rules.dart';
 
 /// The app remote (tab Điều khiển, R-DK-1…10): sends one command, once, and says whether the device did what was
 /// asked. Optimistic display is the caller's; this only reconciles (R-DK-1: no automatic retry). A command the
@@ -14,6 +16,7 @@ class ControlDeviceUseCase {
   ControlDeviceUseCase({required DeviceRepository device}) : _device = device;
 
   final DeviceRepository _device;
+  int _cursorSeq = 0;
 
   /// R-DK-3: what the connected firmware supports.
   ControlCaps get caps => controlCaps(_device.state);
@@ -64,9 +67,25 @@ class ControlDeviceUseCase {
   }
 
   /// R-DK-11: a context menu over the device screen; null closes it. Refused without the firmware for it.
-  Future<Result<void>> menu(MenuView? m) async {
+  /// R-DK-18: [hover] = the item lit under the pointer / by the arrow keys (only with the mouse firmware).
+  Future<Result<void>> menu(MenuView? m, {MenuItem? hover}) async {
     if (!caps.windows) return Result.error(AppError(AppErrorKind.controlUnsupported, detail: 'menu'));
-    return _device.setMenu(m == null ? const {'kind': 'none'} : m.toJson());
+    if (m == null) return _device.setMenu(const {'kind': 'none'});
+    return _device.setMenu({...m.toJson(), if (caps.mouse && hover != null) 'hover': menuHoverIndex(m, hover)});
+  }
+
+  /// R-DK-17: the pointer to the device (UDP, ~30 / s, the caller sends only on change). False = not sent (R-DK-21:
+  /// firmware without the mouse, or no network); nothing to undo.
+  Future<bool> cursor(Cursor c) async {
+    if (!caps.mouse) return false;
+    _cursorSeq = (_cursorSeq + 1) & 0xFFFF;
+    return _device.sendCursor(cursorPacket(_cursorSeq, c));
+  }
+
+  /// R-DK-20: the power button. Refused without the mouse firmware (R-DK-21).
+  Future<Result<PowerState>> power(bool on) async {
+    if (!caps.mouse) return Result.error(AppError(AppErrorKind.controlUnsupported, detail: 'power'));
+    return _device.setPower(on);
   }
 
   /// R-DK-13: the desktop's tray balloon (tray icon → show 10 s, × → hide). Refused without the firmware for it.

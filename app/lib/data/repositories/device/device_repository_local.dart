@@ -4,12 +4,14 @@ import 'dart:typed_data';
 import '../../../domain/models/app_error.dart';
 import '../../../domain/models/attention_card.dart';
 import '../../../domain/models/control.dart';
+import '../../../domain/models/cursor.dart';
 import '../../../domain/models/device_photo.dart';
 import '../../../domain/models/device_state.dart';
 import '../../../domain/rules/photo_rules.dart';
 import '../../../utils/cancel_token.dart';
 import '../../../utils/json.dart';
 import '../../../utils/result.dart';
+import '../../services/cursor_service.dart';
 import '../../services/device_api_service.dart';
 import '../../services/discovery_service.dart';
 import '../../services/local_store_service.dart';
@@ -28,12 +30,14 @@ class DeviceRepositoryLocal extends DeviceRepository with _ControlCalls {
     required DiscoveryService discovery,
     required LocalStoreService store,
     required WifiService wifi,
+    CursorService? cursor,
     Delay delay = _realDelay,
     Duration pollEvery = const Duration(seconds: 5),
   })  : _api = api,
         _discovery = discovery,
         _store = store,
         _wifi = wifi,
+        _cursor = cursor ?? CursorService(),
         _delay = delay,
         _pollEvery = pollEvery;
 
@@ -41,6 +45,8 @@ class DeviceRepositoryLocal extends DeviceRepository with _ControlCalls {
   final DiscoveryService _discovery;
   final LocalStoreService _store;
   final WifiService _wifi;
+  @override
+  final CursorService _cursor;
   final Delay _delay;
   final Duration _pollEvery;
 
