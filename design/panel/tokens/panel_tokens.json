@@ -3055,6 +3055,186 @@
         "w": 21
       },
       "keys": "←/→ đổi nút, Enter chọn, Esc = Hủy"
+    },
+    "startAll": {
+      "use": "P-2026-11-27.25 — Tất cả chương trình đủ chương trình, dời lên khi cao",
+      "source": "source/XP-Start-All-Full.dc.html",
+      "menu": {
+        "x": 144,
+        "w": 96,
+        "maxBottom": 213,
+        "full": [
+          144,
+          2,
+          96,
+          211
+        ],
+        "border": "xpMenuBorder",
+        "bg": "white"
+      },
+      "row": {
+        "h": 20,
+        "icon": [
+          3,
+          2
+        ],
+        "text": [
+          22,
+          4
+        ],
+        "font": "JBMono-11",
+        "color": "bg"
+      },
+      "separator": {
+        "h": 7,
+        "line": [
+          4,
+          3,
+          -8,
+          1,
+          "xpMenuBorder"
+        ]
+      },
+      "order": [
+        "Claude",
+        "Codex",
+        "AI hôm nay",
+        "Xu hướng",
+        "Agents",
+        "Ảnh",
+        "Thời tiết",
+        "Đồng hồ",
+        "Dò mìn",
+        "-",
+        "Thêm / gỡ"
+      ],
+      "widths": {
+        "AI hôm nay": 70,
+        "Xu hướng": 56,
+        "Agents": 42,
+        "Dò mìn": 42
+      },
+      "recent": {
+        "use": "cột trái: 3 chương trình mở gần nhất (không kể ghim)",
+        "source": "source/XP-Start-Recent.dc.html"
+      }
+    },
+    "mines": {
+      "use": "P-2026-11-27.25 — Dò mìn (Minesweeper XP, Beginner 9×9, 10 mìn)",
+      "source": "source/XP-Mines.dc.html",
+      "colors": {
+        "face": "#C0C0C0",
+        "shadow": "#808080",
+        "light": "#FFFFFF",
+        "ledOn": "#FF0000",
+        "ledOff": "#480000",
+        "ledBg": "#000000",
+        "smiley": "#FFFF00",
+        "boom": "#FF0000",
+        "flag": "#FF0000",
+        "num": {
+          "1": "#0000FF",
+          "2": "#008000",
+          "3": "#FF0000",
+          "4": "#000080",
+          "5": "#800000",
+          "6": "#008080",
+          "7": "#000000",
+          "8": "#808080"
+        }
+      },
+      "body": [
+        2,
+        22,
+        236,
+        192,
+        "face"
+      ],
+      "counterPanel": {
+        "rect": [
+          45,
+          26,
+          150,
+          31
+        ],
+        "sunken": 2
+      },
+      "led": {
+        "box": [
+          41,
+          25
+        ],
+        "mines": [
+          51,
+          30
+        ],
+        "time": [
+          148,
+          30
+        ],
+        "digit": [
+          13,
+          23
+        ],
+        "max": 999
+      },
+      "smiley": {
+        "rect": [
+          107,
+          29,
+          26,
+          26
+        ],
+        "moods": [
+          "smile",
+          "wow",
+          "cool",
+          "dead"
+        ],
+        "circle": 17
+      },
+      "board": {
+        "rect": [
+          45,
+          61,
+          150,
+          150
+        ],
+        "sunken": 3,
+        "cell0": [
+          48,
+          64
+        ],
+        "cell": 16,
+        "cols": 9,
+        "rows": 9,
+        "mines": 10
+      },
+      "cellArt": {
+        "closed": "nổi 2 px",
+        "open": "vạch shadow trên + trái 1 px",
+        "number": "JBMono-16B, giữa ô",
+        "mine": "13×13 tại (+2, +2)",
+        "flag": "9×9 tại (+4, +3)",
+        "boom": "nền boom + mìn",
+        "wrong": "mìn + chéo đỏ 2 px"
+      },
+      "desktopIcon": {
+        "size": [
+          32,
+          23
+        ],
+        "cell": "cột 2 tâm x 120, ô y 8",
+        "label": [
+          "Dò mìn",
+          42
+        ]
+      },
+      "title": {
+        "text": "Dò mìn",
+        "font": "JBMono-12B",
+        "w": 42
+      }
     }
   }
 }

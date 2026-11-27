@@ -2,6 +2,7 @@
 
 - Trạng thái: chờ thiết kế
 - Ngày: 2026-11-27 · Nguồn: áp thiết kế app 2026-11-27.10 (`app/docs/tasks/2026-11-27-thiet-ke-2026-11-27.10.md`)
+- Đã vẽ: P-2026-11-27.25
 
 ## Dán vào canvas
 

@@ -2693,6 +2693,8 @@ Nguồn `source/XP-Desk-Agent.dc.html`, `XP-Desk-All.dc.html`, `XP-Desk-Selected
 
 ### XP-Start — Start menu (app chạm start)
 
+> **P-2026-11-27.25 — đủ mọi chương trình:** Tất cả chương trình liệt kê mọi chương trình đã cài (thêm AI hôm nay, Xu hướng, Agents, Dò mìn), cao quá thì dời lên; cột trái = 3 chương trình mở gần nhất — xem XP-Start-All.
+
 > **P-2026-11-27.24 — `Tắt màn` → `Tắt máy`, mục sáng:** nút dưới phải đổi chữ (mở hộp Tắt máy tính); mục dưới con trỏ tô xpSelect — xem XP-Pointer.
 
 > **P-2026-11-26.20 — Start menu kiểu XP trên thiết bị.**
@@ -2824,6 +2826,69 @@ nào mở (như XP thật: boot → Welcome → desktop).
 
 **Start menu** (`XPStartMenu`, `XPStartAll`): nút dưới phải `Tắt màn` → **`Tắt máy`** (49 px, nút đỏ giữ) = *Turn Off Computer*
 của XP, mở hộp Tắt máy tính. `Khởi động lại` bên trái giữ như P-.20.
+
+### XP-Start-All — Start đủ chương trình (mọi chương trình mở được từ Start)
+
+> **P-2026-11-27.25 — Start đủ chương trình, cột trái hay dùng, biểu tượng Dò mìn.**
+
+Nguồn `source/XP-Start-All-Full.dc.html`, `XP-Start-Recent.dc.html`, `XP-Desk-Fun.dc.html` · ảnh `XPStartAllFull.png`,
+`XPStartRecent.png`, `XPDeskFun.png`. Token `themeXP.startAll`. Phiếu `docs/phieu_panel/2026-11-27-start-du-chuong-trinh.md`.
+Thành phần XP thật: *All Programs* (mọi chương trình đã cài; menu cao quá màn thì dời lên, thiếu chỗ bên phải thì lấn sang
+trái), danh sách *most frequently used* ở cột trái Start, biểu tượng desktop xếp *Auto Arrange* theo cột.
+
+- **Menu con Tất cả chương trình**: thứ tự Claude, Codex, AI hôm nay, Xu hướng, Agents (skill Agent; Agents chỉ khi
+  `showAgents`), Ảnh (skill Ảnh), Thời tiết, Đồng hồ, Dò mìn (skill Giải trí `fun`), vạch, `Thêm / gỡ`. Skill tắt → bỏ hàng.
+  - Khung (144, y, 96 × (4 + 20·n + 7 + 20)), viền xpMenuBorder, nền white. Rộng 96 vì `AI hôm nay` 70 px (x 166–235);
+    lấn 7 px lên cột trái (hàng `Tất cả chương trình` sáng còn thấy tới x 143).
+  - Đỉnh y 62 như P-.20 nếu đáy ≤ 213; không thì dời lên cho đáy ≤ 213 (đủ cả: (144, 2, 96×211), đáy y 212). Không chia hai
+    cột: đủ cả mới 11 hàng.
+  - Hàng 20 từ y+2: icon 16 tại (147, hàng+2) (icon cũ giữ như P-.20), chữ JBMono-11 bg TL (166, hàng+4). Vạch xpMenuBorder
+    (148, +3, 88×1), cao 7. Đo: `AI hôm nay` 70, `Xu hướng` 56, `Agents` 42, `Dò mìn` 42 px.
+  - Mục sáng như XP-Pointer: hàng (145, hàng, 94×20) xpSelect, chữ white.
+- **Icon 16 mới** (bitmap trong source): AI hôm nay = đồng hồ đo (vòng xanh lá → vàng → đỏ, kim đen, đế xám); Xu hướng =
+  khung xanh nền white, lưới `#D3E5FA`, đường đỏ đi lên; Agents = hai người (sau xanh dương, trước xanh lá); Dò mìn = mìn
+  13×13 tại (+1, +1) (như ô bảng chơi).
+- **Cột trái (hay dùng)** (`XPStartRecent`): 3 hàng y 99 / 119 / 139 = 3 chương trình mở gần nhất (mới nhất trên), không kể
+  Claude / Codex (đã ghim), chỉ chương trình của skill đang bật; chưa đủ 3 → bù theo thứ tự Ảnh, Thời tiết, Đồng hồ, Dò mìn,
+  AI hôm nay, Xu hướng, Agents. Danh sách giữ trong RAM (tắt nguồn → về thứ tự trên).
+- **Desktop** (`XPDeskFun`): skill Giải trí bật → biểu tượng `Dò mìn` 32×23 (ô xám nổi 22×22 + mìn, bóng chấm như P-.19).
+  Cột 1 đủ 4 ô (Claude, Codex, Ảnh, Thùng rác) → sang cột 2 tâm x 120, ô y 8: icon (104, 8), nhãn `Dò mìn` 42 px TC
+  (120, 32), bóng đen (+1, +1). Ít chương trình hơn → Dò mìn vào cột 1 trước Thùng rác (Thùng rác luôn cuối cột 1).
+- Một trò chơi → để thẳng `Dò mìn`; có trò thứ hai → thư mục `Trò chơi ▸` như XP (vẽ sau).
+
+### XP-Mines — Dò mìn (kênh `Mines`, skill Giải trí `fun`)
+
+> **P-2026-11-27.25 — Dò mìn như Minesweeper của XP.**
+
+Nguồn `source/XP-Mines.dc.html`, `XP-Mines-Play.dc.html`, `XP-Mines-Win.dc.html`, `XP-Mines-Lose.dc.html` · ảnh
+`XPMines.png`, `XPMinesPlay.png`, `XPMinesWin.png`, `XPMinesLose.png`. Token `themeXP.mines`. Phiếu
+`docs/phieu_panel/2026-11-27-minesweeper.md`. Thành phần XP thật: *Minesweeper*, mức Beginner 9×9, 10 mìn.
+
+- **Cửa sổ XP** `XP::window`: tiêu đề `Dò mìn` JBMono-12B white (24, 5) 42 px, bóng xpTitleShadow (+1, +1); icon tiêu đề =
+  mìn 13×13 tại (6, 5) (black, chấm sáng white). Không thanh trạng thái. Nút thanh tác vụ: mìn 13×13 white tại (nút+7, 220).
+- **Không có thanh menu** "Trò chơi  Trợ giúp" (XP có): thân chỉ 192 px, thêm 18 px thì bảng ô 16 tràn y 213. Ván mới =
+  click mặt cười (như XP). Chỉ mức Beginner.
+- **Thân** (2, 22, 236×192) xám `#C0C0C0`. Viền lõm = trên + trái `#808080`, dưới + phải white; viền nổi ngược lại; góc cắt
+  chéo 45°.
+- **Bảng đếm** lõm 2 px (45, 26, 150×31).
+  - LED hộp lõm 1 px 41×25: mìn còn lại tại (51, 30), giây tại (148, 30); trong black 39×23, 3 số 7 đoạn 13×23 vẽ bằng hình
+    (đoạn dày 3, vát đầu), sáng `#FF0000`, tắt `#480000`. Giây 0–999 (dừng ở 999); mìn còn lại = 10 − cờ, âm → `-01`.
+  - Mặt cười 26×26 tại (107, 29): viền `#808080` 1 px, nổi 2 px, mặt vàng `#FFFF00` tròn ⌀17 viền black tâm (120, 42).
+    `smile` thường; `wow` (miệng tròn) khi chuột trái đang giữ trên ô chưa mở; `cool` (kính) khi thắng; `dead` (mắt X,
+    miệng mếu) khi thua. Đang giữ trên mặt cười → nút lõm (viền `#808080` 1 px, mặt dời +1, +1).
+- **Bảng** lõm 3 px (45, 61, 150×150); ô 16×16, ô (c, r) tại (48 + 16c, 64 + 16r).
+  - Chưa mở: `#C0C0C0`, nổi 2 px. Cờ: chưa mở + cờ 9×9 tại (+4, +3) (lá `#FF0000`, cán + đế black).
+  - Đã mở: `#C0C0C0`, vạch `#808080` 1 px trên + trái. Số 1–8 JBMono-16B giữa ô, màu XP: 1 `#0000FF`, 2 `#008000`,
+    3 `#FF0000`, 4 `#000080`, 5 `#800000`, 6 `#008080`, 7 black, 8 `#808080`.
+  - Đang nhấn (chuột trái giữ trên ô chưa mở, không cờ) = vẽ như ô đã mở trống; rời ô / nhả → về lại. Ô dưới con trỏ không
+    sáng (như XP).
+  - Thua: mìn 13×13 tại (+2, +2) trên ô mở cho mọi mìn chưa cắm cờ; mìn vừa click nền `#FF0000`; cờ cắm sai = mìn + chéo
+    đỏ 2 px; cờ đúng giữ. Thắng: mọi mìn tự cắm cờ, LED trái `000`.
+- **Luật như XP**: click đầu không bao giờ trúng mìn (đặt mìn sau click đầu); ô 0 mở lan ô kề; đồng hồ chạy từ click đầu,
+  dừng khi thắng / thua; click trái lên cờ không làm gì; click phải ô chưa mở → cờ, lên cờ → gỡ (bỏ dấu `?` của XP); ván
+  xong thì bảng không nhận click, chỉ mặt cười. Click hai nút (chord) chưa làm.
+- **Vẽ lại từng phần**: mở ô / cắm cờ chỉ vẽ ô đó (vùng lan = các ô vừa mở); giây vẽ lại một LED mỗi giây; mặt cười vẽ lại
+  khi đổi. `draw()` vẽ đúng ván đang có (không reset), an toàn dưới con trỏ (`clipHits` theo ô).
 
 ### XP-Desk-Tray — thời tiết ở khay, bong bóng XP
 

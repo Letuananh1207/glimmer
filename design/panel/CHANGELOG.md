@@ -5,6 +5,43 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-27.25 — Start đủ mọi chương trình, Dò mìn
+
+- **Start › Tất cả chương trình** (`source/XP-Start-All-Full.dc.html`, `screen_specs.md` §17 XP-Start-All; ảnh `XPStartAllFull.png`):
+  - Mọi chương trình đã cài: Claude, Codex, **AI hôm nay** 70, **Xu hướng** 56, **Agents** 42 (khi `showAgents`), Ảnh,
+    Thời tiết, Đồng hồ, **Dò mìn** 42 (skill Giải trí), vạch, Thêm / gỡ. Menu con rộng 96 từ x 144 (lấn 7 px cột trái như
+    XP); cao quá thì dời lên cho đáy ≤ 213 (đủ cả: (144, 2, 96×211)).
+  - 4 icon 16 mới: đồng hồ đo, biểu đồ đường, hai người, quả mìn.
+  - Máy đang có: menu con (151, 62, 89×131) chỉ Claude, Codex, Ảnh, Thời tiết, Đồng hồ.
+- **Start, cột trái** (`source/XP-Start-Recent.dc.html`; ảnh `XPStartRecent.png`): 3 chương trình mở gần nhất (XP *most
+  frequently used*), không kể Claude / Codex ghim; chưa đủ thì bù theo thứ tự skill.
+- **Desktop** (`source/XP-Desk-Fun.dc.html`; ảnh `XPDeskFun.png`): biểu tượng `Dò mìn` 32×23 (ô xám nổi + mìn); cột 1 đủ →
+  cột 2 tâm x 120, ô y 8 (XP Auto Arrange); ít chương trình thì vào cột 1 trước Thùng rác.
+- **Kênh Mines — Dò mìn** (`source/XP-Mines*.dc.html`, `screen_specs.md` §17 XP-Mines; ảnh `XPMines.png`, `XPMinesPlay.png`,
+  `XPMinesWin.png`, `XPMinesLose.png`): Minesweeper XP mức Beginner 9×9, 10 mìn.
+  - Cửa sổ XP `Dò mìn` 42 px, icon mìn; **không thanh menu** (thân 192 px không đủ) — ván mới = click mặt cười.
+  - Thân `#C0C0C0`; bảng đếm lõm (45, 26, 150×31): LED 7 đoạn 13×23 vẽ bằng hình (mìn còn lại (51, 30), giây (148, 30),
+    `#FF0000` / tắt `#480000`), mặt cười 26×26 tại (107, 29) với 4 vẻ cười / há miệng / kính / mắt X.
+  - Bảng lõm (45, 61, 150×150), ô 16 từ (48, 64): chưa mở nổi 2 px, mở phẳng, số JBMono-16B màu XP, cờ, mìn 13×13, mìn nổ
+    nền đỏ, cờ sai = mìn gạch chéo.
+  - Máy đang có: chưa có.
+- Phiếu: `docs/phieu_panel/2026-11-27-start-du-chuong-trinh.md`, `docs/phieu_panel/2026-11-27-minesweeper.md`
+- Đổi luật: cột trái Start = 3 chương trình mở gần nhất thay vì cố định theo skill. Menu con Tất cả chương trình dời lên
+  khi cao (đỉnh không còn cố định y 62), rộng 96 từ x 144 — luật trúng đích Start của app (R-DK-22) đổi theo. Dò mìn bỏ
+  thanh menu và dấu `?` của XP.
+- Cần firmware: màu Dò mìn (`#C0C0C0`, `#808080`, `#FFFF00`, LED `#FF0000` / `#480000`, số `#0000FF` `#008000` `#000080`
+  `#800000` `#008080`); skill `fun` + chương trình Dò mìn (biểu tượng desktop, mục Start); trạng thái ván (81 ô: mở / cờ /
+  số / mìn, giây, mặt) và lệnh click trái / phải / giữ từ app; danh sách 3 chương trình mở gần nhất (RAM). Ảnh `@2x` ghép
+  từ ảnh màn nền + chữ VLW thật; artboard = màn nền + điểm ảnh đổi (chữ là điểm ảnh).
+
+**Việc cần làm trong code:**
+- Start menu: menu con theo danh sách trên, khung x 144 rộng 96, đỉnh y 62 hoặc dời lên cho đáy ≤ 213; 4 icon 16 mới; cột
+  trái = 3 chương trình mở gần nhất.
+- Desktop: biểu tượng Dò mìn khi skill Giải trí bật, xếp theo cột như trên.
+- Kênh `Mines` (mới): cửa sổ Dò mìn theo XP-Mines — bảng đếm, LED, mặt cười, bảng 9×9; luật XP; vẽ lại từng ô / từng LED;
+  `draw()` an toàn dưới con trỏ.
+- App (phiếu riêng phía app): luật trúng đích Start theo bố cục mới; skill Giải trí; click trái / phải / giữ trên bảng Dò mìn.
+
 ## P-2026-11-27.24 — Con trỏ chuột, mục đang sáng, tắt máy (app là chuột / bàn phím / nút nguồn)
 
 - **Con trỏ** (`source/XP-Cursor-Sheet.dc.html`, `screen_specs.md` §17 XP-Pointer; ảnh `XPCursorSheet.png`):

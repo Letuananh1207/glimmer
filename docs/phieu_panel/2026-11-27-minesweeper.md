@@ -2,6 +2,7 @@
 
 - Trạng thái: chờ thiết kế
 - Ngày: 2026-11-27 · Nguồn: lộ trình `app/docs/tasks/2026-11-27-chuong-trinh-xp-con-thieu.md` (bạn đồng ý 2026-11-27), mục 1
+- Đã vẽ: P-2026-11-27.25
 
 ## Dán vào canvas
 
