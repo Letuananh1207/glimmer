@@ -250,7 +250,7 @@ static int waitingNow() {
 // The device never rotates channels (P-2026-11-26.14). A Photo window still
 // steps through its photos, like XP's picture viewer slideshow.
 static bool photoSlideshow() {
-    return !g_nightFace && g_activeCount && Photos::count() > 1
+    return !g_nightFace && g_activeCount && Photos::total() > 1
         && !strcmp(kChannels[g_activeIdx[g_activePtr]].name, "Photo");
 }
 

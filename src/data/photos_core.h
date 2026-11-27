@@ -5,6 +5,11 @@
 // LittleFS as /photos/p<N>.jpg; N grows with each upload, so name order =
 // upload order. The device never scales: the app / web page crops and
 // resizes before sending.
+//
+// Sample photos (like XP's "Sample Pictures") ship in the filesystem image as
+// /photos/s<N>.jpg (tools/samplephotos.py): shown after the user's photos so
+// the window is never empty, outside the kMax user slots, deletable like any
+// photo (a filesystem flash brings them back).
 #include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -12,7 +17,10 @@
 
 namespace Photos {
 
-constexpr int      kMax          = 8;            // photos kept
+constexpr int      kMax          = 8;            // user photos kept
+constexpr int      kMaxSamples   = 8;            // sample photos read at boot
+constexpr char     kUserPrefix   = 'p';
+constexpr char     kSamplePrefix = 's';
 constexpr uint32_t kMaxBytes     = 40UL * 1024;  // per photo
 constexpr uint32_t kReserveBytes = 64UL * 1024;  // LittleFS left free for config / usage / weather
 constexpr int      kSide         = 188;          // exact width = height (Layout::CONTENT_W)
@@ -118,12 +126,12 @@ inline const char* verdictCode(JpegVerdict v) {
     }
 }
 
-// ── Names: "p<N>.jpg", N = 1..999999 ────────────────────────────────────────
+// ── Names: "p<N>.jpg" (user) / "s<N>.jpg" (sample), N = 1..999999 ──────────
 
-// N of a valid photo name, 0 when [name] is not one (also guards DELETE
-// against paths: no '/', no "..").
-inline uint32_t idOf(const char* name) {
-    if (!name || name[0] != 'p') return 0;
+// N of a valid photo name with [prefix], 0 when [name] is not one (also
+// guards DELETE against paths: no '/', no "..").
+inline uint32_t idOf(const char* name, char prefix = kUserPrefix) {
+    if (!name || name[0] != prefix) return 0;
     uint32_t n = 0;
     int digits = 0;
     const char* p = name + 1;
@@ -137,12 +145,14 @@ inline uint32_t idOf(const char* name) {
     return n;
 }
 
-inline void nameOf(uint32_t id, char* buf, size_t n) { snprintf(buf, n, "p%lu.jpg", (unsigned long)id); }
+inline void nameOf(uint32_t id, char* buf, size_t n, char prefix = kUserPrefix) {
+    snprintf(buf, n, "%c%lu.jpg", prefix, (unsigned long)id);
+}
 
-// Insert [id] into the ascending list [ids] (size [n], capacity kMax).
+// Insert [id] into the ascending list [ids] (size [n], capacity [cap]).
 // Returns the new size; unchanged when full or a duplicate.
-inline int insertId(uint32_t* ids, int n, uint32_t id) {
-    if (n >= kMax || !id) return n;
+inline int insertId(uint32_t* ids, int n, uint32_t id, int cap = kMax) {
+    if (n >= cap || !id) return n;
     int i = n;
     while (i > 0 && ids[i - 1] > id) i--;
     if (i > 0 && ids[i - 1] == id) return n;

@@ -6,8 +6,9 @@
 //   26,24       photo i, 188×188 baseline JPEG decoded block by block
 //               (photos.cpp) straight onto the beige body — y 24..211
 //
-// Every draw() — i.e. every slide — moves to the next photo; an unreadable
-// one is skipped. None readable / none at all → the empty window (photo icon
+// Every draw() — i.e. every slide — moves to the next photo: the user's, then
+// the sample photos (s<N>.jpg, tools/samplephotos.py); an unreadable one is
+// skipped. None readable / none at all → the empty window (photo icon
 // ×3 xpEmptyIcon, "Chưa có ảnh", how to send one). tick() paints nothing: the
 // image is static.
 
@@ -48,7 +49,7 @@ static void drawEmpty() {
 
 void chPhotoDraw(const ChannelCtx&) {
     XP::window("Ảnh", XPCore::ICON_PHOTO, false);
-    const int n = Photos::count();
+    const int n = Photos::total();
     for (int tries = 0; tries < n; tries++) {
         int i = Photos::advance();
         if (Photos::draw(i, kPhotoX, kPhotoY)) {

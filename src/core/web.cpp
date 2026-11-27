@@ -19,6 +19,7 @@
 //   POST /mcp          — JSON-RPC: push_card, clear_card, list_cards, get_state, show/next_channel
 //   GET  /api/photos   — photos on the device + limits; POST uploads one (multipart field
 //                        "photo", baseline JPEG 188×188); DELETE /api/photos?name=p3.jpg
+//                        (or a sample photo, s2.jpg — listed apart in "samples")
 //   GET  /api/wallpaper — desktop wallpaper state + limits; POST uploads it (multipart field
 //                        "wallpaper", baseline JPEG 240×214 ≤ 40 KB); DELETE removes it
 //   The API token (when set) guards /push*, /hook, /mcp, /api/refresh, /api/channel,
@@ -219,6 +220,7 @@ static void handleApiState() {
         d[F("ntp_next")] = mainNtpLast() ? mainNtpLast() + ClockCore::kSyncEveryS : 0;
     }
     d[F("photos")]              = Photos::count();
+    d[F("photo_samples")]       = Photos::samples();
     d[F("wallpaper")]           = Wallpaper::present();
     d[F("next_fetch_s")]        = mainNextFetchInMs() / 1000;
     d[F("claude_configured")]   = pSettings && !pSettings->claudeKey.isEmpty();
@@ -810,6 +812,14 @@ static void handlePhotoList() {
         o[F("name")] = Photos::name(i, nm, sizeof(nm));
         o[F("size")] = Photos::size(i);
     }
+    // Sample photos (s<N>.jpg, shipped in the filesystem image): shown after
+    // the user's, outside max_count — listed apart so an app never counts them.
+    JsonArray sa = d[F("samples")].to<JsonArray>();
+    for (int i = Photos::count(); i < Photos::total(); i++) {
+        JsonObject o = sa.add<JsonObject>();
+        o[F("name")] = Photos::name(i, nm, sizeof(nm));
+        o[F("size")] = Photos::size(i);
+    }
     d[F("free")]        = Photos::fsFree();
     d[F("total")]       = Photos::fsTotal();
     d[F("max_count")]   = Photos::kMax;
@@ -870,8 +880,9 @@ static void handlePhotoDelete() {
         return;
     }
     JsonDocument d;
-    d[F("ok")]    = true;
-    d[F("count")] = Photos::count();
+    d[F("ok")]      = true;
+    d[F("count")]   = Photos::count();
+    d[F("samples")] = Photos::samples();
     sendJson(200, d);
 }
 

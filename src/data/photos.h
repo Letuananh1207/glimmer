@@ -13,8 +13,14 @@
 namespace Photos {
 
 void begin();                   // scan /photos/ (LittleFS already mounted)
-int  count();
-const char* name(int i, char* buf, size_t n);   // "p3.jpg"; "" when out of range
+// Indexed user photos first (0 .. count()-1, upload order), then the sample
+// photos shipped in the filesystem image (count() .. total()-1). The upload
+// limits apply to count() only.
+int  count();                   // the user's photos (p<N>.jpg)
+int  samples();                 // sample photos (s<N>.jpg)
+int  total();                   // count() + samples()
+bool isSample(int i);
+const char* name(int i, char* buf, size_t n);   // "p3.jpg" / "s2.jpg"; "" when out of range
 uint32_t size(int i);
 
 // Free LittleFS bytes (total - used) and the block size.
@@ -39,7 +45,7 @@ void        uploadWrite(const uint8_t* p, size_t n);
 const char* uploadEnd(char* savedName, size_t n);
 void        uploadAbort();
 
-// Delete by name (validated with idOf). false = no such photo.
+// Delete a user (p<N>) or sample (s<N>) photo by name. false = no such photo.
 bool remove(const char* name);
 
 }  // namespace Photos

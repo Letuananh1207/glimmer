@@ -1203,6 +1203,24 @@ void test_photo_names_order_and_rotation() {
     TEST_ASSERT_EQUAL(0, nextIndex(5, 3));
 }
 
+// Sample photos (s<N>.jpg, like XP's Sample Pictures): their own names and
+// list, never mistaken for a user photo and vice versa.
+void test_photo_sample_names() {
+    using namespace Photos;
+    TEST_ASSERT_EQUAL_UINT32(2, idOf("s2.jpg", kSamplePrefix));
+    TEST_ASSERT_EQUAL_UINT32(0, idOf("s2.jpg"));                 // not a user photo
+    TEST_ASSERT_EQUAL_UINT32(0, idOf("p2.jpg", kSamplePrefix));
+    TEST_ASSERT_EQUAL_UINT32(0, idOf("s02.jpg", kSamplePrefix));
+    TEST_ASSERT_EQUAL_UINT32(0, idOf("s2.jpg/../x", kSamplePrefix));
+    char nm[16]; nameOf(7, nm, sizeof(nm), kSamplePrefix);
+    TEST_ASSERT_EQUAL_STRING("s7.jpg", nm);
+    uint32_t ids[kMaxSamples]; int n = 0;
+    for (uint32_t k = 1; k <= kMaxSamples + 3; k++) n = insertId(ids, n, k, kMaxSamples);
+    TEST_ASSERT_EQUAL(kMaxSamples, n);                           // capped at its own size
+    TEST_ASSERT_EQUAL_UINT32(1, ids[0]);
+    TEST_ASSERT_EQUAL_UINT32(kMaxSamples, ids[kMaxSamples - 1]);
+}
+
 void test_photo_room_limits() {
     using namespace Photos;
     const uint32_t blk = 8192;
@@ -1393,6 +1411,7 @@ int main(int, char**) {
     RUN_TEST(test_clock_props_core);
     RUN_TEST(test_photo_jpeg_header_check);
     RUN_TEST(test_photo_names_order_and_rotation);
+    RUN_TEST(test_photo_sample_names);
     RUN_TEST(test_photo_room_limits);
     RUN_TEST(test_wallpaper_header_and_fallback);
     RUN_TEST(test_control_prev_and_pause);

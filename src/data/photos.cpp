@@ -8,14 +8,24 @@ namespace {
 const char* const kDir = "/photos";
 const char* const kTmp = "/photos/up.tmp";
 
-uint32_t s_ids[Photos::kMax];
+uint32_t s_ids[Photos::kMax];            // user photos p<N>, ascending
 int      s_n   = 0;
-int      s_cur = -1;
+uint32_t s_sam[Photos::kMaxSamples];     // sample photos s<N>, ascending
+int      s_ns  = 0;
+int      s_cur = -1;                     // index over user photos, then samples
 
-void pathOf(uint32_t id, char* buf, size_t n) {
+void pathOf(uint32_t id, char* buf, size_t n, char prefix = Photos::kUserPrefix) {
     char nm[16];
-    Photos::nameOf(id, nm, sizeof(nm));
+    Photos::nameOf(id, nm, sizeof(nm), prefix);
     snprintf_P(buf, n, PSTR("/photos/%s"), nm);
+}
+
+// Path of photo [i] of the combined list; false when out of range.
+bool pathAt(int i, char* buf, size_t n) {
+    if (i < 0 || i >= s_n + s_ns) return false;
+    if (i < s_n) pathOf(s_ids[i], buf, n);
+    else         pathOf(s_sam[i - s_n], buf, n, Photos::kSamplePrefix);
+    return true;
 }
 
 // ── Upload state ──
@@ -50,28 +60,35 @@ namespace Photos {
 
 void begin() {
     s_n = 0;
+    s_ns = 0;
     s_cur = -1;
     LittleFS.mkdir(kDir);
     LittleFS.remove(kTmp);               // a reboot mid-upload
     Dir d = LittleFS.openDir(kDir);
     while (d.next()) {
-        uint32_t id = idOf(d.fileName().c_str());
-        if (id && d.fileSize() > 0) s_n = insertId(s_ids, s_n, id);
+        if (d.fileSize() == 0) continue;
+        const String nm = d.fileName();
+        if (uint32_t id = idOf(nm.c_str())) s_n = insertId(s_ids, s_n, id);
+        else if ((id = idOf(nm.c_str(), kSamplePrefix))) s_ns = insertId(s_sam, s_ns, id, kMaxSamples);
     }
-    Serial.printf_P(PSTR("[photos] %d on fs, %u B free\n"), s_n, (unsigned)fsFree());
+    Serial.printf_P(PSTR("[photos] %d + %d samples on fs, %u B free\n"), s_n, s_ns, (unsigned)fsFree());
 }
 
-int count() { return s_n; }
+int  count()   { return s_n; }
+int  samples() { return s_ns; }
+int  total()   { return s_n + s_ns; }
+bool isSample(int i) { return i >= s_n && i < s_n + s_ns; }
 
 const char* name(int i, char* buf, size_t n) {
-    if (i < 0 || i >= s_n) { if (n) buf[0] = 0; return buf; }
-    nameOf(s_ids[i], buf, n);
+    if (i < 0 || i >= s_n + s_ns) { if (n) buf[0] = 0; return buf; }
+    if (i < s_n) nameOf(s_ids[i], buf, n);
+    else         nameOf(s_sam[i - s_n], buf, n, kSamplePrefix);
     return buf;
 }
 
 uint32_t size(int i) {
-    if (i < 0 || i >= s_n) return 0;
-    char p[32]; pathOf(s_ids[i], p, sizeof(p));
+    char p[32];
+    if (!pathAt(i, p, sizeof(p))) return 0;
     File f = LittleFS.open(p, "r");
     uint32_t sz = f ? f.size() : 0;
     f.close();
@@ -89,12 +106,12 @@ uint32_t fsTotal() {
     return LittleFS.info(fi) ? fi.totalBytes : 0;
 }
 
-int advance() { return s_cur = nextIndex(s_cur, s_n); }
-int current() { return s_cur < s_n ? s_cur : -1; }
+int advance() { return s_cur = nextIndex(s_cur, s_n + s_ns); }
+int current() { return s_cur < s_n + s_ns ? s_cur : -1; }
 
 bool draw(int i, int x, int y) {
-    if (i < 0 || i >= s_n) return false;
-    char p[32]; pathOf(s_ids[i], p, sizeof(p));
+    char p[32];
+    if (!pathAt(i, p, sizeof(p))) return false;
     // Workspace + file handle ≈ 3.7 KB. The VLW font (2-5 KB of glyph
     // metrics) is the only big thing we can drop to make room.
     if (ESP.getMaxFreeBlockSize() < kWork + 1024) Display::releaseFont();
@@ -184,15 +201,23 @@ const char* uploadEnd(char* savedName, size_t n) {
 }
 
 bool remove(const char* nm) {
-    uint32_t id = idOf(nm);
-    if (!id) return false;
-    int before = s_n;
-    s_n = removeId(s_ids, s_n, id);
-    if (s_n == before) return false;
-    char p[32]; pathOf(id, p, sizeof(p));
+    char p[32];
+    if (uint32_t id = idOf(nm)) {
+        int before = s_n;
+        s_n = removeId(s_ids, s_n, id);
+        if (s_n == before) return false;
+        pathOf(id, p, sizeof(p));
+    } else if ((id = idOf(nm, kSamplePrefix))) {
+        int before = s_ns;
+        s_ns = removeId(s_sam, s_ns, id);
+        if (s_ns == before) return false;
+        pathOf(id, p, sizeof(p), kSamplePrefix);
+    } else {
+        return false;
+    }
     LittleFS.remove(p);
     // Keep the cursor on the same next photo where possible.
-    if (s_cur >= s_n) s_cur = s_n - 1;
+    if (s_cur >= s_n + s_ns) s_cur = s_n + s_ns - 1;
     return true;
 }
 
