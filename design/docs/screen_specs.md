@@ -217,6 +217,8 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
 
 ## 6. Skill — `SkillsScreen` (Skills.png, SkillsSwitching.png, SkillsError.png, SkillsLegacy.png, SkillsLastOne.png, SkillsPhotoHint.png, SkillsPhotoFirmware.png, SkillsFunOn.png, SkillsFunSending.png, SkillsFunFw.png, SkillsFunLastOne.png)
 
+> **2026-11-28.14 — Sửa chữ cũ:** `skillsSubtitle` → "Mỗi skill bật là một chương trình trên máy."; `skillsOrderNote` → "Mỗi skill bật thêm chương trình vào desktop và Start của thiết bị. Thẻ cần duyệt vẫn chen ngang mọi màn." (thiết bị không còn dock / tự xoay, P-2026-11-26.14). Bố cục không đổi; ảnh `Skills*.png` chụp lại.
+
 > **2026-11-28.13 — Hàng skill Giải trí (Dò mìn)** (phiếu `app/docs/phieu_thiet_ke/2026-11-27-skill-giai-tri.md`; R-SK-1, R-SK-2, R-SK-4, R-DK-23): Giải trí thành `SkillRow` thật,
 > đứng cuối (thứ tự dock: Agent, Ảnh, Thời tiết, Đồng hồ, Giải trí), **mặc định tắt**. Icon `icons/dock-fun.svg` (quả mìn pixel
 > 15×15, ×1.5 = 22,5) màu `skillFun` khi bật / muted khi tắt; nền ô `skillFunTint` / `panel2`. Mô tả `skillFunDesc` (đổi chữ).

@@ -5,6 +5,17 @@ widget và việc cần làm — không ghi đường dẫn file hay cách code.
 
 ---
 
+## 2026-11-28.14 — Màn Skill: bỏ chữ cũ về dock và xoay tab
+
+- **Skill · `SkillsScreen`** (`source/Skills.dc.html`, `screen_specs.md` §6; ảnh `Skills*.png` chụp lại):
+  - `skillsSubtitle`: "Mỗi skill bật là một tab trên dock thiết bị." → "Mỗi skill bật là một chương trình trên máy."
+  - `skillsOrderNote`: "Thiết bị xoay các tab theo thứ tự trên…" → "Mỗi skill bật thêm chương trình vào desktop và Start của
+    thiết bị. Thẻ cần duyệt vẫn chen ngang mọi màn." (thiết bị không còn dock / tự xoay từ P-2026-11-26.14).
+  - Bố cục, số đo không đổi.
+
+**Việc cần làm trong code:**
+- `SkillsScreen`: lấy chữ mới của hai khoá trên.
+
 ## 2026-11-28.13 — Skill Giải trí (Dò mìn) bật / tắt được trên màn Skill
 
 - **Skill · `SkillsScreen`** (`source/Skills.dc.html`, `screen_specs.md` §6; ảnh `Skills*.png`, 4 ảnh mới `SkillsFun*.png`):

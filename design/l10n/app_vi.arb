@@ -735,9 +735,9 @@
   "@skillsTitle": {
     "description": "Tiêu đề màn Skill"
   },
-  "skillsSubtitle": "Mỗi skill bật là một tab trên dock thiết bị.",
+  "skillsSubtitle": "Mỗi skill bật là một chương trình trên máy.",
   "@skillsSubtitle": {
-    "description": "Phụ đề màn Skill"
+    "description": "Dòng phụ dưới tiêu đề màn Skill (đổi 2026-11-28.14)"
   },
   "skillsCurrent": "Đang dùng",
   "@skillsCurrent": {
@@ -918,9 +918,9 @@
   "@skillsAlwaysOn": {
     "description": "Mô tả Thời tiết / Đồng hồ khi firmware cũ"
   },
-  "skillsOrderNote": "Thiết bị xoay các tab theo thứ tự trên. Thẻ cần duyệt vẫn chen ngang mọi tab.",
+  "skillsOrderNote": "Mỗi skill bật thêm chương trình vào desktop và Start của thiết bị. Thẻ cần duyệt vẫn chen ngang mọi màn.",
   "@skillsOrderNote": {
-    "description": "Chú thích dưới danh sách (R-SK-3)"
+    "description": "Ghi chú dưới danh sách skill (đổi 2026-11-28.14: thiết bị không còn xoay tab / dock)"
   },
   "skillsSoonTitle": "SẮP CÓ",
   "@skillsSoonTitle": {
