@@ -418,6 +418,10 @@ inline int altTabSel(int sel, int n) {
     return sel % n;
 }
 
+// L-11: Tắt máy tính's dotted shade covers the taskbar too (all 240×240): when it goes, the taskbar is drawn whole —
+// its incremental update would leave the shade on it (the cursor then "wipes" it where it passes).
+inline bool shadesTaskbar(MenuKind k) { return k == MENU_TURNOFF; }
+
 inline int menuW(MenuKind k) {
     return k == MENU_START || k == MENU_TURNOFF ? 240 : k == MENU_DESKTOP ? kMenuDeskW : kMenuWinW;
 }

@@ -589,6 +589,7 @@ void mainSetScreenOn(bool on) {
     if (!on && g_menu.kind == XPCore::MENU_TURNOFF) {
         g_menu = Control::Menu();
         drawActive();
+        if (Taskbar::shown()) Taskbar::draw(barState(millis()), g_settings.clock24h);   // L-11: the shade off it
     }
     applyBrightness();
 }
@@ -681,6 +682,7 @@ bool mainSetMenu(const Control::Menu& m) {
     // Alt+Tab with no window open: XP shows no box (P-2026-11-28.29).
     if (m.kind == XPCore::MENU_ALTTAB && !g_windows.n) return false;
     const bool wasOpen = g_menu.kind != XPCore::MENU_NONE;
+    const bool unshade = XPCore::shadesTaskbar(g_menu.kind) && !XPCore::shadesTaskbar(m.kind);   // L-11
     const bool startToStart = wasOpen && g_menu.kind == XPCore::MENU_START && m.kind == XPCore::MENU_START;
     const bool hoverOnly = wasOpen && Control::sameMenu(g_menu, m);
     const Control::Menu was = litMenu();
@@ -700,8 +702,10 @@ bool mainSetMenu(const Control::Menu& m) {
     } else if (wasOpen) {
         drawActive();
     }
-    // The start button (not under Tắt máy tính's shade: drawActive() already released it).
-    if (Taskbar::shown() && g_menu.kind != XPCore::MENU_TURNOFF) Taskbar::update(barState(millis()), g_settings.clock24h);
+    // The start button (not under Tắt máy tính's shade: drawActive() already released it). L-11: the shade gone →
+    // the whole taskbar again.
+    if (unshade && Taskbar::shown()) Taskbar::draw(barState(millis()), g_settings.clock24h);
+    else if (Taskbar::shown() && g_menu.kind != XPCore::MENU_TURNOFF) Taskbar::update(barState(millis()), g_settings.clock24h);
     Cursor::overlay();
     return true;
 }

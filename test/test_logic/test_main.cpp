@@ -2143,6 +2143,14 @@ void test_input_keys() {
     TEST_ASSERT_EQUAL(ACT_TURNOFF_CLOSE, keyAction(t, KEY_ESC, 0, false).kind);
 }
 
+// L-11: Tắt máy tính's shade covers the taskbar; closing it redraws the taskbar whole.
+void test_turnoff_shade_redraws_taskbar() {
+    TEST_ASSERT_TRUE(XPCore::shadesTaskbar(XPCore::MENU_TURNOFF));
+    TEST_ASSERT_FALSE(XPCore::shadesTaskbar(XPCore::MENU_START));
+    TEST_ASSERT_FALSE(XPCore::shadesTaskbar(XPCore::MENU_DESKTOP));
+    TEST_ASSERT_FALSE(XPCore::shadesTaskbar(XPCore::MENU_NONE));
+}
+
 void test_explorer_core() {
     using namespace ExplorerCore;
     char b[48];
@@ -2263,5 +2271,6 @@ int main(int, char**) {
     RUN_TEST(test_windows_z_order);
     RUN_TEST(test_input_context_menus);
     RUN_TEST(test_input_keys);
+    RUN_TEST(test_turnoff_shade_redraws_taskbar);
     return UNITY_END();
 }

@@ -131,6 +131,22 @@ Mức độ: `chặn dùng` · `khó chịu` · `nhỏ` (chữ, giao diện).
 **Lịch sử**
 - 2026-11-28: ghi; tạm trỏ hook vào IP; bạn chọn tên riêng tự sinh; sửa.
 
+### L-11 · Đóng hộp Tắt máy tính: thanh tác vụ còn vệt đen, chuột đi qua đâu mới sạch đến đấy
+
+- Trạng thái: chờ thử máy · Mức độ: khó chịu · Phần: firmware `main.cpp` `mainSetMenu` / `mainSetScreenOn`, `xp_turnoff` · Quy tắc: "Tắt máy tính" (`CLAUDE.md` Mouse, keyboard, power)
+- Báo: 2026-11-28 — "sau khi vào cửa sổ phần lựa chọn tắt nguồn và tắt ra thì ở thanh công cụ bị ám màu đen, di chuyển chuột qua đến đâu thì các vệt màu hết đến đấy"
+- Các bước: 1. Mở hộp Tắt máy tính (Start › Tắt máy, hoặc Alt+F4 ở desktop). 2. Hủy / Esc (hoặc Chờ).
+- Mong đợi / thực tế: màn và thanh tác vụ như trước khi mở hộp / thanh tác vụ còn lớp chấm tối của hộp; con trỏ vẽ lại ô dưới nó nên vệt tối mất dần theo đường chuột.
+
+**Sửa**
+- Nguyên nhân: lớp chấm tối của hộp phủ cả 240×240, kể cả thanh tác vụ; đóng hộp thì `drawActive()` coi thanh tác vụ vẫn còn nguyên và chỉ vẽ lại nút đổi (`Taskbar::update`). Có từ khi có hộp (P-2026-11-27.24), cả khi app điều khiển.
+- Test: `test_turnoff_shade_redraws_taskbar` (`XPCore::shadesTaskbar`) — native.
+- Code: `xp_core.h` `shadesTaskbar()`; `main.cpp` `mainSetMenu` vẽ lại cả thanh tác vụ (`Taskbar::draw`) khi hộp đóng / thay bằng menu khác; `mainSetScreenOn` (Chờ) cũng vậy.
+- Thử máy: mở hộp Tắt máy tính → Hủy: thanh tác vụ sạch ngay, không cần rê chuột. Thử cả Esc và Chờ (bật màn lại).
+
+**Lịch sử**
+- 2026-11-28: ghi, sửa (95/95 native), đã nạp — chờ bạn thử.
+
 ## Đã xong
 
 ### L-8 · Di chuột trên cửa sổ Ảnh, Thời tiết...: chỗ con trỏ hiện ô trắng tạm thời
