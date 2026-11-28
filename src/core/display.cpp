@@ -535,8 +535,7 @@ static void italic(const uint8_t* bits, int w, int h, int x, int y) {
     XP::drawBits(bits, w, h, x, y, Theme::XP::WHITE);
 }
 
-// Log-on screen (XP-SetupMode): flag + "Window xp" + hint on the left, the
-// selected "user" tile (= the setup network) on the right, power button.
+// Setup QR (R-WF-4): white tile + black modules, quiet zone inside the tile.
 bool Display::drawSetupQr(int16_t x, int16_t y, uint8_t module, const char* ssid) {
     char text[SetupQr::kMaxBytes + 1];
     if (!SetupQr::payload(text, sizeof(text), ssid)) return false;
@@ -559,37 +558,19 @@ bool Display::drawSetupQr(int16_t x, int16_t y, uint8_t module, const char* ssid
     return true;
 }
 
-void Display::drawSetupMode(const char* ap, const char* ip) {
+// Log-on screen (XP-SetupMode, P-2026-11-28.26): flag + "Window xp" in the top
+// band, the Wi-Fi QR in the middle, "Quét mã..." under it, power button +
+// "Cài đặt Wi-Fi" and the AP name (fallback: join it by hand) in the bottom band.
+// Painted once; the ip argument is no longer shown.
+void Display::drawSetupMode(const char* ap, const char*) {
     using namespace Theme::XP;
     resetSystemScreens();
     welcomeChrome();
-    XP::drawFlag(70, 74, 2);
-    italic(kWindowBits, 63, 12, 12, 102);
-    sysText("JBMono-11", "xp", 81, 103, WELCOME_ORANGE, WELCOME);
-    sysText("JBMono-11", "Để bắt đầu,", 14, 126, WHITE, WELCOME);
-    sysText("JBMono-11", "kết nối Wi-Fi", 14, 140, WHITE, WELCOME);
-    tft.drawFastVLine(116, 40, 30, DIVIDER_FADE);
-    tft.drawFastVLine(116, 70, 100, DIVIDER);
-    tft.drawFastVLine(116, 170, 30, DIVIDER_FADE);
-    tft.fillRect(124, 86, 112, 50, USER_SEL);
-    tft.drawFastHLine(124, 86, 112, USER_SEL_HI);
-    tft.fillRect(130, 92, 24, 24, WHITE);
-    tft.fillRect(132, 94, 20, 20, USER_PIC);
-    drawClawd(133, 99, 1, CLAWD_ORANGE, CLAWD_OPEN, false, USER_PIC);
-    // Theo XP thật a long user name wraps under itself: "glimmer-" / "setup".
-    char l1[24], l2[24];
-    const char* dash = strchr(ap, '-');
-    if (dash && dash[1]) {
-        size_t n = (size_t)(dash - ap) + 1;
-        if (n >= sizeof(l1)) n = sizeof(l1) - 1;
-        memcpy(l1, ap, n); l1[n] = '\0';
-        Utf8::copy(l2, sizeof(l2), dash + 1);
-    } else {
-        Utf8::copy(l1, sizeof(l1), ap); l2[0] = '\0';
-    }
-    sysText("JBMono-12B", l1, 158, 92, WHITE, USER_SEL);
-    if (l2[0]) sysText("JBMono-12B", l2, 158, 106, WHITE, USER_SEL);
-    sysText("JBMono-11", ip, 158, 121, WELCOME_SUB, USER_SEL);
+    XP::drawFlag(8, 3, 2);
+    italic(kWindowBits, 63, 12, 40, 9);
+    sysText("JBMono-11", "xp", 110, 8, WELCOME_ORANGE, WELCOME_BAND);
+    drawSetupQr(46, 35, 4, ap);
+    sysText("JBMono-11", "Quét mã bằng app glimmer", SCREEN_W / 2, 187, WHITE, WELCOME, TC_DATUM);
     tft.fillRect(8, 218, 14, 14, WHITE);
     tft.fillRect(9, 219, 12, 12, CLOSE);
     tft.fillRect(14, 221, 2, 5, WHITE);
@@ -597,6 +578,7 @@ void Display::drawSetupMode(const char* ap, const char* ip) {
     tft.fillRect(18, 223, 1, 5, WHITE);
     tft.fillRect(12, 228, 6, 1, WHITE);
     sysText("JBMono-11", "Cài đặt Wi-Fi", 28, 219, WHITE, WELCOME_BAND);
+    sysText("JBMono-11", ap, 141, 219, WELCOME_SUB, WELCOME_BAND);
     s_sysScreen = SYS_SETUP;
 }
 

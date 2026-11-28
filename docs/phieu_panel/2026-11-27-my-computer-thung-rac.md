@@ -1,6 +1,6 @@
 # Phiếu màn thiết bị: My Computer / Explorer + mở Thùng rác
 
-- Trạng thái: đã vẽ (P-2026-11-28.32) — chờ áp
+- Trạng thái: đã áp (P-2026-11-28.32)
 - Đã vẽ: P-2026-11-28.32
 - Ngày: 2026-11-27 · Nguồn: lộ trình `app/docs/tasks/2026-11-27-chuong-trinh-xp-con-thieu.md` (bạn đồng ý 2026-11-27), mục 3
 

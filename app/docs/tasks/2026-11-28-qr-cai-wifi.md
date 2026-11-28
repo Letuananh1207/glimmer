@@ -68,7 +68,7 @@ Không dính giao diện (làm trước):
   `app/docs/phieu_thiet_ke/2026-11-28-quet-qr-cai-wifi.md` (qua `/ui-apply phieu`).
 
 Chờ thiết kế:
-- [ ] 7. Vẽ QR trên log-on (`display.cpp` `drawSetupMode`, `tools/screens.py`) — chờ thiết kế: phiếu panel QR log-on.
+- [x] 7. Vẽ QR trên log-on (`display.cpp` `drawSetupMode`, `tools/screens.py`) — áp P-2026-11-28.26 (2026-11-28).
 - [ ] 8. Màn quét + bước chỉ hỏi mật khẩu + nút quét ở Kết nối / Wi-Fi, route, l10n, quyền camera — chờ thiết kế:
   phiếu app quét QR.
 - [ ] 9. Thử máy thật: nạp firmware, xoá Wi-Fi để vào AP, quét bằng app, lần hai quét không hỏi.

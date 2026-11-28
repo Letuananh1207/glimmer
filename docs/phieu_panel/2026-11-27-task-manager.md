@@ -1,6 +1,6 @@
 # Phiếu màn thiết bị: Task Manager (Trình quản lý tác vụ)
 
-- Trạng thái: đã vẽ (P-2026-11-28.28) — chờ áp
+- Trạng thái: đã áp (P-2026-11-28.28) — còn thiếu mục "Trình quản lý tác vụ" trong menu chuột phải thanh tác vụ (chờ thiết kế menu thanh tác vụ)
 - Đã vẽ: P-2026-11-28.28
 - Ngày: 2026-11-27 · Nguồn: lộ trình `app/docs/tasks/2026-11-27-chuong-trinh-xp-con-thieu.md` (bạn đồng ý 2026-11-27), mục 2
 

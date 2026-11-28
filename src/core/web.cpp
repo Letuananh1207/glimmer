@@ -85,6 +85,21 @@ extern const Control::Menu& mainMenu();
 extern bool        mainSetMenu(const Control::Menu& m);
 extern void        mainSetPower(bool on);
 extern void        mainSetMines(const Mines::View& v);
+#include "perf_core.h"
+#include "xp_alttab.h"
+extern void        mainSetTaskMgr(const Perf::View& v);
+#include "display_core.h"
+extern void        mainSetDisplay(const DisplayCore::View& v);
+extern const DisplayCore::View& mainDisplayView();
+#include "calc_core.h"
+extern void        mainSetCalc(const CalcCore::View& v);
+extern const CalcCore::View& mainCalcView();
+#include "explorer_core.h"
+#include "trash.h"
+extern bool        mainSetExplorer(const ExplorerCore::View& v, const char* what);
+extern const ExplorerCore::View& mainExplorerView();
+extern const Perf::View& mainTaskMgrView();
+extern const Perf::History& mainPerf();
 extern const Mines::View& chMinesView();
 extern void        mainRestart();
 extern int         mainHot();
@@ -216,7 +231,15 @@ static void handleApiState() {
         if (w.sel >= 0) wo[F("sel")] = XPCore::progName(w.sel); else wo[F("sel")] = nullptr;
         const XPCore::MenuKind k = mainMenu().kind;
         d[F("menu")] = k == XPCore::MENU_DESKTOP ? "desktop" : k == XPCore::MENU_WINDOW ? "window"
-                     : k == XPCore::MENU_START ? "start" : k == XPCore::MENU_TURNOFF ? "turnoff" : "none";
+                     : k == XPCore::MENU_START ? "start" : k == XPCore::MENU_TURNOFF ? "turnoff"
+                     : k == XPCore::MENU_ALTTAB ? "alttab" : "none";
+        if (k == XPCore::MENU_ALTTAB) {   // P-2026-11-28.29: the tiles in order + the one chosen
+            int8_t list[XPCore::PROG_COUNT];
+            const int n = XPAltTab::order(list);
+            JsonArray at = d[F("alttab")].to<JsonArray>();
+            for (int i = 0; i < n; i++) at.add(XPCore::progName(list[i]));
+            d[F("alttab_sel")] = XPCore::altTabSel(mainMenu().hover, n);
+        }
         d[F("menu_hover")] = mainMenu().hover;
         d[F("menu_sub")] = mainMenu().sub;
         d[F("hot")] = mainHot();   // P-2026-11-27.24: button under the cursor (slot 0.., 10 = _, 11 = ×, -1)
@@ -245,6 +268,35 @@ static void handleApiState() {
         o[F("count")] = ps.count;
     }
     d[F("power")]               = mainPowerName();
+    {   // Trình quản lý tác vụ (P-2026-11-28.28): present = this firmware draws it; cpu = the last second.
+        const Perf::View& tv = mainTaskMgrView();
+        const Perf::History& ph = mainPerf();
+        JsonObject to = d[F("taskmgr")].to<JsonObject>();
+        to[F("tab")] = tv.tab;
+        to[F("sel")] = tv.sel;
+        to[F("cpu")] = ph.cpu.n ? ph.cpu.at(ph.cpu.n - 1) : 0;
+    }
+    {   // Thuộc tính màn hình (P-2026-11-28.30): present = this firmware draws it.
+        const DisplayCore::View& dv = mainDisplayView();
+        JsonObject dob = d[F("display")].to<JsonObject>();
+        dob[F("tab")] = dv.tab;
+        dob[F("list")] = dv.list;
+    }
+    {   // Máy tính bỏ túi (P-2026-11-28.31): present = this firmware draws it.
+        const CalcCore::View& cv = mainCalcView();
+        JsonObject co = d[F("calc")].to<JsonObject>();
+        co[F("display")] = cv.display;
+        co[F("error")] = cv.error;
+        co[F("mem")] = cv.mem;
+    }
+    {   // Explorer (P-2026-11-28.32): present = this firmware draws it; trash = items in the Recycle Bin.
+        const ExplorerCore::View& ev = mainExplorerView();
+        JsonObject eo = d[F("explorer")].to<JsonObject>();
+        eo[F("place")] = ev.place == ExplorerCore::PLACE_PHOTOS ? "photos"
+                       : ev.place == ExplorerCore::PLACE_TRASH ? "trash" : "computer";
+        eo[F("sel")] = ev.sel;
+        eo[F("trash")] = Trash::count();
+    }
     {   // Dò mìn (P-2026-11-27.25): present = this firmware draws it; the app keeps the game.
         const Mines::View& mv = chMinesView();
         JsonObject mo = d[F("mines")].to<JsonObject>();
@@ -398,6 +450,7 @@ static void handleApiGetSettings() {
     d[F("codexWeeklyHero")]  = s.codexWeeklyHero;
     d[F("clock24h")]      = s.clock24h;
     d[F("invertDisplay")] = s.invertDisplay;
+    d[F("wallpaperMode")] = s.wallpaperMode;
     d[F("nightMode")]     = s.nightMode;
     d[F("nightStartMin")] = s.nightStartMin;
     d[F("nightEndMin")]   = s.nightEndMin;
@@ -501,6 +554,7 @@ static void applyIfPresent(Settings& s, JsonDocument& d) {
     applyBool("codexWeeklyHero",  s.codexWeeklyHero);
     applyBool("clock24h",     s.clock24h);
     applyBool("invertDisplay",s.invertDisplay);
+    applyU8 ("wallpaperMode", s.wallpaperMode, 0, 2);   // P-2026-11-28.30: 0 (Không), 1 Đồi xanh, 2 your photo
     applyBool("useFahrenheit", s.useFahrenheit);
     applyFloat("weatherLat", s.weatherLat);
     applyFloat("weatherLon", s.weatherLon);
@@ -1164,14 +1218,17 @@ void Web::begin(Settings& settings) {
         m.kind = !strcmp(kind, "desktop") ? XPCore::MENU_DESKTOP
                : !strcmp(kind, "window")  ? XPCore::MENU_WINDOW
                : !strcmp(kind, "start")   ? XPCore::MENU_START
-               : !strcmp(kind, "turnoff") ? XPCore::MENU_TURNOFF : XPCore::MENU_NONE;
+               : !strcmp(kind, "turnoff") ? XPCore::MENU_TURNOFF
+               : !strcmp(kind, "alttab")  ? XPCore::MENU_ALTTAB : XPCore::MENU_NONE;
         m.all = d["all"] | false;            // Start menu: All Programs open
         int x = d[F("x")] | 0, y = d[F("y")] | 0;
-        if (m.kind != XPCore::MENU_NONE) XPCore::menuClamp(m.kind, x, y);
+        if (m.kind != XPCore::MENU_NONE && m.kind != XPCore::MENU_ALTTAB) XPCore::menuClamp(m.kind, x, y);
+        else x = y = 0;
         m.x = (int16_t)x;
         m.y = (int16_t)y;
         m.minimized = d[F("minimized")] | false;
         m.hover = (int8_t)(d[F("hover")] | -1);
+        if (m.kind == XPCore::MENU_ALTTAB) m.hover = (int8_t)(d[F("sel")] | -1);   // the tile chosen (−1 = XP's 2nd)
         m.sub = (int8_t)(d[F("sub")] | -1);   // Start › All Programs row (P-2026-11-27.24)
         if (!mainSetMenu(m)) {
             server.send_P(409, PSTR("application/json"), PSTR("{\"error\":\"no menu on this screen\"}"));
@@ -1224,6 +1281,113 @@ void Web::begin(Settings& settings) {
     server.on("/api/photos",         HTTP_GET,    handlePhotoList);
     server.on("/api/photos",         HTTP_POST,   handlePhotoUploadDone, handlePhotoUploadChunk);
     server.on("/api/photos",         HTTP_DELETE, handlePhotoDelete);
+    // Trình quản lý tác vụ (P-2026-11-28.28): {"tab": 0 Ứng dụng | 1 Hiệu năng | 2 Mạng, "sel": row of Ứng dụng
+    // (−1 none; rows = the open windows but Task Manager, in opening order)}. Kết thúc tác vụ = /api/windows.
+    server.on("/api/taskmgr",        HTTP_POST, []() {
+        if (!checkAuth()) { server.send_P(401, PSTR("application/json"), PSTR("{\"error\":\"unauthorized\"}")); return; }
+        JsonDocument d;
+        if (deserializeJson(d, server.arg("plain"))) {
+            server.send_P(400, PSTR("application/json"), PSTR("{\"error\":\"bad json\"}"));
+            return;
+        }
+        Perf::View v = mainTaskMgrView();
+        if (d[F("tab")].is<int>()) {
+            const int t = d[F("tab")];
+            if (t < 0 || t >= Perf::kTabs) {
+                server.send_P(400, PSTR("application/json"), PSTR("{\"error\":\"tab 0..2\"}"));
+                return;
+            }
+            v.tab = (uint8_t)t;
+        }
+        if (d[F("sel")].is<int>()) { const int r = d[F("sel")]; v.sel = (int8_t)(r < -1 ? -1 : r > 15 ? 15 : r); }
+        mainSetTaskMgr(v);
+        server.send_P(200, PSTR("application/json"), PSTR("{\"ok\":true}"));
+    });
+
+    // Thuộc tính màn hình (P-2026-11-28.30): the window as the app touched it — {"tab": 0 Màn nền |
+    // 1 Bảo vệ màn hình | 2 Cài đặt, "wall": 0..2, "saver": 0..3, "list": the mode list open, "bright":
+    // 5..100, "invert", "idle", "down": 0 OK | 1 Hủy | 2 Áp dụng | -1}. Pending values only (−1 / missing =
+    // the saved setting); OK / Áp dụng = the app's POST /api/settings. The whole view each time.
+    server.on("/api/display",        HTTP_POST, []() {
+        if (!checkAuth()) { server.send_P(401, PSTR("application/json"), PSTR("{\"error\":\"unauthorized\"}")); return; }
+        JsonDocument d;
+        if (deserializeJson(d, server.arg("plain"))) {
+            server.send_P(400, PSTR("application/json"), PSTR("{\"error\":\"bad json\"}"));
+            return;
+        }
+        DisplayCore::View v;
+        const int tab = d[F("tab")] | 0;
+        if (tab < 0 || tab >= DisplayCore::TAB_COUNT) {
+            server.send_P(400, PSTR("application/json"), PSTR("{\"error\":\"tab 0..2\"}"));
+            return;
+        }
+        auto clampOr = [](int x, int lo, int hi) { return (int8_t)(x < 0 ? -1 : x < lo ? lo : x > hi ? hi : x); };
+        v.tab    = (uint8_t)tab;
+        v.wall   = clampOr(d[F("wall")] | -1, 0, 2);
+        v.saver  = clampOr(d[F("saver")] | -1, 0, 3);
+        v.list   = d[F("list")] | false;
+        v.bright = clampOr(d[F("bright")] | -1, 5, 100);
+        v.invert = d[F("invert")].is<bool>() ? (int8_t)(d[F("invert")].as<bool>() ? 1 : 0) : (int8_t)-1;
+        v.idle   = d[F("idle")].is<bool>() ? (int8_t)(d[F("idle")].as<bool>() ? 1 : 0) : (int8_t)-1;
+        v.down   = clampOr(d[F("down")] | -1, 0, 2);
+        mainSetDisplay(v);
+        server.send_P(200, PSTR("application/json"), PSTR("{\"ok\":true}"));
+    });
+
+    // Máy tính bỏ túi (P-2026-11-28.31): the app keeps the arithmetic — {"display": "56088." (≤ 16 chars),
+    // "error": true = "Không thể chia cho 0.", "mem": memory not empty, "down": key held (0..23 the grid
+    // row by row, 24 Backspace, 25 CE, 26 C, −1 none)}. Missing fields keep what is shown.
+    server.on("/api/calc",           HTTP_POST, []() {
+        if (!checkAuth()) { server.send_P(401, PSTR("application/json"), PSTR("{\"error\":\"unauthorized\"}")); return; }
+        JsonDocument d;
+        if (deserializeJson(d, server.arg("plain"))) {
+            server.send_P(400, PSTR("application/json"), PSTR("{\"error\":\"bad json\"}"));
+            return;
+        }
+        CalcCore::View v = mainCalcView();
+        if (d[F("display")].is<const char*>()) CalcCore::setDisplay(v, d[F("display")].as<const char*>());
+        if (d[F("error")].is<bool>()) v.error = d[F("error")];
+        if (d[F("mem")].is<bool>()) v.mem = d[F("mem")];
+        if (d[F("down")].is<int>()) {
+            const int k = d[F("down")];
+            v.down = (int8_t)(k < 0 || k >= CalcCore::KEY_COUNT ? CalcCore::KEY_NONE : k);
+        }
+        mainSetCalc(v);
+        server.send_P(200, PSTR("application/json"), PSTR("{\"ok\":true}"));
+    });
+
+    // Máy tính / Ảnh của tôi / Thùng rác (P-2026-11-28.32): {"place": "computer" | "photos" | "trash",
+    // "sel": photo index (photos: user photos then samples, as /api/photos) / bin row, −1 none, "top": first
+    // thumbnail row shown, "confirm": "none" | "delete" | "empty", "do": "delete" | "restore" | "empty" |
+    // "open"} — "do" acts on the selection the device had before this call, then the new view shows.
+    // 409 = the action could not be done (no such item, bin full, file system).
+    server.on("/api/explorer",       HTTP_POST, []() {
+        if (!checkAuth()) { server.send_P(401, PSTR("application/json"), PSTR("{\"error\":\"unauthorized\"}")); return; }
+        JsonDocument d;
+        if (deserializeJson(d, server.arg("plain"))) {
+            server.send_P(400, PSTR("application/json"), PSTR("{\"error\":\"bad json\"}"));
+            return;
+        }
+        ExplorerCore::View v = mainExplorerView();
+        if (d[F("place")].is<const char*>()) {
+            const char* pl = d[F("place")];
+            v.place = !strcmp(pl, "photos") ? ExplorerCore::PLACE_PHOTOS
+                    : !strcmp(pl, "trash")  ? ExplorerCore::PLACE_TRASH : ExplorerCore::PLACE_COMPUTER;
+        }
+        if (d[F("sel")].is<int>()) { const int x = d[F("sel")]; v.sel = (int8_t)(x < -1 ? -1 : x > 31 ? 31 : x); }
+        if (d[F("top")].is<int>()) { const int x = d[F("top")]; v.top = (uint8_t)(x < 0 ? 0 : x > 7 ? 7 : x); }
+        if (d[F("confirm")].is<const char*>()) {
+            const char* c = d[F("confirm")];
+            v.confirm = !strcmp(c, "delete") ? ExplorerCore::CONFIRM_DELETE
+                      : !strcmp(c, "empty")  ? ExplorerCore::CONFIRM_EMPTY : ExplorerCore::CONFIRM_NONE;
+        }
+        if (!mainSetExplorer(v, d[F("do")] | "")) {
+            server.send_P(409, PSTR("application/json"), PSTR("{\"error\":\"could not do that\"}"));
+            return;
+        }
+        server.send_P(200, PSTR("application/json"), PSTR("{\"ok\":true}"));
+    });
+
     server.on("/api/photos/source",  HTTP_POST,   handlePhotoSource);
     server.on("/api/wallpaper",      HTTP_GET,    handleWallpaperGet);
     server.on("/api/wallpaper",      HTTP_POST,   handleWallpaperUploadDone, handleWallpaperChunk);

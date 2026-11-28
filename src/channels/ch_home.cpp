@@ -29,6 +29,8 @@
 #include "chrome.h"
 #include "utf8.h"
 #include "xp.h"
+#include "trash.h"
+#include "xp_icons.h"
 #include "wallpaper.h"
 #include "desk_wallpaper.h"
 #include "desk_icons.h"
@@ -172,7 +174,12 @@ static void drawIcon(int i) {
         case XPCore::PROG_MINES:                                                                        // P-2026-11-27.25
             drawRuns(MinesIcons::kDeskMinesRuns, MinesIcons::kDeskMinesRunCount, MinesIcons::kDeskMinesPal, cx - 16, y, sel);
             break;
-        default:                 drawRuns(kTrashRuns, kTrashRunCount, kTrashPal, cx - 16, y, sel); break;   // Recycle Bin
+        default:                                                                                        // Recycle Bin
+            if (Trash::count())                                    // P-2026-11-28.32: papers in it (XP-Desk-TrashFull)
+                drawRuns(XpIcons::kTrashFullRuns, XpIcons::kTrashFullRunCount, XpIcons::kTrashFullPal, cx - 16, y, sel);
+            else
+                drawRuns(kTrashRuns, kTrashRunCount, kTrashPal, cx - 16, y, sel);
+            break;
     }
 }
 

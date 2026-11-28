@@ -42,6 +42,12 @@
 #include "pointer_core.h"
 #include "mines_core.h"
 #include "clock_core.h"
+#include "perf_core.h"
+#include "display_core.h"
+#include "calc_core.h"
+#include "explorer_core.h"
+#include "trash.h"
+#include "xp_alttab.h"
 #include "cursor.h"
 #include <coredecls.h>
 
@@ -61,7 +67,8 @@ extern bool chNightEnabled   (const ChannelCtx&); extern void chNightDraw   (con
 extern bool chSetupEnabled   (const ChannelCtx&); extern void chSetupDraw   (const ChannelCtx&);
 extern bool chPhotoEnabled   (const ChannelCtx&); extern void chPhotoDraw   (const ChannelCtx&);
 extern bool chPhotoEmpty();
-extern void chPhotoRequestStep();   // the slideshow's next draw() moves to the next photo
+extern void chPhotoRequestStep();
+extern void chPhotoTick       (const ChannelCtx&);   // the slideshow's next draw() moves to the next photo
 extern void chAttentionTick  (const ChannelCtx&);
 extern void chAgentsTick     (const ChannelCtx&);
 extern void chClockTick      (const ChannelCtx&);
@@ -77,6 +84,23 @@ extern void chNightTick      (const ChannelCtx&);
 extern bool chMinesEnabled   (const ChannelCtx&); extern void chMinesDraw   (const ChannelCtx&);
 extern void chMinesTick      (const ChannelCtx&);
 extern void chMinesSet(const Mines::View& v, bool onScreen);
+// Trình quản lý tác vụ (P-2026-11-28.28).
+extern bool chTaskMgrEnabled (const ChannelCtx&); extern void chTaskMgrDraw (const ChannelCtx&);
+extern void chTaskMgrTick    (const ChannelCtx&);
+extern bool chTaskMgrPointer (int x, int y);
+// Thuộc tính màn hình (P-2026-11-28.30).
+extern bool chDisplayEnabled (const ChannelCtx&); extern void chDisplayDraw (const ChannelCtx&);
+extern bool chDisplaySet     (const DisplayCore::View& v, const Settings* set);
+extern bool chDisplayPointer (int x, int y);
+// Máy tính bỏ túi (P-2026-11-28.31, skill Giải trí).
+extern bool chCalcEnabled    (const ChannelCtx&); extern void chCalcDraw    (const ChannelCtx&);
+extern void chCalcSet        (const CalcCore::View& v);
+extern bool chCalcPointer    (int x, int y);
+// Máy tính / Ảnh của tôi / Thùng rác (P-2026-11-28.32).
+extern bool chExplorerEnabled(const ChannelCtx&); extern void chExplorerDraw(const ChannelCtx&);
+extern bool chExplorerSet    (const ExplorerCore::View& v);
+extern bool chExplorerPointer(int x, int y);
+extern void chPhotoShowIndex (int i);
 extern bool chAttentionNeedsYou();
 extern bool chAttentionWakesScreen();
 
@@ -91,12 +115,16 @@ static const Channel kChannels[] = {
     { "Codex",    chCodexEnabled,    chCodexDraw,    chCodexTick,    "agent" },
     { "AI",       chAiDashEnabled,   chAiDashDraw,   chAiDashTick,   "agent" },
     { "Trend",    chTrendEnabled,    chTrendDraw,    chTrendTick,    "agent" },
-    { "Photo",    chPhotoEnabled,    chPhotoDraw,    nullptr,        "photo" },
+    { "Photo",    chPhotoEnabled,    chPhotoDraw,    chPhotoTick,        "photo" },
     { "Weather",  chWeatherEnabled,  chWeatherDraw,  chWeatherTick,  "weather" },
     { "Forecast", chForecastEnabled, chForecastDraw, chForecastTick, "weather" },
     { "Clock",    chClockEnabled,    chClockDraw,    chClockTick,    "clock" },
     { "Mines",    chMinesEnabled,    chMinesDraw,    chMinesTick,    "fun" },     // Dò mìn (P-2026-11-27.25)
+    { "Calc",     chCalcEnabled,     chCalcDraw,     nullptr,        "fun" },     // Máy tính bỏ túi (P-2026-11-28.31)
     { "Info",     chInfoEnabled,     chInfoDraw,     chInfoTick     },
+    { "TaskMgr",  chTaskMgrEnabled,  chTaskMgrDraw,  chTaskMgrTick  },     // P-2026-11-28.28 (system)
+    { "Display",  chDisplayEnabled,  chDisplayDraw,  nullptr        },     // P-2026-11-28.30 (system)
+    { "Explorer", chExplorerEnabled, chExplorerDraw, nullptr        },     // P-2026-11-28.32 (system)
 };
 static constexpr int kChannelCount = sizeof(kChannels) / sizeof(kChannels[0]);
 
@@ -130,6 +158,13 @@ static Control::PowerState g_power;
 static int8_t g_recent[XPCore::kRecentN] = {XPCore::PROG_NONE, XPCore::PROG_NONE, XPCore::PROG_NONE};      // the app's power button (R-DK-20)
 // The Clock window as the app touched it (P-2026-11-26.22) and the last SNTP sync.
 static ClockCore::View  g_clockView;
+// Task Manager (P-2026-11-28.28): the app's tab / row, and the samples it draws (once a second, RAM).
+static Perf::View       g_taskMgrView;
+static DisplayCore::View g_displayView;
+static CalcCore::View   g_calcView;
+static ExplorerCore::View g_explorerView; // Explorer as the app touched it (P-2026-11-28.32)       // Máy tính bỏ túi as the app sent it (P-2026-11-28.31)   // Display Properties as the app touched it (P-2026-11-28.30)
+static Perf::History    g_perf;
+static uint32_t         g_perfSeq = 0, g_heapTotal = 0, g_idleUs = 0;
 static volatile uint32_t g_ntpLast = 0;
 static bool        g_wantHome    = true;  // boot: the desktop as soon as it can show
 
@@ -168,6 +203,13 @@ bool     mainAgentDoneCards() { return g_settings.agentDoneCards; }
 bool     mainPaused()       { return g_rot.paused; }
 int8_t   mainSelectedIcon() { return g_windows.sel; }
 const ClockCore::View& mainClockView() { return g_clockView; }
+const Perf::View& mainTaskMgrView() { return g_taskMgrView; }
+const DisplayCore::View& mainDisplayView() { return g_displayView; }
+const CalcCore::View& mainCalcView() { return g_calcView; }
+const ExplorerCore::View& mainExplorerView() { return g_explorerView; }
+const Perf::History& mainPerf() { return g_perf; }
+uint32_t mainPerfSeq() { return g_perfSeq; }
+uint32_t mainHeapTotal() { return g_heapTotal; }
 uint32_t mainNtpLast()      { return g_ntpLast; }
 const Control::Windows& mainWindows() { return g_windows; }
 const Control::Menu&    mainMenu()    { return g_menu; }
@@ -343,6 +385,7 @@ static void paintMenu() {
     const Control::Menu m = litMenu();
     if (m.kind == XPCore::MENU_START) XPStart::draw(m, g_settings.skillsOn.c_str());
     else if (m.kind == XPCore::MENU_TURNOFF) XPTurnOff::draw(m.hover);
+    else if (m.kind == XPCore::MENU_ALTTAB) XPAltTab::draw(m);
     else XPMenu::draw(m);
 }
 
@@ -351,6 +394,7 @@ static void relightMenu(const Control::Menu& was) {
     const Control::Menu now = litMenu();
     if (now.kind == XPCore::MENU_START) XPStart::relight(was, now, g_settings.skillsOn.c_str());
     else if (now.kind == XPCore::MENU_TURNOFF) XPTurnOff::relight(was.hover, now.hover);
+    else if (now.kind == XPCore::MENU_ALTTAB) XPAltTab::relight(was, now);
     else XPMenu::draw(now);
 }
 
@@ -493,6 +537,8 @@ bool mainShowChannel(const char* name) {
         if (!strcasecmp(kChannels[g_activeIdx[i]].name, name)) {
             if (strcmp(kChannels[g_activeIdx[g_activePtr]].name, "Clock") && !strcasecmp(name, "Clock"))
                 g_clockView = ClockCore::View();      // the Clock window opens on today, as XP
+            if (strcmp(kChannels[g_activeIdx[g_activePtr]].name, "Display") && !strcasecmp(name, "Display"))
+                g_displayView = DisplayCore::View();  // Display Properties opens on the saved values, as XP
             g_activePtr = i;
             g_menu = Control::Menu();
             g_wantHome = false;
@@ -630,6 +676,8 @@ bool mainSetMenu(const Control::Menu& m) {
     const char* name = kChannels[g_activeIdx[g_activePtr]].name;
     if (m.kind != XPCore::MENU_NONE
         && (XPCore::buttonFor(name) == XPCore::BTN_NO_BAR || !strcmp(name, "Attention"))) return false;
+    // Alt+Tab with no window open: XP shows no box (P-2026-11-28.29).
+    if (m.kind == XPCore::MENU_ALTTAB && !g_windows.n) return false;
     const bool wasOpen = g_menu.kind != XPCore::MENU_NONE;
     const bool startToStart = wasOpen && g_menu.kind == XPCore::MENU_START && m.kind == XPCore::MENU_START;
     const bool hoverOnly = wasOpen && Control::sameMenu(g_menu, m);
@@ -687,6 +735,15 @@ static void pointerTick() {
         const bool caption = g_contentDue || XPCore::framesFirst(name);
         hot = PointerCore::hotAt(Taskbar::state(), caption, x, y);
     }
+    // P-2026-11-28.28–.31: a window's own buttons under the mouse (hot ring); it repaints only those.
+    if (g_menu.kind == XPCore::MENU_NONE && !g_contentDue && g_activeCount) {
+        const char* name = kChannels[g_activeIdx[g_activePtr]].name;
+        const int px = mouse ? x : -1, py = mouse ? y : -1;
+        if (!strcmp(name, "TaskMgr") && chTaskMgrPointer(px, py)) Cursor::overlay();
+        if (!strcmp(name, "Display") && chDisplayPointer(px, py)) Cursor::overlay();
+        if (!strcmp(name, "Calc") && chCalcPointer(px, py)) Cursor::overlay();
+        if (!strcmp(name, "Explorer") && chExplorerPointer(px, py)) Cursor::overlay();
+    }
     if (hot != XP::hot()) {
         const PointerCore::Rect was = PointerCore::hotRect(XP::hot()), now = PointerCore::hotRect(hot);
         XP::setHot(hot);
@@ -707,6 +764,79 @@ void mainSetClock(const ClockCore::View& v, bool sync) {
     }
     if (g_activeCount && !strcmp(kChannels[g_activeIdx[g_activePtr]].name, "Clock") && g_menu.kind == XPCore::MENU_NONE)
         drawActive();
+}
+
+// The Task Manager touched from the app (POST /api/taskmgr, P-2026-11-28.28): tab / selected row.
+// On screen a new tab repaints the window, a new row only the list (tick()).
+void mainSetTaskMgr(const Perf::View& v) {
+    const bool tabChanged = v.tab != g_taskMgrView.tab;
+    g_taskMgrView = v;
+    if (tabChanged && g_activeCount && !strcmp(kChannels[g_activeIdx[g_activePtr]].name, "TaskMgr")
+        && g_menu.kind == XPCore::MENU_NONE && !g_contentDue) {
+        drawActive();
+    }
+}
+
+// Display Properties touched from the app (POST /api/display, P-2026-11-28.30): on screen only what changed
+// repaints; a new tab / the drop list opening or closing repaints the window.
+void mainSetDisplay(const DisplayCore::View& v) {
+    g_displayView = v;
+    if (!g_activeCount || strcmp(kChannels[g_activeIdx[g_activePtr]].name, "Display")
+        || g_menu.kind != XPCore::MENU_NONE || g_contentDue) return;
+    if (!chDisplaySet(v, &g_settings)) drawActive();
+    else Cursor::overlay();
+}
+
+// Máy tính bỏ túi from the app (POST /api/calc, P-2026-11-28.31): on screen only the display / memory cell /
+// the keys that changed repaint.
+void mainSetCalc(const CalcCore::View& v) {
+    g_calcView = v;
+    if (g_activeCount && !strcmp(kChannels[g_activeIdx[g_activePtr]].name, "Calc")
+        && g_menu.kind == XPCore::MENU_NONE && !g_contentDue) {
+        chCalcSet(v);
+        Cursor::overlay();
+    }
+}
+
+// Explorer touched from the app (POST /api/explorer, P-2026-11-28.32): the place / selection / scroll / confirm
+// box, then what to do ("delete" the selected photo to the bin, "restore" / "empty" the bin, "open" the
+// selected photo in the Photo window — the app sends /api/channel Photo after). Returns false when the
+// action could not be done (no such item, bin full, file system).
+bool mainSetExplorer(const ExplorerCore::View& v, const char* what) {
+    bool ok = true;
+    bool changed = false;
+    if (what && *what) {
+        if (!strcmp(what, "delete")) {
+            char nm[16];
+            Photos::name(g_explorerView.sel, nm, sizeof(nm));
+            ok = *nm && Trash::moveIn(nm);
+        } else if (!strcmp(what, "restore")) {
+            ok = Trash::restore(g_explorerView.sel);
+        } else if (!strcmp(what, "empty")) {
+            Trash::empty();
+        } else if (!strcmp(what, "open")) {
+            ok = g_explorerView.sel >= 0 && g_explorerView.sel < Photos::total();
+            if (ok) chPhotoShowIndex(g_explorerView.sel);
+        }
+        changed = ok;
+    }
+    g_explorerView = v;
+    // The window's icon follows the place (the taskbar button reads it before the window draws).
+    XPCore::explorerIcon() = v.place == ExplorerCore::PLACE_PHOTOS ? XPCore::ICON_PICTURES
+                           : v.place == ExplorerCore::PLACE_TRASH
+                               ? (Trash::count() ? XPCore::ICON_TRASH_FULL : XPCore::ICON_TRASH)
+                               : XPCore::ICON_COMPUTER;
+    if (g_activeCount && !strcmp(kChannels[g_activeIdx[g_activePtr]].name, "Explorer")
+        && g_menu.kind == XPCore::MENU_NONE && !g_contentDue) {
+        if (changed || !chExplorerSet(v)) {
+            drawActive();
+            Taskbar::draw(barState(millis()), g_settings.clock24h);   // the bin's icon may have filled / emptied
+            Cursor::overlay();
+        } else {
+            Cursor::overlay();
+        }
+    }
+    return ok;
 }
 
 // A Dò mìn board from the app (POST /api/mines, P-2026-11-27.25): the app keeps the game; on screen
@@ -1022,6 +1152,7 @@ static void noticesTick() {
 // ── Setup / loop ─────────────────────────────────────────────────────────────
 
 void setup() {
+    g_heapTotal = ESP.getFreeHeap();     // Task Manager: the heap's size (nothing allocated yet)
     Serial.begin(115200);
     Serial.println(F("\n=== glimmer v" FW_VERSION " ==="));
 
@@ -1038,6 +1169,8 @@ void setup() {
     AttentionQueue::projectsBegin();
     Photos::begin();
     Wallpaper::begin();
+    Wallpaper::setMode(g_settings.wallpaperMode);   // P-2026-11-28.30
+    Trash::begin();                                 // P-2026-11-28.32 (after Photos: it re-adopts nothing)
     Api::refreshCred(g_settings, g_claude, g_codex);
 
     Display::splashStep(millis() / 200);
@@ -1219,7 +1352,23 @@ void loop() {
         Cursor::step(now, repaintRect);
     }
 
+    // Task Manager's samples (P-2026-11-28.28): once a second — CPU = the share not spent in the delay below.
+    static uint32_t perfAt = 0, perfUs = 0;
+    if (now - perfAt >= 1000UL) {
+        const uint32_t us = micros();
+        if (perfAt) {
+            g_perf.cpu.push(Perf::cpuPct(g_idleUs, us - perfUs));
+            g_perf.mem.push(Perf::memPct(ESP.getFreeHeap(), g_heapTotal));
+            g_perf.net.push(WiFi.status() == WL_CONNECTED ? Perf::rssiPct(WiFi.RSSI()) : 0);
+            g_perfSeq++;
+        }
+        perfAt = now;
+        perfUs = us;
+        g_idleUs = 0;
+    }
+    const uint32_t idle0 = micros();
     delay(10);
+    g_idleUs += micros() - idle0;
 }
 
 // Settings were saved from the web UI: apply what can change at runtime.
@@ -1227,6 +1376,7 @@ void mainSettingsChanged() {
     // A newly pasted key/token is fetched right away, not at the next interval.
     if (Api::refreshCred(g_settings, g_claude, g_codex)) mainTriggerRefresh();
     Display::setInvert(g_settings.invertDisplay);
+    Wallpaper::setMode(g_settings.wallpaperMode);      // P-2026-11-28.30
     Storage::applyTimezone(g_settings);
     applyBrightness();
     if (!g_apMode) refreshScreen(true);

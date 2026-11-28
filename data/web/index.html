@@ -229,6 +229,14 @@
           <div class="hint">Không có sự kiện từ Claude Code / Codex trong 15 phút → giảm còn 15%; sáng lại ngay khi có việc hoặc thẻ cần duyệt.</div>
           <label class="row"><input type="checkbox" x-model="settings.clock24h">Đồng hồ 24 giờ</label>
           <label class="row"><input type="checkbox" x-model="settings.invertDisplay">Đảo màu</label>
+          <div class="field-inline">
+            <span>Hình nền</span>
+            <select x-model.number="settings.wallpaperMode">
+              <option :value="0" :selected="settings.wallpaperMode === 0">(Không)</option>
+              <option :value="1" :selected="settings.wallpaperMode === 1">Đồi xanh</option>
+              <option :value="2" :selected="settings.wallpaperMode === 2">Ảnh của bạn</option>
+            </select>
+          </div>
           <div class="hint">Chỉ bật nếu màu trên màn hình của bạn trông bị nhạt.</div>
         </article>
         <article>

@@ -27,7 +27,13 @@ enum Btn : int8_t {
 constexpr int kBtnCount = 4;
 
 // Title-bar / taskbar icons.
-enum Icon : uint8_t { ICON_NONE, ICON_CLAWD, ICON_PHOTO, ICON_WEATHER, ICON_CLOCK, ICON_INFO, ICON_MINES };
+enum Icon : uint8_t { ICON_NONE, ICON_CLAWD, ICON_PHOTO, ICON_WEATHER, ICON_CLOCK, ICON_INFO, ICON_MINES,
+                     // XP colour icons 16 px (P-2026-11-28.28–.32, src/ui/xp_icons.h / start_icons.h): drawn at
+                     // real pixels in their own colours on the title bar (4, 3) and the taskbar (button + 6, 220).
+                     ICON_TASKMGR, ICON_DISPLAY, ICON_CALC, ICON_COMPUTER, ICON_PICTURES, ICON_TRASH, ICON_TRASH_FULL };
+inline bool colorIcon(Icon i) { return i >= ICON_TASKMGR; }
+// The Explorer window's icon follows the place it shows (Máy tính / Ảnh của tôi / Thùng rác); its channel sets it.
+inline Icon& explorerIcon() { static Icon i = ICON_COMPUTER; return i; }
 
 // Which button a channel presses (by kChannels[] name). Attention cards are
 // Claude windows (their button lights orange instead when the card needs you).
@@ -38,13 +44,24 @@ inline Btn buttonFor(const char* name) {
     if (!strcmp(name, "Photo")) return BTN_PHOTO;
     // Info and the desktop (Home, P-2026-11-26.12) press no button.
     if (!strcmp(name, "Info") || !strcmp(name, "Home")) return BTN_NONE;
+    // P-2026-11-28.28–.32: system / Giải trí windows — their own taskbar button (no legacy Btn).
+    if (!strcmp(name, "TaskMgr") || !strcmp(name, "Display") || !strcmp(name, "Calc") || !strcmp(name, "Explorer"))
+        return BTN_NONE;
     return BTN_CLAUDE;   // Attention, Agents, Claude, Codex, AI, Trend, Setup
 }
 
 // Title-bar icon of a channel's window (sources XP-*.dc.html): Clawd on every
 // agent window, the skill icon on Photo / Weather / Forecast / Clock, "i" on Info.
+inline Icon progIcon(int p);
 inline Icon iconFor(const char* name) {
     if (name && !strcmp(name, "Mines")) return ICON_MINES;   // P-2026-11-27.25
+    if (name && (!strcmp(name, "TaskMgr") || !strcmp(name, "Display") || !strcmp(name, "Calc")
+                 || !strcmp(name, "Explorer"))) {
+        if (!strcmp(name, "TaskMgr")) return ICON_TASKMGR;
+        if (!strcmp(name, "Display")) return ICON_DISPLAY;
+        if (!strcmp(name, "Calc")) return ICON_CALC;
+        return explorerIcon();
+    }
     switch (buttonFor(name)) {
         case BTN_NO_BAR:  return ICON_NONE;
         case BTN_NONE:    return ICON_INFO;
@@ -73,11 +90,16 @@ enum Prog : int8_t {
     PROG_CLAUDE, PROG_CODEX, PROG_AI, PROG_TREND, PROG_AGENTS,
     PROG_PHOTO, PROG_WEATHER, PROG_FORECAST, PROG_CLOCK, PROG_INFO,
     PROG_MINES,                                   // Dò mìn, skill Giải trí `fun` (P-2026-11-27.25)
+    PROG_TASKMGR,                                 // Trình quản lý tác vụ, system (P-2026-11-28.28)
+    PROG_DISPLAY,                                 // Thuộc tính màn hình, system (P-2026-11-28.30)
+    PROG_CALC,                                    // Máy tính bỏ túi, skill Giải trí `fun` (P-2026-11-28.31)
+    PROG_EXPLORER,                                // Máy tính / Ảnh của tôi / Thùng rác, system (P-2026-11-28.32)
     PROG_COUNT
 };
 inline const char* progName(int p) {
     static const char* const kName[PROG_COUNT] = {"Claude", "Codex", "AI", "Trend", "Agents",
-                                                  "Photo", "Weather", "Forecast", "Clock", "Info", "Mines"};
+                                                  "Photo", "Weather", "Forecast", "Clock", "Info", "Mines",
+                                                  "TaskMgr", "Display", "Calc", "Explorer"};
     return p >= 0 && p < PROG_COUNT ? kName[p] : nullptr;
 }
 // kChannels[] name → program (case-insensitive like /api/channel); PROG_NONE
@@ -100,6 +122,10 @@ inline Icon progIcon(int p) {
         case PROG_CLOCK:                    return ICON_CLOCK;
         case PROG_INFO:                     return ICON_INFO;
         case PROG_MINES:                    return ICON_MINES;
+        case PROG_TASKMGR:                  return ICON_TASKMGR;
+        case PROG_DISPLAY:                  return ICON_DISPLAY;
+        case PROG_CALC:                     return ICON_CALC;
+        case PROG_EXPLORER:                 return explorerIcon();
         case PROG_NONE:                     return ICON_NONE;
         default:                            return ICON_CLAWD;
     }
@@ -208,8 +234,15 @@ inline WinFrame frameOf(const char* name) {
         {"Weather", {"Thời tiết", ICON_WEATHER, false}}, {"Forecast", {"Thời tiết", ICON_WEATHER, false}},
         {"Clock", {"Ngày và Giờ", ICON_CLOCK, false}},       {"Info", {"Thông tin", ICON_INFO, false}},
         {"Setup", {"Cài đặt", ICON_CLAWD, false}},      {"Mines", {"Dò mìn", ICON_MINES, false}},
+        {"TaskMgr", {"Trình quản lý tác vụ", ICON_TASKMGR, true}},
+        {"Display", {"Thuộc tính màn hình", ICON_DISPLAY, false}},
+        {"Calc", {"Máy tính bỏ túi", ICON_CALC, false}},
     };
     for (const Row& r : kRows) if (name && !strcmp(r.name, name)) return r.f;
+    if (name && !strcmp(name, "Explorer")) {                         // the place it shows
+        const Icon i = explorerIcon();
+        return {i == ICON_PICTURES ? "Ảnh của tôi" : i == ICON_COMPUTER ? "Máy tính" : "Thùng rác", i, true};
+    }
     return {name ? name : "", iconFor(name), false};
 }
 // Taskbar slot of program [p] among the open windows [open] ([n], opening
@@ -310,14 +343,16 @@ inline bool installed(const Installed& i, int p) {
         case PROG_PHOTO:   return i.photo;
         case PROG_WEATHER: case PROG_FORECAST: return i.weather;
         case PROG_CLOCK:   return i.clock;
-        case PROG_MINES:   return i.fun;
+        case PROG_MINES: case PROG_CALC: return i.fun;
         default:           return false;
     }
 }
 // Program [p] came up: it goes to the front (Forecast counts as Weather).
 inline void noteRecent(int8_t recent[kRecentN], int p) {
     if (p == PROG_FORECAST) p = PROG_WEATHER;
-    if (p < 0 || p == PROG_CLAUDE || p == PROG_CODEX || p == PROG_INFO) return;
+    // System windows are not in Start's list; Máy tính bỏ túi waits for its Start row's design (P-2026-11-28.31).
+    if (p < 0 || p == PROG_CLAUDE || p == PROG_CODEX || p == PROG_INFO || p == PROG_TASKMGR || p == PROG_DISPLAY
+        || p == PROG_EXPLORER || p == PROG_CALC) return;
     int k = kRecentN - 1;
     for (int i = 0; i < kRecentN; i++) if (recent[i] == p) { k = i; break; }
     for (; k > 0; k--) recent[k] = recent[k - 1];
@@ -343,10 +378,46 @@ inline int recentRows(const int8_t recent[kRecentN], const Installed& in, int8_t
 // MENU_START (P-2026-11-26.20): the XP Start menu, (0, 0)–(239, 213), never moved.
 // MENU_TURNOFF (P-2026-11-27.24): XP's Turn off computer box over the whole screen (dotted shade
 // included), never moved — opened like a menu, closed like one.
-enum MenuKind : uint8_t { MENU_NONE, MENU_DESKTOP, MENU_WINDOW, MENU_START, MENU_TURNOFF };
+enum MenuKind : uint8_t { MENU_NONE, MENU_DESKTOP, MENU_WINDOW, MENU_START, MENU_TURNOFF,
+                          MENU_ALTTAB };      // P-2026-11-28.29: XP's task switcher (hover = the window chosen)
 constexpr int kMenuItemH = 17, kMenuSepH = 7, kMenuPad = 2;
 constexpr int kMenuDeskW = 166, kMenuWinW = 128;
 // Desktop: 6 items, 3 separators → 127; window: 6 items, 1 separator → 113.
+// ── Alt+Tab (P-2026-11-28.29, XP-AltTab) ── the open windows, most recently used first: the top one, then
+// the others newest-opened first. Box W = max(12 + 40·cols, 160), H = 8 + 38·rows + 4 + 18 + 8, centred in
+// y 0..213; tiles 40×38, ≤ 5 a row, the grid centred (a short last row starts on the left).
+constexpr int kAltTabCols = 5, kAltTabTileW = 40, kAltTabTileH = 38;
+inline int altTabOrder(const int8_t* open, int n, int top, int8_t* out) {
+    int k = 0;
+    for (int i = 0; i < n; i++) if (open[i] == top) { out[k++] = (int8_t)top; break; }
+    for (int i = n - 1; i >= 0; i--) if (open[i] != top) out[k++] = open[i];
+    return k;
+}
+struct AltTabBox { int x, y, w, h, cols, rows; };
+inline AltTabBox altTabBox(int n) {
+    AltTabBox b;
+    b.cols = n < kAltTabCols ? n : kAltTabCols;
+    if (b.cols < 1) b.cols = 1;
+    b.rows = (n + kAltTabCols - 1) / kAltTabCols;
+    if (b.rows < 1) b.rows = 1;
+    b.w = 12 + kAltTabTileW * b.cols;
+    if (b.w < 160) b.w = 160;
+    b.h = 8 + kAltTabTileH * b.rows + 4 + 18 + 8;
+    b.x = (240 - b.w) / 2;
+    b.y = (214 - b.h) / 2;
+    return b;
+}
+inline void altTabTile(const AltTabBox& b, int i, int& x, int& y) {
+    x = b.x + (b.w - kAltTabTileW * b.cols) / 2 + kAltTabTileW * (i % kAltTabCols);
+    y = b.y + 8 + kAltTabTileH * (i / kAltTabCols);
+}
+// The chosen tile: what the app sent, else the second window (XP), the only one when one is open.
+inline int altTabSel(int sel, int n) {
+    if (n <= 0) return -1;
+    if (sel < 0) return n > 1 ? 1 : 0;
+    return sel % n;
+}
+
 inline int menuW(MenuKind k) {
     return k == MENU_START || k == MENU_TURNOFF ? 240 : k == MENU_DESKTOP ? kMenuDeskW : kMenuWinW;
 }

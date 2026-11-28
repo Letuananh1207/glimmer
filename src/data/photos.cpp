@@ -4,6 +4,7 @@
 #include <ESP8266HTTPClient.h>
 #include "display.h"
 #include "tjpgd.h"
+#include "jpeg_thumb.h"
 
 namespace {
 
@@ -297,6 +298,35 @@ const char* uploadEnd(char* savedName, size_t n) {
     s_upErr = "field";          // a POST with no file part next time
     s_upBytes = 0;
     return e;
+}
+
+bool forget(const char* nm) {
+    if (uint32_t id = idOf(nm)) {
+        const int before = s_n;
+        s_n = removeId(s_ids, s_n, id);
+        if (s_n == before) return false;
+    } else if ((id = idOf(nm, kSamplePrefix))) {
+        const int before = s_ns;
+        s_ns = removeId(s_sam, s_ns, id);
+        if (s_ns == before) return false;
+    } else {
+        return false;
+    }
+    if (s_cur >= s_n + s_ns) s_cur = s_n + s_ns - 1;
+    return true;
+}
+
+void adopt(const char* nm) {
+    if (uint32_t id = idOf(nm)) s_n = insertId(s_ids, s_n, id);
+    else if ((id = idOf(nm, kSamplePrefix))) s_ns = insertId(s_sam, s_ns, id, kMaxSamples);
+}
+
+void setCurrent(int i) { if (i >= 0 && i < s_n + s_ns) s_cur = i; }
+
+bool drawThumb(int i, int x, int y) {
+    char p[32];
+    if (!pathAt(i, p, sizeof(p))) return false;
+    return JpegThumb::draw(p, kSide, kSide, 2, x, y, kSide / 4, kSide / 4);
 }
 
 bool remove(const char* nm) {

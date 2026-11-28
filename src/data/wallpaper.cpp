@@ -3,6 +3,7 @@
 #include "display.h"
 #include "tjpgd.h"
 #include "desk_wallpaper.h"
+#include "jpeg_thumb.h"
 
 namespace {
 
@@ -11,6 +12,7 @@ const char* const kTmp  = "/wallpaper.tmp";
 
 bool s_set    = false;    // file present
 bool s_broken = false;    // present but failed to decode (until the next upload / delete)
+uint8_t s_mode = 2;       // Wallpaper::Mode (setting wallpaperMode)
 
 // ── Upload state ──
 File                 s_up;
@@ -100,6 +102,14 @@ bool paintJpeg(const Rect& clip, Wallpaper::Cap* caps, int n) {
     return ok;
 }
 
+// ── One colour (Màn nền › (Không)) ──
+void paintSolid(const Rect& clip, Wallpaper::Cap* caps, int n) {
+    tft.fillRect(clip.x0, clip.y0, clip.x1 - clip.x0 + 1, clip.y1 - clip.y0 + 1, Wallpaper::kNoneColor);
+    for (int k = 0; k < n; k++)
+        if (caps[k].buf)
+            for (int i = 0; i < caps[k].w * caps[k].h; i++) caps[k].buf[i] = Wallpaper::kNoneColor;
+}
+
 // ── Fallback (design pixel wallpaper) ──
 
 void paintFallback(const Rect& clip, Wallpaper::Cap* caps, int n) {
@@ -141,6 +151,31 @@ void begin() {
 
 bool present() { return s_set && !s_broken; }
 
+void setMode(uint8_t m) { s_mode = m > MODE_PHOTO ? MODE_PHOTO : m; }
+uint8_t mode() { return s_mode; }
+
+void thumb(uint8_t m, int x, int y, int w, int h) {
+    if (!Display::clipHits(x, y, w, h)) return;
+    if (m == MODE_NONE) { tft.fillRect(x, y, w, h, kNoneColor); return; }
+    if (m == MODE_PHOTO && present() && JpegThumb::draw(kPath, kW, kH, 2, x, y, w, h)) return;
+    // Fallback: every 4th pixel of every 4th row of the runs.
+    int i = 0;
+    for (int yy = 0; yy < Desk::kDeskH && yy / 4 < h; yy++) {
+        int xx = 0;
+        while (xx < Desk::kDeskW) {
+            const uint8_t ci  = pgm_read_byte(&Desk::kDeskRuns[2 * i]);
+            const uint8_t len = pgm_read_byte(&Desk::kDeskRuns[2 * i + 1]);
+            i++;
+            if (yy % 4 == 0) {
+                const int a = (xx + 3) / 4, b = (xx + len - 1) / 4;   // the 4th pixels inside the run
+                const int bb = b < w - 1 ? b : w - 1;
+                if (a <= bb) tft.drawFastHLine(x + a, y + yy / 4, bb - a + 1, pgm_read_word(&Desk::kDeskPal[ci]));
+            }
+            xx += len;
+        }
+    }
+}
+
 uint32_t size() {
     if (!s_set) return 0;
     File f = LittleFS.open(kPath, "r");
@@ -163,7 +198,8 @@ uint16_t fallbackAt(int x, int y) {
 void paint(int x, int y, int w, int h, Cap* caps, int nCaps) {
     Rect clip{imax(x, 0), imax(y, 0), imin(x + w - 1, kW - 1), imin(y + h - 1, kH - 1)};
     if (clip.x0 > clip.x1 || clip.y0 > clip.y1) return;
-    if (present() && paintJpeg(clip, caps, nCaps)) return;
+    if (s_mode == MODE_NONE) { paintSolid(clip, caps, nCaps); return; }
+    if (s_mode == MODE_PHOTO && present() && paintJpeg(clip, caps, nCaps)) return;
     paintFallback(clip, caps, nCaps);          // none, or the decode failed half-way
 }
 

@@ -84,6 +84,8 @@ void paintSlot(int i, const BarState& s) {
     Icon ic = progIcon(p);
     if (ic == ICON_CLAWD) {
         XP::drawIcon(ic, x + 5, 222, 1, look == LOOK_FLASH ? WHITE : Display::CLAWD_ORANGE);
+    } else if (XPCore::colorIcon(ic)) {
+        XP::drawColorIcon(ic, x + 6, 220);   // P-2026-11-28.28–.32
     } else if (ic == ICON_MINES) {
         XP::drawIcon(ic, x + 7, 220, 1, WHITE);              // XP-Mines: white mine at (button + 7, 220)
     } else {

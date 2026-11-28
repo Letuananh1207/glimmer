@@ -49,6 +49,16 @@ void        uploadAbort();
 // Delete a user (p<N>) or sample (s<N>) photo by name. false = no such photo.
 bool remove(const char* name);
 
+// ── Thùng rác (P-2026-11-28.32, trash.h) ──
+// Drop [name] from the list, keep its file (the bin moves it). false = no such photo.
+bool forget(const char* name);
+// Take [name] back into the list (its file is in /photos/ again).
+void adopt(const char* name);
+// Explorer › open: the slideshow shows photo [i] next (Photo window), cache side.
+void setCurrent(int i);
+// Photo [i] at 1/4 (47 × 47) with its top-left at (x, y) — Ảnh của tôi's thumbnails.
+bool drawThumb(int i, int x, int y);
+
 // ── The app's library (photo_source_core.h; app plan 2026-11-27 kho ảnh trên app) ──
 // The device points at the app's library: each slide it asks for the photo after the one on screen and keeps it
 // in /photos/cur.jpg (one file, overwritten) so a repaint never asks again. The user photos above are the cache

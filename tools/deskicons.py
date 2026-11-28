@@ -32,6 +32,18 @@ SETS = [
     ("XP-Weather-Error.dc.html", "src/ui/warn_icon.h", "WarnIcon", "P-2026-11-26.23", [
         ("Warn", 14, 52),
     ]),
+    # P-2026-11-28.28–.32: Task Manager, Calculator, Explorer (My Computer, drive, folder, Recycle Bin empty / full).
+    # A 4th field names another source file of the set.
+    ("XP-TaskMgr-Apps.dc.html", "src/ui/xp_icons.h", "XpIcons", "P-2026-11-28.28–.32", [
+        ("TaskMgr", 4, 3),
+        ("Calc", 4, 3, "XP-Calc.dc.html"),
+        ("Computer", 4, 3, "XP-Explorer-Computer.dc.html"),
+        ("Drive", 10, 50, "XP-Explorer-Computer.dc.html"),
+        ("Folder", 10, 160, "XP-Explorer-Computer.dc.html"),
+        ("TrashSmall", 4, 3, "XP-Explorer-TrashEmpty.dc.html"),
+        ("TrashSmallFull", 4, 3, "XP-Explorer-Trash.dc.html"),
+        ("TrashFull", 24, 152, "XP-Desk-TrashFull.dc.html"),
+    ]),
 ]
 
 
@@ -59,8 +71,8 @@ def icon(html, left, top):
 def emit(src, out, ns, code, icons):
     html = (SRC / src).read_text(encoding="utf-8")
     parts = []
-    for name, left, top in icons:
-        w, h, pal, runs = icon(html, left, top)
+    for name, left, top, *other in icons:
+        w, h, pal, runs = icon((SRC / other[0]).read_text(encoding="utf-8") if other else html, left, top)
         assert len(pal) < 256 and all(x + rw <= w and y < h for x, y, rw, _ in runs), name
         pal_s = ",\n    ".join(f"0x{c:04X}  /* #{hx} */" for hx, c in pal)
         run_s = ",\n    ".join(", ".join(f"{{{x}, {y}, {rw}, {i}}}" for x, y, rw, i in runs[k:k + 6])
@@ -89,7 +101,7 @@ struct Run {{ uint8_t x, y, w, c; }};
 {chr(10).join(parts)}}}  // namespace {ns}
 """
     (ROOT / out).write_text(text, encoding="utf-8", newline="\n")
-    print(f"{out}: {', '.join(n for n, _, _ in icons)}")
+    print(f"{out}: {', '.join(i[0] for i in icons)}")
 
 
 DART_OUT = ROOT / "app/lib/ui/control/widgets/device_mirror/desk_icons_xp.dart"

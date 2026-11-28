@@ -9,6 +9,8 @@
 #include "cursor.h"
 #include "pointer_core.h"
 #include "mines_icons.h"
+#include "start_icons.h"
+#include "xp_icons.h"
 
 using namespace Theme::XP;
 using XPCore::Icon;
@@ -123,6 +125,7 @@ void paintTitleText(const char* text) {
 }
 
 void titleIcon(Icon icon) {
+    if (XPCore::colorIcon(icon)) { XP::drawColorIcon(icon, 4, 3); return; }
     switch (icon) {
         case XPCore::ICON_NONE: return;
         case XPCore::ICON_CLAWD: XP::drawIcon(icon, 4, 6, 1, Display::CLAWD_ORANGE); return;
@@ -233,6 +236,29 @@ void fitText(char* s, int maxW) {
 void iconSize(Icon icon, int& w, int& h) {
     IconBits b = bitsOf(icon);
     w = b.w; h = b.h;
+}
+
+template <typename Run>
+static void colorRuns(const Run* r, int n, const uint16_t* pal, int x0, int y0, int scale) {
+    for (int k = 0; k < n; k++) {
+        Run q;
+        memcpy_P(&q, &r[k], sizeof(q));
+        tft.fillRect(x0 + q.x * scale, y0 + q.y * scale, q.w * scale, scale, pgm_read_word(&pal[q.c]));
+    }
+}
+#define COLOR_ICON(NS, N) colorRuns(NS::k##N##Runs, NS::k##N##RunCount, NS::k##N##Pal, x, y, scale)
+
+void drawColorIcon(Icon icon, int x, int y, int scale) {
+    switch (icon) {
+        case XPCore::ICON_TASKMGR:    COLOR_ICON(XpIcons, TaskMgr); break;
+        case XPCore::ICON_CALC:       COLOR_ICON(XpIcons, Calc); break;
+        case XPCore::ICON_COMPUTER:   COLOR_ICON(XpIcons, Computer); break;
+        case XPCore::ICON_TRASH:      COLOR_ICON(XpIcons, TrashSmall); break;
+        case XPCore::ICON_TRASH_FULL: COLOR_ICON(XpIcons, TrashSmallFull); break;
+        case XPCore::ICON_DISPLAY:    COLOR_ICON(StartIcons, Desktop); break;
+        case XPCore::ICON_PICTURES:   COLOR_ICON(StartIcons, Photo); break;
+        default: break;
+    }
 }
 
 void drawIcon(Icon icon, int x, int y, int scale, uint16_t color) {
@@ -352,23 +378,23 @@ void groupBox(int x, int y, int w, int h, const char* label, uint16_t bg) {
     if (Display::clipHits(x, y - 7, w, 16)) groupLabel(x, y, label, 0, bg);
 }
 
-void tabs(const char* const* labels, int n, int selected) {
-    // Page: FIELD_BORDER 1 px (6, 41, 228×169), white inside.
-    tft.drawRect(6, 41, 228, 169, FIELD_BORDER);
-    tft.fillRect(7, 42, 226, 167, WHITE);
+void tabs(const char* const* labels, int n, int selected, int pageH, int pad) {
+    // Page: FIELD_BORDER 1 px (6, 41, 228×pageH), white inside.
+    tft.drawRect(6, 41, 228, pageH, FIELD_BORDER);
+    tft.fillRect(7, 42, 226, pageH - 2, WHITE);
     tft.fillRect(6, 26, 228, 15, BODY);                    // the strip above the page
     if (!Display::clipHits(6, 26, 228, 16)) return;        // clipped repaint inside the page
     Display::useFont("JBMono-11");
     tft.setTextDatum(TL_DATUM);
     int x = 6, selX = 6, selW = 0;
     for (int i = 0; i < n; i++) {
-        const int w = tft.textWidth(labels[i]) + 10;
+        const int w = tft.textWidth(labels[i]) + pad;
         if (i == selected) { selX = x; selW = w; x += w; continue; }
         // Unselected: y 28–40, 1 px narrower than its slot, xpRowLine face.
         tft.drawRect(x, 28, w - 1, 14, FIELD_BORDER);
         tft.fillRect(x + 1, 29, w - 3, 12, ROW_LINE);
         tft.setTextColor(BLACK, ROW_LINE);
-        tft.drawString(labels[i], x + 5, 29);
+        tft.drawString(labels[i], x + pad / 2, 29);
         x += w;
     }
     if (selW) {
@@ -379,8 +405,42 @@ void tabs(const char* const* labels, int n, int selected) {
         tft.drawFastVLine(selX + selW - 1, 27, 15, FIELD_BORDER);
         tft.fillRect(selX + 1, 29, selW - 2, 13, WHITE);
         tft.setTextColor(BLACK, WHITE);
-        tft.drawString(labels[selected], selX + 5, 29);
+        tft.drawString(labels[selected], selX + pad / 2, 29);
     }
+}
+
+void pushButton(int x, int y, int w, int h, const char* label, BtnLook look, uint16_t ink, const char* font,
+                int textDy) {
+    if (!Display::clipHits(x, y, w, h)) return;
+    static constexpr uint16_t kLine = 0x01EE, kFace = 0xF79D, kFoot = 0xD698;     // #003C74 #F4F3EE #D6D0C5
+    static constexpr uint16_t kDownFace = 0xDEB9, kDownTop = 0xA532;               // #DCD8CC #A7A495
+    static constexpr uint16_t kHotTop = 0xFF99, kHot = 0xFD89, kHotFoot = 0xE4A0;  // #FFF0CF #F9B348 #E59700
+    const bool down = look == BTN_DOWN;
+    const uint16_t face = down ? kDownFace : kFace;
+    // Edge without its 4 corner pixels (whatever is under them shows: white page or BODY).
+    tft.drawFastHLine(x + 1, y, w - 2, kLine);
+    tft.drawFastHLine(x + 1, y + h - 1, w - 2, kLine);
+    tft.drawFastVLine(x, y + 1, h - 2, kLine);
+    tft.drawFastVLine(x + w - 1, y + 1, h - 2, kLine);
+    tft.fillRect(x + 1, y + 1, w - 2, h - 2, face);
+    if (down) {
+        tft.fillRect(x + 1, y + 1, w - 2, 2, kDownTop);
+    } else {
+        tft.fillRect(x + 1, y + h - 3, w - 2, 2, kFoot);
+    }
+    if (look == BTN_HOT) {
+        tft.drawFastHLine(x + 1, y + 1, w - 2, kHotTop);
+        tft.drawFastHLine(x + 1, y + 2, w - 2, kHot);
+        tft.drawFastHLine(x + 1, y + h - 3, w - 2, kHot);
+        tft.drawFastVLine(x + 1, y + 2, h - 4, kHot);
+        tft.drawFastVLine(x + w - 2, y + 2, h - 4, kHot);
+        tft.drawFastHLine(x + 1, y + h - 2, w - 2, kHotFoot);
+    }
+    if (!label || !*label) return;
+    Display::useFont(font);
+    tft.setTextDatum(TC_DATUM);
+    tft.setTextColor(look == BTN_DIM ? DIM : ink, face);
+    tft.drawString(label, x + w / 2, y + textDy + (down ? 1 : 0));
 }
 
 WxIcon wxIconFor(uint8_t code) {
@@ -475,10 +535,10 @@ void hourglass(int frame, int x, int y) {
 
 // P-2026-11-27.24: in mouse mode the cursor itself turns into Working in
 // Background where it is (cursor.cpp); the fixed cell (132, 160) only without.
-void waitCursor(uint32_t step) {
+void waitCursor(uint32_t step, bool over) {
     if (Cursor::busy(millis())) return;
     static const Ink kArrowInk[] = {{'X', BLACK}, {'W', WHITE}};
-    tft.fillRect(132, 160, 21, 22, BODY);        // the cursor's cell (arrow + hourglass)
+    if (!over) tft.fillRect(132, 160, 21, 22, BODY);        // the cursor's cell (arrow + hourglass)
     drawArt(kArrow, 12, 19, 132, 160, kArrowInk, 2);
     hourglass(XPCore::hourglassFrame(step), 132, 160);
 }

@@ -36,6 +36,9 @@ void screenRepainted();
 // (300 ms, each call extends it) and true comes back — the fixed wait cell is not
 // drawn; otherwise false (the window draws its fixed cell, as before).
 bool busy(uint32_t now);
+// busy() + the wait glyph painted now where the cursor is (the loop is about to block, e.g. the
+// Photo window asking the app, P-2026-11-28.27). False = not in mouse mode.
+bool showBusyNow(uint32_t now);
 // The app drives a visible cursor on a screen that may show it.
 bool mouseMode();
 // Where the cursor's hotspot is drawn (valid while shown()).

@@ -1,6 +1,6 @@
 # Phiếu màn thiết bị: Mã QR trên màn log-on (cài Wi-Fi)
 
-- Trạng thái: đã vẽ (P-2026-11-28.26) — chờ áp
+- Trạng thái: đã áp (P-2026-11-28.26)
 - Đã vẽ: P-2026-11-28.26 (PA B: QR giữa màn)
 - Ngày: 2026-11-28 · Nguồn: yêu cầu người dùng — "mỗi lần vào mạng mới thì trên màn hình hiện mã QR và app chỉ cần
   quét là xong"; kế hoạch `app/docs/tasks/2026-11-28-qr-cai-wifi.md` (R-WF-4). Phiếu app đi cùng:

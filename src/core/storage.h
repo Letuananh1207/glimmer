@@ -32,6 +32,7 @@ struct Settings {
     bool     clock24h      = true;
     // Display polarity for this panel — keep true for SmallTV-Ultra ST7789.
     bool     invertDisplay = true;
+    uint8_t  wallpaperMode = 2;      // Wallpaper::Mode — 0 (Không) one colour, 1 Đồi xanh, 2 your photo (P-2026-11-28.30)
 
     // Night window (local minutes past midnight; start == end disables).
     uint8_t  nightMode     = 0;      // Night::Mode — 0 none, 1 dim, 2 clock, 3 dark

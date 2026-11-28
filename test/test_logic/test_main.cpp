@@ -22,6 +22,10 @@
 #include "cursor_core.h"
 #include "mines_core.h"
 #include "pointer_core.h"
+#include "perf_core.h"
+#include "display_core.h"
+#include "calc_core.h"
+#include "explorer_core.h"
 #include <time.h>
 #include <initializer_list>
 #if defined(_WIN32)   // host tests on Windows (MinGW) lack the POSIX localtime_r
@@ -1734,6 +1738,185 @@ void test_cursor_box_clipped() {
     TEST_ASSERT_FALSE(overlaps(m, Box()));
 }
 
+
+// P-2026-11-28.28: Task Manager's numbers.
+void test_perf_core() {
+    using namespace Perf;
+    TEST_ASSERT_EQUAL(0, cpuPct(0, 0));
+    TEST_ASSERT_EQUAL(0, cpuPct(1000000, 1000000));
+    TEST_ASSERT_EQUAL(12, cpuPct(880000, 1000000));
+    TEST_ASSERT_EQUAL(100, cpuPct(0, 1000000));
+    TEST_ASSERT_EQUAL(0, cpuPct(2000000, 1000000));        // idle longer than the window: not negative
+    TEST_ASSERT_EQUAL(0, memPct(40000, 30000));
+    TEST_ASSERT_EQUAL(50, memPct(15000, 30000));
+    TEST_ASSERT_EQUAL(0, rssiPct(0));                       // not connected
+    TEST_ASSERT_EQUAL(0, rssiPct(-100));
+    TEST_ASSERT_EQUAL(100, rssiPct(-40));
+    TEST_ASSERT_EQUAL(70, rssiPct(-58));
+    TEST_ASSERT_EQUAL(0, ledsLit(0));
+    TEST_ASSERT_EQUAL(1, ledsLit(12));                      // XPTaskMgrPerf: 12 % lights the bottom step
+    TEST_ASSERT_EQUAL(3, ledsLit(48));
+    TEST_ASSERT_EQUAL(6, ledsLit(100));
+    // Graph: 38 points, newest at x 225 → oldest at x 77 (XP-TaskMgr-Perf); 0 % on the bottom row.
+    TEST_ASSERT_EQUAL(77, pointX(225, kCpuN, 0));
+    TEST_ASSERT_EQUAL(225, pointX(225, kCpuN, kCpuN - 1));
+    TEST_ASSERT_EQUAL(41, pointX(229, kNetN, 0));
+    TEST_ASSERT_EQUAL(91, pointY(56, 36, 0));
+    TEST_ASSERT_EQUAL(56, pointY(56, 36, 100));
+    Ring<4> r;
+    TEST_ASSERT_EQUAL(0, r.n);
+    for (int i = 1; i <= 6; i++) r.push((uint8_t)(i * 10));
+    TEST_ASSERT_EQUAL(4, r.n);
+    TEST_ASSERT_EQUAL(30, r.at(0));                         // oldest kept
+    TEST_ASSERT_EQUAL(60, r.at(3));
+    r.push(250);
+    TEST_ASSERT_EQUAL(100, r.at(3));                        // clamped
+    char b[20];
+    uptime(14, b, sizeof(b));            TEST_ASSERT_EQUAL_STRING("14P", b);
+    uptime(3 * 60 + 14, b, sizeof(b));   TEST_ASSERT_EQUAL_STRING("3G 14P", b);
+    uptime(2 * 1440 + 3 * 60 + 14, b, sizeof(b)); TEST_ASSERT_EQUAL_STRING("2NG 3G 14P", b);
+}
+
+// P-2026-11-28.28–.32: the new programs — names, icons, frames, Start's list.
+void test_new_programs() {
+    using namespace XPCore;
+    TEST_ASSERT_EQUAL(PROG_TASKMGR, progOf("taskmgr"));
+    TEST_ASSERT_EQUAL(PROG_CALC, progOf("Calc"));
+    TEST_ASSERT_EQUAL(PROG_DISPLAY, progOf("Display"));
+    TEST_ASSERT_EQUAL(PROG_EXPLORER, progOf("Explorer"));
+    TEST_ASSERT_EQUAL(ICON_TASKMGR, progIcon(PROG_TASKMGR));
+    TEST_ASSERT_TRUE(colorIcon(ICON_CALC));
+    TEST_ASSERT_FALSE(colorIcon(ICON_MINES));
+    TEST_ASSERT_EQUAL_STRING("Trình quản lý tác vụ", frameOf("TaskMgr").title);
+    TEST_ASSERT_EQUAL_STRING("Máy tính bỏ túi", frameOf("Calc").title);
+    explorerIcon() = ICON_TRASH_FULL;
+    TEST_ASSERT_EQUAL_STRING("Thùng rác", frameOf("Explorer").title);
+    TEST_ASSERT_EQUAL(ICON_TRASH_FULL, progIcon(PROG_EXPLORER));
+    explorerIcon() = ICON_COMPUTER;
+    TEST_ASSERT_EQUAL_STRING("Máy tính", frameOf("Explorer").title);
+    TEST_ASSERT_EQUAL(BTN_NONE, buttonFor("TaskMgr"));
+    // Calculator = skill Giải trí; system windows never in Start's "most used".
+    Installed in = installedOf("agent,fun", false);
+    TEST_ASSERT_TRUE(installed(in, PROG_CALC));
+    in = installedOf("agent", false);
+    TEST_ASSERT_FALSE(installed(in, PROG_CALC));
+    int8_t recent[kRecentN] = {PROG_NONE, PROG_NONE, PROG_NONE};
+    noteRecent(recent, PROG_TASKMGR);
+    noteRecent(recent, PROG_EXPLORER);
+    TEST_ASSERT_EQUAL(PROG_NONE, recent[0]);
+    noteRecent(recent, PROG_CALC);                          // no Start row designed yet
+    TEST_ASSERT_EQUAL(PROG_NONE, recent[0]);
+}
+
+// P-2026-11-28.29: Alt+Tab box geometry and order.
+void test_alttab_geometry() {
+    using namespace XPCore;
+    AltTabBox b = altTabBox(3);
+    TEST_ASSERT_EQUAL(40, b.x); TEST_ASSERT_EQUAL(69, b.y); TEST_ASSERT_EQUAL(160, b.w); TEST_ASSERT_EQUAL(76, b.h);
+    int x, y;
+    altTabTile(b, 1, x, y);
+    TEST_ASSERT_EQUAL(100, x); TEST_ASSERT_EQUAL(77, y);           // XP-AltTab-3: chosen frame at (101, 77)
+    b = altTabBox(1);
+    altTabTile(b, 0, x, y);
+    TEST_ASSERT_EQUAL(100, x);                                     // XP-AltTab-1: one tile, centred
+    b = altTabBox(6);
+    TEST_ASSERT_EQUAL(14, b.x); TEST_ASSERT_EQUAL(50, b.y); TEST_ASSERT_EQUAL(212, b.w); TEST_ASSERT_EQUAL(114, b.h);
+    altTabTile(b, 5, x, y);
+    TEST_ASSERT_EQUAL(20, x); TEST_ASSERT_EQUAL(96, y);            // second row starts on the left
+    const int8_t open[] = {PROG_CLAUDE, PROG_WEATHER, PROG_CLOCK};
+    int8_t out[4];
+    TEST_ASSERT_EQUAL(3, altTabOrder(open, 3, PROG_WEATHER, out));
+    TEST_ASSERT_EQUAL(PROG_WEATHER, out[0]);                       // the top window first
+    TEST_ASSERT_EQUAL(PROG_CLOCK, out[1]);                         // then newest opened
+    TEST_ASSERT_EQUAL(PROG_CLAUDE, out[2]);
+    TEST_ASSERT_EQUAL(1, altTabSel(-1, 3));                        // XP: the second is chosen on open
+    TEST_ASSERT_EQUAL(0, altTabSel(-1, 1));
+    TEST_ASSERT_EQUAL(-1, altTabSel(0, 0));
+    TEST_ASSERT_EQUAL(0, altTabSel(3, 3));                         // wraps
+}
+
+// P-2026-11-28.31: Máy tính bỏ túi keys.
+void test_calc_core() {
+    using namespace CalcCore;
+    char b[12];
+    label(0, b, sizeof(b));        TEST_ASSERT_EQUAL_STRING("MC", b);
+    label(5, b, sizeof(b));        TEST_ASSERT_EQUAL_STRING("sqrt", b);
+    label(23, b, sizeof(b));       TEST_ASSERT_EQUAL_STRING("=", b);
+    label(KEY_BACK, b, sizeof(b)); TEST_ASSERT_EQUAL_STRING("Backspace", b);
+    label(KEY_C, b, sizeof(b));    TEST_ASSERT_EQUAL_STRING("C", b);
+    label(99, b, sizeof(b));       TEST_ASSERT_EQUAL_STRING("", b);
+    TEST_ASSERT_TRUE(blueKey(1));                  // 7
+    TEST_ASSERT_TRUE(blueKey(20));                 // +/-
+    TEST_ASSERT_FALSE(blueKey(4));                 // /
+    TEST_ASSERT_FALSE(blueKey(18));                // M+
+    TEST_ASSERT_FALSE(blueKey(KEY_CE));
+    const Rect r = key(23);
+    TEST_ASSERT_EQUAL(198, r.x); TEST_ASSERT_EQUAL(176, r.y);    // XP-Calc-Down: "=" at (198, 176)
+    TEST_ASSERT_EQUAL(23, keyAt(210, 190));
+    TEST_ASSERT_EQUAL(KEY_BACK, keyAt(60, 60));
+    TEST_ASSERT_EQUAL(KEY_NONE, keyAt(43, 100));                // the gap between keys
+    View v;
+    setDisplay(v, "12345678901234567890");
+    TEST_ASSERT_EQUAL(kDisplayMax, (int)strlen(v.display));
+}
+
+// P-2026-11-28.30: Display Properties — pending values over the saved ones, Áp dụng, slider, hot buttons.
+void test_display_props_core() {
+    using namespace DisplayCore;
+    const Saved sv{2, 2, 80, true, true};
+    View v;
+    TEST_ASSERT_FALSE(dirty(v, sv));                       // nothing pending: Áp dụng dim
+    Shown o = shown(v, sv);
+    TEST_ASSERT_EQUAL(80, o.bright);
+    v.bright = 80;
+    TEST_ASSERT_FALSE(dirty(v, sv));                       // same as saved
+    v.saver = 1;
+    TEST_ASSERT_TRUE(dirty(v, sv));
+    TEST_ASSERT_EQUAL(1, shown(v, sv).saver);
+    v = View(); v.invert = 0;
+    TEST_ASSERT_TRUE(dirty(v, sv));
+    TEST_ASSERT_FALSE(shown(v, sv).invert);
+    TEST_ASSERT_EQUAL(106, thumbX(80));                    // XP-Display-Settings: thumb (101, 137) 11 wide
+    TEST_ASSERT_EQUAL(20, tickX(0));
+    TEST_ASSERT_EQUAL(74, tickX(5));
+    TEST_ASSERT_EQUAL(127, tickX(10));
+    TEST_ASSERT_EQUAL(3, wallRows(true));
+    TEST_ASSERT_EQUAL(2, wallRows(false));
+    TEST_ASSERT_EQUAL(BTN_OK, hotAt(60, 195, false));
+    TEST_ASSERT_EQUAL(BTN_NONE, hotAt(190, 195, false));   // Áp dụng dim: never hot
+    TEST_ASSERT_EQUAL(BTN_APPLY, hotAt(190, 195, true));
+    TEST_ASSERT_EQUAL(BTN_NONE, hotAt(60, 150, true));
+}
+
+// P-2026-11-28.32: Explorer texts and geometry.
+void test_explorer_core() {
+    using namespace ExplorerCore;
+    char b[48];
+    shownName("s3.jpg", b, sizeof(b));  TEST_ASSERT_EQUAL_STRING("mau3.jpg", b);
+    shownName("p12.jpg", b, sizeof(b)); TEST_ASSERT_EQUAL_STRING("p12.jpg", b);
+    sizeText(0, b, sizeof(b));          TEST_ASSERT_EQUAL_STRING("0 KB", b);
+    sizeText(1, b, sizeof(b));          TEST_ASSERT_EQUAL_STRING("1 KB", b);
+    sizeText(32768, b, sizeof(b));      TEST_ASSERT_EQUAL_STRING("32 KB", b);
+    driveText(412 * 1024 + 300, 1024 * 1024, b, sizeof(b));
+    TEST_ASSERT_EQUAL_STRING("trống 412 KB / 1 MB", b);
+    TEST_ASSERT_EQUAL(72, driveUsedW(1024 * 1024 * 2 / 5, 1024 * 1024));     // 60 % used of 120 px
+    TEST_ASSERT_EQUAL(0, driveUsedW(5, 0));
+    objectsText(8, 214 * 1024, true, b, sizeof(b));  TEST_ASSERT_EQUAL_STRING("8 đối tượng · 214 KB", b);
+    objectsText(0, 0, true, b, sizeof(b));            TEST_ASSERT_EQUAL_STRING("0 đối tượng", b);
+    objectsText(3, 0, false, b, sizeof(b));           TEST_ASSERT_EQUAL_STRING("3 đối tượng", b);
+    int x, y;
+    TEST_ASSERT_TRUE(thumbCell(2, 0, x, y));   TEST_ASSERT_EQUAL(120, x); TEST_ASSERT_EQUAL(28, y);
+    TEST_ASSERT_TRUE(thumbCell(5, 0, x, y));   TEST_ASSERT_EQUAL(63, x);  TEST_ASSERT_EQUAL(100, y);
+    TEST_ASSERT_FALSE(thumbCell(8, 0, x, y));                    // third row: scrolled off
+    TEST_ASSERT_TRUE(thumbCell(8, 1, x, y));   TEST_ASSERT_EQUAL(100, y);
+    TEST_ASSERT_FALSE(thumbCell(0, 1, x, y));
+    deletedText(0, 0, 0, 0, 1, 1, b, sizeof(b));               TEST_ASSERT_EQUAL_STRING("--", b);
+    deletedText(1, 5, 5, 14 * 60 + 2, 28, 11, b, sizeof(b));   TEST_ASSERT_EQUAL_STRING("14:02", b);
+    deletedText(1, 4, 5, 14 * 60 + 2, 27, 11, b, sizeof(b));   TEST_ASSERT_EQUAL_STRING("27/11", b);
+    TEST_ASSERT_TRUE(in(kNoBtn, 130, 140));
+    TEST_ASSERT_FALSE(in(kYesBtn, 130, 140));
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_setup_qr_payload_is_open_wifi);
@@ -1813,5 +1996,11 @@ int main(int, char**) {
     RUN_TEST(test_mines_view);
     RUN_TEST(test_pointer_turnoff_and_hot);
     RUN_TEST(test_menu_hover_same_menu);
+    RUN_TEST(test_perf_core);
+    RUN_TEST(test_new_programs);
+    RUN_TEST(test_alttab_geometry);
+    RUN_TEST(test_display_props_core);
+    RUN_TEST(test_calc_core);
+    RUN_TEST(test_explorer_core);
     return UNITY_END();
 }

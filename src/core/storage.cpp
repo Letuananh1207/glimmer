@@ -52,6 +52,8 @@ Settings Storage::load() {
     s.codexWeeklyHero  = doc[F("codex_weekly_hero")]  | false;
     s.clock24h      = doc[F("clock_24h")]      | true;
     s.invertDisplay = doc[F("invert_display")] | true;
+    s.wallpaperMode = doc[F("wallpaper_mode")] | 2;
+    if (s.wallpaperMode > 2) s.wallpaperMode = 2;
     // Night: minute-precision window + mode. Older configs stored whole hours
     // and an on/off dim flag; translate those once on load.
     if (!doc[F("night_mode")].isNull()) {
@@ -123,6 +125,7 @@ bool Storage::save(const Settings& s) {
     doc[F("codex_weekly_hero")]  = s.codexWeeklyHero;
     doc[F("clock_24h")]     = s.clock24h;
     doc[F("invert_display")]= s.invertDisplay;
+    doc[F("wallpaper_mode")]= s.wallpaperMode;
     doc[F("night_mode")]      = s.nightMode;
     doc[F("night_start_min")] = s.nightStartMin;
     doc[F("night_end_min")]   = s.nightEndMin;

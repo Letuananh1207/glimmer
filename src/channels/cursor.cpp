@@ -149,6 +149,15 @@ bool busy(uint32_t now) {
     return true;
 }
 
+bool showBusyNow(uint32_t now) {
+    if (!busy(now)) return false;
+    if (!s_shown) return true;                   // step() draws it once the cursor shows
+    s_drawn.shape = SHAPE_WAIT;                  // wait = arrow + hourglass: covers the arrow
+    s_drawnFrame = (int8_t)waitFrame(now);
+    paintCursor(s_drawn, s_drawnFrame);
+    return true;
+}
+
 int drawnX() { return s_drawn.x; }
 int drawnY() { return s_drawn.y; }
 

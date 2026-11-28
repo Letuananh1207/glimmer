@@ -64,6 +64,9 @@ namespace XP {
     void drawIcon(Icon icon, int x, int y, int scale, uint16_t color);
     // Icon size in cells (w, h).
     void iconSize(Icon icon, int& w, int& h);
+    // XP colour icon (XPCore::colorIcon) with its top-left at (x, y), each pixel [scale] px (Alt+Tab ×2);
+    // transparent cells left as they are.
+    void drawColorIcon(Icon icon, int x, int y, int scale = 1);
 
     // ── Components (§17 "Thành phần") ──
 
@@ -86,7 +89,16 @@ namespace XP {
     // FIELD_BORDER + WHITE; tabs from x 6, width = text + 10 (JBMono-11 TL
     // (x+5, 29)); the selected one y 26–41 with a WELCOME_ORANGE / FLAG_YELLOW
     // hot top and a white face joined to the page, the others y 28–40 ROW_LINE.
-    void tabs(const char* const* labels, int n, int selected);
+    // [pageH]: the page's height (Task Manager 152, Display 140); [pad]: tab width = text + pad, text at x + pad / 2.
+    void tabs(const char* const* labels, int n, int selected, int pageH = 169, int pad = 10);
+
+    // XP push button (P-2026-11-28.28–.31, as Date and Time's "Cập nhật ngay"): #003C74 edge with 1-px cut
+    // corners, #F4F3EE face, 2 foot rows #D6D0C5, label centred (y + 3, JBMono-11 unless [font]).
+    // BTN_DIM: label xpDim. BTN_HOT: XP's orange inner ring (mouse over it). BTN_DOWN: pressed — face
+    // #DCD8CC, 2 top rows #A7A495, label 1 px lower. [ink]: label colour of a live button.
+    enum BtnLook : uint8_t { BTN_UP, BTN_DIM, BTN_HOT, BTN_DOWN };
+    void pushButton(int x, int y, int w, int h, const char* label, BtnLook look,
+                    uint16_t ink = Theme::XP::BLACK, const char* font = "JBMono-11", int textDy = 3);
 
     // Weather icon for a WMO code: sun (0–1), partly cloudy (2–3, fog), rain
     // (the rest) — 16×16, or 32×32 with [big]. Transparent background.
@@ -123,7 +135,8 @@ namespace XP {
     // "Working in Background" cursor: arrow 12×19 tip (132, 160) + hourglass
     // frame step % 4 at (142, 169) (frame 3 lies flat at (140, 171)); repaints
     // its 21×22 cell on BODY.
-    void waitCursor(uint32_t step);
+    // over = drawn straight over a photo (no BODY cell behind it, XP-Photo-Asking).
+    void waitCursor(uint32_t step, bool over = false);
     // XP-Open's hourglass [frame] (0..3) beside an arrow whose tip is at (x, y) — the mouse cursor's
     // Working in Background (P-2026-11-27.24, cursor.cpp) and the fixed wait cell.
     void hourglass(int frame, int x, int y);

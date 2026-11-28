@@ -30,6 +30,18 @@ struct Cap { int16_t x, y, w, h; uint16_t* buf; };
 // edge of the rectangle aborts early (cheap for bands near the top).
 void paint(int x, int y, int w, int h, Cap* caps = nullptr, int nCaps = 0);
 
+// P-2026-11-28.30 (Display Properties › Màn nền): which wallpaper the desktop shows — setting
+// wallpaperMode. NONE = one colour (XP's (None): the desktop colour #004E98), HILLS = the fallback pixel
+// wallpaper even when /wallpaper.jpg is set, PHOTO = the JPEG (the fallback when there is none).
+enum Mode : uint8_t { MODE_NONE = 0, MODE_HILLS = 1, MODE_PHOTO = 2 };
+constexpr uint16_t kNoneColor = 0x0273;      // #004E98
+void setMode(uint8_t mode);
+uint8_t mode();
+
+// The wallpaper [mode] shows, a quarter size (60 × 54 for 240 × 214), with its top-left at (x, y),
+// clipped to w × h — the Display Properties preview. JPEG: TJpgDec's 1/4 output; fallback: every 4th pixel.
+void thumb(uint8_t mode, int x, int y, int w, int h);
+
 // Colour of the fallback wallpaper at (x, y) (screen = wallpaper coords).
 uint16_t fallbackAt(int x, int y);
 

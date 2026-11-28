@@ -30,8 +30,8 @@ https://claude.ai/artifact/WzLqGhKvD1MYxqaiRkzq1r, exported to `design/` by a de
   `tools/pio_native_cflags.py` (host gcc defaults to C23, which breaks its `typedef bool`).
 - **LittleFS files**: `/config.json` (settings), `/usage.bin` (history ring),
   `/weather.json` (last-good weather), `/photos/p<N>.jpg` (skill `photo`),
-  `/wallpaper.jpg` (desktop wallpaper), `/fonts/*.vlw`, `/web/*`. A
-  filesystem flash replaces all of them.
+  `/wallpaper.jpg` (desktop wallpaper), `/trash/*` + `/trash/index.bin` (Thùng rác), `/fonts/*.vlw`,
+  `/web/*`. A filesystem flash replaces all of them.
 
 ## Flashing (OTA over HTTP)
 
@@ -149,7 +149,7 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
   `skillsOn` array in `/api/settings`, `skills_on` + `skills` (+ legacy
   `skill` = first on) in `/api/state`. Channels of enabled skills can show, plus
   `skill = nullptr` system channels (Attention, Night, Info). Weather +
-  Forecast = `weather`, Clock = `clock`, Photo = `photo`, Mines = `fun` (Giải trí, default off). New pack = id in
+  Forecast = `weather`, Clock = `clock`, Photo = `photo`, Mines + Calc = `fun` (Giải trí, default off). New pack = id in
   `Skill::kAll` + program(s) in `XPCore::Prog` + desktop icon (`XPCore::deskIcons`) + Start rows
   (`PointerCore::startLayout`, `XPCore::installed`) + tag its channels. App rules `R-SK-*`.
 - **Start lists** (P-2026-11-27.25): left column = pinned Claude / Codex + the **3 programs opened last**
@@ -160,6 +160,19 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
   open, win / loss); `POST /api/mines {board: 81 chars '.' 'F' 'P' '0'..'8' 'M' 'X' 'W', face, left, secs,
   run}` → the device repaints only the changed cells / face / LED and runs the seconds itself;
   `/api/state` `mines` (present = this firmware draws it). No menu bar, no `?` (P-.25).
+- **More XP programs** (P-2026-11-28.28–.32): **the app is the computer** — it keeps the state / arithmetic and
+  sends a view; the device draws, repaints only what changed, and lights its own buttons under the cursor
+  (`chXPointer` from `pointerTick`, XP's hot ring, `XP::pushButton`). Colour 16-px icons: `src/ui/xp_icons.h`
+  (`tools/deskicons.py`), `XPCore::colorIcon`. System windows (no skill, not in Start's "hay dùng"):
+  **TaskMgr** (`POST /api/taskmgr {tab, sel}`; CPU % = the share of each second `loop()` is outside its
+  `delay(10)`, histories 38/38/48 B in RAM, `perf_core.h`), **Display** (Thuộc tính màn hình: `POST /api/display`
+  = the app's pending values, OK / Áp dụng = its `POST /api/settings`; setting `wallpaperMode` 0 (Không) =
+  #004E98 / 1 Đồi xanh = fallback / 2 your photo; preview = wallpaper at 1/4 via `jpeg_thumb.cpp`),
+  **Explorer** (Máy tính / Ảnh của tôi / Thùng rác, `POST /api/explorer {place, sel, top, confirm, do}`;
+  deleting a photo = rename into `/trash/` (≤ 16, `trash.cpp`), the desktop bin shows full). **Calc**
+  (skill `fun`, `POST /api/calc {display, error, mem, down}`; no Start row until designed). **Alt+Tab** =
+  menu kind `alttab` + `sel` (`xp_alttab.cpp`; order = top window, then newest opened; `/api/state`
+  `alttab`). Not drawn yet (no design): the taskbar's right-click menu (Trình quản lý tác vụ item).
 - `draw(ctx)` — full repaint on activation, may `Display::clear()`.
 - `tick(ctx)` — 5 Hz while active. **Never** `Display::clear()` /
   `tft.fillScreen()`. File-static caches with sentinels (`-1`, `-2.f`) +

@@ -285,6 +285,8 @@ def title_bar(sc, t, icon="clawd"):
         draw_icon(sc, "info", 8, 6, 1, X["WHITE"])
     elif icon == "mines":                                   # P-2026-11-27.25: black mine + glint at (6, 5)
         run_icon(sc, _mines_icon("TitleMine"), 6, 5)
+    elif icon in COLOR_ICON:                                # P-2026-11-28.28–.32
+        color_icon(sc, icon, 4, 3)
     elif icon:
         w, h, _ = ICONS[icon]
         draw_icon(sc, icon, 13 - w // 2, 11 - h // 2, 1, X["WHITE"])
@@ -401,27 +403,54 @@ def group_box(sc, x, y, w, h, label, bg=None):
     group_label(sc, x, y, label, bg=bg)
 
 
-def tabs(sc, labels, sel):
+def tabs(sc, labels, sel, page_h=169, pad=10):
     """XP::tabs (P-2026-11-26.17 Luna tab control)."""
-    sc.outline(6, 41, 228, 169, X["FIELD_BORDER"])
-    sc.rect(7, 42, 226, 167, X["WHITE"])
+    sc.outline(6, 41, 228, page_h, X["FIELD_BORDER"])
+    sc.rect(7, 42, 226, page_h - 2, X["WHITE"])
     sc.rect(6, 26, 228, 15, X["BODY"])
     x, sx, sw = 6, 6, 0
     for i, t in enumerate(labels):
-        w = sc.width("JBMono-11", t) + 10
+        w = sc.width("JBMono-11", t) + pad
         if i == sel:
             sx, sw = x, w
         else:
             sc.outline(x, 28, w - 1, 14, X["FIELD_BORDER"])
             sc.rect(x + 1, 29, w - 3, 12, X["ROW_LINE"])
-            sc.text("JBMono-11", t, x + 5, 29, X["BLACK"])
+            sc.text("JBMono-11", t, x + pad // 2, 29, X["BLACK"])
         x += w
     sc.hline(sx, 26, sw, X["WELCOME_ORANGE"])
     sc.rect(sx, 27, sw, 2, X["FLAG_YELLOW"])
     sc.vline(sx, 27, 15, X["FIELD_BORDER"])
     sc.vline(sx + sw - 1, 27, 15, X["FIELD_BORDER"])
     sc.rect(sx + 1, 29, sw - 2, 13, X["WHITE"])
-    sc.text("JBMono-11", labels[sel], sx + 5, 29, X["BLACK"])
+    sc.text("JBMono-11", labels[sel], sx + pad // 2, 29, X["BLACK"])
+
+
+def push_button(sc, x, y, w, h, label, look="up", ink=None, fname="JBMono-11", dy=3):
+    """XP::pushButton (P-2026-11-28.28–.31): up / dim / hot / down."""
+    line, face, foot = hx("003C74"), hx("F4F3EE"), hx("D6D0C5")
+    down = look == "down"
+    if down:
+        face = hx("DCD8CC")
+    sc.hline(x + 1, y, w - 2, line)
+    sc.hline(x + 1, y + h - 1, w - 2, line)
+    sc.vline(x, y + 1, h - 2, line)
+    sc.vline(x + w - 1, y + 1, h - 2, line)
+    sc.rect(x + 1, y + 1, w - 2, h - 2, face)
+    if down:
+        sc.rect(x + 1, y + 1, w - 2, 2, hx("A7A495"))
+    else:
+        sc.rect(x + 1, y + h - 3, w - 2, 2, foot)
+    if look == "hot":
+        sc.hline(x + 1, y + 1, w - 2, hx("FFF0CF"))
+        sc.hline(x + 1, y + 2, w - 2, hx("F9B348"))
+        sc.hline(x + 1, y + h - 3, w - 2, hx("F9B348"))
+        sc.vline(x + 1, y + 2, h - 4, hx("F9B348"))
+        sc.vline(x + w - 2, y + 2, h - 4, hx("F9B348"))
+        sc.hline(x + 1, y + h - 2, w - 2, hx("E59700"))
+    if label:
+        c = X["DIM"] if look == "dim" else (ink or X["BLACK"])
+        sc.text(fname, label, x + w // 2, y + dy + (1 if down else 0), c, "TC")
 
 
 def wx_icon(sc, code, x, y, big):
@@ -512,9 +541,10 @@ def draw_art(sc, name, x, y, inks):
                 sc.pixel(x + c, y + r, inks[k])
 
 
-def wait_cursor(sc, frame=0):
+def wait_cursor(sc, frame=0, over=False):
     """XP::waitCursor: arrow tip (132, 160) + hourglass frame (frame 3 flat at (140, 171))."""
-    sc.rect(132, 160, 21, 22, X["BODY"])
+    if not over:
+        sc.rect(132, 160, 21, 22, X["BODY"])
     draw_art(sc, "kArrow", 132, 160, {"X": X["BLACK"], "W": X["WHITE"]})
     inks = {"X": X["BLACK"], "W": X["WHITE"], "S": X["AMBER"]}
     if frame % 4 == 3:
@@ -601,7 +631,8 @@ def task_bands(sc, x, w, r0, r1):
 
 # main.cpp barState / XPCore::fillBar (P-2026-11-26.14): one button per open window.
 PROG_ICON = {"Photo": "photo", "Weather": "weather", "Forecast": "weather", "Clock": "clock", "Info": "info",
-             "Mines": "mines"}
+             "Mines": "mines", "TaskMgr": "taskmgr", "Display": "display", "Calc": "calc", "Explorer": "computer",
+             "Pictures": "pictures", "Trash": "trash", "TrashFull": "trash_full"}
 _BTN_PROG = {"claude": "Claude", "photo": "Photo", "weather": "Weather", "clock": "Clock"}
 
 
@@ -638,6 +669,8 @@ def taskbar(sc, *, active="claude", windows=None, top=None, flash=False, badge=1
         icon = PROG_ICON.get(prog, "clawd")
         if icon == "clawd":
             draw_icon(sc, "clawd", x + 5, 222, 1, X["WHITE"] if look == "flash" else CLAWD_ORANGE)
+        elif icon in COLOR_ICON:                            # P-2026-11-28.28–.32
+            color_icon(sc, icon, x + 6, 220)
         elif icon == "mines":                               # white mine at (button + 7, 220)
             pal, runs = _mines_icon("TitleMine")
             for xx, yy, ww, c in runs:
@@ -771,28 +804,24 @@ def connecting(sc):
     italic(sc, "kWelcomeBits", 71, 12, 70, 106)
 
 
+def _design_qr():
+    """The QR modules of design/panel/source/XP-SetupMode.dc.html (same payload; the firmware's
+    library may pick another mask — same size and content)."""
+    src = (ROOT / "design" / "panel" / "source" / "XP-SetupMode.dc.html").read_text(encoding="utf-8")
+    m = re.search(r'viewBox="0 0 37 37"[^>]*><path fill="#000000" d="([^"]*)"', src)
+    return [(int(x), int(y)) for x, y in re.findall(r"M(\d+) (\d+)h", m.group(1))] if m else []
+
+
 def setup_ap(sc, ap="glimmer-setup", ip="192.168.4.1"):
+    # P-2026-11-28.26: QR in the middle, logo in the top band, AP name in the bottom band.
     welcome_chrome(sc)
-    draw_flag(sc, 70, 74, 2)
-    italic(sc, "kWindowBits", 63, 12, 12, 102)
-    sc.text("JBMono-11", "xp", 81, 103, X["WELCOME_ORANGE"])
-    sc.text("JBMono-11", "Để bắt đầu,", 14, 126, X["WHITE"])
-    sc.text("JBMono-11", "kết nối Wi-Fi", 14, 140, X["WHITE"])
-    sc.vline(116, 40, 30, X["DIVIDER_FADE"])
-    sc.vline(116, 70, 100, X["DIVIDER"])
-    sc.vline(116, 170, 30, X["DIVIDER_FADE"])
-    sc.rect(124, 86, 112, 50, X["USER_SEL"])
-    sc.hline(124, 86, 112, X["USER_SEL_HI"])
-    sc.rect(130, 92, 24, 24, X["WHITE"])
-    sc.rect(132, 94, 20, 20, X["USER_PIC"])
-    clawd(sc, 133, 99, 1, CLAWD_ORANGE, bg=X["USER_PIC"])
-    l1, _, l2 = ap.partition("-")
-    if l2:
-        l1 += "-"
-    sc.text("JBMono-12B", l1, 158, 92, X["WHITE"])
-    if l2:
-        sc.text("JBMono-12B", l2, 158, 106, X["WHITE"])
-    sc.text("JBMono-11", ip, 158, 121, X["WELCOME_SUB"])
+    draw_flag(sc, 8, 3, 2)
+    italic(sc, "kWindowBits", 63, 12, 40, 9)
+    sc.text("JBMono-11", "xp", 110, 8, X["WELCOME_ORANGE"])
+    sc.rect(46, 35, 148, 148, X["WHITE"])
+    for mx, my in _design_qr():
+        sc.rect(46 + mx * 4, 35 + my * 4, 4, 4, X["BLACK"])
+    sc.text("JBMono-11", "Quét mã bằng app glimmer", 120, 187, X["WHITE"], "TC")
     sc.rect(8, 218, 14, 14, X["WHITE"])
     sc.rect(9, 219, 12, 12, X["CLOSE"])
     sc.rect(14, 221, 2, 5, X["WHITE"])
@@ -800,6 +829,7 @@ def setup_ap(sc, ap="glimmer-setup", ip="192.168.4.1"):
     sc.rect(18, 223, 1, 5, X["WHITE"])
     sc.rect(12, 228, 6, 1, X["WHITE"])
     sc.text("JBMono-11", "Cài đặt Wi-Fi", 28, 219, X["WHITE"])
+    sc.text("JBMono-11", ap, 141, 219, X["WELCOME_SUB"])
 
 
 def ota(sc):
@@ -1106,10 +1136,32 @@ def _start_icon(name):
     return pal, [tuple(int(v) for v in m) for m in re.findall(r"\{(\d+), (\d+), (\d+), (\d+)\}", runs_src)]
 
 
-def run_icon(sc, icon, x0, y0):
+def run_icon(sc, icon, x0, y0, scale=1):
     pal, runs = icon
     for x, y, w, c in runs:
-        sc.rect(x0 + x, y0 + y, w, 1, pal[c])
+        sc.rect(x0 + x * scale, y0 + y * scale, w * scale, scale, pal[c])
+
+
+# src/ui/xp_icons.h (P-2026-11-28.28–.32, tools/deskicons.py): XP colour icons of the new programs.
+_SRC_XPICONS = (ROOT / "src" / "ui" / "xp_icons.h").read_text(encoding="utf-8")
+
+
+def _xp_icon(name):
+    pal_src = re.search(rf"k{name}Pal\[\] PROGMEM = \{{(.*?)\}};", _SRC_XPICONS, re.S).group(1)
+    pal = [hx(h) for h in re.findall(r"/\* #([0-9A-F]{6}) \*/", pal_src)]
+    runs_src = re.search(rf"k{name}Runs\[\] PROGMEM = \{{(.*?)\n\}};", _SRC_XPICONS, re.S).group(1)
+    return pal, [tuple(int(v) for v in m) for m in re.findall(r"\{(\d+), (\d+), (\d+), (\d+)\}", runs_src)]
+
+
+# XPCore::colorIcon: drawn in their own colours, title (4, 3), taskbar (button + 6, 220).
+COLOR_ICON = {"taskmgr": ("xp", "TaskMgr"), "calc": ("xp", "Calc"), "computer": ("xp", "Computer"),
+              "trash": ("xp", "TrashSmall"), "trash_full": ("xp", "TrashSmallFull"),
+              "display": ("start", "Desktop"), "pictures": ("start", "Photo")}
+
+
+def color_icon(sc, icon, x, y, scale=1):
+    src, name = COLOR_ICON[icon]
+    run_icon(sc, _xp_icon(name) if src == "xp" else _start_icon(name), x, y, scale)
 
 
 START_FILL = ["Photo", "Weather", "Clock", "Mines", "AI", "Trend", "Agents"]   # XPCore::recentRows
@@ -1260,7 +1312,7 @@ def with_hot(hot, draw):
 
 def desktop(sc, *, cl="Claude", cx="Codex", line1=f"29° {DOT} Ít mây", line2="cảm giác 33°",
             balloon=False, badge=1, skills=("agent", "photo", "weather", "clock"), sel=None,
-            windows=(), top=None, tray=None, one_col=False, xp_icons=True):
+            windows=(), top=None, tray=None, one_col=False, xp_icons=True, trash_full=False):
     """tray=None: the weather tray icon when the weather skill is on (P-2026-11-26.15); the older
     design images (before .15) are drawn with tray=False."""
     sc.img.paste(_desk_wallpaper(), (0, 0))
@@ -1271,6 +1323,8 @@ def desktop(sc, *, cl="Claude", cx="Codex", line1=f"29° {DOT} Ít mây", line2=
         white = X["SELECT_ICON"] if selected else X["WHITE"]
         if prog == "Claude":
             draw_icon(sc, "clawd", x - 18, y + 1, 2, X["SELECT_CLAWD"] if selected else CLAWD_ORANGE)
+        elif xp_icons and prog is None and trash_full:                  # P-2026-11-28.32
+            run_icon(sc, _xp_icon("TrashFull"), x - 16, y)
         elif xp_icons and prog in ("Codex", "Photo", None, "Mines"):     # P-2026-11-26.19, .25
             desk_icon_xp(sc, prog, x - 16, y, selected)
         elif prog == "Codex":
@@ -1893,10 +1947,447 @@ def photo_empty(sc):
     title_meta(sc, "")
     draw_icon(sc, "photo", 96, 52, 3, X["EMPTY_ICON"])
     sc.text("JBMono-16B", "Chưa có ảnh", 120, 100, X["MUTED"], "TC")
-    sc.text("JBMono-11", "Gửi ảnh từ app glimmer", 120, 128, X["BLACK"], "TC")
-    sc.text("JBMono-11", "hoặc", 120, 146, X["MUTED"], "TC")
-    sc.text("JBMono-12B", "glimmer.local", 120, 162, X["LINK"], "TC")
+    sc.text("JBMono-11", "Thêm ảnh trong app glimmer", 120, 128, X["BLACK"], "TC")   # P-2026-11-28.27
     taskbar(sc, active="photo", accent=MINT, badge=1, progress=0)   # empty: no slide progress
+
+
+# ── Trình quản lý tác vụ (ch_taskmgr.cpp, P-2026-11-28.28) ──
+TM_GREEN, TM_OFF, TM_GRID = hx("00FF00"), hx("007F00"), hx("008040")
+TM_CPU = [3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 3, 4, 4, 10, 18, 9, 6, 3, 3, 3, 3, 3, 4, 4, 4, 8, 4, 3, 3, 3, 4, 4, 30,
+          20, 8, 4, 3, 12]
+TM_MEM = [38, 38, 39, 39, 40, 40, 40, 39, 39, 40, 41, 41, 40, 40, 40, 41, 50, 58, 50, 44, 42, 41, 41, 40, 40, 41,
+          41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41]
+TM_NET = [70] * 8 + [68, 66, 69, 70, 70, 62, 55, 64, 70, 71, 72, 71, 70, 70, 69, 70, 71, 70, 70, 70, 70, 70, 70, 70,
+                     70, 70, 69, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70]
+
+
+def _tm_graph(sc, x, y, w, h, pts):
+    sc.rect(x, y, w, h, hx("000000"))
+    for gx in range(x + 11, x + w, 12):
+        sc.vline(gx, y, h, TM_GRID)
+    for gy in range(y + 11, y + h, 12):
+        sc.hline(x, gy, w, TM_GRID)
+    n, right, prev = len(pts), x + w - 1, None
+    for i, v in enumerate(pts):
+        qx, qy = right - 4 * (n - 1 - i), y + (h - 1) - (v * (h - 1) + 50) // 100
+        if prev:
+            ImageDraw.Draw(sc.img).line([prev, (qx, qy)], fill=TM_GREEN)
+        else:
+            sc.pixel(qx, qy, TM_GREEN)
+        prev = (qx, qy)
+
+
+def _tm_gauge(sc, x, y, pct, label):
+    sc.rect(x, y, 44, 36, hx("000000"))
+    lit = 0 if not pct else min(6, (pct * 6 + 99) // 100)
+    for i in range(6):
+        c = TM_GREEN if 6 - i <= lit else TM_OFF
+        sc.rect(x + 15, y + 3 + 3 * i, 6, 2, c)
+        sc.rect(x + 23, y + 3 + 3 * i, 6, 2, c)
+    sc.text("JBMono-11", label, x + 22, y + 23, TM_GREEN, "TC")
+
+
+def _tm_list(sc, x, y, w, h):
+    sc.outline(x, y, w, h, X["FIELD_BORDER"])
+    sc.rect(x + 1, y + 1, w - 2, h - 2, X["WHITE"])
+    sc.rect(x + 1, y + 1, w - 2, 15, X["BODY"])
+    sc.hline(x + 1, y + 16, w - 2, hx("D0D0BF"))
+    sc.hline(x + 1, y + 17, w - 2, X["DIM"])
+
+
+TM_ROW_ICON = {"Claude": ("start", "SmallClawd"), "Weather": ("start", "Weather"), "Clock": ("start", "Clock"),
+               "Photo": ("start", "Photo"), "Codex": ("start", "SmallCodex")}
+TM_TITLE = {"Claude": "Claude", "Weather": "Thời tiết", "Clock": "Ngày và Giờ", "Photo": "Ảnh", "Codex": "Codex"}
+
+
+def taskmgr(sc, tab=0, rows=("Claude", "Weather", "Clock"), sel=1, hot=None, cpu=12, free=21412, maxblk=15200,
+            used_k=20, mem_pct=48, up="2NG 3G 14P", ssid="nha-tuan", rssi=-58, ip="192.168.1.23"):
+    window(sc, "Trình quản lý tác vụ", "taskmgr")
+    tabs(sc, ["Ứng dụng", "Hiệu năng", "Mạng"], tab, 152, 10)
+    if tab == 0:
+        _tm_list(sc, 10, 46, 220, 112)
+        sc.rect(150, 50, 1, 10, X["DIM"])
+        sc.text("JBMono-11", "Tác vụ", 16, 48, X["BLACK"])
+        sc.text("JBMono-11", "Trạng thái", 156, 48, X["BLACK"])
+        for i, p in enumerate(rows):
+            y = 64 + 18 * i
+            lit = i == sel
+            fg = X["WHITE"] if lit else X["BLACK"]
+            if lit:
+                sc.rect(11, y, 218, 18, X["SELECT"])
+            src, name = TM_ROW_ICON[p]
+            pal, runs = _start_icon(name)
+            ih = max(r[1] for r in runs) + 1
+            ih = {"SmallClawd": 10, "SmallCodex": 12, "Photo": 14}.get(name, 16)
+            run_icon(sc, (pal, runs), 14, y + (18 - ih) // 2)
+            sc.text("JBMono-11", TM_TITLE[p], 34, y + 2, fg)
+            sc.text("JBMono-11", "Đang chạy", 156, y + 2, fg)
+        any_ = bool(rows)
+        push_button(sc, 26, 165, 117, 21, "Kết thúc tác vụ", "dim" if not any_ else "hot" if hot == 0 else "up")
+        push_button(sc, 147, 165, 82, 21, "Chuyển tới", "dim" if not any_ else "hot" if hot == 1 else "up")
+    elif tab == 1:
+        for gx, gy, gw, gh, lab in ((10, 50, 52, 46, "CPU"), (66, 50, 164, 46, "Lịch sử dùng CPU"),
+                                    (10, 104, 52, 46, "Bộ nhớ"), (66, 104, 164, 46, "Lịch sử bộ nhớ"),
+                                    (10, 158, 130, 34, "Bộ nhớ (KB)"), (144, 158, 86, 34, "Đã chạy")):
+            group_box(sc, gx, gy, gw, gh, lab, X["WHITE"])
+        sc.text("JBMono-11", "Còn trống", 14, 162, X["BLACK"])
+        sc.text("JBMono-11", "Khối lớn", 14, 176, X["BLACK"])
+        _tm_gauge(sc, 14, 56, cpu, f"{cpu} %")
+        _tm_gauge(sc, 14, 110, mem_pct, f"{used_k}K")
+        _tm_graph(sc, 70, 56, 156, 36, TM_CPU)
+        _tm_graph(sc, 70, 110, 156, 36, TM_MEM)
+        sc.text("JBMono-11", str(free), 136, 162, X["BLACK"], "TR")
+        sc.text("JBMono-11", str(maxblk), 136, 176, X["BLACK"], "TR")
+        sc.text("JBMono-11", up, 187, 170, X["BLACK"], "TC")
+    else:
+        sc.text("JBMono-11", "Wi-Fi · Đã kết nối", 10, 46, X["GROUP_LABEL"])
+        sc.text("JBMono-11", "100%", 38, 62, X["LABEL"], "TR")
+        sc.text("JBMono-11", "0%", 38, 120, X["LABEL"], "TR")
+        _tm_graph(sc, 40, 61, 190, 72, TM_NET)
+        _tm_list(sc, 10, 140, 220, 38)
+        sc.rect(75, 144, 1, 10, X["DIM"])
+        sc.rect(140, 144, 1, 10, X["DIM"])
+        sc.text("JBMono-11", "Mạng", 15, 142, X["BLACK"])
+        sc.text("JBMono-11", "Tín hiệu", 80, 142, X["BLACK"])
+        sc.text("JBMono-11", "IP", 145, 142, X["BLACK"])
+        sc.text("JBMono-11", ssid, 15, 160, X["BLACK"])
+        sc.text("JBMono-11", f"{rssi} dBm", 80, 160, X["BLACK"])
+        sc.text("JBMono-11", ip, 145, 160, X["BLACK"])
+    sc.rect(2, 196, 236, 18, X["BODY"])
+    sc.hline(2, 196, 236, X["DIM"])
+    for x, w, t in ((3, 76, f"Tác vụ: {len(rows)}"), (80, 69, f"CPU: {cpu}%"), (150, 87, f"Trống: {(free + 512) // 1024}K")):
+        sc.rect(x, 199, w - 1, 1, X["DIM"])
+        sc.rect(x, 199, 1, 13, X["DIM"])
+        sc.rect(x, 211, w - 1, 1, X["WHITE"])
+        sc.rect(x + w - 2, 199, 1, 13, X["WHITE"])
+        sc.text("JBMono-11", t, x + 4, 199, X["BLACK"])
+    taskbar(sc, windows=["Claude", "TaskMgr"], top="TaskMgr", tray_weather=True, badge=0)
+
+
+SCREENS_TM = [
+    ("Trình quản lý tác vụ", "XP-TaskMgr-Apps · Ứng dụng", lambda s: taskmgr(s), "XPTaskMgrApps"),
+    ("Trình quản lý · nút hot", "XP-TaskMgr-Hover · con trỏ trên Kết thúc tác vụ",
+     lambda s: taskmgr(s, hot=0), "XPTaskMgrHover"),
+    ("Trình quản lý · trống", "XP-TaskMgr-Empty · không cửa sổ", lambda s: taskmgr(s, rows=()), "XPTaskMgrEmpty"),
+    ("Trình quản lý · Hiệu năng", "XP-TaskMgr-Perf", lambda s: taskmgr(s, tab=1), "XPTaskMgrPerf"),
+    ("Trình quản lý · Mạng", "XP-TaskMgr-Net", lambda s: taskmgr(s, tab=2), "XPTaskMgrNet"),
+]
+
+
+# ── Alt+Tab (channels/xp_alttab.cpp, P-2026-11-28.29) ──
+def alt_tab(sc, progs, sel):
+    n = len(progs)
+    cols = max(1, min(n, 5)); rows = max(1, (n + 4) // 5)
+    w = max(12 + 40 * cols, 160); h = 8 + 38 * rows + 4 + 18 + 8
+    x0, y0 = (240 - w) // 2, (214 - h) // 2
+    edge, fill = hx("0A246A"), hx("D3E5FA")
+    sc.hline(x0 + 1, y0, w - 2, edge); sc.hline(x0 + 1, y0 + h - 1, w - 2, edge)
+    sc.vline(x0, y0 + 1, h - 2, edge); sc.vline(x0 + w - 1, y0 + 1, h - 2, edge)
+    sc.outline(x0 + 1, y0 + 1, w - 2, h - 2, X["WHITE"])
+    sc.rect(x0 + 2, y0 + 2, w - 4, h - 4, fill)
+    for i, p in enumerate(progs):
+        x = x0 + (w - 40 * cols) // 2 + 40 * (i % 5)
+        y = y0 + 8 + 38 * (i // 5)
+        if i == sel:
+            sc.rect(x + 1, y, 38, 36, X["SELECT"])
+            sc.rect(x + 3, y + 2, 34, 32, fill)
+        if p == "Claude":
+            run_icon(sc, _start_icon("PinClawd"), x + 2, y + 8)
+        elif p in ("Codex", "Photo"):
+            run_icon(sc, _desk_icon(p), x + 4, y + 6)
+        elif p == "Weather":
+            wx_icon(sc, 2, x + 4, y + 2, True)
+        elif p == "Clock":
+            run_icon(sc, _start_icon("Clock"), x + 4, y + 2, 2)
+        else:
+            color_icon(sc, PROG_ICON[p], x + 4, y + 2, 2)
+    nx, ny, nw = x0 + 8, y0 + 8 + 38 * rows + 4, w - 16
+    sc.outline(nx, ny, nw, 18, X["FIELD_BORDER"])
+    sc.rect(nx + 1, ny + 1, nw - 2, 16, X["WHITE"])
+    sc.text("JBMono-11", TM_TITLE.get(progs[sel], progs[sel]), nx + nw // 2, ny + 1, X["BLACK"], "TC")
+
+
+SCREENS_AT = [
+    ("Alt+Tab · 3 cửa sổ", "XP-AltTab-3 · chọn sẵn cửa sổ thứ hai",
+     lambda s: (weather(s), alt_tab(s, ["Weather", "Claude", "Clock"], 1)), "XPAltTab3"),
+    ("Alt+Tab · 1 cửa sổ", "XP-AltTab-1", lambda s: (weather(s), alt_tab(s, ["Weather"], 0)), "XPAltTab1"),
+    ("Alt+Tab · 6 cửa sổ", "XP-AltTab-6 · hai hàng",
+     lambda s: (weather(s), alt_tab(s, ["Weather", "Claude", "Clock", "Photo", "Codex", "TaskMgr"], 2)),
+     "XPAltTab6"),
+]
+
+
+# ── Thuộc tính màn hình (ch_display.cpp, P-2026-11-28.30) ──
+def _check(sc, x, y, on):
+    sc.outline(x, y, 13, 13, X["FIELD_BORDER"])
+    sc.rect(x + 1, y + 1, 11, 11, X["WHITE"])
+    if on:
+        for i, t in enumerate((2, 3, 4, 3, 2, 1, 0)):
+            sc.rect(x + 3 + i, y + 3 + t, 1, 2, X["CHECK"])
+
+
+def _monitor(sc, x, y, saver=False, wall=2):
+    sc.rect(x, y, 76, 64, hx("8A8A8A"))
+    sc.rect(x + 1, y + 1, 74, 62, hx("D4D0C8"))
+    sc.hline(x + 1, y + 1, 74, X["WHITE"])
+    sc.vline(x + 1, y + 1, 62, X["WHITE"])
+    sc.outline(x + 7, y + 4, 62, 56, X["LABEL"])
+    sc.rect(x + 64, y + 61, 4, 1, hx("21A121"))
+    sc.rect(x + 30, y + 64, 16, 5, hx("B2B2B2"))
+    sc.rect(x + 22, y + 69, 32, 4, hx("D4D0C8"))
+    sc.hline(x + 22, y + 72, 32, hx("8A8A8A"))
+    sx, sy = x + 8, y + 5
+    if saver:
+        sc.rect(sx, sy, 60, 54, hx("000000"))
+        sc.text("JBMono-11", "23:47", sx + 30, sy + 18, X["LABEL"], "TC")
+        return
+    if wall == 0:
+        sc.rect(sx, sy, 60, 48, hx("004E98"))
+    else:   # Đồi xanh (and the sample "your photo": the fallback, every 4th pixel)
+        im = _desk_wallpaper().load()
+        for yy in range(48):
+            for xx in range(60):
+                sc.pixel(sx + xx, sy + yy, im[xx * 4, yy * 4])
+    for k, c in enumerate(("D97757", "000000", "F8D56A")):
+        sc.rect(sx + 6, sy + 6 + 8 * k, 4, 3, hx(c))
+    sc.rect(sx, sy + 48, 60, 6, hx("245EDC"))
+    sc.rect(sx, sy + 48, 14, 6, hx("3A9E3A"))
+
+
+def _list_rows(sc, x, y, w, labels, sel):
+    for i, t in enumerate(labels):
+        lit = i == sel
+        sc.rect(x, y + 16 * i, w, 16, X["SELECT"] if lit else X["WHITE"])
+        sc.text("JBMono-11", t, x + 3, y + 16 * i + 1, X["WHITE"] if lit else X["BLACK"])
+
+
+SAVER = ["(Không)", "Tối dần", "Đồng hồ", "Tắt màn"]
+
+
+def display_props(sc, tab=0, wall=2, saver=2, lst=False, bright=80, invert=True, idle=True, dirty=False,
+                  hot=None):
+    window(sc, "Thuộc tính màn hình", "display")
+    tabs(sc, ["Màn nền", "Bảo vệ màn hình", "Cài đặt"], tab, 140, 8)
+    if tab == 0:
+        _monitor(sc, 12, 48, wall=wall)
+        sc.text("JBMono-11", "Hình nền:", 96, 46, X["BLACK"])
+        sc.outline(96, 62, 132, 52, X["FIELD_BORDER"])
+        sc.rect(97, 63, 130, 50, X["WHITE"])
+        _list_rows(sc, 97, 63, 130, ["(Không)", "Đồi xanh", "Ảnh của bạn"], wall)
+        push_button(sc, 163, 120, 65, 21, "Duyệt...", "dim")
+        sc.text("JBMono-11", "Gửi ảnh nền từ app glimmer.", 12, 150, X["LABEL"])
+    elif tab == 1:
+        _monitor(sc, 12, 48, saver=True)
+        sc.text("JBMono-11", "Chế độ:", 96, 46, X["BLACK"])
+        sc.outline(96, 61, 132, 18, X["FIELD_BORDER"])
+        sc.rect(97, 62, 130, 16, X["WHITE"])
+        sc.text("JBMono-11", SAVER[saver], 99, 63, X["BLACK"])
+        sc.rect(212, 63, 14, 14, X["BTN"])
+        sc.rect(215, 69, 5, 1, X["WHITE"]); sc.rect(216, 70, 3, 1, X["WHITE"]); sc.rect(217, 71, 1, 1, X["WHITE"])
+        sc.text("JBMono-11", "Bắt đầu", 96, 89, X["BLACK"])
+        sc.text("JBMono-11", "Kết thúc", 96, 111, X["BLACK"])
+        for i, t in enumerate(("22:00", "07:00")):
+            y = 86 + 22 * i
+            sc.outline(160, y, 68, 18, X["FIELD_BORDER"])
+            sc.rect(161, y + 1, 66, 16, X["BODY"])
+            sc.text("JBMono-11", t, 164, y + 2, X["BLACK"])
+        group_box(sc, 10, 140, 220, 34, "Khi rảnh", X["WHITE"])
+        _check(sc, 16, 152, idle)
+        sc.text("JBMono-11", "Tối khi rảnh 15 phút", 34, 152, X["BLACK"])
+        if lst:
+            sc.outline(96, 79, 132, 66, hx("000000"))
+            sc.rect(97, 80, 130, 64, X["WHITE"])
+            _list_rows(sc, 97, 80, 130, SAVER, saver)
+    else:
+        _monitor(sc, 82, 46, wall=wall)
+        group_box(sc, 10, 128, 128, 48, "Độ sáng", X["WHITE"])
+        sc.rect(20, 142, 108, 2, X["DIM"])
+        sc.hline(20, 144, 108, X["WHITE"])
+        for i in range(11):
+            sc.rect(20 + (i * 107 + 5) // 10, 156, 1, 3, X["LABEL"])
+        x, y = 20 + (bright * 107 + 50) // 100 - 5, 137
+        line, core = hx("003C74"), hx("5CC15C")
+        sc.hline(x, y, 11, line); sc.vline(x, y + 1, 7, line); sc.vline(x + 10, y + 1, 7, line)
+        sc.hline(x + 1, y + 1, 9, X["WHITE"]); sc.vline(x + 1, y + 2, 6, X["WHITE"]); sc.vline(x + 9, y + 2, 6, X["WHITE"])
+        sc.rect(x + 2, y + 2, 7, 6, core)
+        for r in range(5):
+            sc.pixel(x + 1 + r, y + 8 + r, line); sc.pixel(x + 9 - r, y + 8 + r, line)
+            if r < 4:
+                sc.pixel(x + 2 + r, y + 8 + r, X["WHITE"]); sc.pixel(x + 8 - r, y + 8 + r, X["WHITE"])
+            if r < 3:
+                sc.hline(x + 3 + r, y + 8 + r, 5 - 2 * r, core)
+        sc.text("JBMono-11", "Ít", 18, 160, X["BLACK"])
+        sc.text("JBMono-11", f"{bright}%", 74, 160, X["BLACK"], "TC")
+        sc.text("JBMono-11", "Nhiều", 132, 160, X["BLACK"], "TR")
+        group_box(sc, 142, 128, 88, 48, "Màu", X["WHITE"])
+        sc.text("JBMono-11", "240 x 240", 148, 141, X["BLACK"])
+        _check(sc, 148, 158, invert)
+        sc.text("JBMono-11", "Đảo màu", 166, 158, X["BLACK"])
+    push_button(sc, 53, 187, 49, 21, "OK", "hot" if hot == 0 else "up")
+    push_button(sc, 106, 187, 49, 21, "Hủy", "hot" if hot == 1 else "up")
+    push_button(sc, 159, 187, 70, 21, "Áp dụng", "dim" if not dirty else "hot" if hot == 2 else "up")
+    taskbar(sc, windows=["Claude", "Display"], top="Display", tray_weather=True, badge=0)
+
+
+SCREENS_DP = [
+    ("Thuộc tính màn hình", "XP-Display-Desktop · Màn nền", lambda s: display_props(s), "XPDisplayDesktop"),
+    ("Thuộc tính · Bảo vệ màn hình", "XP-Display-Saver", lambda s: display_props(s, tab=1), "XPDisplaySaver"),
+    ("Thuộc tính · danh sách chế độ", "XP-Display-SaverList",
+     lambda s: display_props(s, tab=1, lst=True, dirty=True), "XPDisplaySaverList"),
+    ("Thuộc tính · Cài đặt", "XP-Display-Settings · Áp dụng hot",
+     lambda s: (display_props(s, tab=2, dirty=True, hot=2), cursor(s, "arrow", 196, 199)), "XPDisplaySettings"),
+]
+
+
+# ── Máy tính bỏ túi (ch_calc.cpp, P-2026-11-28.31) ──
+CALC_KEYS = ["MC", "7", "8", "9", "/", "sqrt", "MR", "4", "5", "6", "*", "%", "MS", "1", "2", "3", "-", "1/x",
+             "M+", "0", "+/-", ".", "+", "="]
+
+
+def calc(sc, display="0.", error=False, mem=False, down=None, hot=None):
+    window(sc, "Máy tính bỏ túi", "calc")
+    sc.outline(8, 27, 224, 24, X["FIELD_BORDER"])
+    sc.rect(9, 28, 222, 22, X["WHITE"])
+    if error:
+        sc.text("JBMono-12B", "Không thể chia cho 0.", 227, 31, X["BLACK"], "TR")
+    else:
+        sc.text("JBMono-16B", display, 227, 30, X["BLACK"], "TR")
+    sc.outline(8, 56, 34, 24, X["DIM"])
+    sc.rect(9, 57, 32, 22, X["BODY"])
+    sc.hline(9, 57, 32, X["LABEL"])
+    sc.vline(9, 57, 22, X["LABEL"])
+    if mem:
+        sc.text("JBMono-12B", "M", 25, 59, X["BLACK"], "TC")
+    keys = [(k, 8 + 38 * (i % 6), 86 + 30 * (i // 6), 34, 26, 4) for i, k in enumerate(CALC_KEYS)]
+    keys += [("Backspace", 46, 56, 76, 24, 3), ("CE", 126, 56, 52, 24, 3), ("C", 182, 56, 50, 24, 3)]
+    for i, (k, x, y, w, h, dy) in enumerate(keys):
+        blue = i < 24 and 1 <= i % 6 <= 3
+        look = "down" if down == k else "hot" if hot == k else "up"
+        push_button(sc, x, y, w, h, k, look, X["GROUP_LABEL"] if blue else X["RED"], "JBMono-12B", dy)
+    taskbar(sc, windows=["Claude", "Calc"], top="Calc", tray_weather=True, badge=0)
+
+
+SCREENS_CALC = [
+    ("Máy tính bỏ túi", "XP-Calc · 0.", lambda s: calc(s), "XPCalc"),
+    ("Máy tính · nút nhấn", "XP-Calc-Down · = lõm, bộ nhớ M",
+     lambda s: calc(s, display="56088.", mem=True, down="="), "XPCalcDown"),
+    ("Máy tính · nút hot", "XP-Calc-Hover · chuột trên 7", lambda s: calc(s, display="123.", hot="7"), "XPCalcHover"),
+    ("Máy tính · lỗi", "XP-Calc-Error · chia cho 0", lambda s: calc(s, error=True), "XPCalcError"),
+]
+
+
+# ── Explorer (ch_explorer.cpp, P-2026-11-28.32) ──
+def _ex_status(sc, left, right):
+    sc.rect(2, 196, 236, 18, X["BODY"])
+    sc.hline(2, 196, 236, X["DIM"])
+    for x, w, t in ((3, 148, left), (152, 85, right)):
+        sc.hline(x, 199, w - 1, X["DIM"]); sc.vline(x, 199, 13, X["DIM"])
+        sc.hline(x, 211, w - 1, X["WHITE"]); sc.vline(x + w - 2, 199, 13, X["WHITE"])
+        sc.text("JBMono-11", t, x + 4, 199, X["BLACK"])
+
+
+def _ex_head(sc, t, y):
+    sc.text("JBMono-12B", t, 8, y, X["GROUP_LABEL"])
+    sc.hline(8, y + 15, 140, X["DIVIDER_FADE"])
+    sc.hline(148, y + 15, 40, X["DIVIDER"])
+
+
+EX_PHOTOS = ["p1.jpg", "p2.jpg", "p3.jpg", "p4.jpg", "mau1.jpg", "mau2.jpg", "mau3.jpg", "mau4.jpg"]
+
+
+def _ex_thumb(k):
+    f = ROOT / "data" / "photos" / f"s{k % 8 + 1}.jpg"
+    try:
+        return Image.open(f).convert("RGB").resize((47, 47), Image.BOX)
+    except OSError:
+        return sample_photo().resize((47, 47), Image.BOX)
+
+
+def explorer(sc, place="computer", sel=-1, confirm=None, trash=(("p3.jpg", "32 KB", "14:02"),
+                                                                   ("p5.jpg", "29 KB", "13:40")), hot=None):
+    title, icon = {"computer": ("Máy tính", "computer"), "photos": ("Ảnh của tôi", "pictures"),
+                   "trash": ("Thùng rác", "trash_full" if trash else "trash")}[place]
+    window(sc, title, icon)
+    sc.rect(2, 22, 236, 174, X["WHITE"])
+    if place == "computer":
+        _ex_head(sc, "Ổ đĩa", 26)
+        run_icon(sc, _xp_icon("Drive"), 10, 50)
+        sc.text("JBMono-11", "Bộ nhớ (C:)", 48, 47, X["BLACK"])
+        sc.outline(48, 62, 122, 10, X["FIELD_BORDER"])
+        sc.rect(49, 63, 120, 8, X["WHITE"])
+        sc.rect(49, 63, 72, 8, X["USER_SEL"])
+        sc.text("JBMono-11", "trống 412 KB / 1 MB", 48, 75, X["LABEL"])
+        _ex_head(sc, "Thư mục", 98)
+        run_icon(sc, _desk_icon("Photo"), 10, 122)
+        sc.text("JBMono-11", "Ảnh của tôi", 48, 121, X["BLACK"])
+        sc.text("JBMono-11", "8 tệp · 214 KB", 48, 135, X["LABEL"])
+        run_icon(sc, _xp_icon("Folder"), 10, 160)
+        sc.text("JBMono-11", "Hình nền", 48, 159, X["BLACK"])
+        sc.text("JBMono-11", "wallpaper.jpg", 48, 173, X["LABEL"])
+        _ex_status(sc, "3 đối tượng", "Máy tính")
+    elif place == "photos":
+        for i, nm in enumerate(EX_PHOTOS):
+            x, y = 6 + 57 * (i % 4), 28 + 72 * (i // 4)
+            lit = i == sel
+            sc.outline(x + 3, y, 51, 51, X["SELECT"] if lit else hx("ACA899"))
+            sc.img.paste(_ex_thumb(i), (x + 5, y + 2))
+            if lit:
+                sc.rect(x + 1, y + 53, 55, 14, X["SELECT"])
+            sc.text("JBMono-11", nm, x + 28, y + 53, X["WHITE"] if lit else X["BLACK"], "TC")
+        _ex_status(sc, "8 đối tượng · 214 KB", "Ảnh của tôi")
+        if confirm:
+            sc.rect(18, 60, 204, 104, X["FRAME"])
+            for i, c in enumerate(("3D95FF", "2B80F5", "1C6BE8", "0F5BDC")):
+                sc.rect(18, 60 + 5 * i, 204, 5, hx(c))
+            sc.rect(20, 80, 200, 82, X["BODY"])
+            sc.text("JBMono-12B", "Xác nhận xoá tệp", 24, 63, X["WHITE"])
+            sc.rect(204, 63, 14, 14, X["CLOSE"])
+            for i in range(8):
+                sc.pixel(207 + i, 66 + i, X["WHITE"]); sc.pixel(214 - i, 66 + i, X["WHITE"])
+            run_icon(sc, _xp_icon("TrashFull"), 28, 92)
+            sc.text("JBMono-11", f"Chuyển '{EX_PHOTOS[sel]}'", 68, 90, X["BLACK"])
+            sc.text("JBMono-11", "vào Thùng rác?", 68, 104, X["BLACK"])
+            push_button(sc, 58, 134, 56, 21, "Có", "hot")
+            push_button(sc, 126, 134, 56, 21, "Không", "hot" if hot == 2 else "up")
+    else:
+        sc.rect(2, 22, 236, 28, X["BODY"])
+        any_ = bool(trash)
+        push_button(sc, 6, 26, 136, 21, "Dọn sạch Thùng rác", "up" if any_ else "dim")
+        push_button(sc, 146, 26, 75, 21, "Khôi phục", "up" if any_ else "dim")
+        sc.outline(6, 52, 228, 140, X["FIELD_BORDER"])
+        sc.rect(7, 53, 226, 138, X["WHITE"])
+        sc.rect(7, 53, 226, 15, X["BODY"])
+        sc.hline(7, 68, 226, hx("D0D0BF"))
+        sc.hline(7, 69, 226, X["DIM"])
+        sc.rect(104, 56, 1, 10, X["DIM"]); sc.rect(162, 56, 1, 10, X["DIM"])
+        sc.text("JBMono-11", "Tên", 12, 54, X["BLACK"])
+        sc.text("JBMono-11", "Cỡ", 110, 54, X["BLACK"])
+        sc.text("JBMono-11", "Đã xoá", 168, 54, X["BLACK"])
+        for i, (nm, sz, at) in enumerate(trash):
+            y = 70 + 18 * i
+            lit = i == sel
+            fg = X["WHITE"] if lit else X["BLACK"]
+            if lit:
+                sc.rect(7, y, 226, 18, X["SELECT"])
+            run_icon(sc, _start_icon("Photo"), 10, y + 2)
+            sc.text("JBMono-11", nm, 30, y + 2, fg)
+            sc.text("JBMono-11", sz, 110, y + 2, fg)
+            sc.text("JBMono-11", at, 168, y + 2, fg)
+        _ex_status(sc, f"{len(trash)} đối tượng · 61 KB" if trash else "0 đối tượng", "Thùng rác")
+    taskbar(sc, windows=["Claude", "Explorer" if place == "computer" else "Pictures" if place == "photos"
+                         else ("TrashFull" if trash else "Trash")], top=None, tray_weather=True, badge=0)
+
+
+SCREENS_EX = [
+    ("Máy tính", "XP-Explorer-Computer", lambda s: explorer(s), "XPExplorerComputer"),
+    ("Ảnh của tôi", "XP-Explorer-Photos · p3 chọn", lambda s: explorer(s, "photos", sel=2), "XPExplorerPhotos"),
+    ("Xác nhận xoá", "XP-Explorer-Confirm · Có chọn sẵn",
+     lambda s: explorer(s, "photos", sel=2, confirm="delete"), "XPExplorerConfirm"),
+    ("Thùng rác", "XP-Explorer-Trash · 2 mục", lambda s: explorer(s, "trash", sel=0), "XPExplorerTrash"),
+    ("Thùng rác · trống", "XP-Explorer-TrashEmpty", lambda s: explorer(s, "trash", trash=()), "XPExplorerTrashEmpty"),
+    ("Desktop · Thùng rác đầy", "XP-Desk-TrashFull",
+     lambda s: desktop(s, one_col=True, trash_full=True), "XPDeskTrashFull"),
+]
 
 
 SCREENS_A = [
@@ -2021,6 +2512,12 @@ SCREENS_C = [
     ("Cài đặt", "XP-Setup · chưa có khóa", setup, "XPSetup"),
     ("Ảnh", "XP-Photo · 2/5", photo, "XPPhoto"),
     ("Ảnh · chưa có ảnh", "XP-Photo-Empty", photo_empty, "XPPhotoEmpty"),
+    # P-2026-11-28.27: from the phone / asking (old photo + XP-Open wait cursor) / phone away
+    ("Ảnh · từ điện thoại", "XP-Photo-Phone · 3/40", lambda s: photo(s, 3, 40), "XPPhotoPhone"),
+    ("Ảnh · đang xin ảnh", "XP-Photo-Asking · giữ ảnh cũ + con trỏ chờ",
+     lambda s: (photo(s, 3, 40), wait_cursor(s, 0, over=True)), "XPPhotoAsking"),
+    ("Ảnh · điện thoại vắng", "XP-Photo-Offline · 3/8 · đã lưu",
+     lambda s: (photo(s, 3, 8), title_meta(s, "3/8 · đã lưu")), "XPPhotoOffline"),
 ]
 
 
@@ -2060,7 +2557,11 @@ SCREENS = [
     ("Dò mìn", "XP-Mines · ván mới", lambda s: mines(s, **_mines_from_design("XP-Mines")), "XPMines"),
     ("Dò mìn · đang chơi", "XP-Mines-Play", lambda s: mines(s, **_mines_from_design("XP-Mines-Play")), "XPMinesPlay"),
     ("Dò mìn · thắng", "XP-Mines-Win", lambda s: mines(s, **_mines_from_design("XP-Mines-Win")), "XPMinesWin"),
-    ("Dò mìn · thua", "XP-Mines-Lose", lambda s: mines(s, **_mines_from_design("XP-Mines-Lose")), "XPMinesLose"),
+    ("Dò mìn · thua", "XP-Mines-Lose", lambda s: mines(s, **_mines_from_design("XP-Mines-Lose")), "XPMinesLose"),    *SCREENS_TM,                                                         # P-2026-11-28.28
+    *SCREENS_AT,                                                         # P-2026-11-28.29
+    *SCREENS_DP,                                                         # P-2026-11-28.30
+    *SCREENS_CALC,                                                       # P-2026-11-28.31
+    *SCREENS_EX,                                                         # P-2026-11-28.32
 ]
 
 
