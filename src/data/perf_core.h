@@ -34,6 +34,27 @@ struct Ring {
 struct View { uint8_t tab = 0; int8_t sel = -1; };
 constexpr uint8_t kTabs = 3;
 
+// Plan thiet-bi-la-may-tinh stage 5 (R-DK-24, was the app's): what a click on the window hits. Tabs y 26–41:
+// Ứng dụng x 6–71, Hiệu năng 72–144, Mạng 145–182; Ứng dụng: rows of 18 from y 64 (x 11–228, ≤ 5), the list's empty
+// part deselects, Kết thúc tác vụ (26, 165, 117×21), Chuyển tới (147, 165, 82×21).
+enum HitKind : uint8_t { HIT_NONE, HIT_TAB, HIT_ROW, HIT_END, HIT_SWITCH };
+struct Hit { uint8_t kind = HIT_NONE; int8_t value = -1; };
+inline Hit hitAt(int x, int y, uint8_t tab, int rows) {
+    Hit h;
+    auto in = [x, y](int bx, int by, int w, int hh) { return x >= bx && x < bx + w && y >= by && y < by + hh; };
+    if (y >= 26 && y <= 41) {
+        static const uint8_t kX[3] = {6, 72, 145}, kW[3] = {66, 73, 38};
+        for (int i = 0; i < 3; i++) if (x >= kX[i] && x < kX[i] + kW[i]) { h.kind = HIT_TAB; h.value = (int8_t)i; }
+        return h;
+    }
+    if (tab != 0) return h;
+    if (in(11, 64, 218, 18 * 5)) { const int i = (y - 64) / 18; h.kind = HIT_ROW; h.value = (int8_t)(i < rows ? i : -1); }
+    else if (in(10, 46, 220, 112)) { h.kind = HIT_ROW; h.value = -1; }
+    else if (in(26, 165, 117, 21)) h.kind = HIT_END;
+    else if (in(147, 165, 82, 21)) h.kind = HIT_SWITCH;
+    return h;
+}
+
 struct History {
     Ring<kCpuN> cpu, mem;
     Ring<kNetN> net;

@@ -99,7 +99,8 @@ Mở rộng gói UDP :4210 hiện có (`'G' 'C' 1 shape seq x y`, 8 byte):
    — + app: chuột phải / phím gửi lên thiết bị khi `input.stage` ≥ 3 (R-DK-31). 94/94 native, 449 app, RAM +64 B.
 4. [x] (2026-11-28; đã nạp + cài app) Firmware: cửa sổ Thời tiết (tab), Đồng hồ (tab, lịch, múi giờ, cập nhật ngay), Dò mìn (ván trên thiết bị).
    — + app: R-DK-32 (thôi gửi `/api/clock`, `/api/mines` khi `stage` ≥ 4). 98/98 native, 450 app, RAM +76 B.
-5. Firmware: Trình quản lý tác vụ, Thuộc tính màn hình, Máy tính bỏ túi, Explorer / Thùng rác, Ctrl+Alt+Del.
+5. [x] (2026-11-29; đã nạp + cài app) Firmware: Trình quản lý tác vụ, Thuộc tính màn hình, Máy tính bỏ túi, Explorer / Thùng rác, Ctrl+Alt+Del.
+   — + app R-DK-33. 100/100 native, 451 app. RAM tĩnh +136 B, flash +15 KB (số thực mềm); không việc gì thêm mỗi vòng.
 6. App: `app_request` → màn điện thoại; dọn code tính trúng cũ (sau khi bạn thử máy đạt).
 7. Tài liệu: `CLAUDE.md`, `quy_tac.md`, `docs/AGENTS-GLIMMER.md` nếu đổi API.
 

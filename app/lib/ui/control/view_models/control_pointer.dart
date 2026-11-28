@@ -191,7 +191,12 @@ extension ControlPointer on ControlViewModel {
       // R-DK-31: the device takes the key (Start, menus, Alt+Tab, Alt+F4, the desktop); the app still answers the
       // keys inside the windows it drives (stages 4–5 of the plan move those).
       await _control.key(key);
-      if (_menu == null && !_startOpen && key != ControlKey.altTab && key != ControlKey.altF4 && key != ControlKey.windows) {
+      if (_menu == null &&
+          !_startOpen &&
+          !_control.deviceDrives(channel) &&
+          key != ControlKey.altTab &&
+          key != ControlKey.altF4 &&
+          key != ControlKey.windows) {
         await _programKey(key);
       }
       _syncSoon();

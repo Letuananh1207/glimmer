@@ -161,4 +161,13 @@ void main() {
     expect(rig.posts('/api/menu'), isEmpty);
     expect(rig.cursor.sent.where((p) => p.datagram[2] == 2 && p.datagram[3] != 0), hasLength(6), reason: 'left + right');
   });
+
+  test('R-DK-33 stage 5: Máy tính bỏ túi on the device — a click and Enter send no /api/calc', () async {
+    vm = await make(_state(stage: 5, channel: 'Calc', windows: {'open': ['Calc'], 'min': <String>[], 'top': 'Calc'}));
+    to(8 + 38 * 2 + 10, 86 + 30 * 2 + 10);
+    await vm.clickLeft();
+    await vm.pressKey(ControlKey.enter);
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+    expect(rig.posts('/api/calc'), isEmpty);
+  });
 }

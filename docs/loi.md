@@ -131,9 +131,11 @@ Mức độ: `chặn dùng` · `khó chịu` · `nhỏ` (chữ, giao diện).
 **Lịch sử**
 - 2026-11-28: ghi; tạm trỏ hook vào IP; bạn chọn tên riêng tự sinh; sửa.
 
+## Đã xong
+
 ### L-12 · Di chuột trên thiết bị chậm, lag (mọi màn)
 
-- Trạng thái: chờ thử máy · Mức độ: khó chịu (con trỏ bò) · Phần: firmware `display.cpp` (`beginRepaint` / `endRepaint`, sprite của L-8), `cursor.cpp` · Quy tắc: "Mouse, keyboard, power" (`CLAUDE.md`, repaint-safe `draw()`)
+- Trạng thái: xong · Mức độ: khó chịu (con trỏ bò) · Phần: firmware `display.cpp` (`beginRepaint` / `endRepaint`, sprite của L-8), `cursor.cpp` · Quy tắc: "Mouse, keyboard, power" (`CLAUDE.md`, repaint-safe `draw()`)
 - Báo: 2026-11-28 — "sau bản cập nhật đột nhiên tôi cảm thấy lag hơn khi di chuột thì con chuột rất lag và chậm"
 - Các bước: 1. Firmware a421d95 (đợt 4). 2. Rê chuột trên desktop hoặc một cửa sổ (Thời tiết).
 - Mong đợi / thực tế: con trỏ đi mượt (đo được trước đây: Home ~8 ms mỗi bước) / `cursor.repaint_ms` **~200 ms mỗi bước ở mọi chỗ** (desktop, thanh tác vụ, cửa sổ Thời tiết) — con trỏ chỉ nhích ~5 lần / giây.
@@ -147,10 +149,8 @@ Mức độ: `chặn dùng` · `khó chịu` · `nhỏ` (chữ, giao diện).
 - Lần 2 (bạn báo 2026-11-29: "các màn start, claude, thiết bị vẫn lag"): đo Start 116–349 ms, Claude 120–176 ms, Máy tính 55–124 ms — các màn này dùng 2–3 font trong cùng một ô (JBMono-11 / 12B / 16B, VT323), sprite giữ được một font nên mỗi lần đổi font lại nạp. Gốc: `loadFont()` của TFT_eSPI đọc bảng số đo glyph **từng byte** (~6 500 lần đọc LittleFS mỗi font). Sửa: `display.cpp` `fastLoadFont()` điền đúng các trường công khai của TFT_eSPI (cùng `malloc`, `unloadFont()` vẫn giải phóng), đọc bảng 8 glyph (224 B) một lần; thư viện gốc làm dự phòng. Không thêm heap, RAM tĩnh không đổi.
 
 **Lịch sử**
-- 2026-11-29: lần 2 — font nạp nhanh (đọc theo khối), nạp. Đo lại: Start 116–349 → **3–45 ms**, Claude 120–176 → **3–31 ms**, Máy tính 55–124 → **43–48 ms**; heap như trước (17,1 KB).
+- 2026-11-29: lần 2 — font nạp nhanh (đọc theo khối), nạp. Đo lại: Start 116–349 → **3–45 ms**, Claude 120–176 → **3–31 ms**, Máy tính 55–124 → **43–48 ms**; heap như trước (17,1 KB). Bạn thử 2026-11-29: ổn.
 - 2026-11-28: ghi, đo, sửa, nạp. Đo lại bằng gói chuột UDP: Home **18–21 ms** mỗi bước (lần đầu 126 ms: nạp font một lần); heap thường trực 20,6 → 17,2 KB (font của sprite, trả lại trước TLS).
-
-## Đã xong
 
 ### L-11 · Đóng hộp Tắt máy tính: thanh tác vụ còn vệt đen, chuột đi qua đâu mới sạch đến đấy
 

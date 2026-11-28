@@ -19,7 +19,7 @@ namespace InputCore {
 
 constexpr uint8_t kMouseVersion = 2;
 // What the device acts on so far (`/api/state` `input.stage`): 1 = desktop, taskbar, _ / ×, Start, Tắt máy tính;
-constexpr uint8_t kStage = 4;   // 3 = + right-click menus, keys; 4 = + Thời tiết's tabs, Ngày và Giờ, Dò mìn
+constexpr uint8_t kStage = 5;   // 3 = + menus, keys; 4 = + Thời tiết, Ngày và Giờ, Dò mìn; 5 = + the 4 XP programs
 constexpr uint8_t kLeft = 1, kRight = 2;
 constexpr uint32_t kDoubleMs = 500;
 constexpr int kDoubleSlop = 4;
@@ -131,6 +131,7 @@ enum Act : uint8_t {
     ACT_ALTTAB,        // stage 3: Alt+Tab — the box opens / the next tile ([arg] = 1, Shift = −1)
     ACT_ALTTAB_CANCEL, // Esc while the box is up
     ACT_INSIDE,        // stage 4: a click inside window [prog] at (x, y) — its channel works it out ([arg] 1 = right)
+    ACT_INSIDE_KEY,    // stage 5: key [arg] (mods in x) for window [prog]
 };
 
 struct Action {
@@ -139,6 +140,7 @@ struct Action {
     int8_t arg = -1;
     int16_t x = 0, y = 0;          // ACT_MENU_OPEN: where
     bool min = false;              // ACT_MENU_OPEN: the window is minimized
+    bool dbl = false;              // ACT_INSIDE: the second click of a double click
 };
 inline Action act(Act k, int prog = XPCore::PROG_NONE, int arg = -1) {
     Action a; a.kind = k; a.prog = (int8_t)prog; a.arg = (int8_t)arg; return a;
@@ -233,17 +235,23 @@ inline Action menuAt(XPCore::MenuKind k, int x, int y, int prog = XPCore::PROG_N
 
 // Stage 4: a click inside the window on screen. Thời tiết's tabs (y 26–41: Hiện tại x 6–71, Dự báo 72–123) switch
 // here; Ngày và Giờ and Dò mìn are worked out by their channel (ACT_INSIDE); other windows: still the app's.
-inline Action inside(const Scene& s, int x, int y, bool right) {
+// Stage 5: Trình quản lý tác vụ, Thuộc tính màn hình, Máy tính bỏ túi, Explorer are worked out by the device too.
+inline bool deviceWindow(int p) {
+    return p == XPCore::PROG_MINES || p == XPCore::PROG_CLOCK || p == XPCore::PROG_TASKMGR
+        || p == XPCore::PROG_DISPLAY || p == XPCore::PROG_CALC || p == XPCore::PROG_EXPLORER;
+}
+inline Action inside(const Scene& s, int x, int y, bool right, bool dbl = false) {
     if (y < 22 || y >= kBarY) return Action();
     if (s.shown == XPCore::PROG_WEATHER && !right && y >= 26 && y < 42) {
         if (x >= 6 && x < 72) return act(ACT_OPEN, XPCore::PROG_WEATHER);
         if (x >= 72 && x < 124) return act(ACT_OPEN, XPCore::PROG_FORECAST);
         return Action();
     }
-    if (s.shown == XPCore::PROG_MINES || (s.shown == XPCore::PROG_CLOCK && !right)) {
+    if (s.shown == XPCore::PROG_MINES || (deviceWindow(s.shown) && !right)) {
         Action a = act(ACT_INSIDE, s.shown, right ? 1 : 0);
         a.x = (int16_t)x;
         a.y = (int16_t)y;
+        a.dbl = dbl;
         return a;
     }
     return Action();
@@ -305,7 +313,7 @@ inline Action leftClick(const Scene& s, int x, int y, bool dbl) {
     if (s.caption) {
         if (captionRect(kHotMin).has(x, y)) return act(ACT_MINIMIZE, s.shown);
         if (captionRect(kHotClose).has(x, y)) return act(ACT_CLOSE, s.shown);
-        return inside(s, x, y, false);
+        return inside(s, x, y, false, dbl);
     }
     if (s.desktop) {
         const int i = iconAt(s, x, y);
@@ -389,6 +397,13 @@ inline Action keyAction(const Scene& s, uint8_t k, uint8_t mods, bool altTabUp) 
         if (s.menu == XPCore::MENU_TURNOFF) return act(ACT_TURNOFF_CLOSE);
         if (s.shown >= 0 && !s.desktop) return act(ACT_CLOSE, s.shown);
         return s.desktop ? act(ACT_TURNOFF_BOX) : Action();          // XP: Alt+F4 on the desktop = Shut Down
+    }
+    // Stage 5: keys inside the XP program on screen (Esc / Enter / arrows / Delete / Backspace — the window decides).
+    if (s.menu == XPCore::MENU_NONE && s.caption && !s.desktop && deviceWindow(s.shown) && s.shown != XPCore::PROG_MINES
+        && s.shown != XPCore::PROG_CLOCK) {
+        Action a = act(ACT_INSIDE_KEY, s.shown, k);
+        a.x = mods;
+        return a;
     }
     if (k == KEY_ESC) {
         if (s.menu == XPCore::MENU_TURNOFF) return act(ACT_TURNOFF_CLOSE);

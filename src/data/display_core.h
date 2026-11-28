@@ -70,4 +70,60 @@ inline int8_t hotAt(int x, int y, bool applyOn) {
     return BTN_NONE;
 }
 
+// Plan thiet-bi-la-may-tinh stage 5 (R-DK-26, was the app's): what a click on the window hits and what it edits.
+enum HitKind : uint8_t {
+    HIT_NONE, HIT_TAB, HIT_WALL, HIT_TOGGLE_LIST, HIT_SAVER, HIT_CLOSE_LIST, HIT_IDLE, HIT_BRIGHT, HIT_INVERT,
+    HIT_OK, HIT_CANCEL, HIT_APPLY,
+};
+struct Hit { uint8_t kind = HIT_NONE; int8_t value = 0; };
+// The brightness the slider gives at [x] (track x 20…127), 5–100.
+inline int8_t brightAt(int x) {
+    const int v = ((x - 20) * 100 + 53) / 107;
+    return (int8_t)(v < 5 ? 5 : v > 100 ? 100 : v);
+}
+inline Hit hitAt(const View& v, const Saved& s, bool photo, int x, int y) {
+    Hit h;
+    auto in = [x, y](int bx, int by, int w, int hh) { return x >= bx && x < bx + w && y >= by && y < by + hh; };
+    auto mk = [&h](uint8_t k, int val = 0) { h.kind = k; h.value = (int8_t)val; return h; };
+    if (v.tab == TAB_SAVER && v.list) {                  // the open mode list lies over the page
+        if (in(97, 80, 130, 64)) return mk(HIT_SAVER, (y - 80) / 16);
+        return mk(HIT_CLOSE_LIST);
+    }
+    if (y >= 26 && y <= 41) {
+        static const uint8_t kX[3] = {6, 63, 176}, kW[3] = {57, 113, 57};
+        for (int i = 0; i < 3; i++) if (x >= kX[i] && x < kX[i] + kW[i]) return mk(HIT_TAB, i);
+        return h;
+    }
+    const Rect ok = button(BTN_OK), cancel = button(BTN_CANCEL), apply = button(BTN_APPLY);
+    if (in(ok.x, ok.y, ok.w, ok.h)) return mk(HIT_OK);
+    if (in(cancel.x, cancel.y, cancel.w, cancel.h)) return mk(HIT_CANCEL);
+    if (in(apply.x, apply.y, apply.w, apply.h)) return dirty(v, s) ? mk(HIT_APPLY) : h;
+    if (v.tab == TAB_DESKTOP) {
+        if (in(97, 63, 130, 16 * wallRows(photo))) return mk(HIT_WALL, (y - 63) / 16);
+    } else if (v.tab == TAB_SAVER) {
+        if (in(96, 61, 132, 18)) return mk(HIT_TOGGLE_LIST);
+        if (in(16, 152, 168, 14)) return mk(HIT_IDLE);
+    } else {
+        if (in(14, 136, 120, 22)) return mk(HIT_BRIGHT, brightAt(x));
+        if (in(148, 158, 78, 14)) return mk(HIT_INVERT);
+    }
+    return h;
+}
+// [v] after a click on [h] that only edits (tab, values, the list); OK / Hủy / Áp dụng are the caller's.
+inline View edit(View v, const Saved& s, const Hit& h) {
+    const Shown o = shown(v, s);
+    switch (h.kind) {
+        case HIT_TAB:         v.tab = (uint8_t)h.value; v.list = false; break;
+        case HIT_WALL:        v.wall = h.value; break;
+        case HIT_TOGGLE_LIST: v.list = !v.list; break;
+        case HIT_SAVER:       v.saver = h.value; v.list = false; break;
+        case HIT_CLOSE_LIST:  v.list = false; break;
+        case HIT_IDLE:        v.idle = o.idle ? 0 : 1; break;
+        case HIT_BRIGHT:      v.bright = h.value; break;
+        case HIT_INVERT:      v.invert = o.invert ? 0 : 1; break;
+        default: break;
+    }
+    return v;
+}
+
 }  // namespace DisplayCore

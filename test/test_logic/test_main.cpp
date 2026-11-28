@@ -2171,8 +2171,8 @@ void test_input_inside_windows() {
     w.shown = XPCore::PROG_CLOCK;
     TEST_ASSERT_EQUAL(ACT_INSIDE, leftClick(w, 30, 33, false).kind);
     TEST_ASSERT_EQUAL(ACT_NONE, rightClick(w, 30, 100, 0).kind);
-    w.shown = XPCore::PROG_CALC;                                 // still the app's (stage 5)
-    TEST_ASSERT_EQUAL(ACT_NONE, leftClick(w, 30, 100, false).kind);
+    w.shown = XPCore::PROG_CALC;                                 // stage 5: the device's too
+    TEST_ASSERT_EQUAL(ACT_INSIDE, leftClick(w, 30, 100, false).kind);
 }
 
 void test_clock_on_device() {
@@ -2263,6 +2263,131 @@ void test_mines_on_device() {
     TEST_ASSERT_EQUAL(0, v.left);
     TEST_ASSERT_EQUAL(FACE_COOL, v.face);
     TEST_ASSERT_TRUE(faceAt(110, 30));
+}
+
+// Stage 5: the 4 XP programs worked out on the device.
+// Keys as on the Calculator: digits . + - * / = % s(qrt) i(1/x) n(+/-) b(ack) e(CE) c(C) M(S) R(MR) P(M+) X(MC).
+static const char* calcShows(const char* keys) {
+    using namespace CalcCore;
+    static State st;
+    st = State();
+    for (const char* k = keys; *k; k++) {
+        int key = -1;
+        switch (*k) {
+            case '7': key = 1; break; case '8': key = 2; break; case '9': key = 3; break;
+            case '4': key = 7; break; case '5': key = 8; break; case '6': key = 9; break;
+            case '1': key = 13; break; case '2': key = 14; break; case '3': key = 15; break;
+            case '0': key = 19; break; case '.': key = 21; break;
+            case '/': key = 4; break; case '*': key = 10; break; case '-': key = 16; break; case '+': key = 22; break;
+            case '=': key = 23; break; case '%': key = 11; break; case 's': key = 5; break; case 'i': key = 17; break;
+            case 'n': key = 20; break; case 'b': key = KEY_BACK; break; case 'e': key = KEY_CE; break;
+            case 'c': key = KEY_C; break; case 'M': key = 12; break; case 'R': key = 6; break; case 'P': key = 18; break;
+            case 'X': key = 0; break; default: break;
+        }
+        if (key >= 0) press(st, key);
+    }
+    static View v;
+    v = viewOf(st, KEY_NONE);
+    return v.error ? "ERR" : v.display;
+}
+
+void test_calc_on_device() {
+    TEST_ASSERT_EQUAL_STRING("0.", calcShows(""));
+    TEST_ASSERT_EQUAL_STRING("12.", calcShows("12"));
+    TEST_ASSERT_EQUAL_STRING("1.5", calcShows("1.5"));
+    TEST_ASSERT_EQUAL_STRING("7.", calcShows("007"));
+    TEST_ASSERT_EQUAL_STRING("5.", calcShows("2+3*"));
+    TEST_ASSERT_EQUAL_STRING("20.", calcShows("2+3*4="));
+    TEST_ASSERT_EQUAL_STRING("80.", calcShows("2+3*4=="));
+    TEST_ASSERT_EQUAL_STRING("4.", calcShows("10-3=="));
+    TEST_ASSERT_EQUAL_STRING("10.", calcShows("5+="));
+    TEST_ASSERT_EQUAL_STRING("4.", calcShows("6+-2="));
+    TEST_ASSERT_EQUAL_STRING("5.", calcShows("50+10%"));
+    TEST_ASSERT_EQUAL_STRING("55.", calcShows("50+10%="));
+    TEST_ASSERT_EQUAL_STRING("3.", calcShows("9s"));
+    TEST_ASSERT_EQUAL_STRING("0.25", calcShows("4i"));
+    TEST_ASSERT_EQUAL_STRING("-5.", calcShows("5n"));
+    TEST_ASSERT_EQUAL_STRING("5.", calcShows("2+9s="));
+    TEST_ASSERT_EQUAL_STRING("ERR", calcShows("1/0="));
+    TEST_ASSERT_EQUAL_STRING("0.", calcShows("1/0=e"));
+    TEST_ASSERT_EQUAL_STRING("12.", calcShows("123b"));
+    TEST_ASSERT_EQUAL_STRING("8.", calcShows("5+7e3="));
+    TEST_ASSERT_EQUAL_STRING("9.", calcShows("7Mc2+R="));
+    TEST_ASSERT_EQUAL_STRING("0.33333333333333", calcShows("1/3="));
+    TEST_ASSERT_EQUAL_STRING("0.3", calcShows(".1+.2="));
+    TEST_ASSERT_TRUE(strlen(calcShows("99999999*99999999=")) <= 16);
+    TEST_ASSERT_TRUE(strlen(calcShows("1234567890123456789")) <= 16);
+}
+
+void test_xp_programs_on_device() {
+    // Trình quản lý tác vụ.
+    Perf::Hit t = Perf::hitAt(100, 35, 0, 2);
+    TEST_ASSERT_EQUAL(Perf::HIT_TAB, t.kind);
+    TEST_ASSERT_EQUAL(1, t.value);
+    TEST_ASSERT_EQUAL(1, Perf::hitAt(100, 64 + 18 + 5, 0, 2).value);
+    TEST_ASSERT_EQUAL(-1, Perf::hitAt(100, 110, 0, 2).value);
+    TEST_ASSERT_EQUAL(Perf::HIT_END, Perf::hitAt(50, 170, 0, 2).kind);
+    TEST_ASSERT_EQUAL(Perf::HIT_SWITCH, Perf::hitAt(200, 170, 0, 2).kind);
+    TEST_ASSERT_EQUAL(Perf::HIT_NONE, Perf::hitAt(50, 170, 1, 2).kind);
+    {   // Thuộc tính màn hình.
+    using namespace DisplayCore;
+    Saved sv{2, 0, 80, true, true};
+    View d;
+    TEST_ASSERT_EQUAL(HIT_WALL, hitAt(d, sv, true, 120, 70).kind);
+    TEST_ASSERT_EQUAL(HIT_NONE, hitAt(d, sv, false, 120, 100).kind);       // no photo: 2 rows
+    TEST_ASSERT_EQUAL(HIT_NONE, hitAt(d, sv, true, 180, 195).kind);        // Áp dụng: nothing changed
+    d = edit(d, sv, hitAt(d, sv, true, 120, 85));
+    TEST_ASSERT_EQUAL(1, d.wall);
+    TEST_ASSERT_EQUAL(HIT_APPLY, hitAt(d, sv, true, 180, 195).kind);
+    View s1; s1.tab = TAB_SAVER;
+    s1 = edit(s1, sv, hitAt(s1, sv, true, 150, 68));
+    TEST_ASSERT_TRUE(s1.list);
+    View picked = edit(s1, sv, hitAt(s1, sv, true, 150, 115));
+    TEST_ASSERT_EQUAL(2, picked.saver);
+    TEST_ASSERT_FALSE(picked.list);
+    TEST_ASSERT_EQUAL(HIT_CLOSE_LIST, hitAt(s1, sv, true, 30, 190).kind);  // OK under the list: only closes it
+    View c; c.tab = TAB_SETTINGS;
+    TEST_ASSERT_EQUAL(50, edit(c, sv, hitAt(c, sv, true, 73, 145)).bright);
+    TEST_ASSERT_EQUAL(5, brightAt(14));
+    TEST_ASSERT_EQUAL(0, edit(c, sv, hitAt(c, sv, true, 170, 162)).invert);
+    }
+    {   // Explorer.
+    using namespace ExplorerCore;
+    ExplorerCore::View e;
+    TEST_ASSERT_EQUAL(HIT_OPEN_PHOTOS, ExplorerCore::hitAt(e, 100, 130, 8, 0).kind);
+    e.place = PLACE_PHOTOS;
+    TEST_ASSERT_EQUAL(1, ExplorerCore::hitAt(e, 70, 40, 10, 0).value);
+    e.top = 1;
+    TEST_ASSERT_EQUAL(9, ExplorerCore::hitAt(e, 70, 110, 10, 0).value);
+    TEST_ASSERT_EQUAL(-1, ExplorerCore::hitAt(e, 130, 110, 10, 0).value);
+    ExplorerCore::View m; m.place = PLACE_PHOTOS;
+    m = move(m, 0, 1, 10);
+    TEST_ASSERT_EQUAL(0, m.sel);
+    m = move(move(m, 0, 1, 10), 0, 1, 10);
+    TEST_ASSERT_EQUAL(8, m.sel);
+    TEST_ASSERT_EQUAL(1, m.top);
+    ExplorerCore::View tr; tr.place = PLACE_TRASH;
+    TEST_ASSERT_EQUAL(HIT_NONE, ExplorerCore::hitAt(tr, 180, 35, 0, 2).kind);   // Khôi phục needs a row
+    tr.sel = 1;
+    TEST_ASSERT_EQUAL(HIT_RESTORE, ExplorerCore::hitAt(tr, 180, 35, 0, 2).kind);
+    TEST_ASSERT_EQUAL(HIT_EMPTY, ExplorerCore::hitAt(tr, 50, 35, 0, 2).kind);
+    tr.confirm = CONFIRM_EMPTY;
+    TEST_ASSERT_EQUAL(HIT_YES, ExplorerCore::hitAt(tr, 80, 140, 0, 2).kind);
+    TEST_ASSERT_EQUAL(HIT_NO, ExplorerCore::hitAt(tr, 150, 140, 0, 2).kind);
+    }
+    {   // Input: the inside of these windows and their keys go to the device.
+    using namespace InputCore;
+    Scene w;
+    w.caption = true;
+    w.shown = XPCore::PROG_CALC;
+    TEST_ASSERT_EQUAL(ACT_INSIDE, leftClick(w, 30, 100, false).kind);
+    Action k = keyAction(w, KEY_ENTER, 0, false);
+    TEST_ASSERT_EQUAL(ACT_INSIDE_KEY, k.kind);
+    TEST_ASSERT_EQUAL(KEY_ENTER, k.arg);
+    TEST_ASSERT_EQUAL(ACT_CLOSE, keyAction(w, KEY_F4, MOD_ALT, false).kind);    // Alt+F4 still closes it
+    w.shown = XPCore::PROG_EXPLORER;
+    TEST_ASSERT_TRUE(leftClick(w, 100, 130, true).dbl);
+    }
 }
 
 void test_explorer_core() {
@@ -2389,5 +2514,7 @@ int main(int, char**) {
     RUN_TEST(test_input_inside_windows);
     RUN_TEST(test_clock_on_device);
     RUN_TEST(test_mines_on_device);
+    RUN_TEST(test_calc_on_device);
+    RUN_TEST(test_xp_programs_on_device);
     return UNITY_END();
 }

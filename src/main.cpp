@@ -741,6 +741,52 @@ static InputCore::Scene inputScene() {
 void mainSetMines(const Mines::View& v);
 void mainSetClock(const ClockCore::View& v, bool sync);
 void mainSettingsChanged();
+void mainSetTaskMgr(const Perf::View& v);
+void mainSetDisplay(const DisplayCore::View& v);
+void mainSetCalc(const CalcCore::View& v);
+bool mainSetExplorer(const ExplorerCore::View& v, const char* what);
+static void applyClick(const InputCore::Action& a);
+static void insideKey(const InputCore::Action& a);
+
+static CalcCore::State g_calc;        // stage 5: Máy tính bỏ túi's arithmetic, kept by the device (~60 B)
+static uint32_t g_calcUpAt = 0;       // the key drawn pressed lets go then (0 = none)
+
+static void calcPress(int k) {
+    CalcCore::press(g_calc, k);
+    mainSetCalc(CalcCore::viewOf(g_calc, (int8_t)k));
+    g_calcUpAt = millis() + 150;
+}
+
+// Rows of Trình quản lý tác vụ › Ứng dụng: the open windows but itself, opening order (as ch_taskmgr.cpp).
+static int taskRows(int8_t* out) {
+    int n = 0;
+    for (int i = 0; i < g_windows.n && n < 5; i++)
+        if (g_windows.open[i] != XPCore::PROG_TASKMGR) out[n++] = g_windows.open[i];
+    return n;
+}
+
+static DisplayCore::Saved displaySaved() {
+    DisplayCore::Saved s;
+    s.wall = g_settings.wallpaperMode; s.saver = g_settings.nightMode; s.bright = g_settings.brightness;
+    s.invert = g_settings.invertDisplay; s.idle = g_settings.idleDim;
+    return s;
+}
+
+// Thuộc tính màn hình › OK / Áp dụng: the values shown become the device's settings (saved).
+static void displaySave() {
+    const DisplayCore::Shown o = DisplayCore::shown(g_displayView, displaySaved());
+    g_settings.wallpaperMode = o.wall; g_settings.nightMode = o.saver; g_settings.brightness = o.bright;
+    g_settings.invertDisplay = o.invert; g_settings.idleDim = o.idle;
+    Storage::save(g_settings);
+    mainSettingsChanged();
+    mainSetDisplay(g_displayView);
+}
+
+static void closeShown(int p) { InputCore::Action c; c.kind = InputCore::ACT_CLOSE; c.prog = (int8_t)p; applyClick(c); }
+
+static void explorerOpenPhoto(ExplorerCore::View v) {
+    if (mainSetExplorer(v, "open")) mainShowChannel("Photo");
+}
 static uint32_t g_altCommitAt = 0;
 static Mines::Game g_minesGame;      // stage 4: Dò mìn's game, kept by the device
 
@@ -760,6 +806,65 @@ static void insideClick(const InputCore::Action& a) {
         }
         minesShow();
         return;
+    }
+    if (a.prog == XPCore::PROG_TASKMGR) {
+        int8_t rows[6];
+        const int n = taskRows(rows);
+        Perf::View v = g_taskMgrView;
+        const Perf::Hit h = Perf::hitAt(a.x, a.y, v.tab, n);
+        if (h.kind == Perf::HIT_TAB) { v.tab = (uint8_t)h.value; mainSetTaskMgr(v); }
+        else if (h.kind == Perf::HIT_ROW) { v.sel = h.value; mainSetTaskMgr(v); drawActive(); }
+        else if (h.kind == Perf::HIT_END && v.sel >= 0 && v.sel < n) {
+            const int p = rows[v.sel];
+            v.sel = -1;
+            mainSetTaskMgr(v);
+            Control::removeWindow(g_windows, p);   // another window than the one on screen: only the list
+            drawActive();
+        } else if (h.kind == Perf::HIT_SWITCH && v.sel >= 0 && v.sel < n) {
+            mainShowChannel(XPCore::progName(rows[v.sel]));
+        }
+        return;
+    }
+    if (a.prog == XPCore::PROG_DISPLAY) {
+        const DisplayCore::Saved sv = displaySaved();
+        const DisplayCore::Hit h = DisplayCore::hitAt(g_displayView, sv, Wallpaper::present(), a.x, a.y);
+        switch (h.kind) {
+            case DisplayCore::HIT_NONE: return;
+            case DisplayCore::HIT_OK: displaySave(); closeShown(XPCore::PROG_DISPLAY); return;
+            case DisplayCore::HIT_CANCEL: closeShown(XPCore::PROG_DISPLAY); return;
+            case DisplayCore::HIT_APPLY: displaySave(); return;
+            default: mainSetDisplay(DisplayCore::edit(g_displayView, sv, h)); return;
+        }
+    }
+    if (a.prog == XPCore::PROG_CALC) {
+        const int k = CalcCore::keyAt(a.x, a.y);
+        if (k >= 0) calcPress(k);
+        return;
+    }
+    if (a.prog == XPCore::PROG_EXPLORER) {
+        ExplorerCore::View v = g_explorerView;
+        const ExplorerCore::Hit h = ExplorerCore::hitAt(v, a.x, a.y, Photos::total(), Trash::count());
+        switch (h.kind) {
+            case ExplorerCore::HIT_OPEN_PHOTOS:
+                if (a.dbl) { v = ExplorerCore::View(); v.place = ExplorerCore::PLACE_PHOTOS; mainSetExplorer(v, ""); }
+                return;
+            case ExplorerCore::HIT_ITEM:
+                v.sel = h.value;
+                if (a.dbl && h.value >= 0 && v.place == ExplorerCore::PLACE_PHOTOS) { mainSetExplorer(v, ""); explorerOpenPhoto(v); return; }
+                mainSetExplorer(v, "");
+                return;
+            case ExplorerCore::HIT_RESTORE: v.sel = -1; mainSetExplorer(v, "restore"); return;
+            case ExplorerCore::HIT_EMPTY: v.confirm = ExplorerCore::CONFIRM_EMPTY; mainSetExplorer(v, ""); return;
+            case ExplorerCore::HIT_YES: {
+                const bool empty = v.confirm == ExplorerCore::CONFIRM_EMPTY;
+                v.confirm = ExplorerCore::CONFIRM_NONE;
+                v.sel = -1;
+                mainSetExplorer(v, empty ? "empty" : "delete");
+                return;
+            }
+            case ExplorerCore::HIT_NO: v.confirm = ExplorerCore::CONFIRM_NONE; mainSetExplorer(v, ""); return;
+            default: return;
+        }
     }
     if (a.prog == XPCore::PROG_CLOCK) {
         time_t now = time(nullptr);
@@ -871,6 +976,9 @@ static void applyClick(const InputCore::Action& a) {
         case ACT_INSIDE:
             insideClick(a);
             break;
+        case ACT_INSIDE_KEY:
+            insideKey(a);
+            break;
         case ACT_START:
             showMenu(g_menu.kind == XPCore::MENU_START ? XPCore::MENU_NONE : XPCore::MENU_START);
             break;
@@ -906,6 +1014,68 @@ static void applyClick(const InputCore::Action& a) {
     }
 }
 
+// Stage 5: a key inside Trình quản lý tác vụ / Thuộc tính màn hình / Máy tính bỏ túi / Explorer, as XP.
+static void insideKey(const InputCore::Action& a) {
+    using namespace InputCore;
+    const int k = a.arg;
+    if (a.prog == XPCore::PROG_DISPLAY) {
+        if (k == KEY_ESC) closeShown(XPCore::PROG_DISPLAY);
+        else if (k == KEY_ENTER) { displaySave(); closeShown(XPCore::PROG_DISPLAY); }
+        return;
+    }
+    if (a.prog == XPCore::PROG_CALC) {
+        if (k == KEY_ENTER) calcPress(23);
+        else if (k == KEY_ESC) calcPress(CalcCore::KEY_C);
+        else if (k == KEY_BACKSPACE) calcPress(CalcCore::KEY_BACK);
+        else if (k == KEY_DELETE) calcPress(CalcCore::KEY_CE);
+        return;
+    }
+    if (a.prog == XPCore::PROG_TASKMGR) {
+        int8_t rows[6];
+        const int n = taskRows(rows);
+        Perf::View v = g_taskMgrView;
+        if (v.tab != 0 || !n) return;
+        if (k == KEY_DOWN || k == KEY_UP) {
+            v.sel = (int8_t)(v.sel < 0 ? 0 : v.sel + (k == KEY_DOWN ? 1 : -1));
+            if (v.sel < 0) v.sel = 0;
+            if (v.sel >= n) v.sel = (int8_t)(n - 1);
+            mainSetTaskMgr(v);
+            drawActive();
+        } else if (k == KEY_ENTER && v.sel >= 0 && v.sel < n) {
+            mainShowChannel(XPCore::progName(rows[v.sel]));
+        } else if (k == KEY_DELETE && v.sel >= 0 && v.sel < n) {   // XP: Delete = Kết thúc tác vụ
+            const int p = rows[v.sel];
+            v.sel = -1;
+            mainSetTaskMgr(v);
+            Control::removeWindow(g_windows, p);
+            drawActive();
+        }
+        return;
+    }
+    if (a.prog == XPCore::PROG_EXPLORER) {
+        ExplorerCore::View v = g_explorerView;
+        if (v.confirm != ExplorerCore::CONFIRM_NONE) {          // the box: Enter = Có (preselected), Esc = Không
+            if (k == KEY_ENTER) {
+                const bool empty = v.confirm == ExplorerCore::CONFIRM_EMPTY;
+                v.confirm = ExplorerCore::CONFIRM_NONE; v.sel = -1;
+                mainSetExplorer(v, empty ? "empty" : "delete");
+            } else if (k == KEY_ESC) {
+                v.confirm = ExplorerCore::CONFIRM_NONE; mainSetExplorer(v, "");
+            }
+            return;
+        }
+        if (k == KEY_BACKSPACE && v.place != ExplorerCore::PLACE_COMPUTER) {   // XP: up one level
+            mainSetExplorer(ExplorerCore::View(), "");
+            return;
+        }
+        if (v.place != ExplorerCore::PLACE_PHOTOS) return;
+        const int dx = k == KEY_LEFT ? -1 : k == KEY_RIGHT ? 1 : 0, dy = k == KEY_UP ? -1 : k == KEY_DOWN ? 1 : 0;
+        if (dx || dy) { mainSetExplorer(ExplorerCore::move(v, dx, dy, Photos::total()), ""); return; }
+        if (k == KEY_ENTER && v.sel >= 0) { explorerOpenPhoto(v); return; }
+        if (k == KEY_DELETE && v.sel >= 0) { v.confirm = ExplorerCore::CONFIRM_DELETE; mainSetExplorer(v, ""); }
+    }
+}
+
 // Alt+Tab box up and Alt let go (1 s without another Alt+Tab): the window chosen comes up (XP).
 static void altTabCommit() {
     if (g_menu.kind != XPCore::MENU_ALTTAB) return;
@@ -924,6 +1094,10 @@ static void inputTick() {
     const int nk = Cursor::takeKeys(ks, 4);
     const bool ready = g_activeCount && g_power.p == Control::POWER_ON && cursorAllowed();
     if (g_menu.kind == XPCore::MENU_ALTTAB && (int32_t)(millis() - g_altCommitAt) >= 0) altTabCommit();
+    if (g_calcUpAt && (int32_t)(millis() - g_calcUpAt) >= 0) {   // Máy tính bỏ túi: the pressed key lets go
+        g_calcUpAt = 0;
+        mainSetCalc(CalcCore::viewOf(g_calc, CalcCore::KEY_NONE));
+    }
     if (!ready) return;
     for (int i = 0; i < n; i++) {
         const int x = pr[i].x, y = pr[i].y;

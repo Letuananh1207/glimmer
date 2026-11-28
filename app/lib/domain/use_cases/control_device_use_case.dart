@@ -109,6 +109,8 @@ class ControlDeviceUseCase {
       _ => false,
     };
     if (!has) return const Result.ok(null);
+    const window = {'taskmgr': 'TaskMgr', 'display': 'Display', 'calc': 'Calc', 'explorer': 'Explorer'};
+    if (deviceDrives(window[program]!)) return const Result.ok(null); // R-DK-33: the device keeps the view
     return _device.setProgramView(program, body);
   }
 
@@ -141,10 +143,13 @@ class ControlDeviceUseCase {
   bool get deviceKeys => (_device.state?.inputStage ?? 0) >= 3 && caps.mouse;
 
   /// R-DK-32: the device also works the insides of Ngày và Giờ, Thời tiết's tabs and Dò mìn (`input.stage` ≥ 4).
-  bool deviceDrives(String window) =>
-      (_device.state?.inputStage ?? 0) >= 4 &&
-      caps.mouse &&
-      const {'Clock', 'Weather', 'Forecast', 'Mines'}.contains(window);
+  /// R-DK-33: and the insides of Trình quản lý tác vụ, Thuộc tính màn hình, Máy tính bỏ túi, Explorer (stage ≥ 5).
+  bool deviceDrives(String window) {
+    final stage = _device.state?.inputStage ?? 0;
+    if (!caps.mouse) return false;
+    if (stage >= 4 && const {'Clock', 'Weather', 'Forecast', 'Mines'}.contains(window)) return true;
+    return stage >= 5 && const {'TaskMgr', 'Display', 'Calc', 'Explorer'}.contains(window);
+  }
 
   int _keySeq = 0;
 

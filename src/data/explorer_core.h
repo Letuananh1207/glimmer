@@ -93,4 +93,52 @@ inline void deletedText(uint32_t at, long dayAt, long dayNow, int minOfDay, int 
     else EX_PRINTF(out, n, "%02d/%02d", mday, mon);
 }
 
+// Plan thiet-bi-la-may-tinh stage 5 (R-DK-28, was the app's): what a click on the window hits.
+enum HitKind : uint8_t { HIT_NONE, HIT_OPEN_PHOTOS, HIT_ITEM, HIT_EMPTY, HIT_RESTORE, HIT_YES, HIT_NO };
+struct Hit { uint8_t kind = HIT_NONE; int8_t value = -1; };
+inline Hit hitAt(const View& v, int x, int y, int photos, int trash) {
+    Hit h;
+    auto mk = [&h](uint8_t k, int val = -1) { h.kind = k; h.value = (int8_t)val; return h; };
+    if (v.confirm != CONFIRM_NONE) {
+        if (in(kYesBtn, x, y)) return mk(HIT_YES);
+        if (in(kNoBtn, x, y)) return mk(HIT_NO);
+        return h;
+    }
+    if (v.place == PLACE_COMPUTER) {
+        if (x >= 8 && x < 230 && y >= 118 && y < 152) return mk(HIT_OPEN_PHOTOS);
+        return h;
+    }
+    if (v.place == PLACE_PHOTOS) {
+        if (x < 2 || x >= 238 || y < 22 || y >= 196) return h;
+        if (x >= 6 && y >= 28) {
+            const int col = (x - 6) / kCellW, row = (y - 28) / kCellH;
+            if (col < kThumbCols && row < kThumbRows) {
+                const int i = (v.top + row) * kThumbCols + col;
+                return mk(HIT_ITEM, i < photos ? i : -1);
+            }
+        }
+        return mk(HIT_ITEM, -1);
+    }
+    if (in(kEmptyBtn, x, y)) return trash > 0 ? mk(HIT_EMPTY) : h;
+    if (in(kRestoreBtn, x, y)) return trash > 0 && v.sel >= 0 ? mk(HIT_RESTORE) : h;
+    if (x >= 7 && x < 233 && y >= kRowY && y < kRowY + kRowH * kRowsShown) {
+        const int i = (y - kRowY) / kRowH;
+        return mk(HIT_ITEM, i < trash ? i : -1);
+    }
+    if (x >= 7 && x < 233 && y >= 53 && y < 191) return mk(HIT_ITEM, -1);
+    return h;
+}
+// Ảnh của tôi: [v] after an arrow ([dx], [dy] cells) among [photos]; rows scroll to keep the selection in sight.
+inline View move(View v, int dx, int dy, int photos) {
+    if (photos <= 0) return v;
+    int sel = v.sel < 0 ? 0 : v.sel + dx + dy * kThumbCols;
+    if (sel < 0) sel = 0;
+    if (sel > photos - 1) sel = photos - 1;
+    const int row = sel / kThumbCols;
+    if (row < v.top) v.top = (uint8_t)row;
+    else if (row >= v.top + kThumbRows) v.top = (uint8_t)(row - kThumbRows + 1);
+    v.sel = (int8_t)sel;
+    return v;
+}
+
 }  // namespace ExplorerCore

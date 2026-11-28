@@ -375,7 +375,11 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
   1 s after the last press or by another key, arrows / Tab / Enter in menus, Start, the box and the desktop,
   Ctrl+Alt+Del → Trình quản lý tác vụ). Stage 4: Thời tiết's tabs, Ngày và Giờ (`ClockCore::hitAt` / `apply`; a zone
   picked is saved as `tzMinutes`) and Dò mìn (`Mines::Game` in RAM, `reveal` / `flag` / `viewOf`; the device's RNG) are
-  worked on the device (`InputCore::inside` → `ACT_INSIDE`). v1 packets (the app works clicks out) still work.
+  worked on the device (`InputCore::inside` → `ACT_INSIDE`). Stage 5: Trình quản lý tác vụ (`Perf::hitAt`), Thuộc tính
+  màn hình (`DisplayCore::hitAt` / `edit`, OK / Áp dụng save the settings on the device), Máy tính bỏ túi
+  (`CalcCore::State` / `press` / `format` — no libm: Newton sqrt, integer digits) and Explorer (`ExplorerCore::hitAt` /
+  `move`) too, with XP's keys (`ACT_INSIDE_KEY`: Delete = Kết thúc tác vụ / CE / Xác nhận xoá, Backspace = up).
+  v1 packets (the app works clicks out) still work.
 - **Mouse, keyboard, power** (app plan `app/docs/tasks/2026-11-27-app-la-chuot-ban-phim-nguon.md`,
   R-DK-17…21): the app is the mouse / keyboard / power button, the device
   only the screen. **Cursor** (`cursor_core.h` pure + glyphs, `channels/cursor.cpp`):
