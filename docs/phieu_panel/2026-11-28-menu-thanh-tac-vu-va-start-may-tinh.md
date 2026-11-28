@@ -1,6 +1,8 @@
 # Phiếu màn thiết bị: Menu chuột phải thanh tác vụ, menu chuột phải trên tệp, hàng Start cho Máy tính bỏ túi
 
-- Trạng thái: chờ thiết kế
+- Trạng thái: chờ thiết kế (phần 2, 3) · phần 1 đã làm không chờ vẽ (bạn chốt 2026-11-29): menu thanh tác vụ theo khung
+  menu desktop sẵn có (166 px, mục 17, vạch 7) — Thanh công cụ ▸ (mờ) · Xếp tầng cửa sổ (mờ) · Hiện màn nền · Trình quản lý
+  tác vụ · Khoá thanh tác vụ (mờ) · Thuộc tính (mờ); phiên vẽ có thể chỉnh lại
 - Ngày: 2026-11-28 · Nguồn: áp P-2026-11-28.28 / .31 / .32 — chỗ CHANGELOG có nhắc nhưng chưa có bản vẽ; kế hoạch app
   `app/docs/tasks/2026-11-28-app-cho-chuong-trinh-xp.md` (người dùng 2026-11-28: tính năng mới phải dùng trọn, giống hệt XP)
 

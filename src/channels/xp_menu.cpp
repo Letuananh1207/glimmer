@@ -17,6 +17,12 @@ const char kPasteLink[] PROGMEM = "Dán lối tắt";
 const char kNew[] PROGMEM = "Mới";
 const char kProps[] PROGMEM = "Thuộc tính";
 const char kRestoreL[] PROGMEM = "Khôi phục";
+// XP's taskbar menu (Toolbars ▸, Cascade, Show the Desktop, Task Manager, Lock the Taskbar, Properties).
+const char kToolbars[] PROGMEM = "Thanh công cụ";
+const char kCascade[] PROGMEM = "Xếp tầng cửa sổ";
+const char kShowDesk[] PROGMEM = "Hiện màn nền";
+const char kTaskMgr[] PROGMEM = "Trình quản lý tác vụ";
+const char kLockBar[] PROGMEM = "Khoá thanh tác vụ";
 const char kMove[] PROGMEM = "Di chuyển";
 const char kSize[] PROGMEM = "Kích thước";
 const char kMinL[] PROGMEM = "Thu nhỏ";
@@ -31,7 +37,7 @@ struct Row {
     Glyph glyph;
 };
 
-const Row kDesktop[] = {
+const Row kDesktop[] PROGMEM = {
     {kArrange, false, true, false, G_NONE},
     {kRefresh, false, false, false, G_NONE},
     {nullptr, false, false, false, G_NONE},
@@ -41,6 +47,20 @@ const Row kDesktop[] = {
     {kNew, true, true, false, G_NONE},
     {nullptr, false, false, false, G_NONE},
     {kProps, false, false, false, G_NONE},
+};
+
+// Cascade / Lock / Properties are dim: windows never move or resize, the taskbar is always locked, its
+// properties window is not drawn yet.
+const Row kTaskbar[] PROGMEM = {
+    {kToolbars, true, true, false, G_NONE},
+    {nullptr, false, false, false, G_NONE},
+    {kCascade, true, false, false, G_NONE},
+    {kShowDesk, false, false, false, G_NONE},
+    {nullptr, false, false, false, G_NONE},
+    {kTaskMgr, false, false, false, G_NONE},
+    {nullptr, false, false, false, G_NONE},
+    {kLockBar, true, false, false, G_NONE},
+    {kProps, true, false, false, G_NONE},
 };
 
 // Glyph rects (dx, dy, w, h) from the item's top-left (source XP-Menu-Window.dc.html).
@@ -77,24 +97,26 @@ void rows(const Row* r, int n, int x, int y, int w, int hover) {
     int iy = y + kMenuPad;
     int item = 0;
     for (int i = 0; i < n; i++) {
-        if (!r[i].label) {
+        Row row;
+        memcpy_P(&row, &r[i], sizeof(row));      // tables live in flash (the window menu's is on the stack: fine)
+        if (!row.label) {
             tft.drawFastHLine(x + 2, iy + 3, w - 4, MENU_BORDER);
             iy += kMenuSepH;
             continue;
         }
         const bool lit = item++ == hover;
         const uint16_t bg = lit ? SELECT : WHITE;
-        const uint16_t c = r[i].dim ? MENU_BORDER : lit ? WHITE : BLACK;
+        const uint16_t c = row.dim ? MENU_BORDER : lit ? WHITE : BLACK;
         tft.fillRect(x + kMenuPad, iy, w - 2 * kMenuPad, kMenuItemH, bg);
-        Display::useFont(r[i].bold ? "JBMono-12B" : "JBMono-11");
+        Display::useFont(row.bold ? "JBMono-12B" : "JBMono-11");
         tft.setTextDatum(TL_DATUM);
         tft.setTextColor(c, bg);
         char t[32];
-        strncpy_P(t, r[i].label, sizeof(t));
+        strncpy_P(t, row.label, sizeof(t));
         t[sizeof(t) - 1] = 0;
-        tft.drawString(t, x + 17, iy + (r[i].bold ? 1 : 2));
-        if (r[i].arrow) arrow(x + w - 10, iy + 5, c);
-        glyph(r[i].glyph, x, iy, c);
+        tft.drawString(t, x + 17, iy + (row.bold ? 1 : 2));
+        if (row.arrow) arrow(x + w - 10, iy + 5, c);
+        glyph(row.glyph, x, iy, c);
         iy += kMenuItemH;
     }
 }
@@ -112,6 +134,10 @@ void draw(const Control::Menu& m) {
     tft.fillRect(x + 1, y + 1, w - 2, h - 2, WHITE);
     if (m.kind == MENU_DESKTOP) {
         rows(kDesktop, sizeof(kDesktop) / sizeof(kDesktop[0]), x, y, w, m.hover);
+        return;
+    }
+    if (m.kind == MENU_TASKBAR) {
+        rows(kTaskbar, sizeof(kTaskbar) / sizeof(kTaskbar[0]), x, y, w, m.hover);
         return;
     }
     const Row win[] = {

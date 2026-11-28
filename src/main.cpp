@@ -725,7 +725,7 @@ static InputCore::Scene inputScene() {
     s.bar = Taskbar::state();
     s.nIcons = s.desktop ? XPCore::deskIcons(g_settings.skillsOn.c_str(), s.icons) : 0;
     if (s.menu == XPCore::MENU_START) PointerCore::startLayout(mainStartInputs(), s.start);
-    if (s.menu == XPCore::MENU_DESKTOP || s.menu == XPCore::MENU_WINDOW) {
+    if (XPCore::contextMenu(s.menu)) {
         int mx = g_menu.x, my = g_menu.y;
         XPCore::menuClamp(s.menu, mx, my);
         s.menuX = (int16_t)mx;
@@ -1145,7 +1145,7 @@ static void pointerTick() {
     // Stage 3: a context menu the device opened lights the item under the pointer (dim ones too, as XP); only when
     // the pointer moves onto another item, so an arrow key's pick stays while it rests.
     static int8_t ptrItem = -2;
-    if (mouse && Cursor::deviceDriven() && (g_menu.kind == XPCore::MENU_DESKTOP || g_menu.kind == XPCore::MENU_WINDOW)) {
+    if (mouse && Cursor::deviceDriven() && XPCore::contextMenu(g_menu.kind)) {
         int mx = g_menu.x, my = g_menu.y;
         XPCore::menuClamp(g_menu.kind, mx, my);
         bool inside = false;

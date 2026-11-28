@@ -235,7 +235,7 @@ static void handleApiState() {
         const XPCore::MenuKind k = mainMenu().kind;
         d[F("menu")] = k == XPCore::MENU_DESKTOP ? "desktop" : k == XPCore::MENU_WINDOW ? "window"
                      : k == XPCore::MENU_START ? "start" : k == XPCore::MENU_TURNOFF ? "turnoff"
-                     : k == XPCore::MENU_ALTTAB ? "alttab" : "none";
+                     : k == XPCore::MENU_ALTTAB ? "alttab" : k == XPCore::MENU_TASKBAR ? "taskbar" : "none";
         if (k == XPCore::MENU_ALTTAB) {   // P-2026-11-28.29: the tiles in order + the one chosen
             int8_t list[XPCore::PROG_COUNT];
             const int n = XPAltTab::order(list);
@@ -1232,7 +1232,8 @@ void Web::begin(Settings& settings) {
                : !strcmp(kind, "window")  ? XPCore::MENU_WINDOW
                : !strcmp(kind, "start")   ? XPCore::MENU_START
                : !strcmp(kind, "turnoff") ? XPCore::MENU_TURNOFF
-               : !strcmp(kind, "alttab")  ? XPCore::MENU_ALTTAB : XPCore::MENU_NONE;
+               : !strcmp(kind, "alttab")  ? XPCore::MENU_ALTTAB
+               : !strcmp(kind, "taskbar") ? XPCore::MENU_TASKBAR : XPCore::MENU_NONE;
         m.all = d["all"] | false;            // Start menu: All Programs open
         int x = d[F("x")] | 0, y = d[F("y")] | 0;
         if (m.kind != XPCore::MENU_NONE && m.kind != XPCore::MENU_ALTTAB) XPCore::menuClamp(m.kind, x, y);

@@ -2390,6 +2390,35 @@ void test_xp_programs_on_device() {
     }
 }
 
+// XP's taskbar menu: right click on the taskbar's empty part; Trinh quan ly tac vu, Hien man nen.
+void test_taskbar_menu() {
+    using namespace InputCore;
+    Scene s = deskScene();
+    Action a = rightClick(s, 150, 225, 0);                      // between the buttons and the tray
+    TEST_ASSERT_EQUAL(ACT_MENU_OPEN, a.kind);
+    TEST_ASSERT_EQUAL(XPCore::MENU_TASKBAR, a.arg);
+    TEST_ASSERT_EQUAL(213 - XPCore::menuH(XPCore::MENU_TASKBAR), a.y);
+    TEST_ASSERT_TRUE(a.x + XPCore::menuW(XPCore::MENU_TASKBAR) <= 240);
+    TEST_ASSERT_EQUAL(ACT_NONE, rightClick(s, 20, 225, 0).kind);     // the start button: no menu
+    Scene m = deskScene();
+    m.menu = XPCore::MENU_TASKBAR;
+    m.menuX = 70; m.menuY = 86;
+    // Rows: Thanh cong cu (dim), sep, Xep tang (dim), Hien man nen, sep, Trinh quan ly tac vu, sep, Khoa (dim), Thuoc tinh (dim).
+    const int y0 = 86 + XPCore::kMenuPad;
+    TEST_ASSERT_EQUAL(ACT_NONE, leftClick(m, 100, y0 + 8, false).kind);
+    a = leftClick(m, 100, y0 + 17 + 7 + 17 + 8, false);
+    TEST_ASSERT_EQUAL(ACT_SHOW_DESKTOP, a.kind);
+    a = leftClick(m, 100, y0 + 3 * 17 + 2 * 7 + 8, false);
+    TEST_ASSERT_EQUAL(ACT_OPEN, a.kind);
+    TEST_ASSERT_EQUAL(XPCore::PROG_TASKMGR, a.prog);
+    // Keys: Down from nothing lights Hien man nen (the first usable), then Trinh quan ly tac vu.
+    TEST_ASSERT_EQUAL(2, keyAction(m, KEY_DOWN, 0, false).arg);
+    m.hover = 2;
+    TEST_ASSERT_EQUAL(3, keyAction(m, KEY_DOWN, 0, false).arg);
+    m.hover = 3;
+    TEST_ASSERT_EQUAL(XPCore::PROG_TASKMGR, keyAction(m, KEY_ENTER, 0, false).prog);
+}
+
 void test_explorer_core() {
     using namespace ExplorerCore;
     char b[48];
@@ -2516,5 +2545,6 @@ int main(int, char**) {
     RUN_TEST(test_mines_on_device);
     RUN_TEST(test_calc_on_device);
     RUN_TEST(test_xp_programs_on_device);
+    RUN_TEST(test_taskbar_menu);
     return UNITY_END();
 }

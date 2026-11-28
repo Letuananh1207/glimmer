@@ -379,7 +379,8 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
   màn hình (`DisplayCore::hitAt` / `edit`, OK / Áp dụng save the settings on the device), Máy tính bỏ túi
   (`CalcCore::State` / `press` / `format` — no libm: Newton sqrt, integer digits) and Explorer (`ExplorerCore::hitAt` /
   `move`) too, with XP's keys (`ACT_INSIDE_KEY`: Delete = Kết thúc tác vụ / CE / Xác nhận xoá, Backspace = up).
-  v1 packets (the app works clicks out) still work.
+  Taskbar menu (`MENU_TASKBAR`, XP's: right click on the taskbar's empty part, drawn as the desktop menu; Hiện màn nền,
+  Trình quản lý tác vụ — the others dim). v1 packets (the app works clicks out) still work.
 - **Mouse, keyboard, power** (app plan `app/docs/tasks/2026-11-27-app-la-chuot-ban-phim-nguon.md`,
   R-DK-17…21): the app is the mouse / keyboard / power button, the device
   only the screen. **Cursor** (`cursor_core.h` pure + glyphs, `channels/cursor.cpp`):

@@ -152,6 +152,7 @@ constexpr int8_t kPlaceComputer = 0, kPlaceTrash = 2;
 enum MenuItemId : uint8_t {
     MI_ARRANGE, MI_REFRESH, MI_PASTE, MI_PASTE_LINK, MI_NEW, MI_PROPS,                 // desktop
     MI_RESTORE, MI_MOVE, MI_SIZE, MI_MIN, MI_MAX, MI_CLOSE,                           // window
+    MI_TOOLBARS, MI_CASCADE, MI_SHOW_DESKTOP, MI_TASKMGR, MI_LOCK, MI_BAR_PROPS,       // taskbar
     MI_SEP = 0xFF,
 };
 // Rows top to bottom (MI_SEP = a separator); returns the count.
@@ -159,8 +160,11 @@ inline int menuRows(XPCore::MenuKind k, uint8_t* out) {
     static const uint8_t kDesk[] = {MI_ARRANGE, MI_REFRESH, MI_SEP, MI_PASTE, MI_PASTE_LINK, MI_SEP, MI_NEW, MI_SEP,
                                     MI_PROPS};
     static const uint8_t kWin[] = {MI_RESTORE, MI_MOVE, MI_SIZE, MI_MIN, MI_MAX, MI_SEP, MI_CLOSE};
-    const uint8_t* r = k == XPCore::MENU_DESKTOP ? kDesk : kWin;
-    const int n = k == XPCore::MENU_DESKTOP ? (int)sizeof(kDesk) : (int)sizeof(kWin);
+    static const uint8_t kBar[] = {MI_TOOLBARS, MI_SEP, MI_CASCADE, MI_SHOW_DESKTOP, MI_SEP, MI_TASKMGR, MI_SEP, MI_LOCK,
+                                   MI_BAR_PROPS};
+    const uint8_t* r = k == XPCore::MENU_DESKTOP ? kDesk : k == XPCore::MENU_TASKBAR ? kBar : kWin;
+    const int n = k == XPCore::MENU_DESKTOP ? (int)sizeof(kDesk) : k == XPCore::MENU_TASKBAR ? (int)sizeof(kBar)
+                                                                                              : (int)sizeof(kWin);
     for (int i = 0; i < n; i++) out[i] = r[i];
     return n;
 }
@@ -178,7 +182,7 @@ inline int menuItems(XPCore::MenuKind k) { return k == XPCore::MENU_DESKTOP ? 6 
 // Lit (usable) items; the others are drawn dim and do nothing (Sắp xếp biểu tượng ▸: its sub-menu is not drawn).
 inline bool menuEnabled(uint8_t id, bool minimized) {
     switch (id) {
-        case MI_REFRESH: case MI_PROPS: case MI_CLOSE: return true;
+        case MI_REFRESH: case MI_PROPS: case MI_CLOSE: case MI_SHOW_DESKTOP: case MI_TASKMGR: return true;
         case MI_RESTORE: return minimized;
         case MI_MIN:     return !minimized;
         default:         return false;
@@ -212,6 +216,8 @@ inline Action menuChoose(const Scene& s, int i) {
         case MI_RESTORE: return act(ACT_OPEN, s.menuProg);
         case MI_MIN:     return act(ACT_MINIMIZE, s.menuProg);
         case MI_CLOSE:   return act(ACT_CLOSE, s.menuProg);
+        case MI_SHOW_DESKTOP: return act(ACT_SHOW_DESKTOP);
+        case MI_TASKMGR:      return act(ACT_OPEN, XPCore::PROG_TASKMGR);
         default:         return Action();
     }
 }
@@ -300,7 +306,7 @@ inline Action leftClick(const Scene& s, int x, int y, bool dbl) {
         }
     }
     if (s.menu == XPCore::MENU_START) return startClick(s, x, y);
-    if (s.menu == XPCore::MENU_DESKTOP || s.menu == XPCore::MENU_WINDOW) return menuClick(s, x, y);
+    if (XPCore::contextMenu(s.menu)) return menuClick(s, x, y);
     if (s.menu != XPCore::MENU_NONE) return Action();            // the Alt+Tab box: keys only
     if (y >= kBarY) {
         if (x < kStartRight) return act(ACT_START);
@@ -331,7 +337,7 @@ inline Action leftClick(const Scene& s, int x, int y, bool dbl) {
 // menu is not drawn). With a menu up: inside = as a left click, outside = it closes. Start / the box: nothing.
 inline Action rightClick(const Scene& s, int x, int y, uint16_t minMask) {
     using namespace PointerCore;
-    if (s.menu == XPCore::MENU_DESKTOP || s.menu == XPCore::MENU_WINDOW) return menuClick(s, x, y);
+    if (XPCore::contextMenu(s.menu)) return menuClick(s, x, y);
     if (s.menu != XPCore::MENU_NONE) return Action();
     if (y >= kBarY) {
         for (int i = 0; i < XPCore::slotsFor(s.bar.trayWeather); i++) {
@@ -340,6 +346,9 @@ inline Action rightClick(const Scene& s, int x, int y, uint16_t minMask) {
                 return menuAt(XPCore::MENU_WINDOW, XPCore::buttonX(i), 213 - XPCore::menuH(XPCore::MENU_WINDOW), p,
                               (minMask >> p & 1) != 0);
         }
+        // XP: the taskbar's empty part (between start and the tray) → the taskbar menu, rising from the bar.
+        if (x >= kStartRight && x < XPCore::trayX(s.bar.trayWeather))
+            return menuAt(XPCore::MENU_TASKBAR, x, 213 - XPCore::menuH(XPCore::MENU_TASKBAR));
         return Action();
     }
     if (s.caption && y < 22) return menuAt(XPCore::MENU_WINDOW, x, y, s.shown, false);
@@ -409,7 +418,7 @@ inline Action keyAction(const Scene& s, uint8_t k, uint8_t mods, bool altTabUp) 
         if (s.menu == XPCore::MENU_TURNOFF) return act(ACT_TURNOFF_CLOSE);
         return s.menu != XPCore::MENU_NONE ? act(ACT_MENU_CLOSE) : Action();
     }
-    if (s.menu == XPCore::MENU_DESKTOP || s.menu == XPCore::MENU_WINDOW) {
+    if (XPCore::contextMenu(s.menu)) {
         switch (k) {
             case KEY_DOWN: case KEY_TAB: { const int j = nextUsable(s, s.hover, 1); return j < 0 ? Action() : act(ACT_HOVER, XPCore::PROG_NONE, j); }
             case KEY_UP: { const int j = nextUsable(s, s.hover, -1); return j < 0 ? Action() : act(ACT_HOVER, XPCore::PROG_NONE, j); }
@@ -472,7 +481,7 @@ inline CursorCore::Shape shapeAt(const Scene& s, int x, int y) {
         const bool row = subHit(s.start, s.all, x, y) >= 0 || startHit(s.start, s.all, x, y) >= 0;
         return row || (y >= kBarY && x < kStartRight) ? CursorCore::SHAPE_HAND : CursorCore::SHAPE_ARROW;
     }
-    if (s.menu == XPCore::MENU_DESKTOP || s.menu == XPCore::MENU_WINDOW) {
+    if (XPCore::contextMenu(s.menu)) {
         bool inside = false;
         const int i = menuItemAt(s.menu, s.menuX, s.menuY, x, y, inside);
         return i >= 0 && menuEnabled(menuItem(s.menu, i), s.menuMin) ? CursorCore::SHAPE_HAND : CursorCore::SHAPE_ARROW;

@@ -379,7 +379,10 @@ inline int recentRows(const int8_t recent[kRecentN], const Installed& in, int8_t
 // MENU_TURNOFF (P-2026-11-27.24): XP's Turn off computer box over the whole screen (dotted shade
 // included), never moved — opened like a menu, closed like one.
 enum MenuKind : uint8_t { MENU_NONE, MENU_DESKTOP, MENU_WINDOW, MENU_START, MENU_TURNOFF,
-                          MENU_ALTTAB };      // P-2026-11-28.29: XP's task switcher (hover = the window chosen)
+                          MENU_ALTTAB,        // P-2026-11-28.29: XP's task switcher (hover = the window chosen)
+                          MENU_TASKBAR };     // XP's taskbar menu (right click on its empty part; drawn as the desktop's)
+// The context menus drawn by xp_menu.cpp (items, separators, hover).
+inline bool contextMenu(MenuKind k) { return k == MENU_DESKTOP || k == MENU_WINDOW || k == MENU_TASKBAR; }
 constexpr int kMenuItemH = 17, kMenuSepH = 7, kMenuPad = 2;
 constexpr int kMenuDeskW = 166, kMenuWinW = 128;
 // Desktop: 6 items, 3 separators → 127; window: 6 items, 1 separator → 113.
@@ -423,12 +426,12 @@ inline int altTabSel(int sel, int n) {
 inline bool shadesTaskbar(MenuKind k) { return k == MENU_TURNOFF; }
 
 inline int menuW(MenuKind k) {
-    return k == MENU_START || k == MENU_TURNOFF ? 240 : k == MENU_DESKTOP ? kMenuDeskW : kMenuWinW;
+    return k == MENU_START || k == MENU_TURNOFF ? 240 : k == MENU_DESKTOP || k == MENU_TASKBAR ? kMenuDeskW : kMenuWinW;
 }
 inline int menuH(MenuKind k) {
     if (k == MENU_TURNOFF) return 240;
     if (k == MENU_START) return 214;
-    return k == MENU_DESKTOP ? 2 * kMenuPad + 6 * kMenuItemH + 3 * kMenuSepH
+    return k == MENU_DESKTOP || k == MENU_TASKBAR ? 2 * kMenuPad + 6 * kMenuItemH + 3 * kMenuSepH
                              : 2 * kMenuPad + 6 * kMenuItemH + 1 * kMenuSepH;
 }
 inline void menuClamp(MenuKind k, int& x, int& y) {
