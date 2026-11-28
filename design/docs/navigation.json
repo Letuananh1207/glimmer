@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-28.11",
+  "version": "2026-11-28.12",
   "start": "Connect",
   "rule": "Chưa kết nối được thiết bị → Connect. Kết nối được → khung 4 tab: tab 1 = Control (điều khiển: ô màn thiết bị + nút), tab 2 = Skills, tab 3 = Settings, tab 4 = Device. Dashboard (Số liệu) là màn phụ đẩy từ Control, mở đúng tab của kênh đang hiện. Settings và Device dùng chung; Connect, WifiSetup, PhotoCrop ngoài khung tab.",
   "screens": {
@@ -59,8 +59,8 @@
         "manual"
       ],
       "to": {
-        "WifiSetup": "Nút 'Thiết bị mới / đang hiện glimmer-setup' (push)",
-        "Dashboard": "Tìm thấy / nhập IP đúng"
+        "Dashboard": "Tìm thấy / nhập IP đúng",
+        "WifiScan": "Nút 'connectNewDevice' (thay WifiSetup)"
       }
     },
     "Dashboard": {
@@ -142,13 +142,18 @@
       "source": "source/WifiSetup.dc.html",
       "states": [
         "form",
+        "formScanned",
+        "password",
         "working",
         "done",
-        "failed"
+        "failed",
+        "saved",
+        "forget"
       ],
       "pop": "Nút quay lại; khóa khi đang làm (working)",
       "to": {
-        "Dashboard": "Nút 'Xong' khi tìm lại được thiết bị"
+        "Dashboard": "Nút 'Xong' khi tìm lại được thiết bị",
+        "WifiScan": "Nút 'wifiScanEntry' đầu form"
       }
     },
     "Skills": {
@@ -234,6 +239,31 @@
         "Tên nơi ≤ 16 ký tự",
         "Xoá = weatherLat 0, weatherLon 0, weatherPlace \"\"",
         "Firmware không có weatherPlace → chỉ gửi toạ độ"
+      ]
+    },
+    "WifiScan": {
+      "source": "source/WifiScan.dc.html",
+      "states": [
+        "scanning",
+        "found",
+        "wrongCode",
+        "noCamera"
+      ],
+      "push": true,
+      "from": {
+        "Connect": "Nút 'connectNewDevice' (notFound)",
+        "Control": "Nút 'controlSetupAction' trên thanh báo setup",
+        "WifiSetup": "Nút 'wifiScanEntry'"
+      },
+      "to": {
+        "WifiSetup.working": "Mã glimmer-setup + mạng điện thoại có mật khẩu đã nhớ (R-WF-5)",
+        "WifiSetup.password": "Mã glimmer-setup + mạng chưa nhớ mật khẩu",
+        "WifiSetup.formScanned": "Mã glimmer-setup + điện thoại không ở Wi-Fi nào",
+        "WifiSetup.form": "Nút 'wifiScanManual'"
+      },
+      "rules": [
+        "R-WF-4: chỉ nhận mã Wi-Fi mở có tên bắt đầu glimmer-setup; mã khác → wrongCode, không làm gì",
+        "Đọc được → rung nhẹ, tự đóng (thay bằng màn Cài Wi-Fi ở bước đúng)"
       ]
     }
   },

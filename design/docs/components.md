@@ -57,3 +57,6 @@
 | `PowerButton` | **2026-11-27.10:** nút nguồn tròn 48 góc phải đầu màn: viền mint (bật) / coral (tắt) / vòng quay (đang tắt, đang khởi động); máy tắt → nút "Bật máy" 120 giữa bàn rê. §8. |
 | `LibraryTile` | **2026-11-28.11:** ô ảnh của Kho ảnh — như `PhotoTile`, thêm dấu "trên máy" (ô 22 bo 6, icon tv 14 mint, góc phải dưới) cho 8 ảnh mới nhất, viền mint + nhãn ĐANG CHIẾU cho ảnh thiết bị đang chiếu, phủ vòng xoay khi đang thêm / xoá. Số đo `screen_specs.md` §2. |
 | `PhotoSourceStatus` | **2026-11-28.11:** dòng nguồn ảnh trong thẻ kho — nền `panel2` bo 10, chấm 8 mint (online) / muted (offline, none), chữ 12, bên phải "đang chiếu x/n", dòng phụ lý do khi offline. |
+| `WifiScanEntry` | **2026-11-28.12:** nút lớn "Quét mã trên màn thiết bị" — cao ≥ 64, bo 14, viền `clawd`, nền `clawd` 8 %, ô icon 40 + chữ 15/500 + phụ 12 + chevron. §5. |
+| `ScanViewfinder` | **2026-11-28.12:** khung ngắm 240 bo 12, góc 34 nét 4, phủ ngoài 50 %; màu góc theo trạng thái (ink / mint / coral), vạch quét `clawd`. §10. |
+| `SavedPasswordsSheet` | **2026-11-28.12:** bảng dưới liệt kê mạng có mật khẩu đã nhớ, mỗi dòng nút Quên (hỏi lại trước khi quên). §5. |

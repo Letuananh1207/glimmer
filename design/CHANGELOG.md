@@ -5,6 +5,33 @@ widget và việc cần làm — không ghi đường dẫn file hay cách code.
 
 ---
 
+## 2026-11-28.12 — Quét mã QR trên màn thiết bị để cài Wi-Fi
+
+- **Quét mã · `WifiScanScreen`** (màn mới; `source/WifiScan.dc.html`, `screen_specs.md` §10; ảnh `WifiScan*.png`, 4 trạng thái):
+  - Camera toàn màn, khung ngắm 240 giữa, bảng dưới có ảnh nhỏ màn cài Wi-Fi thật của thiết bị (`images/panel-setup-qr.png`) +
+    hướng dẫn + "Không có mã? Nhập tay".
+  - Đọc được mã glimmer-setup → khung mint, rung nhẹ, tự đóng sang Cài Wi-Fi đúng bước. Mã lạ → báo coral, không làm gì
+    (R-WF-4), "Quét lại". Chưa có quyền camera → xin quyền / mở cài đặt điện thoại.
+- **Cài Wi-Fi · `WifiSetupScreen`** (`screen_specs.md` §5; mọi ảnh `WifiSetup*.png`):
+  - `form`: nút lớn "Quét mã trên màn thiết bị" ở đầu, vạch "HOẶC NHẬP TAY", nút "Mật khẩu đã nhớ (n)" dưới cùng. Khung 900.
+  - Mới `password` (chỉ hỏi mật khẩu, tên mạng chỉ đọc + "Đổi mạng", ghi chú app sẽ nhớ), `formScanned` (điện thoại không ở Wi-Fi
+    nào → form đầy đủ), `saved` (bảng mật khẩu đã nhớ, nút Quên), `forget` (hỏi trước khi quên) — R-WF-5.
+  - Mạng đã nhớ mật khẩu → quét xong vào thẳng `working`. Chữ `working` / `done` / `failed` cập nhật.
+- **Kết nối** (§1): nút thứ ba → "Quét mã QR trên màn thiết bị" (icon qr) mở màn Quét mã. **Điều khiển** (§8): nút trên thanh báo
+  glimmer-setup → "Quét mã trên màn". Ảnh `Connect*.png`, `ControlSetup.png` chụp lại.
+- **Chuỗi**: 32 khoá mới (`wifiScan…`, `wifiSaved…`, `wifiForget…`, `wifiPassFor`…), đổi chữ `connectNewDevice`,
+  `controlSetupAction`, `wifiStepJoinApDetail`, `wifiDoneDetail`, `wifiNotFound`. Token không đổi.
+- Phiếu: `app/docs/phieu_thiet_ke/2026-11-28-quet-qr-cai-wifi.md`
+- Không cần firmware mới: mã QR do firmware vẽ (panel P-2026-11-28.26, `WIFI:T:nopass;S:glimmer-setup;;`).
+
+**Việc cần làm trong code:**
+- `WifiScanScreen` (mới): camera + khung ngắm, đọc mã theo R-WF-4 (`scanned()`); đọc được → rung, đóng, vào bước `working` /
+  `password` / `formScanned` theo mạng điện thoại và kho mật khẩu; mã lạ → báo, quét lại; không có quyền camera → xin quyền /
+  mở cài đặt.
+- `WifiSetupScreen`: nút quét ở đầu `form`; bước `password` (chỉ ô mật khẩu, tên mạng chỉ đọc + Đổi mạng); `formScanned`; bảng
+  mật khẩu đã nhớ + hộp thoại quên (`rememberedNetworks`, `forgetPassword()`).
+- `ConnectScreen`, `ControlScreen` (thanh báo setup): nút mới mở màn Quét mã.
+
 ## 2026-11-28.11 — Kho ảnh: ảnh nằm trên điện thoại, thiết bị giữ 8 ảnh mới nhất
 
 - **Số liệu · tab Ảnh · `DashboardScreen`** (`source/Dashboard.dc.html`, `screen_specs.md` §2; ảnh `DashboardLibrary*.png`,
