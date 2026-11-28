@@ -43,17 +43,87 @@ static const char* nameFor(Display::FontTier t) {
     return "JBMono-11";
 }
 
+// L-12: TFT_eSPI's loadFont() reads the glyph table one byte at a time (~6 500 LittleFS reads for 231 glyphs: tens to
+// hundreds of ms). This fills the same public fields — same mallocs, so unloadFont() frees them as usual — reading the
+// table 8 glyphs (224 B) at a time. Same values as the library's loadMetrics() (max descent, bitmap offsets, space).
+static uint32_t be32(const uint8_t* p) { return (uint32_t)p[0] << 24 | (uint32_t)p[1] << 16 | (uint32_t)p[2] << 8 | p[3]; }
+
+static bool fastLoadFont(TFT_eSPI& t, const char* name) {
+    if (t.fontLoaded) t.unloadFont();
+    char path[40];
+    snprintf_P(path, sizeof(path), PSTR("/fonts/%s.vlw"), name);
+    File f = LittleFS.open(path, "r");
+    if (!f) return false;
+    uint8_t h[24];
+    if (f.read(h, sizeof(h)) != sizeof(h)) { f.close(); return false; }
+    const uint16_t n = (uint16_t)be32(h);
+    t.gFont.gArray = nullptr;
+    t.gFont.gCount = n;
+    t.gFont.ascent = (int16_t)(uint16_t)be32(h + 16);
+    t.gFont.descent = (int16_t)(uint16_t)be32(h + 20);
+    t.gFont.maxAscent = (uint16_t)t.gFont.ascent;
+    t.gFont.maxDescent = (uint16_t)t.gFont.descent;
+    t.gUnicode  = (uint16_t*)malloc(n * 2);
+    t.gHeight   = (uint8_t*)malloc(n);
+    t.gWidth    = (uint8_t*)malloc(n);
+    t.gxAdvance = (uint8_t*)malloc(n);
+    t.gdY       = (int16_t*)malloc(n * 2);
+    t.gdX       = (int8_t*)malloc(n);
+    t.gBitmap   = (uint32_t*)malloc(n * 4);
+    if (!t.gUnicode || !t.gHeight || !t.gWidth || !t.gxAdvance || !t.gdY || !t.gdX || !t.gBitmap) {
+        t.fontLoaded = true;               // so unloadFont() frees what was allocated
+        t.unloadFont();
+        f.close();
+        return false;
+    }
+    uint32_t bitmapPtr = 24 + (uint32_t)n * 28;
+    uint8_t buf[28 * 8];
+    for (uint16_t g = 0; g < n;) {
+        const uint16_t k = (uint16_t)(n - g < 8 ? n - g : 8);
+        if (f.read(buf, (size_t)k * 28) != (size_t)k * 28) {
+            t.fontLoaded = true;
+            t.unloadFont();
+            f.close();
+            return false;
+        }
+        for (uint16_t j = 0; j < k; j++, g++) {
+            const uint8_t* r = buf + j * 28;
+            t.gUnicode[g]  = (uint16_t)be32(r);
+            t.gHeight[g]   = (uint8_t)be32(r + 4);
+            t.gWidth[g]    = (uint8_t)be32(r + 8);
+            t.gxAdvance[g] = (uint8_t)be32(r + 12);
+            t.gdY[g]       = (int16_t)be32(r + 16);
+            t.gdX[g]       = (int8_t)be32(r + 20);
+            const uint16_t u = t.gUnicode[g];
+            if (((int16_t)t.gHeight[g] - (int16_t)t.gdY[g]) > (int16_t)t.gFont.maxDescent
+                && (((u > 0x20) && (u < 0xA0) && (u != 0x7F)) || (u > 0xFF)))
+                t.gFont.maxDescent = (uint16_t)(t.gHeight[g] - t.gdY[g]);
+            t.gBitmap[g] = bitmapPtr;
+            bitmapPtr += (uint32_t)t.gWidth[g] * t.gHeight[g];
+        }
+        yield();
+    }
+    t.gFont.yAdvance = (uint16_t)(t.gFont.maxAscent + t.gFont.maxDescent);
+    t.gFont.spaceWidth = (uint16_t)((t.gFont.ascent + t.gFont.descent) * 2 / 7);
+    t.fontFS = LittleFS;                   // as loadFont(name, LittleFS) does
+    t.spiffs = false;
+    t.fs_font = true;
+    t.fontFile = f;
+    t.fontLoaded = true;
+    return true;
+}
+
 void Display::useFont(const char* name) {
     // The repaint sprite has its own font; the panel's stays loaded meanwhile (L-8).
     const char*& loaded = s_toSprite ? s_sprFont : s_loadedFont;
     if (loaded && strcmp(loaded, name) == 0) return;
     if (loaded) tft.unloadFont();
-    // VLW files live at /fonts/<name>.vlw on LittleFS. TFT_eSPI prepends '/'
-    // and appends '.vlw', so pass "fonts/<name>". Also must pass LittleFS
-    // explicitly because TFT_eSPI defaults to SPIFFS.
+    loaded = name;
+    if (fastLoadFont(tft, name)) return;
+    // Fallback: the library's loader. VLW files live at /fonts/<name>.vlw on LittleFS; TFT_eSPI prepends '/' and
+    // appends '.vlw', so pass "fonts/<name>", and LittleFS explicitly (it defaults to SPIFFS).
     String path = String("fonts/") + name;
     tft.loadFont(path, LittleFS);
-    loaded = name;
 }
 
 // Drop the loaded VLW glyph cache to free heap before memory-hungry ops (TLS).
