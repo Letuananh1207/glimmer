@@ -1,6 +1,7 @@
 # Phiếu màn thiết bị: Display Properties (Thuộc tính màn hình)
 
-- Trạng thái: chờ thiết kế
+- Trạng thái: đã vẽ (P-2026-11-28.30) — chờ áp
+- Đã vẽ: P-2026-11-28.30
 - Ngày: 2026-11-27 · Nguồn: lộ trình `app/docs/tasks/2026-11-27-chuong-trinh-xp-con-thieu.md` (bạn đồng ý 2026-11-27), mục 4
 
 ## Dán vào canvas

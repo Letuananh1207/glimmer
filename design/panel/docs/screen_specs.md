@@ -1844,6 +1844,8 @@ Nguồn `source/Photo-Empty.dc.html` · ảnh `screens/@2x/PhotoEmpty.png`
 
 ## 17. Kiểu XP (Luna) — giao diện toàn máy
 
+> **P-2026-11-28.30 — Thuộc tính màn hình:** hộp thoại Display Properties (Màn nền / Bảo vệ màn hình / Cài đặt) — xem mục XP-Display.
+
 > **P-2026-11-28.29 — Alt+Tab:** hộp chuyển tác vụ kiểu XP giữa màn — xem mục XP-AltTab.
 
 > **P-2026-11-28.28 — Trình quản lý tác vụ:** cửa sổ mới kiểu Windows Task Manager (tab Ứng dụng / Hiệu năng / Mạng) — xem mục XP-TaskMgr.
@@ -2941,6 +2943,43 @@ Nguồn `source/XP-AltTab-3|1|6.dc.html` (nền nhúng `XP-Weather-Props`) · �
 - **Hành vi** (như XP): mở → chọn sẵn cửa sổ thứ hai (một cửa sổ → chính nó); Tab tiến, Shift+Tab lùi, vòng quanh; không
   cửa sổ nào → không hiện hộp. Đổi ô chọn chỉ vẽ lại 2 ô + ô tên. Nhả Alt → đóng hộp (`draw()` kênh dưới) rồi mở cửa sổ đã
   chọn như XP-Open (nút lún, khung trống + con trỏ chờ).
+
+### XP-Display — Thuộc tính màn hình (kênh `Display`)
+
+> **P-2026-11-28.30 — Display Properties kiểu XP.** Phiếu `docs/phieu_panel/2026-11-27-display-properties.md`.
+
+Nguồn `source/XP-Display-Desktop|Saver|SaverList|Settings.dc.html` · ảnh `XPDisplayDesktop.png`, `XPDisplaySaver.png`,
+`XPDisplaySaverList.png`, `XPDisplaySettings.png`. Token `themeXP.display`. Thành phần XP thật: *Display Properties* (tab
+Desktop, Screen Saver, Settings; màn hình xem trước; OK / Cancel / Apply). Chương trình hệ thống, không skill; mở từ menu
+chuột phải desktop › `Thuộc tính` (mục đã có, nay mở cửa sổ này).
+
+- **Khung**: cửa sổ XP, tiêu đề `Thuộc tính màn hình` 12B (133 px), biểu tượng 16 = biểu tượng `Desktop` của Start tại (4, 3).
+- **Tab** (y 26–41): `Màn nền` (6, w 57) · `Bảo vệ màn hình` (63, w 113) · `Cài đặt` (176, w 57); chữ TL (x+4, 29).
+  Trang (6, 41, 228×140) viền xpFieldBorder, nền white.
+- **Nút** (y 187, cao 21, kiểu nút Task Manager): `OK` (53, w 49) · `Hủy` (106, w 49) · `Áp dụng` (159, w 70; chữ 49).
+  `Áp dụng` chữ xpDim tới khi có thay đổi chưa áp. Con trỏ trên nút → viền cam *hot*.
+- **Màn hình xem trước** (76×73): vỏ (x, y, 76×64) viền `#8A8A8A`, nền `#D4D0C8`, cạnh sáng trên / trái white; khung màn
+  (x+7, y+4, 62×56) xpLabel; màn (x+8, y+5, 60×54); đèn nguồn (x+64, y+61, 4×1) `#21A121`; cổ (x+30, y+64, 16×5) `#B2B2B2`,
+  đế (x+22, y+69, 32×4) `#D4D0C8` + vạch đáy `#8A8A8A`. Màn = hình nền thu 1/4 (TJpgDec scale 2) + dải thanh tác vụ 6 px.
+
+| tab | khối | tọa độ · font · chữ (px) |
+|---|---|---|
+| Màn nền | màn xem trước | (12, 48) |
+| | `Hình nền:` | TL (96, 46) 11 · 63 |
+| | danh sách | (96, 62, 132×52) viền xpFieldBorder; dòng 16 từ y 63, chữ TL (100, +1): `(Không)` 49 · `Đồi xanh` 56 · `Ảnh của bạn` 77; mục chọn (97, y, 130×16) xpSelect chữ white. `Ảnh của bạn` chỉ có khi đã có /wallpaper.jpg |
+| | `Duyệt...` | nút (163, 120, 65×21) mờ |
+| | ghi chú | `Gửi ảnh nền từ app glimmer.` TL (12, 150) xpLabel · 189 |
+| Bảo vệ màn hình | màn xem trước | (12, 48), màn đen + `23:47` 11 xpLabel căn giữa (y+18) |
+| | `Chế độ:` + ô chọn | TL (96, 46); ô (96, 61, 132×18) chữ (99, 63) + nút xổ (212, 63, 14×14) xpBtn. Mục: `(Không)` / `Tối dần` / `Đồng hồ` / `Tắt màn` = `nightMode` 0–3 |
+| | danh sách mở (`XPDisplaySaverList`) | (96, 79, 132×66) viền black, nền white, dòng 16; mục hiện tại xpSelect |
+| | `Bắt đầu` / `Kết thúc` | nhãn TL (96, 89) / (96, 111) 49 / 56; ô chỉ đọc (160, 86 / 108, 68×18) nền xpBody, `22:00` / `07:00` TL (164, +2) |
+| | groupbox `Khi rảnh` | (10, 140, 220×34) 56; ☑ (16, 152) + `Tối khi rảnh 15 phút` TL (34, 152) · 140 (`idleDim`) |
+| Cài đặt | màn xem trước | (82, 46) |
+| | groupbox `Độ sáng` | (10, 128, 128×48) 49; thanh trượt XP: rãnh (20, 142, 108×2) xpDim + hàng sáng white, 11 vạch 1×3 tại y 156; nút trượt 11×13 (viền `#003C74`, viền trong white, lõi xpStartHi, mũi nhọn xuống) căn tâm x = 20 + độ sáng % × 107; `Ít` TL (18, 160) · `80%` TC (74, 160) · `Nhiều` TR (132, 160) |
+| | groupbox `Màu` | (142, 128, 88×48) 21; `240 x 240` TL (148, 141) 63; ☑ (148, 158) + `Đảo màu` TL (166, 158) 49 (`invertDisplay`) |
+
+- App tính chạm và gửi lệnh; đổi giá trị = `POST /api/settings` như màn Cài đặt của app (một nơi lưu). Đổi một mục chỉ
+  vẽ lại mục đó + màn xem trước; vẽ lại dưới con trỏ dùng `clipHits` cho màn xem trước (giải mã JPEG).
 
 ### XP-Start-All — Start đủ chương trình (mọi chương trình mở được từ Start)
 

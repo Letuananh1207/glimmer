@@ -5,6 +5,26 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-28.30 — Thuộc tính màn hình (Display Properties) kiểu Windows XP
+
+- **Kênh mới Display** (`source/XP-Display-Desktop|Saver|SaverList|Settings.dc.html`, `screen_specs.md` §17 mục
+  XP-Display; ảnh `XPDisplayDesktop.png`, `XPDisplaySaver.png`, `XPDisplaySaverList.png`, `XPDisplaySettings.png`) — theo
+  *Display Properties*:
+  - Tiêu đề `Thuộc tính màn hình`; tab `Màn nền` / `Bảo vệ màn hình` / `Cài đặt` (bỏ Themes, Appearance); màn hình CRT
+    xem trước mỗi tab; nút `OK` / `Hủy` / `Áp dụng` (mờ tới khi có thay đổi).
+  - Màn nền: danh sách (Không) / Đồi xanh / Ảnh của bạn; `Duyệt...` mờ; `Gửi ảnh nền từ app glimmer.`
+  - Bảo vệ màn hình: ô chọn chế độ = `nightMode` 0–3, giờ bắt đầu / kết thúc chỉ đọc, ☑ `Tối khi rảnh 15 phút`.
+  - Cài đặt: thanh trượt `Độ sáng` (Ít · % · Nhiều), `240 x 240`, ☑ `Đảo màu`.
+  - Máy chưa có; mục `Thuộc tính` của menu desktop chưa mở gì.
+- Phiếu: `docs/phieu_panel/2026-11-27-display-properties.md`
+- Cần firmware: màu vỏ màn hình `#8A8A8A` / `#D4D0C8`, đèn `#21A121`; giải mã hình nền thu 1/4 cho màn xem trước;
+  chọn hình nền (Không) = nền một màu, Đồi xanh = nền dự phòng (dù đã có /wallpaper.jpg).
+
+**Việc cần làm trong code:**
+- Kênh `Display` (hệ thống): menu desktop › `Thuộc tính` mở nó; tab, mục chọn, danh sách mở, nút do app gửi; đổi giá
+  trị qua `/api/settings` (cùng chỗ lưu với app); đổi một mục chỉ vẽ lại mục đó + màn xem trước.
+- App: cửa sổ Thuộc tính màn hình trong màn mô phỏng chạm được như Đồng hồ.
+
 ## P-2026-11-28.29 — Alt+Tab: đổi qua lại các cửa sổ như Windows XP
 
 - **Lớp vẽ đè Alt+Tab** (`source/XP-AltTab-3|1|6.dc.html`, `screen_specs.md` §17 mục XP-AltTab; ảnh `XPAltTab3.png`,

@@ -3459,6 +3459,96 @@
         214
       ],
       "firstSel": 1
+    },
+    "display": {
+      "xp": "Display Properties",
+      "title": "Thuộc tính màn hình",
+      "tabs": [
+        [
+          "Màn nền",
+          6,
+          57
+        ],
+        [
+          "Bảo vệ màn hình",
+          63,
+          113
+        ],
+        [
+          "Cài đặt",
+          176,
+          57
+        ]
+      ],
+      "page": [
+        6,
+        41,
+        228,
+        140
+      ],
+      "buttons": [
+        [
+          "OK",
+          53,
+          187,
+          49
+        ],
+        [
+          "Hủy",
+          106,
+          187,
+          49
+        ],
+        [
+          "Áp dụng",
+          159,
+          187,
+          70
+        ]
+      ],
+      "monitor": {
+        "case": [
+          76,
+          64
+        ],
+        "edge": "#8A8A8A",
+        "fill": "#D4D0C8",
+        "bezel": "xpLabel",
+        "screen": [
+          8,
+          5,
+          60,
+          54
+        ],
+        "led": "#21A121",
+        "neck": "#B2B2B2"
+      },
+      "wallpaperList": [
+        "(Không)",
+        "Đồi xanh",
+        "Ảnh của bạn"
+      ],
+      "saverModes": [
+        "(Không)",
+        "Tối dần",
+        "Đồng hồ",
+        "Tắt màn"
+      ],
+      "trackbar": {
+        "track": [
+          20,
+          142,
+          108
+        ],
+        "ticks": 11,
+        "thumb": {
+          "edge": "#003C74",
+          "inner": "white",
+          "core": "xpStartHi",
+          "w": 11,
+          "h": 13
+        }
+      }
     }
   }
 }
