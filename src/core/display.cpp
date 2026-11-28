@@ -59,6 +59,8 @@ void Display::useFont(const char* name) {
 // Drop the loaded VLW glyph cache to free heap before memory-hungry ops (TLS).
 void Display::releaseFont() {
     if (s_loadedFont) { s_panel.unloadFont(); s_loadedFont = nullptr; }
+    // L-12: the repaint sprite's font too (never while a repaint draws into it).
+    if (s_sprFont && s_spr && !s_toSprite) { s_spr->unloadFont(); s_sprFont = nullptr; }
 }
 
 // ── glimmer logo — 16×16 spark, direct-blit ──
@@ -400,12 +402,15 @@ void Display::beginRepaint(int x, int y, int w, int h) {
     s_clipX = (int16_t)x; s_clipY = (int16_t)y; s_clipW = (int16_t)w; s_clipH = (int16_t)h;
     // L-8: off-screen, then one push — nothing half-painted shows under the cursor. The sprite's viewport datum
     // (-x, -y) keeps screen coordinates. No heap for it → straight to the panel, clipped (as before).
-    s_spr = new (std::nothrow) TFT_eSprite(&s_panel);
+    // L-12: one sprite object for every repaint — only its pixel buffer comes and goes, so the VLW font it loaded
+    // stays (a font load is tens of ms: loading it at every cursor step made the cursor crawl, ~200 ms a step).
+    if (!s_spr) s_spr = new (std::nothrow) TFT_eSprite(&s_panel);
+    bool made = false;
     if (s_spr) {
         s_spr->setColorDepth(16);
-        if (!s_spr->createSprite(w, h)) { delete s_spr; s_spr = nullptr; }
+        made = s_spr->createSprite(w, h);
     }
-    if (s_spr) {
+    if (made) {
         s_spr->setViewport(-x, -y, SCREEN_W, SCREEN_H, true);
         g_tft = s_spr;
         s_toSprite = true;
@@ -416,14 +421,11 @@ void Display::beginRepaint(int x, int y, int w, int h) {
 
 void Display::endRepaint() {
     if (s_toSprite) {
-        if (s_sprFont) { s_spr->unloadFont(); s_sprFont = nullptr; }
         s_spr->resetViewport();
         g_tft = &s_panel;
         s_toSprite = false;
         s_spr->pushSprite(s_clipX, s_clipY);
-        s_spr->deleteSprite();
-        delete s_spr;
-        s_spr = nullptr;
+        s_spr->deleteSprite();             // the buffer only: the sprite's font stays for the next repaint (L-12)
     } else {
         s_panel.resetViewport();
     }

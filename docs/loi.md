@@ -131,6 +131,23 @@ Mức độ: `chặn dùng` · `khó chịu` · `nhỏ` (chữ, giao diện).
 **Lịch sử**
 - 2026-11-28: ghi; tạm trỏ hook vào IP; bạn chọn tên riêng tự sinh; sửa.
 
+### L-12 · Di chuột trên thiết bị chậm, lag (mọi màn)
+
+- Trạng thái: chờ thử máy · Mức độ: khó chịu (con trỏ bò) · Phần: firmware `display.cpp` (`beginRepaint` / `endRepaint`, sprite của L-8), `cursor.cpp` · Quy tắc: "Mouse, keyboard, power" (`CLAUDE.md`, repaint-safe `draw()`)
+- Báo: 2026-11-28 — "sau bản cập nhật đột nhiên tôi cảm thấy lag hơn khi di chuột thì con chuột rất lag và chậm"
+- Các bước: 1. Firmware a421d95 (đợt 4). 2. Rê chuột trên desktop hoặc một cửa sổ (Thời tiết).
+- Mong đợi / thực tế: con trỏ đi mượt (đo được trước đây: Home ~8 ms mỗi bước) / `cursor.repaint_ms` **~200 ms mỗi bước ở mọi chỗ** (desktop, thanh tác vụ, cửa sổ Thời tiết) — con trỏ chỉ nhích ~5 lần / giây.
+- Bằng chứng: đo bằng gói chuột UDP + `/api/state`: Home 200–205 ms ở 10 điểm, Weather 193–196 ms; heap 20,7 KB, khối lớn 10–18 KB.
+
+**Sửa**
+- Nguyên nhân: từ L-8, mỗi bước chuột vẽ lại ô dưới con trỏ vào một sprite **tạo mới rồi xoá** — font VLW nạp vào sprite (font của TFT_eSPI theo từng đối tượng) bị nạp lại từ flash ở **mọi** bước, kể cả chỗ không có chữ (desktop đo nhãn biểu tượng trước khi chặn clip). Nạp một font giờ tốn cỡ trăm ms (231 glyph tiếng Việt, heap phân mảnh).
+- Code: `display.cpp` giữ **một** đối tượng sprite cho mọi lần vẽ lại, chỉ bộ đệm điểm ảnh tạo / xoá (`deleteSprite` không gỡ font) → font của sprite nạp một lần, dùng lại; `releaseFont()` (trước mỗi TLS, cổng heap L-4) trả luôn font của sprite.
+- Test: không khoá được bằng test native (thời gian trên panel thật); đo lại `cursor.repaint_ms` sau khi nạp.
+- Thử máy: rê chuột trên desktop, thanh tác vụ, một cửa sổ có chữ: đi mượt; `/api/state` `cursor.repaint_ms` vài chục ms trở xuống; `heap_refusals` không tăng bất thường.
+
+**Lịch sử**
+- 2026-11-28: ghi, đo, sửa, nạp. Đo lại bằng gói chuột UDP: Home **18–21 ms** mỗi bước (lần đầu 126 ms: nạp font một lần); heap thường trực 20,6 → 17,2 KB (font của sprite, trả lại trước TLS).
+
 ## Đã xong
 
 ### L-11 · Đóng hộp Tắt máy tính: thanh tác vụ còn vệt đen, chuột đi qua đâu mới sạch đến đấy
