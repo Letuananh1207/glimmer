@@ -442,7 +442,11 @@ static void repaintRect(int x, int y, int w, int h) {
     const Channel& ch = kChannels[g_activeIdx[g_activePtr]];
     if (!g_contentDue && g_menu.kind == XPCore::MENU_NONE && ch.tick) ch.tick(makeCtx());
     Display::beginRepaint(x, y, w, h);
-    if (g_contentDue) {
+    // L-9: the Start menu covers (0, 0)–(239, 213) — a box inside it needs no window under it.
+    const bool underStart = g_menu.kind == XPCore::MENU_START && y + h <= Layout::TASKBAR_Y;
+    if (underStart) {
+        // nothing: paintMenu() below covers the whole box
+    } else if (g_contentDue) {
         const XPCore::WinFrame f = XPCore::frameOf(ch.name);
         XP::emptyFrame(f.title, f.icon, f.status);
     } else {

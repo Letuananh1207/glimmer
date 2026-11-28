@@ -93,6 +93,24 @@ Mức độ: `chặn dùng` · `khó chịu` · `nhỏ` (chữ, giao diện).
 **Lịch sử**
 - 2026-11-27: ghi + tìm nguyên nhân; bạn chốt "phiên mới hơn thắng + hết hạn 2 giờ"; sửa, test xanh, chờ thử máy.
 
+### L-9 · Menu Start mở: di chuột trên thiết bị rất lag
+
+- Trạng thái: chờ thử máy · Mức độ: khó chịu (con trỏ bò, khó chọn mục) · Phần: con trỏ + menu Start (`main.cpp` `repaintRect`, `xp_start.cpp`) · Quy tắc: "Mouse, keyboard, power" (`CLAUDE.md`, repaint-safe `draw()`)
+- Báo: 2026-11-28 — "Hiện nay khi mở phần start trên phần cứng và di chuyển con chuột thì rất lag"
+- Các bước: 1. Mở menu Start từ app. 2. Rê chuột trên bàn rê.
+- Mong đợi / thực tế: con trỏ đi mượt như trên cửa sổ / bò, giật.
+- Bằng chứng: chưa có (đo được bằng `/api/state` `cursor.repaint_ms` / `repaint_max`).
+
+**Sửa**
+- Nguyên nhân: mỗi lần con trỏ nhích, `repaintRect()` vẽ lại cả cửa sổ dưới menu (dù menu Start che kín y 0–213) rồi `XPStart::draw()` vẽ **toàn bộ** menu, không chặn theo vùng clip (`clipHits`). Font của sprite nạp lại mỗi lần vẽ lại, và menu đổi qua lại JBMono-16B / 12B / 11 khoảng 10 lần, mỗi lần ~30 ms → vài trăm ms mỗi bước chuột.
+- Test: không khoá được bằng test native (thời gian vẽ trên panel thật).
+- Code: `src/main.cpp` `repaintRect` — menu Start mở và hộp ở trên thanh tác vụ → không vẽ cửa sổ bên dưới; `src/channels/xp_start.cpp` — chặn `clipHits` cho dải người dùng, từng dòng, dải dưới, menu con, từng chữ (`text()`). RAM không đổi (45 688 B).
+- Thử máy: nạp firmware → mở Start, rê chuột qua lại hai cột và All Programs: con trỏ đi mượt, dòng sáng đúng. Còn lag → gửi `/api/state` (`cursor.repaint_ms`, `repaint_max`).
+- Commit: `ed56e00`. Đã nạp lên máy 2026-11-28.
+
+**Lịch sử**
+- 2026-11-28: ghi + sửa, chờ thử máy.
+
 ## Đã xong
 
 ### L-8 · Di chuột trên cửa sổ Ảnh, Thời tiết...: chỗ con trỏ hiện ô trắng tạm thời

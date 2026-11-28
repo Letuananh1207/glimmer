@@ -50,6 +50,8 @@ const char kRestart[] PROGMEM = "Khởi động lại";
 const char kTurnOff[] PROGMEM = "Tắt máy";   // P-2026-11-27.24: opens Tắt máy tính
 
 void text(const char* p, const char* font, int x, int y, uint16_t fg, uint16_t bg) {
+    // L-9: a cursor repaint loads each font into its sprite again (~30 ms) — only for labels it touches.
+    if (!Display::clipHits(x, y, 150, 18)) return;
     char t[40];
     strncpy_P(t, p, sizeof(t));
     t[sizeof(t) - 1] = 0;
@@ -71,6 +73,7 @@ void runs(const Run* r, int n, const uint16_t* pal, int x0, int y0) {
 #define ICON(NS, N, X, Y) runs(NS::k##N##Runs, NS::k##N##RunCount, NS::k##N##Pal, (X), (Y))
 
 void userBand() {
+    if (!Display::clipHits(0, 0, 240, 34)) return;
     for (int b = 0; b < 6; b++) tft.fillRect(0, kBandY[b], 240, kBandY[b + 1] - kBandY[b], kBand[b]);
     tft.drawFastHLine(3, 0, 234, kBandHi);
     tft.fillRect(5, 4, 24, 24, WHITE);                  // picture frame
@@ -115,6 +118,7 @@ void runsLit(const Run* r, int n, const uint16_t* pal, int x0, int y0) {
 void paintItem(const StartLayout& L, int i, bool lit) {
     if (i < 0 || i >= L.n) return;
     const Rect r = L.row[i];
+    if (!Display::clipHits(r.x, r.y, r.w, r.h)) return;   // L-9: a cursor repaint elsewhere
     const int y = r.y;
     const uint16_t fg = lit ? WHITE : BLACK;
     switch (L.item[i]) {
@@ -180,6 +184,7 @@ void paintItem(const StartLayout& L, int i, bool lit) {
 void paintSub(const StartLayout& L, int i, bool lit) {
     if (i < 0 || i >= L.subN) return;
     const Rect r = L.subRow[i];
+    if (!Display::clipHits(r.x, r.y, r.w, r.h)) return;   // L-9: a cursor repaint elsewhere
     const int y = r.y;
     const uint16_t bg = lit ? SELECT : WHITE, fg = lit ? WHITE : BLACK;
     tft.fillRect(r.x, r.y, r.w, r.h, bg);
@@ -210,6 +215,7 @@ void columns(const StartLayout& L, const Control::Menu& m) {
 }
 
 void bottomBand(const StartLayout& L, const Control::Menu& m) {
+    if (!Display::clipHits(0, 190, 240, 24)) return;
     for (int b = 0; b < 5; b++) tft.fillRect(0, 190 + 5 * b, 240, b == 4 ? 4 : 5, kBottom[b]);
     tft.drawFastHLine(0, 190, 240, TASK_HI);
     text(kRestart, "JBMono-11", 27, 196, WHITE, kBottom[1]);
@@ -222,6 +228,7 @@ void bottomBand(const StartLayout& L, const Control::Menu& m) {
 // All Programs sub-menu (144, top, 96 wide — P-2026-11-27.25): every installed program, separator, Thêm / gỡ.
 void allPrograms(const StartLayout& L, const Control::Menu& m) {
     const Rect b = L.subBox;
+    if (!Display::clipHits(b.x, b.y, b.w, b.h)) return;
     tft.fillRect(b.x, b.y, b.w, b.h, MENU_BORDER);
     tft.fillRect(b.x + 1, b.y + 1, b.w - 2, b.h - 2, WHITE);
     for (int i = 0; i < L.subN; i++) paintSub(L, i, i == m.sub);
