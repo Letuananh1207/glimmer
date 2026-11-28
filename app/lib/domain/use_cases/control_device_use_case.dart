@@ -91,7 +91,7 @@ class ControlDeviceUseCase {
 
   /// R-DK-23: the Dò mìn game [g] at [now] goes down to be drawn. Nothing on firmware without it.
   Future<Result<void>> mines(MinesGame g, DateTime now) async {
-    if (!caps.mines) return const Result.ok(null);
+    if (!caps.mines || deviceDrives('Mines')) return const Result.ok(null); // R-DK-32: the device keeps the game
     return _device.setMines(minesBody(g, now));
   }
 
@@ -139,6 +139,12 @@ class ControlDeviceUseCase {
 
   /// R-DK-31: the device also opens the context menus and takes the keys (`input.stage` ≥ 3).
   bool get deviceKeys => (_device.state?.inputStage ?? 0) >= 3 && caps.mouse;
+
+  /// R-DK-32: the device also works the insides of Ngày và Giờ, Thời tiết's tabs and Dò mìn (`input.stage` ≥ 4).
+  bool deviceDrives(String window) =>
+      (_device.state?.inputStage ?? 0) >= 4 &&
+      caps.mouse &&
+      const {'Clock', 'Weather', 'Forecast', 'Mines'}.contains(window);
 
   int _keySeq = 0;
 

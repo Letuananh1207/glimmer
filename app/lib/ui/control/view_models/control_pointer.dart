@@ -154,7 +154,7 @@ extension ControlPointer on ControlViewModel {
       _lit = null;
       return;
     }
-    if (channel != 'Home' && rules.isProgram(channel) && y >= 22 && y <= 213) {
+    if (channel != 'Home' && rules.isProgram(channel) && y >= 22 && y <= 213 && !_control.deviceDrives(channel)) {
       if (!_minesClick(left: true)) tap(x, y);
     }
     await _control.click(_cursor);
@@ -173,7 +173,7 @@ extension ControlPointer on ControlViewModel {
   /// R-DK-18: right click = the old hold (R-DK-11), where the pointer is.
   Future<void> clickRight() async {
     if (!pointerUsable) return;
-    if (_minesClick(left: false)) return;
+    if (!_control.deviceDrives(channel) && _minesClick(left: false)) return;
     if (_control.deviceKeys) {
       // R-DK-31: the device opens the context menu itself (XP right-click).
       await _control.click(_cursor, button: 2);

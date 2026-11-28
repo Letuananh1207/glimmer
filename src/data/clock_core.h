@@ -98,4 +98,98 @@ inline int wdayOf(int y, int m, int d) {
 // SNTP asks again every hour (ESP8266 core SNTP_UPDATE_DELAY).
 constexpr uint32_t kSyncEveryS = 3600;
 
+// ── Touched on the device (plan thiet-bi-la-may-tinh, stage 4; was the app's clock_rules.dart, R-DK-16) ──
+inline int daysIn(int y, int m) {
+    static const uint8_t kDays[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    if (m == 2) return (y % 4 == 0 && (y % 100 != 0 || y % 400 == 0)) ? 29 : 28;
+    return m >= 1 && m <= 12 ? kDays[m - 1] : 30;
+}
+// First row shown when [list] opens on row [sel] (XP keeps the chosen row in view).
+inline uint8_t topFor(uint8_t list, int sel) { return clampTop(list, sel - 4); }
+
+enum HitKind : uint8_t {
+    HIT_NONE, HIT_TAB, HIT_MONTH_LIST, HIT_YEAR_UP, HIT_YEAR_DOWN, HIT_DAY, HIT_PICK_MONTH, HIT_ZONE_LIST,
+    HIT_PICK_ZONE, HIT_SCROLL_UP, HIT_SCROLL_DOWN, HIT_CLOSE_LIST, HIT_SYNC,
+};
+struct Hit { uint8_t kind = HIT_NONE; int16_t value = 0; };
+inline Hit hit(uint8_t k, int v = 0) { Hit h; h.kind = k; h.value = (int16_t)v; return h; }
+inline bool inBox(int x, int y, int rx, int ry, int rw, int rh) { return x >= rx && x < rx + rw && y >= ry && y < ry + rh; }
+
+// A click while a drop list (lx, ly, w × 119) is open: a row picks (value = index + base), the scroll buttons scroll,
+// anywhere outside closes it (XP).
+inline Hit listHit(const View& v, int x, int y, int lx, int ly, int w, uint8_t pick, int base) {
+    const int h = 2 + kListRows * kListRowH;
+    if (!inBox(x, y, lx, ly, w, h)) return hit(HIT_CLOSE_LIST);
+    if (x >= lx + w - 11) {
+        if (y < ly + 11) return hit(HIT_SCROLL_UP);
+        if (y >= ly + h - 11) return hit(HIT_SCROLL_DOWN);
+        return Hit();
+    }
+    const int r = (y - ly - 1) / kListRowH, i = v.top + r;
+    return r >= 0 && r < kListRows && i < listCount(v.list) ? hit(pick, i + base) : Hit();
+}
+
+// What a click at (x, y) on the Ngày và Giờ window hits (ch_clock.cpp's layout); [year] / [month] = today's.
+inline Hit hitAt(const View& v, int x, int y, int year, int month) {
+    if (y >= 26 && y < 42) {
+        static const uint8_t kTabX[4] = {6, 93, 152, 218};
+        for (int i = 0; i < 3; i++) if (x >= kTabX[i] && x < kTabX[i + 1]) return hit(HIT_TAB, i);
+        return Hit();
+    }
+    switch (v.tab) {
+        case TAB_DATE: {
+            if (v.list == LIST_MONTH) return listHit(v, x, y, 14, 78, 67, HIT_PICK_MONTH, 1);
+            if (inBox(x, y, 14, 62, 67, 16)) return hit(HIT_MONTH_LIST);
+            if (inBox(x, y, 112, 60, 20, 10)) return hit(HIT_YEAR_UP);
+            if (inBox(x, y, 112, 70, 20, 10)) return hit(HIT_YEAR_DOWN);
+            if (inBox(x, y, 13, 98, 112, 78)) {
+                const int vy = v.year ? v.year : year, vm = v.month ? v.month : month;
+                const int i = ((y - 98) / 13) * 7 + (x - 13) / 16;
+                const int lead = (wdayOf(vy, vm, 1) + 6) % 7;          // Monday first
+                const int d = i - lead + 1;
+                return d >= 1 && d <= daysIn(vy, vm) ? hit(HIT_DAY, d) : Hit();
+            }
+            break;
+        }
+        case TAB_ZONE:
+            if (v.list == LIST_ZONE) return listHit(v, x, y, 12, 68, 216, HIT_PICK_ZONE, 0);
+            if (inBox(x, y, 12, 50, 216, 18)) return hit(HIT_ZONE_LIST);
+            break;
+        default:
+            if (inBox(x, y, 125, 98, 103, 21)) return hit(HIT_SYNC);
+    }
+    return Hit();
+}
+
+// [v] after hit [h]; [zone] = the device's zone index now. [sync] = ask the time servers again; [newZone] = a zone
+// picked (its index), −1 none.
+inline View apply(View v, const Hit& h, int year, int month, int zone, bool& sync, int& newZone) {
+    sync = false;
+    newZone = -1;
+    const int vy = v.year ? v.year : year, vm = v.month ? v.month : month;
+    switch (h.kind) {
+        case HIT_TAB: v.tab = (uint8_t)h.value; v.list = LIST_NONE; break;
+        case HIT_MONTH_LIST:
+            if (v.list == LIST_MONTH) v.list = LIST_NONE;
+            else { v.list = LIST_MONTH; v.top = topFor(LIST_MONTH, vm - 1); }
+            break;
+        case HIT_YEAR_UP:   v.year = (uint16_t)(vy + 1 > 2099 ? 2099 : vy + 1); v.month = (uint8_t)vm; v.day = 0; break;
+        case HIT_YEAR_DOWN: v.year = (uint16_t)(vy - 1 < 1970 ? 1970 : vy - 1); v.month = (uint8_t)vm; v.day = 0; break;
+        case HIT_DAY:       v.year = (uint16_t)vy; v.month = (uint8_t)vm; v.day = (uint8_t)h.value; break;
+        case HIT_PICK_MONTH: v.year = (uint16_t)vy; v.month = (uint8_t)h.value; v.list = LIST_NONE; v.day = 0; break;
+        case HIT_ZONE_LIST:
+            if (v.list == LIST_ZONE) v.list = LIST_NONE;
+            else { v.list = LIST_ZONE; v.top = topFor(LIST_ZONE, zone < 0 ? 0 : zone); }
+            break;
+        case HIT_PICK_ZONE: v.list = LIST_NONE; newZone = h.value; break;
+        case HIT_SCROLL_UP:   v.top = clampTop(v.list, v.top - 1); break;
+        case HIT_SCROLL_DOWN: v.top = clampTop(v.list, v.top + 1); break;
+        case HIT_CLOSE_LIST: v.list = LIST_NONE; break;
+        case HIT_SYNC: sync = true; break;
+        default: break;
+    }
+    return v;
+}
+
+
 }  // namespace ClockCore

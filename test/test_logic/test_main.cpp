@@ -2151,6 +2151,120 @@ void test_turnoff_shade_redraws_taskbar() {
     TEST_ASSERT_FALSE(XPCore::shadesTaskbar(XPCore::MENU_NONE));
 }
 
+// Stage 4: Ngay va Gio, Do min and Thoi tiet's tabs on the device.
+void test_input_inside_windows() {
+    using namespace InputCore;
+    Scene w;
+    w.caption = true;
+    w.shown = XPCore::PROG_WEATHER;
+    TEST_ASSERT_EQUAL(XPCore::PROG_FORECAST, leftClick(w, 90, 33, false).prog);
+    TEST_ASSERT_EQUAL(XPCore::PROG_WEATHER, leftClick(w, 30, 33, false).prog);
+    TEST_ASSERT_EQUAL(ACT_NONE, leftClick(w, 100, 100, false).kind);
+    w.shown = XPCore::PROG_MINES;
+    Action a = leftClick(w, 60, 70, false);
+    TEST_ASSERT_EQUAL(ACT_INSIDE, a.kind);
+    TEST_ASSERT_EQUAL(0, a.arg);
+    a = rightClick(w, 60, 70, 0);
+    TEST_ASSERT_EQUAL(ACT_INSIDE, a.kind);
+    TEST_ASSERT_EQUAL(1, a.arg);                                // a flag, not a menu
+    TEST_ASSERT_EQUAL(ACT_MENU_OPEN, rightClick(w, 60, 10, 0).kind);   // the title bar: the window menu
+    w.shown = XPCore::PROG_CLOCK;
+    TEST_ASSERT_EQUAL(ACT_INSIDE, leftClick(w, 30, 33, false).kind);
+    TEST_ASSERT_EQUAL(ACT_NONE, rightClick(w, 30, 100, 0).kind);
+    w.shown = XPCore::PROG_CALC;                                 // still the app's (stage 5)
+    TEST_ASSERT_EQUAL(ACT_NONE, leftClick(w, 30, 100, false).kind);
+}
+
+void test_clock_on_device() {
+    using namespace ClockCore;
+    View v;
+    // Tabs.
+    Hit h = hitAt(v, 100, 33, 2026, 11);
+    TEST_ASSERT_EQUAL(HIT_TAB, h.kind);
+    TEST_ASSERT_EQUAL(1, h.value);
+    // Nov 2026 starts on a Sunday: Monday-first grid, the 1st in the 7th cell.
+    h = hitAt(v, 13 + 16 * 6 + 2, 98 + 2, 2026, 11);
+    TEST_ASSERT_EQUAL(HIT_DAY, h.kind);
+    TEST_ASSERT_EQUAL(1, h.value);
+    TEST_ASSERT_EQUAL(HIT_NONE, hitAt(v, 13 + 2, 98 + 2, 2026, 11).kind);   // Monday 26 Oct: not this month
+    bool sync = false;
+    int zone = -1;
+    View d = apply(v, h, 2026, 11, 8, sync, zone);
+    TEST_ASSERT_EQUAL(2026, d.year);
+    TEST_ASSERT_EQUAL(11, d.month);
+    TEST_ASSERT_EQUAL(1, d.day);
+    // Year up / down, kept 1970..2099; a new year drops the chosen day.
+    View y = apply(d, hitAt(d, 120, 62, 2026, 11), 2026, 11, 8, sync, zone);
+    TEST_ASSERT_EQUAL(2027, y.year);
+    TEST_ASSERT_EQUAL(0, y.day);
+    // The month list opens on the month in view, a row picks it.
+    View l = apply(v, hitAt(v, 30, 66, 2026, 11), 2026, 11, 8, sync, zone);
+    TEST_ASSERT_EQUAL(LIST_MONTH, l.list);
+    TEST_ASSERT_EQUAL(3, l.top);                                  // Nov = row 10 → top 6? clamped to 12 - 9 = 3
+    h = hitAt(l, 30, 78 + 1 + 13 * 0 + 3, 2026, 11);
+    TEST_ASSERT_EQUAL(HIT_PICK_MONTH, h.kind);
+    TEST_ASSERT_EQUAL(4, h.value);                                // top 3 → April
+    View p = apply(l, h, 2026, 11, 8, sync, zone);
+    TEST_ASSERT_EQUAL(4, p.month);
+    TEST_ASSERT_EQUAL(LIST_NONE, p.list);
+    TEST_ASSERT_EQUAL(HIT_CLOSE_LIST, hitAt(l, 200, 200, 2026, 11).kind);
+    // Múi giờ: the list, a zone picked; Internet: Cập nhật ngay.
+    View z; z.tab = TAB_ZONE;
+    View zl = apply(z, hitAt(z, 100, 55, 2026, 11), 2026, 11, 8, sync, zone);
+    TEST_ASSERT_EQUAL(LIST_ZONE, zl.list);
+    apply(zl, hitAt(zl, 100, 68 + 1 + 3, 2026, 11), 2026, 11, 8, sync, zone);
+    TEST_ASSERT_EQUAL(zl.top, zone);
+    View n; n.tab = TAB_NET;
+    apply(n, hitAt(n, 150, 105, 2026, 11), 2026, 11, 8, sync, zone);
+    TEST_ASSERT_TRUE(sync);
+    TEST_ASSERT_EQUAL(29, daysIn(2028, 2));
+    TEST_ASSERT_EQUAL(28, daysIn(2100, 2));
+}
+
+void test_mines_on_device() {
+    using namespace Mines;
+    uint32_t seed = 12345;
+    auto rnd = [&seed](int n) { seed = seed * 1103515245u + 12345u; return (int)((seed >> 16) % (uint32_t)n); };
+    Game g;
+    reveal(g, 40, 1000, rnd);
+    TEST_ASSERT_EQUAL(ST_PLAYING, g.status);
+    TEST_ASSERT_FALSE(g.mines.has(40));                         // the first click never hits a mine
+    TEST_ASSERT_EQUAL(kMines, g.mines.count());
+    TEST_ASSERT_TRUE(g.opened.has(40));
+    View v = viewOf(g, 4000);
+    TEST_ASSERT_EQUAL(3, v.secs);
+    TEST_ASSERT_TRUE(v.run);
+    TEST_ASSERT_EQUAL(FACE_SMILE, v.face);
+    // A flag on a closed cell; left on a flag does nothing; the count goes down.
+    int closed = -1;
+    for (int i = 0; i < kCells; i++) if (!g.opened.has(i)) { closed = i; break; }
+    flag(g, closed);
+    TEST_ASSERT_EQUAL('F', viewOf(g, 4000).cell[closed]);
+    TEST_ASSERT_EQUAL(kMines - 1, viewOf(g, 4000).left);
+    reveal(g, closed, 4000, rnd);
+    TEST_ASSERT_FALSE(g.opened.has(closed));
+    flag(g, closed);
+    // Clicking a mine loses: X on it, the other mines shown, dead face, the clock stops.
+    int mine = -1;
+    for (int i = 0; i < kCells; i++) if (g.mines.has(i)) { mine = i; break; }
+    reveal(g, mine, 9000, rnd);
+    TEST_ASSERT_EQUAL(ST_LOST, g.status);
+    v = viewOf(g, 20000);
+    TEST_ASSERT_EQUAL('X', v.cell[mine]);
+    TEST_ASSERT_EQUAL(FACE_DEAD, v.face);
+    TEST_ASSERT_FALSE(v.run);
+    TEST_ASSERT_EQUAL(8, v.secs);
+    // Opening every safe cell wins: all mines flagged, 0 left, cool face.
+    Game w;
+    reveal(w, 0, 0, rnd);
+    for (int i = 0; i < kCells; i++) if (!w.mines.has(i)) reveal(w, i, 5000, rnd);
+    TEST_ASSERT_EQUAL(ST_WON, w.status);
+    v = viewOf(w, 6000);
+    TEST_ASSERT_EQUAL(0, v.left);
+    TEST_ASSERT_EQUAL(FACE_COOL, v.face);
+    TEST_ASSERT_TRUE(faceAt(110, 30));
+}
+
 void test_explorer_core() {
     using namespace ExplorerCore;
     char b[48];
@@ -2272,5 +2386,8 @@ int main(int, char**) {
     RUN_TEST(test_input_context_menus);
     RUN_TEST(test_input_keys);
     RUN_TEST(test_turnoff_shade_redraws_taskbar);
+    RUN_TEST(test_input_inside_windows);
+    RUN_TEST(test_clock_on_device);
+    RUN_TEST(test_mines_on_device);
     return UNITY_END();
 }

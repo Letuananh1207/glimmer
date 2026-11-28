@@ -71,6 +71,121 @@ inline uint16_t shownSecs(const View& v, uint32_t sentMs, uint32_t nowMs) {
 
 // 7-segment patterns (bit 6 = a … bit 0 = g) of the 3 LED digits for [v]: 000..999, a minus as
 // XP shows it below 0 ("-01"; −99 at least).
+// ── The game on the device (plan thiet-bi-la-may-tinh, stage 4; was the app's mines_rules.dart, R-DK-23) ──
+// Minesweeper of XP at Beginner: the first click of a game never hits a mine (mines placed after it), a 0 opens its
+// neighbours (flags kept), a mine = lost, every safe cell open = won (every mine flagged). Bit sets: 3 × 11 B.
+enum Status : uint8_t { ST_READY, ST_PLAYING, ST_WON, ST_LOST };
+struct Bits {
+    uint8_t b[11] = {};
+    bool has(int i) const { return b[i >> 3] >> (i & 7) & 1; }
+    void set(int i, bool on) { if (on) b[i >> 3] |= (uint8_t)(1 << (i & 7)); else b[i >> 3] &= (uint8_t)~(1 << (i & 7)); }
+    int count() const { int n = 0; for (int i = 0; i < kCells; i++) n += has(i); return n; }
+};
+struct Game {
+    Bits mines, opened, flags;
+    uint8_t status = ST_READY;
+    int8_t blast = -1;
+    uint32_t startMs = 0, endMs = 0;
+};
+
+inline int around(int i, int8_t out[8]) {
+    const int c = i % kCols, r = i / kCols;
+    int n = 0;
+    for (int dr = -1; dr <= 1; dr++)
+        for (int dc = -1; dc <= 1; dc++) {
+            if (!dr && !dc) continue;
+            const int cc = c + dc, rr = r + dr;
+            if (cc >= 0 && cc < kCols && rr >= 0 && rr < kRows) out[n++] = (int8_t)(rr * kCols + cc);
+        }
+    return n;
+}
+inline int minesAround(const Game& g, int i) {
+    int8_t nb[8];
+    const int n = around(i, nb);
+    int m = 0;
+    for (int k = 0; k < n; k++) m += g.mines.has(nb[k]);
+    return m;
+}
+
+// [rnd](n) = a random number 0 ≤ r < n (the device's hardware RNG; seeded in tests).
+template <typename Rnd>
+inline void placeMines(Game& g, int safe, Rnd rnd) {
+    int placed = 0;
+    while (placed < kMines) {
+        const int k = (int)rnd(kCells);
+        if (k == safe || g.mines.has(k)) continue;
+        g.mines.set(k, true);
+        placed++;
+    }
+}
+
+template <typename Rnd>
+inline void reveal(Game& g, int i, uint32_t now, Rnd rnd) {
+    if (i < 0 || i >= kCells || g.status == ST_WON || g.status == ST_LOST || g.flags.has(i) || g.opened.has(i)) return;
+    if (g.status == ST_READY) {
+        placeMines(g, i, rnd);
+        g.status = ST_PLAYING;
+        g.startMs = now;
+    }
+    if (g.mines.has(i)) {
+        g.opened.set(i, true);
+        g.status = ST_LOST;
+        g.blast = (int8_t)i;
+        g.endMs = now;
+        return;
+    }
+    int8_t todo[kCells];
+    int n = 0;
+    todo[n++] = (int8_t)i;
+    while (n) {
+        const int k = todo[--n];
+        if (g.opened.has(k)) continue;
+        g.opened.set(k, true);
+        if (minesAround(g, k)) continue;
+        int8_t nb[8];
+        const int m = around(k, nb);
+        for (int j = 0; j < m; j++)
+            if (!g.opened.has(nb[j]) && !g.flags.has(nb[j]) && !g.mines.has(nb[j]) && n < kCells) todo[n++] = nb[j];
+    }
+    if (g.opened.count() == kCells - kMines) {
+        g.flags = g.mines;
+        g.status = ST_WON;
+        g.endMs = now;
+    }
+}
+
+inline void flag(Game& g, int i) {
+    if (i < 0 || i >= kCells || g.status == ST_WON || g.status == ST_LOST || g.opened.has(i)) return;
+    g.flags.set(i, !g.flags.has(i));
+}
+
+// What ch_mines draws for [g] at [now]: the board ('.', 'F', '0'..'8'; lost: 'M' mines, 'X' the blast, 'W' wrong
+// flags), the face, mines left (10 − flags, 0 once won), the seconds and whether they run.
+inline View viewOf(const Game& g, uint32_t now) {
+    View v;
+    const bool lost = g.status == ST_LOST;
+    for (int i = 0; i < kCells; i++) {
+        const bool mine = g.mines.has(i), fl = g.flags.has(i);
+        char c = '.';
+        if (lost && i == g.blast) c = 'X';
+        else if (lost && fl && !mine) c = 'W';
+        else if (fl) c = 'F';
+        else if (lost && mine) c = 'M';
+        else if (g.opened.has(i)) c = (char)('0' + minesAround(g, i));
+        v.cell[i] = c;
+    }
+    v.face = g.status == ST_WON ? FACE_COOL : lost ? FACE_DEAD : FACE_SMILE;
+    v.left = (int16_t)(g.status == ST_WON ? 0 : kMines - g.flags.count());
+    const uint32_t end = g.status == ST_PLAYING ? now : g.endMs;
+    const uint32_t s = g.status == ST_READY ? 0 : (end - g.startMs) / 1000;
+    v.secs = (uint16_t)(s > (uint32_t)kSecsMax ? kSecsMax : s);
+    v.run = g.status == ST_PLAYING;
+    return v;
+}
+
+// The face button 26 × 26 at (107, 29).
+inline bool faceAt(int x, int y) { return x >= 107 && x < 133 && y >= 29 && y < 55; }
+
 constexpr uint8_t kSegDigit[10] = {0x7E, 0x30, 0x6D, 0x79, 0x33, 0x5B, 0x5F, 0x70, 0x7F, 0x7B};
 constexpr uint8_t kSegMinus = 0x01;
 inline void ledDigits(int v, uint8_t out[3]) {

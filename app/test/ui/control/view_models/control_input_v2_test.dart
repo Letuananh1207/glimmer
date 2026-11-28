@@ -149,4 +149,16 @@ void main() {
     expect(keyPacket(5, ControlKey.altF4), [0x47, 0x4B, 1, 0, 5, 2, 8]);
     expect(keyPacket(6, ControlKey.windows), [0x47, 0x4B, 1, 0, 6, 0, 11]);
   });
+
+  test('R-DK-32 stage 4: clicks inside Dò mìn / Ngày và Giờ go to the device only (no /api/mines, /api/clock)', () async {
+    vm = await make(_state(stage: 4, channel: 'Mines', windows: {'open': ['Mines'], 'min': <String>[], 'top': 'Mines'}));
+    rig.api.on(_url, 'POST', '/api/mines', {'ok': true});
+    to(48 + 16 * 4 + 8, 64 + 16 * 4 + 8);
+    await vm.clickLeft();
+    await vm.clickRight();
+    await Future<void>.delayed(Duration.zero);
+    expect(rig.posts('/api/mines'), isEmpty);
+    expect(rig.posts('/api/menu'), isEmpty);
+    expect(rig.cursor.sent.where((p) => p.datagram[2] == 2 && p.datagram[3] != 0), hasLength(6), reason: 'left + right');
+  });
 }

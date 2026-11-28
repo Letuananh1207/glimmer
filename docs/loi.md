@@ -131,9 +131,11 @@ Mức độ: `chặn dùng` · `khó chịu` · `nhỏ` (chữ, giao diện).
 **Lịch sử**
 - 2026-11-28: ghi; tạm trỏ hook vào IP; bạn chọn tên riêng tự sinh; sửa.
 
+## Đã xong
+
 ### L-11 · Đóng hộp Tắt máy tính: thanh tác vụ còn vệt đen, chuột đi qua đâu mới sạch đến đấy
 
-- Trạng thái: chờ thử máy · Mức độ: khó chịu · Phần: firmware `main.cpp` `mainSetMenu` / `mainSetScreenOn`, `xp_turnoff` · Quy tắc: "Tắt máy tính" (`CLAUDE.md` Mouse, keyboard, power)
+- Trạng thái: xong · Mức độ: khó chịu · Phần: firmware `main.cpp` `mainSetMenu` / `mainSetScreenOn`, `xp_turnoff` · Quy tắc: "Tắt máy tính" (`CLAUDE.md` Mouse, keyboard, power)
 - Báo: 2026-11-28 — "sau khi vào cửa sổ phần lựa chọn tắt nguồn và tắt ra thì ở thanh công cụ bị ám màu đen, di chuyển chuột qua đến đâu thì các vệt màu hết đến đấy"
 - Các bước: 1. Mở hộp Tắt máy tính (Start › Tắt máy, hoặc Alt+F4 ở desktop). 2. Hủy / Esc (hoặc Chờ).
 - Mong đợi / thực tế: màn và thanh tác vụ như trước khi mở hộp / thanh tác vụ còn lớp chấm tối của hộp; con trỏ vẽ lại ô dưới nó nên vệt tối mất dần theo đường chuột.
@@ -145,9 +147,7 @@ Mức độ: `chặn dùng` · `khó chịu` · `nhỏ` (chữ, giao diện).
 - Thử máy: mở hộp Tắt máy tính → Hủy: thanh tác vụ sạch ngay, không cần rê chuột. Thử cả Esc và Chờ (bật màn lại).
 
 **Lịch sử**
-- 2026-11-28: ghi, sửa (95/95 native), đã nạp — chờ bạn thử.
-
-## Đã xong
+- 2026-11-28: ghi, sửa (95/95 native), đã nạp; bạn thử 2026-11-28: ổn.
 
 ### L-8 · Di chuột trên cửa sổ Ảnh, Thời tiết...: chỗ con trỏ hiện ô trắng tạm thời
 

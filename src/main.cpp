@@ -738,7 +738,47 @@ static InputCore::Scene inputScene() {
     return s;
 }
 
-static uint32_t g_altCommitAt = 0;   // Alt+Tab: "Alt let go" (the app's key is one press, R-DK-25)
+void mainSetMines(const Mines::View& v);
+void mainSetClock(const ClockCore::View& v, bool sync);
+void mainSettingsChanged();
+static uint32_t g_altCommitAt = 0;
+static Mines::Game g_minesGame;      // stage 4: Dò mìn's game, kept by the device
+
+// Stage 4: Dò mìn's game drawn (the channel repaints only the changed cells).
+static void minesShow() { mainSetMines(Mines::viewOf(g_minesGame, millis())); }
+
+// Stage 4: a click inside Ngày và Giờ / Dò mìn (was the app's clock_rules / mines_rules).
+static void insideClick(const InputCore::Action& a) {
+    if (a.prog == XPCore::PROG_MINES) {
+        auto rnd = [](int n) { return (int)(RANDOM_REG32 % (uint32_t)n); };
+        if (a.arg == 0 && Mines::faceAt(a.x, a.y)) g_minesGame = Mines::Game();
+        else {
+            const int cell = Mines::cellAt(a.x, a.y);
+            if (cell < 0) return;
+            if (a.arg) Mines::flag(g_minesGame, cell);
+            else Mines::reveal(g_minesGame, cell, millis(), rnd);
+        }
+        minesShow();
+        return;
+    }
+    if (a.prog == XPCore::PROG_CLOCK) {
+        time_t now = time(nullptr);
+        struct tm t; localtime_r(&now, &t);
+        const int y = t.tm_year + 1900, m = t.tm_mon + 1;
+        const ClockCore::Hit h = ClockCore::hitAt(g_clockView, a.x, a.y, y, m);
+        if (h.kind == ClockCore::HIT_NONE) return;
+        bool sync = false;
+        int zone = -1;
+        const ClockCore::View v = ClockCore::apply(g_clockView, h, y, m, ClockCore::zoneIndex(g_settings.tzMinutes),
+                                                   sync, zone);
+        if (zone >= 0 && zone < ClockCore::kZoneCount) {      // the device's time zone (as Cài đặt, saved)
+            g_settings.tzMinutes = ClockCore::kZoneMin[zone];
+            Storage::save(g_settings);
+            mainSettingsChanged();
+        }
+        mainSetClock(v, sync);
+    }
+}   // Alt+Tab: "Alt let go" (the app's key is one press, R-DK-25)
 
 static InputCore::ClickTrack g_clicks;
 
@@ -761,6 +801,7 @@ static void applyClick(const InputCore::Action& a) {
             }
             break;
         case ACT_OPEN:
+            if (a.prog == XPCore::PROG_MINES) minesShow();         // the device's game (stage 4)
             if (a.prog == XPCore::PROG_EXPLORER && a.arg >= 0) {
                 g_explorerView = ExplorerCore::View();
                 g_explorerView.place = (uint8_t)a.arg;
@@ -826,6 +867,9 @@ static void applyClick(const InputCore::Action& a) {
         }
         case ACT_ALTTAB_CANCEL:
             showMenu(XPCore::MENU_NONE);
+            break;
+        case ACT_INSIDE:
+            insideClick(a);
             break;
         case ACT_START:
             showMenu(g_menu.kind == XPCore::MENU_START ? XPCore::MENU_NONE : XPCore::MENU_START);

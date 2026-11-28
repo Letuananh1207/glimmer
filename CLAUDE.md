@@ -373,7 +373,9 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
   lights the item under the pointer, acts on a click / Enter (`InputCore::menuChoose`); key datagram
   `'G' 'K' 1 seq16 mods key` (`InputCore::keyAction`: Win, Esc, Alt+F4 — desktop = Tắt máy tính, Alt+Tab box committed
   1 s after the last press or by another key, arrows / Tab / Enter in menus, Start, the box and the desktop,
-  Ctrl+Alt+Del → Trình quản lý tác vụ). v1 packets (the app works clicks out) still work.
+  Ctrl+Alt+Del → Trình quản lý tác vụ). Stage 4: Thời tiết's tabs, Ngày và Giờ (`ClockCore::hitAt` / `apply`; a zone
+  picked is saved as `tzMinutes`) and Dò mìn (`Mines::Game` in RAM, `reveal` / `flag` / `viewOf`; the device's RNG) are
+  worked on the device (`InputCore::inside` → `ACT_INSIDE`). v1 packets (the app works clicks out) still work.
 - **Mouse, keyboard, power** (app plan `app/docs/tasks/2026-11-27-app-la-chuot-ban-phim-nguon.md`,
   R-DK-17…21): the app is the mouse / keyboard / power button, the device
   only the screen. **Cursor** (`cursor_core.h` pure + glyphs, `channels/cursor.cpp`):

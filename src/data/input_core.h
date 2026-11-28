@@ -19,7 +19,7 @@ namespace InputCore {
 
 constexpr uint8_t kMouseVersion = 2;
 // What the device acts on so far (`/api/state` `input.stage`): 1 = desktop, taskbar, _ / ×, Start, Tắt máy tính;
-constexpr uint8_t kStage = 3;   // 3 = + right-click menus, keys (Win, Esc, Alt+F4, Alt+Tab, arrows, Enter)
+constexpr uint8_t kStage = 4;   // 3 = + right-click menus, keys; 4 = + Thời tiết's tabs, Ngày và Giờ, Dò mìn
 constexpr uint8_t kLeft = 1, kRight = 2;
 constexpr uint32_t kDoubleMs = 500;
 constexpr int kDoubleSlop = 4;
@@ -130,6 +130,7 @@ enum Act : uint8_t {
     ACT_HOVER,         // stage 3: item [arg] lit (arrow keys)
     ACT_ALTTAB,        // stage 3: Alt+Tab — the box opens / the next tile ([arg] = 1, Shift = −1)
     ACT_ALTTAB_CANCEL, // Esc while the box is up
+    ACT_INSIDE,        // stage 4: a click inside window [prog] at (x, y) — its channel works it out ([arg] 1 = right)
 };
 
 struct Action {
@@ -230,6 +231,24 @@ inline Action menuAt(XPCore::MenuKind k, int x, int y, int prog = XPCore::PROG_N
     return a;
 }
 
+// Stage 4: a click inside the window on screen. Thời tiết's tabs (y 26–41: Hiện tại x 6–71, Dự báo 72–123) switch
+// here; Ngày và Giờ and Dò mìn are worked out by their channel (ACT_INSIDE); other windows: still the app's.
+inline Action inside(const Scene& s, int x, int y, bool right) {
+    if (y < 22 || y >= kBarY) return Action();
+    if (s.shown == XPCore::PROG_WEATHER && !right && y >= 26 && y < 42) {
+        if (x >= 6 && x < 72) return act(ACT_OPEN, XPCore::PROG_WEATHER);
+        if (x >= 72 && x < 124) return act(ACT_OPEN, XPCore::PROG_FORECAST);
+        return Action();
+    }
+    if (s.shown == XPCore::PROG_MINES || (s.shown == XPCore::PROG_CLOCK && !right)) {
+        Action a = act(ACT_INSIDE, s.shown, right ? 1 : 0);
+        a.x = (int16_t)x;
+        a.y = (int16_t)y;
+        return a;
+    }
+    return Action();
+}
+
 // Start open: what a click on (x, y) does.
 inline Action startClick(const Scene& s, int x, int y) {
     using namespace PointerCore;
@@ -286,7 +305,7 @@ inline Action leftClick(const Scene& s, int x, int y, bool dbl) {
     if (s.caption) {
         if (captionRect(kHotMin).has(x, y)) return act(ACT_MINIMIZE, s.shown);
         if (captionRect(kHotClose).has(x, y)) return act(ACT_CLOSE, s.shown);
-        return Action();                              // the window's inside: later stages
+        return inside(s, x, y, false);
     }
     if (s.desktop) {
         const int i = iconAt(s, x, y);
@@ -316,6 +335,7 @@ inline Action rightClick(const Scene& s, int x, int y, uint16_t minMask) {
         return Action();
     }
     if (s.caption && y < 22) return menuAt(XPCore::MENU_WINDOW, x, y, s.shown, false);
+    if (s.caption) return inside(s, x, y, true);                 // Dò mìn: a flag
     if (s.desktop) {
         const int i = iconAt(s, x, y);
         if (i >= 0) return act(ACT_SELECT, s.icons[i].prog);
