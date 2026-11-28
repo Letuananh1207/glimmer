@@ -22,6 +22,7 @@
 #include "cursor_core.h"
 #include "mines_core.h"
 #include "pointer_core.h"
+#include "input_core.h"
 #include "perf_core.h"
 #include "display_core.h"
 #include "calc_core.h"
@@ -1889,6 +1890,153 @@ void test_display_props_core() {
 }
 
 // P-2026-11-28.32: Explorer texts and geometry.
+// Plan thiet-bi-la-may-tinh, stage 1: the device works out what a click does.
+void test_input_mouse_packets() {
+    using namespace InputCore;
+    Mouse m; m.seq = 0x1234; m.buttons = kLeft; m.x = 10; m.y = 230;
+    uint8_t b[8];
+    encodeMouse(m, b);
+    Mouse r;
+    TEST_ASSERT_TRUE(parseMouse(b, 8, r));
+    TEST_ASSERT_EQUAL(0x1234, r.seq);
+    TEST_ASSERT_EQUAL(kLeft, r.buttons);
+    TEST_ASSERT_EQUAL(230, r.y);
+    CursorCore::Packet v1;
+    TEST_ASSERT_FALSE(CursorCore::parse(b, 8, v1));            // the v1 parser leaves v2 alone
+    b[3] = 7;
+    TEST_ASSERT_FALSE(parseMouse(b, 8, r));                    // unknown button bits
+    Press pr[2];
+    TEST_ASSERT_EQUAL(1, pressesOf(0, kLeft, pr));
+    TEST_ASSERT_EQUAL(PRESS_LEFT, pr[0]);
+    TEST_ASSERT_EQUAL(0, pressesOf(kLeft, kLeft, pr));         // held: no new press
+    TEST_ASSERT_EQUAL(0, pressesOf(kLeft, 0, pr));             // release
+    TEST_ASSERT_EQUAL(2, pressesOf(0, kLeft | kRight, pr));
+    TEST_ASSERT_EQUAL(PRESS_RIGHT, pr[1]);
+}
+
+void test_input_double_click() {
+    using namespace InputCore;
+    ClickTrack t;
+    TEST_ASSERT_FALSE(doubleClick(t, 1000, 50, 50));
+    TEST_ASSERT_TRUE(doubleClick(t, 1400, 53, 47));            // <= 500 ms, <= 4 px
+    TEST_ASSERT_FALSE(doubleClick(t, 1500, 53, 47));           // a third press starts over
+    TEST_ASSERT_FALSE(doubleClick(t, 2100, 53, 47));           // > 500 ms after
+    TEST_ASSERT_FALSE(doubleClick(t, 2200, 60, 47));           // > 4 px away
+}
+
+static InputCore::Scene deskScene(const char* skills = "agent,weather,clock") {
+    InputCore::Scene s;
+    s.desktop = true;
+    s.bar.trayWeather = true;
+    s.nIcons = XPCore::deskIcons(skills, s.icons);
+    return s;
+}
+
+void test_input_desktop_and_taskbar() {
+    using namespace InputCore;
+    Scene s = deskScene();
+    // Desktop: a click selects (XP), a double click opens; the Recycle Bin opens Thung rac; an empty spot drops it.
+    Action a = leftClick(s, 40, 20, false);
+    TEST_ASSERT_EQUAL(ACT_SELECT, a.kind);
+    TEST_ASSERT_EQUAL(XPCore::PROG_CLAUDE, a.prog);
+    a = leftClick(s, 40, 20, true);
+    TEST_ASSERT_EQUAL(ACT_OPEN, a.kind);
+    TEST_ASSERT_EQUAL(XPCore::PROG_CLAUDE, a.prog);
+    const int binY = s.icons[s.nIcons - 1].y + 10;
+    a = leftClick(s, 40, binY, true);
+    TEST_ASSERT_EQUAL(ACT_OPEN, a.kind);
+    TEST_ASSERT_EQUAL(XPCore::PROG_EXPLORER, a.prog);
+    TEST_ASSERT_EQUAL(kPlaceTrash, a.arg);
+    TEST_ASSERT_EQUAL(XPCore::kDeskTrash, leftClick(s, 40, binY, false).prog);
+    a = leftClick(s, 200, 100, false);
+    TEST_ASSERT_EQUAL(ACT_SELECT, a.kind);
+    TEST_ASSERT_EQUAL(XPCore::PROG_NONE, a.prog);
+    TEST_ASSERT_EQUAL(CursorCore::SHAPE_ARROW, shapeAt(s, 40, 20));   // XP keeps the arrow over icons
+    // Taskbar: start, a window's button, an empty slot, the tray icon (Thoi tiet), the tray clock (Ngay va Gio).
+    TEST_ASSERT_EQUAL(ACT_START, leftClick(s, 20, 225, false).kind);
+    s.bar.prog[0] = XPCore::PROG_CLAUDE;
+    a = leftClick(s, XPCore::buttonX(0) + 5, 225, false);
+    TEST_ASSERT_EQUAL(ACT_TASKBAR, a.kind);
+    TEST_ASSERT_EQUAL(XPCore::PROG_CLAUDE, a.prog);
+    TEST_ASSERT_EQUAL(CursorCore::SHAPE_HAND, shapeAt(s, XPCore::buttonX(0) + 5, 225));
+    TEST_ASSERT_EQUAL(ACT_NONE, leftClick(s, XPCore::buttonX(1) + 5, 225, false).kind);
+    TEST_ASSERT_EQUAL(XPCore::PROG_WEATHER, leftClick(s, 185, 225, false).prog);
+    TEST_ASSERT_EQUAL(XPCore::PROG_CLOCK, leftClick(s, 220, 225, false).prog);
+}
+
+void test_input_caption_start_turnoff() {
+    using namespace InputCore;
+    Scene w;
+    w.caption = true;
+    w.shown = XPCore::PROG_WEATHER;
+    TEST_ASSERT_EQUAL(ACT_MINIMIZE, leftClick(w, 190, 10, false).kind);
+    TEST_ASSERT_EQUAL(ACT_CLOSE, leftClick(w, 226, 10, false).kind);
+    TEST_ASSERT_EQUAL(ACT_NONE, leftClick(w, 208, 10, false).kind);      // the maximize button is always off
+    TEST_ASSERT_EQUAL(ACT_NONE, leftClick(w, 100, 100, false).kind);     // the inside: a later stage
+    // Start open: a pinned program, All Programs, Desktop, Thiet bi = My Computer, the bottom band -> Tat may tinh,
+    // Cai dat (no window drawn yet) -> nothing, the start button -> closes, outside -> closes.
+    Scene s = deskScene();
+    s.menu = XPCore::MENU_START;
+    PointerCore::startLayout(startIn("agent,weather,clock"), s.start);
+    Action a = leftClick(s, 60, 40, false);
+    TEST_ASSERT_EQUAL(ACT_OPEN, a.kind);
+    TEST_ASSERT_EQUAL(XPCore::PROG_CLAUDE, a.prog);
+    TEST_ASSERT_EQUAL(ACT_START_ALL, leftClick(s, 60, 175, false).kind);
+    TEST_ASSERT_EQUAL(ACT_SHOW_DESKTOP, leftClick(s, 190, 45, false).kind);
+    a = leftClick(s, 190, 140, false);
+    TEST_ASSERT_EQUAL(ACT_OPEN, a.kind);
+    TEST_ASSERT_EQUAL(XPCore::PROG_EXPLORER, a.prog);
+    TEST_ASSERT_EQUAL(kPlaceComputer, a.arg);
+    TEST_ASSERT_EQUAL(ACT_NONE, leftClick(s, 190, 95, false).kind);
+    TEST_ASSERT_EQUAL(ACT_TURNOFF_BOX, leftClick(s, 30, 200, false).kind);
+    TEST_ASSERT_EQUAL(ACT_TURNOFF_BOX, leftClick(s, 200, 200, false).kind);
+    TEST_ASSERT_EQUAL(ACT_START, leftClick(s, 20, 225, false).kind);
+    TEST_ASSERT_EQUAL(ACT_START_CLOSE, leftClick(s, 150, 230, false).kind);
+    TEST_ASSERT_EQUAL(CursorCore::SHAPE_HAND, shapeAt(s, 60, 40));
+    // All Programs: a sub-menu row opens its program.
+    s.all = true;
+    const PointerCore::Rect r = s.start.subRow[0];
+    a = leftClick(s, r.x + 5, r.y + 5, false);
+    TEST_ASSERT_EQUAL(ACT_OPEN, a.kind);
+    TEST_ASSERT_EQUAL(XPCore::PROG_CLAUDE, a.prog);
+    // Tat may tinh: modal, its four buttons.
+    Scene t;
+    t.menu = XPCore::MENU_TURNOFF;
+    TEST_ASSERT_EQUAL(ACT_STANDBY, leftClick(t, 50, 100, false).kind);
+    TEST_ASSERT_EQUAL(ACT_POWER_OFF, leftClick(t, 120, 100, false).kind);
+    TEST_ASSERT_EQUAL(ACT_RESTART, leftClick(t, 190, 100, false).kind);
+    TEST_ASSERT_EQUAL(ACT_TURNOFF_CLOSE, leftClick(t, 180, 160, false).kind);
+    TEST_ASSERT_EQUAL(ACT_NONE, leftClick(t, 10, 10, false).kind);
+    // A context menu (still the app's until stage 3): the device leaves the click alone.
+    Scene m = deskScene();
+    m.menu = XPCore::MENU_DESKTOP;
+    TEST_ASSERT_EQUAL(ACT_NONE, leftClick(m, 40, 20, true).kind);
+}
+
+void test_windows_z_order() {
+    Control::Windows w;
+    Control::adopt(w, XPCore::PROG_CLAUDE);
+    Control::adopt(w, XPCore::PROG_WEATHER);
+    Control::adopt(w, XPCore::PROG_CLOCK);
+    Control::adopt(w, XPCore::PROG_WEATHER);          // Weather on top again
+    Control::closeWindow(w, XPCore::PROG_WEATHER);
+    TEST_ASSERT_EQUAL(XPCore::PROG_CLOCK, w.top);       // the one activated before it
+    TEST_ASSERT_EQUAL(2, w.n);
+    Control::minimizeWindow(w, XPCore::PROG_CLOCK);
+    TEST_ASSERT_EQUAL(XPCore::PROG_NONE, w.top);
+    Control::adopt(w, XPCore::PROG_CLAUDE);
+    Control::closeWindow(w, XPCore::PROG_CLAUDE);
+    TEST_ASSERT_EQUAL(XPCore::PROG_NONE, w.top);        // only a minimized one is left: the desktop
+    Control::Windows a;
+    a.open[0] = XPCore::PROG_CLAUDE; a.open[1] = XPCore::PROG_PHOTO; a.n = 2; a.top = XPCore::PROG_CLAUDE;
+    Control::zFromOpen(a);
+    TEST_ASSERT_EQUAL(XPCore::PROG_CLAUDE, a.z[a.zn - 1]);
+    Control::closeWindow(a, XPCore::PROG_CLAUDE);
+    TEST_ASSERT_EQUAL(XPCore::PROG_PHOTO, a.top);
+    Control::showDesktop(a);
+    TEST_ASSERT_EQUAL(XPCore::PROG_NONE, a.top);
+}
+
 void test_explorer_core() {
     using namespace ExplorerCore;
     char b[48];
@@ -2002,5 +2150,10 @@ int main(int, char**) {
     RUN_TEST(test_display_props_core);
     RUN_TEST(test_calc_core);
     RUN_TEST(test_explorer_core);
+    RUN_TEST(test_input_mouse_packets);
+    RUN_TEST(test_input_double_click);
+    RUN_TEST(test_input_desktop_and_taskbar);
+    RUN_TEST(test_input_caption_start_turnoff);
+    RUN_TEST(test_windows_z_order);
     return UNITY_END();
 }

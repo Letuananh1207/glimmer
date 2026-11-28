@@ -77,6 +77,9 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
   /// R-DK-23: the Dò mìn game the app keeps (the device draws it).
   MinesGame _minesGame = MinesGame.fresh;
 
+  /// R-DK-30: the state read shortly after a click the device acted on.
+  Timer? _syncTimer;
+
   /// R-DK-24…29: the XP programs' views the app keeps (control_programs.dart).
   final _p = _XpPrograms();
 
@@ -222,9 +225,29 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
     final s = _device.state;
     if (s != null && _device.error == null) _lastOk = _now();
     if (s != null) _noticeInstalled(s.skillsOn);
-    if (s != null && _sending == null && _started) _follow(s.activeChannel);
+    if (s != null && _control.deviceInput && _started) {
+      _adoptDevice(s); // R-DK-30: the device keeps the windows, Start and the selection
+    } else if (s != null && _sending == null && _started) {
+      _follow(s.activeChannel);
+    }
     _pushWindows();
     notifyListeners();
+  }
+
+  /// R-DK-30: the device works out clicks and keeps the windows: the app takes its list, whether Start is open, and
+  /// drops a context menu the device no longer shows.
+  void _adoptDevice(DeviceState s) {
+    final w = s.deviceWindows;
+    if (w != null) {
+      _windows = w;
+      _sentWindows = w;
+    }
+    _startOpen = s.menu == 'start';
+    if (!_startOpen) _startAll = false;
+    if (s.menu == 'none' && _menu != null) {
+      _menu = null;
+      _lit = null;
+    }
   }
 
   /// R-DK-9: a skill just turned on (Skill tab, web) → its first desktop icon is selected, as XP shows a new program.
@@ -289,7 +312,14 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
     final s = _device.state;
     if (!_started && s != null && mode == ControlMode.normal) {
       _started = true;
-      await _startAtDesktop(s.activeChannel);
+      // R-DK-30: the device is the computer — the app opening is a mouse plugged back in: its windows stay.
+      if (_control.deviceInput) {
+        _adoptDevice(s);
+      } else {
+        await _startAtDesktop(s.activeChannel);
+      }
+    } else if (s != null && _started && _control.deviceInput) {
+      _adoptDevice(s);
     } else if (s != null && _sending == null && _started) {
       _follow(s.activeChannel);
     }
@@ -695,6 +725,8 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
     _device.removeListener(_onDevice);
     _failureTimer?.cancel();
     _cursorTimer?.cancel();
+    _syncTimer?.cancel();
+    _p.altTimer?.cancel();
     super.dispose();
   }
 }

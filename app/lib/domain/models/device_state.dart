@@ -4,6 +4,7 @@ import 'cursor.dart';
 import 'device_sources.dart';
 import 'device_weather.dart';
 import 'library_photo.dart';
+import 'windows.dart';
 import 'project.dart';
 import 'usage.dart';
 
@@ -58,6 +59,9 @@ class DeviceState {
     this.startRecent = const [],
     this.minesApi = false,
     this.xpPrograms = const XpPrograms(),
+    this.inputStage = 0,
+    this.deviceWindows,
+    this.menu = 'none',
   });
 
   factory DeviceState.fromJson(Map<String, dynamic> j) => DeviceState(
@@ -111,6 +115,9 @@ class DeviceState {
     startRecent: List.unmodifiable((j['start_recent'] as List? ?? const []).whereType<String>()),
     minesApi: j['mines'] is Map,
     xpPrograms: XpPrograms.fromJson(j),
+    inputStage: j['input'] is Map && (j['input'] as Map)['stage'] is num ? ((j['input'] as Map)['stage'] as num).toInt() : 0,
+    deviceWindows: j['windows'] is Map<String, dynamic> ? WindowStack.fromDevice(j['windows'] as Map<String, dynamic>) : null,
+    menu: j['menu'] is String ? j['menu'] as String : 'none',
   );
 
   /// The same state with what a control command changed (answer of `/api/channel`, `/api/screen`).
@@ -166,6 +173,9 @@ class DeviceState {
         startRecent: startRecent,
         minesApi: minesApi,
         xpPrograms: xpPrograms,
+        inputStage: inputStage,
+        deviceWindows: deviceWindows,
+        menu: menu,
         ntpLast: ntpLast,
       );
 
@@ -231,6 +241,15 @@ class DeviceState {
 
   /// The XP programs of panel P-2026-11-28.28…32 this firmware draws (R-DK-24…29).
   final XpPrograms xpPrograms;
+
+  /// R-DK-30: what the device works out from the mouse itself (`input.stage`; 0 = the app does, mouse v1).
+  final int inputStage;
+
+  /// The device's open windows (`windows`), null = firmware without them.
+  final WindowStack? deviceWindows;
+
+  /// The menu over the device screen (`menu`: none, desktop, window, start, turnoff, alttab).
+  final String menu;
 
   /// Backlight on; null = firmware without `/api/screen` (R-DK-3).
   final bool? screenOn;

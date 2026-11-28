@@ -49,5 +49,13 @@ int menuHoverIndex(MenuView menu, MenuItem? item) =>
     item == null ? -1 : menu.rows.whereType<MenuItem>().toList().indexOf(item);
 
 /// The datagram: 'G' 'C' version 1, shape, sequence (16 bits, big-endian), x, y.
+/// R-DK-30: mouse datagram v2 (firmware `input_core.h`) — the buttons held instead of the shape (the device picks
+/// it): `'G' 'C' 2 buttons seqHi seqLo x y`; [buttons] bit 0 left, bit 1 right.
+Uint8List mousePacket(int seq, Cursor c, int buttons) =>
+    Uint8List.fromList([0x47, 0x43, 2, buttons & 3, (seq >> 8) & 0xFF, seq & 0xFF, c.px, c.py]);
+
+/// R-DK-30: a button change goes out this many times with one seq (UDP may drop one; the device takes it once).
+const mouseRepeats = 3;
+
 Uint8List cursorPacket(int seq, Cursor c) =>
     Uint8List.fromList([0x47, 0x43, 1, c.shape.index, (seq >> 8) & 0xFF, seq & 0xFF, c.px, c.py]);

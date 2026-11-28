@@ -24,6 +24,14 @@ int8_t   s_drawnFrame = -1;      // hourglass frame on the panel (shape wait)
 
 constexpr uint32_t kBusyHoldMs = 300;   // > one 200-ms tick of a loading screen
 
+// Mouse v2: buttons held, the device's shape, presses waiting for main.cpp (a short queue: a click is 1 press).
+bool     s_v2 = false;
+uint8_t  s_buttons = 0;
+Shape    s_devShape = SHAPE_ARROW;
+constexpr int kPressQ = 4;
+Cursor::PressAt s_press[kPressQ];
+int      s_pressN = 0;
+
 Glyph glyphOf(uint8_t shape) {
     Glyph g;
     memcpy_P(&g, &kGlyphs[shape < SHAPE_COUNT ? shape : 0], sizeof(g));
@@ -101,8 +109,27 @@ bool poll(uint32_t) {
         const int len = s_udp.parsePacket();
         if (len <= 0) break;
         const int got = s_udp.read(buf, sizeof(buf));
+        if (got != len) continue;
+        InputCore::Mouse m;
+        if (InputCore::parseMouse(buf, (size_t)got, m)) {
+            // v2: every new seq counts in order (a press must not be lost to a later move).
+            if (s_seen && !stillCurrent(m.seq, s_want.seq)) continue;   // late / one of the 3 copies
+            InputCore::Press pr[2];
+            const int np = InputCore::pressesOf(s_buttons, m.buttons, pr);
+            for (int i = 0; i < np && s_pressN < kPressQ; i++) s_press[s_pressN++] = {pr[i], m.x, m.y, millis()};
+            s_buttons = m.buttons;
+            s_v2 = true;
+            s_want.seq = m.seq;
+            s_want.x = m.x;
+            s_want.y = m.y;
+            s_want.shape = s_devShape;
+            s_seen = true;
+            changed = true;
+            continue;
+        }
         Packet p;
-        if (got != len || !parse(buf, (size_t)got, p)) continue;
+        if (!parse(buf, (size_t)got, p)) continue;
+        s_v2 = false;
         if (s_seen && !stillCurrent(p.seq, s_want.seq)) continue;   // late / duplicate
         s_want = p;
         s_seen = true;
@@ -164,6 +191,21 @@ int drawnY() { return s_drawn.y; }
 void screenRepainted() {
     // Whatever was under the old glyph is fresh now; draw it again on top.
     overlay();
+}
+
+bool deviceDriven() { return s_v2; }
+
+void setShape(Shape s) {
+    s_devShape = s;
+    if (s_v2) s_want.shape = s;
+}
+
+int takePresses(PressAt* out, int max) {
+    const int n = s_pressN < max ? s_pressN : max;
+    for (int i = 0; i < n; i++) out[i] = s_press[i];
+    for (int i = n; i < s_pressN; i++) s_press[i - n] = s_press[i];
+    s_pressN -= n;
+    return n;
 }
 
 bool    seen()  { return s_seen; }

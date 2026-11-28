@@ -667,6 +667,7 @@ void mainSetWindows(const Control::Windows& w) {
     // The list may come before the /api/channel that shows its top window.
     if (w.top >= 0 && (g_windows.minMask >> w.top & 1) && !(w.minMask >> w.top & 1)) g_restoring = w.top;
     g_windows = w;
+    Control::zFromOpen(g_windows);
     if (selChanged && g_activeCount && !strcmp(kChannels[g_activeIdx[g_activePtr]].name, "Home")) drawActive();
 }
 
@@ -703,6 +704,116 @@ bool mainSetMenu(const Control::Menu& m) {
     if (Taskbar::shown() && g_menu.kind != XPCore::MENU_TURNOFF) Taskbar::update(barState(millis()), g_settings.clock24h);
     Cursor::overlay();
     return true;
+}
+
+// ── The device is the computer (plan app/docs/tasks/2026-11-28-thiet-bi-la-may-tinh.md, stage 1) ──
+// Mouse v2: the app sends the buttons; what a click hits and does is worked out here (input_core.h).
+
+// What is on screen now, for input_core.
+static InputCore::Scene inputScene() {
+    InputCore::Scene s;
+    const char* name = g_activeCount ? kChannels[g_activeIdx[g_activePtr]].name : nullptr;
+    s.desktop = isHome(name);
+    s.shown = (int8_t)XPCore::progOf(name);
+    s.caption = name && Taskbar::shown() && s.shown >= 0 && (g_contentDue || XPCore::framesFirst(name));
+    s.menu = g_menu.kind;
+    s.all = g_menu.all;
+    s.bar = Taskbar::state();
+    s.nIcons = s.desktop ? XPCore::deskIcons(g_settings.skillsOn.c_str(), s.icons) : 0;
+    if (s.menu == XPCore::MENU_START) PointerCore::startLayout(mainStartInputs(), s.start);
+    return s;
+}
+
+static InputCore::ClickTrack g_clicks;
+
+static void showMenu(XPCore::MenuKind k, bool all = false) {
+    Control::Menu m;
+    m.kind = k;
+    m.all = all;
+    mainSetMenu(m);
+}
+
+// Apply what a left click does (the same device functions the app's HTTP commands use).
+static void applyClick(const InputCore::Action& a) {
+    using namespace InputCore;
+    switch (a.kind) {
+        case ACT_SELECT:
+            if (a.prog != g_windows.sel) {
+                g_windows.sel = a.prog;
+                drawActive();
+                Cursor::overlay();
+            }
+            break;
+        case ACT_OPEN:
+            if (a.prog == XPCore::PROG_EXPLORER && a.arg >= 0) {
+                g_explorerView = ExplorerCore::View();
+                g_explorerView.place = (uint8_t)a.arg;
+            }
+            mainShowChannel(XPCore::progName(a.prog));
+            break;
+        case ACT_TASKBAR:
+            if (a.prog == XPCore::progOf(mainActiveChannelName())) {       // on screen: down (XP)
+                Control::minimizeWindow(g_windows, a.prog);
+                mainNoteMinimize();
+                mainShowChannel("Home");
+            } else {
+                mainShowChannel(XPCore::progName(a.prog));
+            }
+            break;
+        case ACT_MINIMIZE:
+            Control::minimizeWindow(g_windows, a.prog);
+            mainNoteMinimize();
+            mainShowChannel("Home");
+            break;
+        case ACT_CLOSE:
+            Control::closeWindow(g_windows, a.prog);
+            mainShowChannel(g_windows.top >= 0 ? XPCore::progName(g_windows.top) : "Home");
+            break;
+        case ACT_START:
+            showMenu(g_menu.kind == XPCore::MENU_START ? XPCore::MENU_NONE : XPCore::MENU_START);
+            break;
+        case ACT_START_ALL:
+            showMenu(XPCore::MENU_START, !g_menu.all);
+            break;
+        case ACT_SHOW_DESKTOP:
+            Control::showDesktop(g_windows);
+            g_menu = Control::Menu();
+            mainShowChannel("Home");
+            break;
+        case ACT_TURNOFF_BOX:
+            showMenu(XPCore::MENU_TURNOFF);
+            break;
+        case ACT_STANDBY:
+            mainSetScreenOn(false);
+            break;
+        case ACT_POWER_OFF:
+            showMenu(XPCore::MENU_NONE);
+            mainSetPower(false);
+            break;
+        case ACT_RESTART:
+            showMenu(XPCore::MENU_NONE);
+            mainRestart();
+            break;
+        case ACT_START_CLOSE:
+        case ACT_TURNOFF_CLOSE:
+        case ACT_MENU_CLOSE:
+            showMenu(XPCore::MENU_NONE);
+            break;
+        case ACT_NONE:
+            break;
+    }
+}
+
+// The presses that came in (v2 mouse): left = a click (double click as XP); right = menus, a later stage.
+static void inputTick() {
+    Cursor::PressAt pr[4];
+    const int n = Cursor::takePresses(pr, 4);
+    if (!n || !g_activeCount || g_power.p != Control::POWER_ON || !cursorAllowed()) return;
+    for (int i = 0; i < n; i++) {
+        if (pr[i].press != InputCore::PRESS_LEFT) continue;
+        const bool dbl = InputCore::doubleClick(g_clicks, pr[i].at, pr[i].x, pr[i].y);
+        applyClick(InputCore::leftClick(inputScene(), pr[i].x, pr[i].y, dbl));
+    }
 }
 
 // P-2026-11-27.24 (XP-Pointer): what the mouse cursor is over — a Start menu / sub-menu row or a Tắt
@@ -1349,7 +1460,13 @@ void loop() {
     if (!g_apMode) {
         Cursor::poll(now);
         Cursor::setAllowed(cursorAllowed(), repaintRect);
-        if (!booting) pointerTick();
+        if (!booting) {
+            inputTick();
+            pointerTick();
+            // Mouse v2: the device picks the cursor's shape (XP's hand over what a click acts on).
+            if (Cursor::deviceDriven() && Cursor::mouseMode())
+                Cursor::setShape(InputCore::shapeAt(inputScene(), Cursor::x(), Cursor::y()));
+        }
         Cursor::step(now, repaintRect);
     }
 

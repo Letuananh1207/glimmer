@@ -88,6 +88,7 @@ extern void        mainSetPower(bool on);
 extern void        mainSetMines(const Mines::View& v);
 #include "perf_core.h"
 #include "xp_alttab.h"
+#include "input_core.h"
 extern void        mainSetTaskMgr(const Perf::View& v);
 #include "display_core.h"
 extern void        mainSetDisplay(const DisplayCore::View& v);
@@ -314,6 +315,14 @@ static void handleApiState() {
         for (int i = 0; i < XPCore::kRecentN; i++) if (r[i] >= 0) sr.add(XPCore::progName(r[i]));
     }   // R-DK-20: on / shutting / off / booting
     // Mouse (R-DK-17): the app sends the pointer over UDP to this port.
+    // Plan thiet-bi-la-may-tinh: the mouse datagram version this firmware works clicks out from (v2 = buttons;
+    // [stage]: what the device already acts on — 1 = desktop, taskbar, _ / ×, Start, Tắt máy tính). Absent = the app
+    // works clicks out (v1).
+    {
+        JsonObject in = d[F("input")].to<JsonObject>();
+        in[F("mouse")] = InputCore::kMouseVersion;
+        in[F("stage")] = InputCore::kStage;
+    }
     JsonObject cur = d[F("cursor")].to<JsonObject>();
     cur[F("port")]  = CursorCore::kPort;
     cur[F("x")]     = Cursor::x();

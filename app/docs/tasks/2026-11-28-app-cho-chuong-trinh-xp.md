@@ -4,7 +4,8 @@
   Firmware đã áp (panel P-2026-11-28.28 → .32, commit 3137a68); còn phía app ("app là máy tính": app giữ trạng thái,
   tính click / phím, gửi view; thiết bị chỉ vẽ).
 - Loại: thêm · Cỡ: lớn
-- Trạng thái: chờ thử máy thật (nhiệm vụ 1–11 xong 2026-11-28; vòng còn hở chờ phiếu app `docs/phieu_thiet_ke/2026-11-28-phim-xp-con-thieu.md` + phiếu panel `../docs/phieu_panel/2026-11-28-menu-thanh-tac-vu-va-start-may-tinh.md`)
+- Trạng thái: xong (sẽ được thay bằng `2026-11-28-thiet-bi-la-may-tinh.md`: thiết bị tự hiểu chuột / phím — logic click
+  ở app chuyển lên firmware, đợt 5–6 kế hoạch đó). Phần làm được (thử máy ổn 2026-11-28; vòng còn hở chờ phiếu app `docs/phieu_thiet_ke/2026-11-28-phim-xp-con-thieu.md` + phiếu panel `../docs/phieu_panel/2026-11-28-menu-thanh-tac-vu-va-start-may-tinh.md`)
 
 ## Phạm vi
 
@@ -76,7 +77,7 @@
       `touch_rules`, `start_rules` · test.
 - [x] 10. Nối vào `ControlViewModel` (click trái / phải, phím, gửi lệnh theo `caps`) · test: `control_pointer_test.dart`.
 - [x] 11. Phiếu app (phím Ctrl+Alt+Del, Delete) — `/ui-apply phieu`; phiếu panel thêm menu chuột phải trên tệp.
-- [ ] 12. Thử máy thật.
+- [x] 12. (bạn thử 2026-11-28: ổn) Thử máy thật.
 
 ## Kiểm tra cuối
 dart tool/check.dart --changed · flutter analyze · flutter test -r failures-only · dart tool/rule_trace.dart

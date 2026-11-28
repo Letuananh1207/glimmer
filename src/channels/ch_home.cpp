@@ -100,7 +100,7 @@ static void labelText(int i, const ChannelCtx& ctx, char* out, size_t n) {
     }
 }
 
-static bool selected(int i) { return s_sel >= 0 && s_icons[i].prog == s_sel; }
+static bool selected(int i) { return s_sel != XPCore::PROG_NONE && s_icons[i].prog == s_sel; }
 
 // ── Painting ──
 

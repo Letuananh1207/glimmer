@@ -85,7 +85,27 @@ struct Windows {
     int8_t   top     = XPCore::PROG_NONE;
     uint16_t minMask = 0;
     int8_t   sel     = XPCore::PROG_NONE;
+    // Activation order, top-most last (plan thiet-bi-la-may-tinh): who comes back when a window closes.
+    int8_t   z[XPCore::PROG_COUNT];
+    uint8_t  zn      = 0;
 };
+
+inline void zRemove(Windows& w, int p) {
+    uint8_t k = 0;
+    for (int i = 0; i < w.zn; i++) if (w.z[i] != p) w.z[k++] = w.z[i];
+    w.zn = k;
+}
+inline void zRaise(Windows& w, int p) {
+    if (p < 0 || p >= XPCore::PROG_COUNT) return;
+    zRemove(w, p);
+    w.z[w.zn++] = (int8_t)p;
+}
+// A list from the app (no activation order): opening order, the top window last.
+inline void zFromOpen(Windows& w) {
+    w.zn = 0;
+    for (int i = 0; i < w.n; i++) if (w.open[i] != w.top) w.z[w.zn++] = w.open[i];
+    if (w.top >= 0) w.z[w.zn++] = w.top;
+}
 
 inline bool isOpen(const Windows& w, int p) {
     for (int i = 0; i < w.n; i++) if (w.open[i] == p) return true;
@@ -99,6 +119,32 @@ inline void adopt(Windows& w, int p) {
     w.top = (int8_t)p;
     w.minMask &= (uint16_t)~(1u << p);
     w.sel = XPCore::PROG_NONE;
+    zRaise(w, p);
+}
+
+// × on [p]: it goes; the window activated before it comes back up (not a minimized one), else the desktop.
+inline void closeWindow(Windows& w, int p) {
+    uint8_t k = 0;
+    for (int i = 0; i < w.n; i++) if (w.open[i] != p) w.open[k++] = w.open[i];
+    w.n = k;
+    zRemove(w, p);
+    if (p >= 0 && p < XPCore::PROG_COUNT) w.minMask &= (uint16_t)~(1u << p);
+    w.top = XPCore::PROG_NONE;
+    for (int i = w.zn - 1; i >= 0; i--)
+        if (!(w.minMask >> w.z[i] & 1)) { w.top = w.z[i]; break; }
+}
+
+// _ on [p]: it goes down to its taskbar button; the desktop shows (as the app did, R-DK-8).
+inline void minimizeWindow(Windows& w, int p) {
+    if (p < 0 || p >= XPCore::PROG_COUNT) return;
+    w.minMask |= (uint16_t)(1u << p);
+    if (w.top == p) w.top = XPCore::PROG_NONE;
+}
+
+// Start › Desktop: every window down.
+inline void showDesktop(Windows& w) {
+    for (int i = 0; i < w.n; i++) w.minMask |= (uint16_t)(1u << w.open[i]);
+    w.top = XPCore::PROG_NONE;
 }
 
 // Add [p] to a list being rebuilt from the app (no duplicates, unknown names skipped).

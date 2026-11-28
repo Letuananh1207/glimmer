@@ -121,6 +121,29 @@ class ControlDeviceUseCase {
   /// R-DK-26: Thuộc tính màn hình's OK / Áp dụng — the pending values saved as the device's settings.
   Future<Result<ControlOutcome>> saveSettings(Map<String, dynamic> values) => _setting(values);
 
+  /// R-DK-30: the device works out clicks itself (`input.stage` ≥ 1): the app sends mouse v2.
+  bool get deviceInput => (_device.state?.inputStage ?? 0) >= 1 && caps.mouse;
+
+  /// R-DK-30: the pointer at [c] with [buttons] held (mouse v2). A button change goes out [mouseRepeats] times with
+  /// one seq. False = not sent.
+  Future<bool> mouse(Cursor c, {int buttons = 0, bool change = false}) async {
+    if (!caps.mouse) return false;
+    _cursorSeq = (_cursorSeq + 1) & 0xFFFF;
+    final p = mousePacket(_cursorSeq, c, buttons);
+    var ok = false;
+    for (var i = 0; i < (change ? mouseRepeats : 1); i++) {
+      ok = await _device.sendCursor(p) || ok;
+    }
+    return ok;
+  }
+
+  /// R-DK-30: a click of button [button] (1 left, 2 right) at [c]: pressed, then let go.
+  Future<bool> click(Cursor c, {int button = 1}) async {
+    final down = await mouse(c, buttons: button, change: true);
+    final up = await mouse(c, change: true);
+    return down && up;
+  }
+
   /// R-DK-20: the power button. Refused without the mouse firmware (R-DK-21).
   Future<Result<PowerState>> power(bool on) async {
     if (!caps.mouse) return Result.error(AppError(AppErrorKind.controlUnsupported, detail: 'power'));

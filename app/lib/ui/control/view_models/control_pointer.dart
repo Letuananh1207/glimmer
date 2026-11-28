@@ -30,6 +30,13 @@ extension ControlPointer on ControlViewModel {
   void movePointer(double dx, double dy, Duration dt) {
     if (!pointerUsable) return;
     final moved = moveCursor(_cursor, dx, dy, dt);
+    if (_v2) {
+      // R-DK-30: the device lights Start's rows and picks the cursor's shape; the app's own menus still light here.
+      _cursor = moved;
+      _hoverAppMenu();
+      _sendPointer();
+      return;
+    }
     final pick = _startOpen ? _startPick(moved).kind : StartPickKind.none;
     final onStart = pick != StartPickKind.none && pick != StartPickKind.close;
     _cursor = moved.copyWith(
@@ -37,16 +44,23 @@ extension ControlPointer on ControlViewModel {
           ? (onStart ? CursorShape.hand : CursorShape.arrow)
           : cursorShapeAt(moved, frame, menu: _menu, waiting: _sending == ControlCommand.open),
     );
-    final m = _menu;
-    if (m != null) {
-      final x = _cursor.px.toDouble(), y = _cursor.py.toDouble();
-      final item = menuContains(m, x, y) ? menuItemAt(m, x, y) : null;
-      if (item != _lit) {
-        _lit = item;
-        unawaited(_control.menu(m, hover: item));
-      }
-    }
+    _hoverAppMenu();
     _sendPointer();
+  }
+
+  /// R-DK-30: the device works out clicks itself (firmware `input.stage` ≥ 1).
+  bool get _v2 => _control.deviceInput;
+
+  /// R-DK-18: the context menu item under the pointer lights.
+  void _hoverAppMenu() {
+    final m = _menu;
+    if (m == null) return;
+    final x = _cursor.px.toDouble(), y = _cursor.py.toDouble();
+    final item = menuContains(m, x, y) ? menuItemAt(m, x, y) : null;
+    if (item != _lit) {
+      _lit = item;
+      unawaited(_control.menu(m, hover: item));
+    }
   }
 
   /// The latest pointer now, or once [pointerSendEvery] has passed since the last datagram.
@@ -57,7 +71,7 @@ extension ControlPointer on ControlViewModel {
       _cursorTimer?.cancel();
       _cursorTimer = null;
       _cursorSentAt = _now();
-      unawaited(_control.cursor(_cursor));
+      unawaited(_v2 ? _control.mouse(_cursor) : _control.cursor(_cursor));
     } else {
       _cursorTimer ??= Timer(wait, () {
         _cursorTimer = null;
@@ -80,6 +94,10 @@ extension ControlPointer on ControlViewModel {
   /// Khởi động lại to confirm), else null.
   Future<StartPick?> clickLeft() async {
     if (!pointerUsable) return null;
+    if (_v2) {
+      await _clickV2();
+      return null;
+    }
     if (_startOpen) return _startClick(_startPick(_cursor));
     if (_minesClick(left: true)) return null;
     final hadMenu = _menu != null;
@@ -125,6 +143,31 @@ extension ControlPointer on ControlViewModel {
     _startOpen = false;
     _startAll = false;
     notifyListeners();
+  }
+
+  /// R-DK-30: a left click with the device working clicks out — the press / release go down; the app still acts on
+  /// its own context menu and on the inside of the windows it drives (stages 3–5 of the plan move those too).
+  Future<void> _clickV2() async {
+    final x = _cursor.px.toDouble(), y = _cursor.py.toDouble();
+    if (_menu != null) {
+      tap(x, y);
+      _lit = null;
+      return;
+    }
+    if (channel != 'Home' && rules.isProgram(channel) && y >= 22 && y <= 213) {
+      if (!_minesClick(left: true)) tap(x, y);
+    }
+    await _control.click(_cursor);
+    _syncSoon();
+  }
+
+  /// How soon after a click the app reads what the device did.
+  static const syncAfterClick = Duration(milliseconds: 250);
+
+  /// R-DK-30: read the device's state shortly after a click (windows, Start, the screen).
+  void _syncSoon() {
+    _syncTimer?.cancel();
+    _syncTimer = Timer(syncAfterClick, () => unawaited(_device.refresh()));
   }
 
   /// R-DK-18: right click = the old hold (R-DK-11), where the pointer is.

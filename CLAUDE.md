@@ -361,6 +361,15 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
   `prev` / `pause` / `resume` still answer but nothing rotates. Screen off = backlight 0 on top of the night rules until an urgent /
   approval / question / user-error card holds the screen
   (`chAttentionWakesScreen`).
+- **The device is the computer** (app plan `app/docs/tasks/2026-11-28-thiet-bi-la-may-tinh.md`, in stages): mouse
+  datagram **v2** `'G' 'C' 2 buttons seq16 x y` (buttons bit 0 left / 1 right; a change sent 3× with one seq) →
+  `Cursor` queues the presses, `main.cpp inputTick()` works out what a click does with `input_core.h` (pure, tested:
+  `leftClick(Scene, x, y, dbl)`, XP double click ≤ 500 ms / ≤ 4 px, `shapeAt` = the device picks the cursor shape) and
+  applies it with the same functions the HTTP commands use; windows keep an activation order (`Control::Windows::z`,
+  `closeWindow` brings the previous one back). `/api/state` `input {mouse, stage}`; stage 1 = desktop (click selects,
+  double click opens, Recycle Bin → Explorer › Thùng rác), taskbar (start, buttons, tray icon / clock), _ / ×, Start
+  (Thiết bị → Máy tính; Số liệu / Cài đặt / Thêm-gỡ do nothing until their windows are drawn), Tắt máy tính. v1
+  packets (the app works clicks out) still work.
 - **Mouse, keyboard, power** (app plan `app/docs/tasks/2026-11-27-app-la-chuot-ban-phim-nguon.md`,
   R-DK-17…21): the app is the mouse / keyboard / power button, the device
   only the screen. **Cursor** (`cursor_core.h` pure + glyphs, `channels/cursor.cpp`):

@@ -71,6 +71,20 @@ class WindowStack {
     sel: sel != null && keep(sel!) ? sel : null,
   );
 
+  /// The device's windows (`/api/state` `windows {open, top, min, sel}`) when the device keeps them (R-DK-30: input
+  /// stage ≥ 1). It does not report its activation order: opening order, the top one last.
+  factory WindowStack.fromDevice(Map<String, dynamic> j) {
+    final open = [...(j['open'] as List? ?? const []).whereType<String>()];
+    final top = j['top'] is String ? j['top'] as String : null;
+    return WindowStack(
+      open: open,
+      z: [...open.where((p) => p != top), ?top],
+      top: top,
+      minimized: {...(j['min'] as List? ?? const []).whereType<String>()},
+      sel: j['sel'] is String ? j['sel'] as String : null,
+    );
+  }
+
   /// `POST /api/windows` body (panel P-2026-11-26.14).
   Map<String, Object?> toJson() => {
     'open': open,

@@ -11,6 +11,7 @@
 // pixel buffers.
 #include <stdint.h>
 #include "cursor_core.h"
+#include "input_core.h"
 
 namespace Cursor {
 
@@ -44,6 +45,14 @@ bool mouseMode();
 // Where the cursor's hotspot is drawn (valid while shown()).
 int  drawnX();
 int  drawnY();
+
+// Mouse v2 (input_core.h, plan thiet-bi-la-may-tinh): the app sends the buttons, the device picks the shape
+// and works out what a click does.
+bool    deviceDriven();          // the last packet was v2
+void    setShape(CursorCore::Shape s);   // the shape the device picked for v2 (main.cpp pointerTick)
+// The button presses received since the last call, oldest first, with where they happened.
+struct PressAt { InputCore::Press press; uint8_t x, y; uint32_t at; };
+int     takePresses(PressAt* out, int max);
 
 bool    seen();                  // a packet came since boot (the app drives a cursor)
 uint8_t x();
