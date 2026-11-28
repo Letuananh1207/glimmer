@@ -1930,7 +1930,7 @@ BBBBBB.YYYYY..
 
 - **Khởi động** (`XP-Splash`): nền đen; cờ ×3 (42×36) trên-phải; `Clawdsoft` 11 white, `Window` 16B white, `xp` 11 xpWelcomeOrange chỉ số trên, `Professional` 11 xpWelcomeOrange — cụm căn giữa (x0 = (240 − (w + 16)) / 2); ô 56×11 tại (92, 152) viền xpBootGrey góc vạt, 3 khối xanh 6×5 bước 8 chạy qua lại; góc dưới phải chữ `Clawdsoft` nghiêng white (bitmap, mép phải x 231, y 226) — chỗ tên hãng của XP.
 - **Welcome** (`XP-Connecting`): nền xpWelcome; dải trên y 0–29 + đường y 30, dải dưới y 206–239 xpWelcomeBand; viền y 205–206 cam giữa nhạt dần ra hai bên; chỉ chữ `welcome` nghiêng white + bóng tại (70, 106).
-- **Đăng nhập** (`XP-SetupMode`): nền welcome; trái cờ ×2 + `Window` nghiêng + `xp` + `Để bắt đầu, kết nối Wi-Fi`; vạch dọc x 116 mờ hai đầu; phải ô chọn (ảnh khung trắng + `glimmer-setup` + `192.168.4.1` nhỏ); dưới-trái nút nguồn đỏ + `Cài đặt Wi-Fi`. Chi tiết: token `themeXP.welcome`.
+- **Đăng nhập** (`XP-SetupMode`) — **P-2026-11-28.26: mã QR giữa màn, xem mục XP-SetupMode** (dòng dưới là bản cũ): nền welcome; trái cờ ×2 + `Window` nghiêng + `xp` + `Để bắt đầu, kết nối Wi-Fi`; vạch dọc x 116 mờ hai đầu; phải ô chọn (ảnh khung trắng + `glimmer-setup` + `192.168.4.1` nhỏ); dưới-trái nút nguồn đỏ + `Cài đặt Wi-Fi`. Chi tiết: token `themeXP.welcome`.
 - **Cập nhật** (`XP-OtaProgress`): nền welcome; `đang cập nhật...` nghiêng (20, 96); `Đừng tắt hay rút điện máy.` 11 TC (120, 130).
 - **Đêm** (`XP-Night`): nền đen, chữ #4D4D4D, không cửa sổ.
 
@@ -2604,6 +2604,25 @@ Nguồn `source/XP-Connecting.dc.html` · ảnh `screens/@2x/XPConnecting.png`
 |---|---|---|---|---|
 
 ### XP-SetupMode — XP · màn đăng nhập / cài đặt Wi-Fi
+
+> **P-2026-11-28.26 — mã QR cài Wi-Fi, QR giữa màn:** thay bảng dưới (bản cũ chia trái / phải ở x 116). Phiếu
+> `docs/phieu_panel/2026-11-28-qr-man-log-on.md`. Nền, dải trên / dưới, vạch viền màu như cũ (token `themeXP.welcome`);
+> không thanh tác vụ, không hoạt ảnh; vẽ một lần, không đổi khi đang ở AP.
+>
+> | khối | tọa độ | màu / font | chữ, rộng đo |
+> |---|---|---|---|
+> | cờ ×2 | 28×24 tại (8, 3) — trong dải trên | 4 màu cờ | — |
+> | `Window` nghiêng | bitmap 68×12 white tại (40, 9), bóng xpWelcomeShadow (41, 10) | — | — |
+> | `xp` | TL (110, 8) | `JBMono-11` xpWelcomeOrange | 14 |
+> | mã QR | khối white (46, 35, 148×148); 29×29 ô × 4 px từ (62, 51) (viền trắng 4 ô); ô tối black | `drawSetupQr(46, 35, 4, ssid)` | `WIFI:T:nopass;S:glimmer-setup;;` (v3, ECC M) |
+> | hướng dẫn | TL (36, 187) — căn giữa x 120 | `JBMono-11` white | `Quét mã bằng app glimmer` 168 |
+> | nút nguồn | 14×14 tại (8, 218), như cũ | white / xpClose | — |
+> | `Cài đặt Wi-Fi` | TL (28, 219) | `JBMono-11` white | 91 |
+> | tên AP (dự phòng khi không có app) | TL (141, 219) | `JBMono-11` xpWelcomeSub | `glimmer-setup` 91 |
+>
+> Bỏ: chữ `Để bắt đầu, kết nối Wi-Fi`, vạch dọc x 116, ô chọn người dùng (ảnh Clawd, `glimmer-` / `setup`, `192.168.4.1`).
+> Hoa văn QR trong ảnh là mặt nạ 2; thư viện firmware tự chọn mặt nạ — cùng nội dung, cùng cỡ.
+
 
 Nguồn `source/XP-SetupMode.dc.html` · ảnh `screens/@2x/XPSetupMode.png`
 

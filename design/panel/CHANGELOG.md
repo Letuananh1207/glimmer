@@ -5,6 +5,22 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-28.26 — Màn cài Wi-Fi hiện mã QR để quét bằng app
+
+- **Màn hệ thống Đăng nhập** (`source/XP-SetupMode.dc.html`, `screen_specs.md` mục XP-SetupMode; ảnh `XPSetupMode.png`):
+  - Mã QR giữa màn: khối trắng (46, 35, 148×148), 29×29 ô × 4 px từ (62, 51), viền trắng 4 ô, đen trên trắng —
+    `WIFI:T:nopass;S:glimmer-setup;;` (phiên bản 3, ECC M; `drawSetupQr` có sẵn).
+  - Cờ + `Window` nghiêng + `xp` thu vào dải trên (cờ (8, 3), chữ (40, 9), `xp` (110, 8)).
+  - Hướng dẫn `Quét mã bằng app glimmer` JBMono-11 white, căn giữa, y 187 (168 px).
+  - Dải dưới: nút nguồn + `Cài đặt Wi-Fi` giữ; thêm `glimmer-setup` xpWelcomeSub TL (141, 219), 91 px — dự phòng khi
+    không có app (vào Wi-Fi tay).
+  - Bỏ bố cục trái / phải (vạch x 116, ô người dùng, `192.168.4.1`).
+  - Máy đang vẽ log-on không có QR.
+- Phiếu: `docs/phieu_panel/2026-11-28-qr-man-log-on.md`
+
+**Việc cần làm trong code:**
+- Màn `SetupMode`: vẽ theo tọa độ trên, QR bằng `drawSetupQr(46, 35, 4, ssid)`; vẽ một lần, không đổi khi đang ở AP.
+
 ## P-2026-11-27.25 — Start đủ mọi chương trình, Dò mìn
 
 - **Start › Tất cả chương trình** (`source/XP-Start-All-Full.dc.html`, `screen_specs.md` §17 XP-Start-All; ảnh `XPStartAllFull.png`):

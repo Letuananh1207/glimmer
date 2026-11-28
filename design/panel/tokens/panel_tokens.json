@@ -1560,7 +1560,27 @@
       "screens": {
         "Connecting": "chỉ `welcome` tại (70, 106)",
         "OtaProgress": "`đang cập nhật...` (20, 96) + `Đừng tắt hay rút điện máy.` 11 TC (120, 130)",
-        "SetupMode": "trái: cờ ×2 (70, 74), `Window` nghiêng (12, 102) + `xp` cam, `Để bắt đầu,` / `kết nối Wi-Fi` 11 (14, 126 / 140); vạch dọc x 116: y 40–69 xpDividerFade, 70–169 xpDivider, 170–199 xpDividerFade; phải: ô chọn 112×50 tại (124, 86) xpUserSel + đường trên xpUserSelHi, ảnh 24×24 khung white tại (130, 92) nền xpUserPic + Clawd, tên `glimmer-` / `setup` 12B (158, 92 / 106), `192.168.4.1` 11 xpWelcomeSub (158, 121); dưới-trái nút nguồn 14×14 (8, 218) xpClose + `Cài đặt Wi-Fi` 11 (28, 219)"
+        "SetupMode": "P-2026-11-28.26: cờ ×2 (8, 3) + `Window` nghiêng (40, 9) + `xp` cam (110, 8) trong dải trên; mã QR khối white (46, 35, 148×148), 29×29 ô × 4 px từ (62, 51), nội dung WIFI:T:nopass;S:glimmer-setup;;; `Quét mã bằng app glimmer` 11 white TL (36, 187) 168 px; dưới-trái nút nguồn (8, 218) + `Cài đặt Wi-Fi` 11 (28, 219); dưới-phải `glimmer-setup` 11 xpWelcomeSub TL (141, 219) 91 px"
+      },
+      "setupQr": {
+        "box": [
+          46,
+          35,
+          148,
+          148
+        ],
+        "module": 4,
+        "modules": 29,
+        "quiet": 4,
+        "origin": [
+          62,
+          51
+        ],
+        "dark": "black",
+        "light": "white",
+        "payload": "WIFI:T:nopass;S:glimmer-setup;;",
+        "version": 3,
+        "ecc": "M"
       }
     },
     "rules": {
