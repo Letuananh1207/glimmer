@@ -2162,6 +2162,19 @@ Nguồn `source/XP-Setup.dc.html` · ảnh `screens/@2x/XPSetup.png`
 
 ### XP-Photo — Kiểu XP · Ảnh
 
+> **P-2026-11-28.27 — ảnh từ điện thoại** (phiếu `docs/phieu_panel/2026-11-27-anh-tu-dien-thoai.md`; theo *Windows Picture
+> and Fax Viewer*: giữ ảnh cũ tới khi ảnh mới mở xong, con trỏ đồng hồ cát, không màn trống). Ảnh 188×188 tại (26, 24) như cũ.
+>
+> | trạng thái | nguồn / ảnh | tiêu đề (`JBMono-12B` white TL (24, 4), bóng (+1, +1)) | khác |
+> |---|---|---|---|
+> | từ điện thoại (`source.state` online, `remote`) | `XP-Photo-Phone` · `XPPhotoPhone.png` | `Ảnh · 3/40` 70 px — `index/count` của kho trên app | — |
+> | đang xin ảnh kế tiếp (≤ 3 s) | `XP-Photo-Asking` · `XPPhotoAsking.png` | giữ tiêu đề của ảnh đang hiện | ảnh cũ giữ nguyên; con trỏ chờ XP-Open: mũi tên 12×19 tại (132, 160) + đồng hồ cát 9×12 tại (142, 169), 4 khung × 200 ms (chế độ chuột: con trỏ của app thành chờ tại chỗ, `Cursor::busy`). Ảnh mới về → vẽ đè ảnh, con trỏ mất (vẽ lại vùng con trỏ). Không hộp tải về. |
+> | điện thoại vắng (offline, chiếu ảnh đã lưu) | `XP-Photo-Offline` · `XPPhotoOffline.png` | `Ảnh · 3/8 · đã lưu` 126 px — `current/total` của ảnh trên máy | không thanh trạng thái (ảnh chiếm hết thân) |
+> | kho rỗng (app + máy) | `XP-Photo-Empty` · `XPPhotoEmpty.png` | `Ảnh` | `Chưa có ảnh` 16B TC (120, 100) 110 px như cũ; `Thêm ảnh trong app glimmer` 11 TC (120, 128) 182 px; bỏ `hoặc` + `glimmer.local` |
+>
+> Đổi trạng thái online ↔ offline chỉ vẽ lại tiêu đề (vùng chữ x 22–181, y 2–19), không vẽ lại ảnh.
+
+
 Nguồn `source/XP-Photo.dc.html` · ảnh `screens/@2x/XPPhoto.png`
 
 | x, y | datum | font | nội dung | px |
@@ -2503,6 +2516,8 @@ Nguồn `source/XP-Agents-Idle.dc.html` · ảnh `screens/@2x/XPAgentsIdle.png`
 | 231, 199 | TR | `JBMono-11` | `không mục nào chờ` | 119 |
 
 ### XP-Photo-Empty — XP · Ảnh · chưa có ảnh
+
+> **P-2026-11-28.27:** dòng 2 = `Thêm ảnh trong app glimmer` (182 px); bỏ `hoặc` / `glimmer.local` — xem mục XP-Photo.
 
 Nguồn `source/XP-Photo-Empty.dc.html` · ảnh `screens/@2x/XPPhotoEmpty.png`
 

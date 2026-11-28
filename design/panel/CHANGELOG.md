@@ -5,6 +5,23 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-28.27 — Cửa sổ Ảnh lấy ảnh từ điện thoại
+
+- **Kênh Photo** (mới `source/XP-Photo-Phone.dc.html`, `XP-Photo-Asking.dc.html`, `XP-Photo-Offline.dc.html`; sửa
+  `XP-Photo-Empty.dc.html`; `screen_specs.md` mục XP-Photo; ảnh `XPPhotoPhone.png`, `XPPhotoAsking.png`,
+  `XPPhotoOffline.png`, `XPPhotoEmpty.png`) — theo *Windows Picture and Fax Viewer*:
+  - Từ điện thoại: tiêu đề `Ảnh · 3/40` (70 px) — thứ tự trong kho của app.
+  - Đang xin ảnh kế tiếp: giữ ảnh cũ + con trỏ chờ XP-Open (mũi tên (132, 160) + đồng hồ cát (142, 169)); ảnh mới về
+    vẽ đè, con trỏ mất. Không hộp tải về, không màn trống.
+  - Điện thoại vắng: tiêu đề `Ảnh · 3/8 · đã lưu` (126 px) — vị trí trong ảnh máy đã giữ; không thanh trạng thái.
+  - Kho rỗng: `Chưa có ảnh` + `Thêm ảnh trong app glimmer` (182 px); bỏ `hoặc glimmer.local`.
+  - Máy đang: vẽ đè ảnh mới ngay khi về, meta `index/count` / `i/n`; chưa có con trỏ chờ khi xin, chưa có `· đã lưu`.
+- Phiếu: `docs/phieu_panel/2026-11-27-anh-tu-dien-thoai.md`
+
+**Việc cần làm trong code:**
+- Kênh `Photo`: lúc xin ảnh kế tiếp hiện con trỏ chờ trên ảnh cũ (chế độ chuột: con trỏ của app thành chờ); offline thêm
+  `· đã lưu` vào tiêu đề; online ↔ offline chỉ vẽ lại tiêu đề; chữ kho rỗng như trên.
+
 ## P-2026-11-28.26 — Màn cài Wi-Fi hiện mã QR để quét bằng app
 
 - **Màn hệ thống Đăng nhập** (`source/XP-SetupMode.dc.html`, `screen_specs.md` mục XP-SetupMode; ảnh `XPSetupMode.png`):
