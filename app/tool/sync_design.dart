@@ -8,6 +8,7 @@
 //                                                               báo chuỗi thiết kế đã xoá)
 //   ../design/icons/*.svg               → assets/icons/
 //   ../design/data/*.json               → assets/data/
+//   ../design/images/*.png              → assets/images/  (ảnh dùng trong app, vd. màn thiết bị thật)
 // Chỉ báo (sửa tay theo CHANGELOG):
 //   "font" / "type" / "space" / "size" / "radius" / "border" trong design_tokens.json đổi
 //   → lib/ui/core/themes/app_text.dart (viết tay)
@@ -42,6 +43,7 @@ void main(List<String> args) {
   _mergeArb('$_design/l10n/app_vi.arb', '$_root/lib/l10n/app_vi.arb', state);
   _copyDir('icons', 'assets/icons', '.svg');
   _copyDir('data', 'assets/data', '.json');
+  _copyDir('images', 'assets/images', '.png');
 
   for (final key in _handTokens) {
     final before = (state['tokens'] as Map<String, dynamic>?)?[key];

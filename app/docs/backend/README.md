@@ -120,7 +120,9 @@ App là bộ nhớ, thiết bị trỏ vào lấy (kế hoạch `docs/tasks/2026
 trong bộ đệm (8 ảnh mới nhất). Ghi qua file tạm rồi đổi tên. `PhotoLibraryService` (file), `PhotoLibraryRepository`
 (`lib/data/repositories/photo/`), `PhotoServerService` (HTTP thường cổng 8787, `GET /p/<khoá>/next?after=<id>`),
 `PhotoSourceUseCase` (gửi `POST /api/photos/source {host, port, key}`, đồng bộ bộ đệm). Bản sao cũ
-(`<app documents>/photos/`, hình xem trước của tab Ảnh) giữ nguyên.
+(`<app documents>/photos/`, hình xem trước của tab Ảnh) giữ nguyên. Giao diện Kho ảnh (thiết kế 2026-11-28.11):
+`PhotoLibraryUseCase` đọc kho (mới nhất trước) và xoá (bản đệm trên thiết bị trước, từ chối → ảnh còn trong kho);
+`PhotoSourceInfo` (`photo_source` của `/api/state`) và `LibraryItem` chỉ ở bộ nhớ, không lưu.
 
 ## Mật khẩu Wi-Fi đã nhớ (2026-11-28, R-WF-5)
 
@@ -130,6 +132,7 @@ Lưu trong **kho bảo mật của máy** (`flutter_secure_storage` → Android 
 | Khoá | Kiểu | Ý nghĩa |
 | --- | --- | --- |
 | `wifi_pw:<ssid>` | string | Mật khẩu của mạng `<ssid>` (tên đã cắt khoảng trắng hai đầu; rỗng = mạng mở). Chỉ ghi khi thiết bị đã hiện lại trên mạng đó; quên khi gửi bằng mật khẩu nhớ mà thiết bị không hiện lại. **Bí mật** — backend (nếu có) **không** đồng bộ. |
+| `wifi_used:<ssid>` | string (epoch ms) | Lần cuối thiết bị hiện lại trên `<ssid>` (bảng "Mật khẩu đã nhớ", thiết kế 2026-11-28.12: "dùng lần cuối hôm nay / 12/11"). Thiếu (mục ghi trước 2026-11-28.12) → không ghi ngày. Xoá cùng mật khẩu. |
 
 `DeviceRepository.joinSetupAp` nhận thêm `ssid` (tên AP đọc từ mã QR, R-WF-4; mặc định `glimmer-setup`);
 `AppErrorKind.notGlimmerQr` = mã vừa quét không phải mã trên màn cài đặt. Không có dữ liệu cũ — không di trú.

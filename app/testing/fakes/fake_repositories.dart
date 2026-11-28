@@ -3,9 +3,12 @@ import 'dart:typed_data';
 import 'package:glimmer_app/data/repositories/backup/backup_repository.dart';
 import 'package:glimmer_app/data/repositories/device/device_repository_local.dart';
 import 'package:glimmer_app/data/repositories/location/location_repository.dart';
+import 'package:glimmer_app/data/repositories/photo/photo_library_repository.dart';
+import 'package:glimmer_app/data/repositories/photo/photo_server_repository.dart';
 import 'package:glimmer_app/data/repositories/release/release_repository.dart';
 import 'package:glimmer_app/domain/models/app_error.dart';
 import 'package:glimmer_app/domain/models/config_backup.dart';
+import 'package:glimmer_app/domain/models/library_photo.dart';
 import 'package:glimmer_app/domain/models/release.dart';
 import 'package:glimmer_app/domain/models/weather_location.dart';
 import 'package:glimmer_app/utils/result.dart';
@@ -120,4 +123,64 @@ class FakeLocationRepository implements LocationRepository {
 
   @override
   Future<void> openLocationSettings() async => locationSettings++;
+}
+
+
+/// The phone's photo library in memory (R-AK-1).
+class FakePhotoLibraryRepository implements PhotoLibraryRepository {
+  final photos = <LibraryPhoto>[];
+  final jpegs = <int, Uint8List>{};
+  var _next = 1;
+  var _clock = DateTime(2026, 11, 28, 9);
+
+  @override
+  Future<List<LibraryPhoto>> list() async => List.of(photos);
+
+  @override
+  Future<Result<LibraryPhoto>> add(Uint8List jpeg, {String? cachedAs}) async {
+    _clock = _clock.add(const Duration(minutes: 1));
+    final p = LibraryPhoto(id: _next++, added: _clock, size: jpeg.length, cachedAs: cachedAs);
+    photos.add(p);
+    jpegs[p.id] = jpeg;
+    return Result.ok(p);
+  }
+
+  @override
+  Future<void> remove(int id) async {
+    photos.removeWhere((p) => p.id == id);
+    jpegs.remove(id);
+  }
+
+  @override
+  Future<LibraryPhoto?> byDeviceName(String deviceName) async =>
+      photos.where((p) => p.cachedAs == deviceName).firstOrNull;
+
+  @override
+  Future<Uint8List?> bytes(int id) async => jpegs[id];
+
+  @override
+  Future<void> setCached(int id, String? deviceName) async {
+    final i = photos.indexWhere((p) => p.id == id);
+    if (i >= 0) photos[i] = photos[i].withCache(deviceName);
+  }
+}
+
+/// R-AK-4 without a socket: "serves" on the port asked.
+class FakePhotoServerRepository implements PhotoServerRepository {
+  @override
+  bool running = false;
+  @override
+  int port = 0;
+
+  @override
+  Future<int> start({required int port, required String key, required Future<ServedPhoto?> Function(int after) next}) async {
+    running = true;
+    return this.port = port;
+  }
+
+  @override
+  Future<void> stop() async {
+    running = false;
+    port = 0;
+  }
 }

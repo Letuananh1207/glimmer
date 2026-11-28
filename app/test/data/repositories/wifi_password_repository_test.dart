@@ -15,7 +15,6 @@ void main() {
     expect((repo.passwordFor('Co quan'), secrets.stored['Co quan']), ('b', 'b'));
     expect(repo.networks, ['Co quan', 'Nha']);
 
-    repo.remember('Nha', 'a'); // không đổi → không ghi, không báo
     repo.remember('', 'x'); // tên rỗng → bỏ qua
     expect(notified, 1);
 
@@ -23,5 +22,21 @@ void main() {
     expect((repo.passwordFor('Nha'), secrets.stored.containsKey('Nha'), notified), (null, false, 2));
     repo.forget('Nha');
     expect(notified, 2);
+  });
+
+  test('2026-11-28.12 "dùng lần cuối": mỗi lần nhớ (kể cả cùng mật khẩu) ghi ngày; nạp lại; quên thì xoá', () async {
+    final secrets = FakeWifiSecretsService({'Nha': 'a'});
+    var now = DateTime(2026, 11, 12, 9);
+    final repo = WifiPasswordRepositoryLocal(secrets, {'Nha': 'a'}, now: () => now);
+    expect(repo.lastUsed('Nha'), isNull, reason: 'kept before the date was');
+    repo.remember('Nha', 'a');
+    expect(repo.lastUsed('Nha'), DateTime(2026, 11, 12, 9));
+    now = DateTime(2026, 11, 28, 20);
+    repo.remember('Nha', 'a');
+    expect(secrets.used['Nha'], DateTime(2026, 11, 28, 20));
+    final again = await WifiPasswordRepositoryLocal.load(secrets);
+    expect(again.lastUsed(' Nha '), DateTime(2026, 11, 28, 20));
+    again.forget('Nha');
+    expect((again.lastUsed('Nha'), secrets.used.containsKey('Nha')), (null, false));
   });
 }

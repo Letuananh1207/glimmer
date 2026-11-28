@@ -40,7 +40,10 @@ class SkillStyle {
         'chat' => const SkillStyle._(AppColors.muted, AppColors.panel2, dock: '$_icons/dock-chat.svg'),
         'music' => const SkillStyle._(AppColors.skillMusic, AppColors.skillMusicTint, icon: Icons.music_note),
         'social' => const SkillStyle._(AppColors.skillSocial, AppColors.skillSocialTint, icon: Icons.forum),
-        _ => const SkillStyle._(AppColors.skillFun, AppColors.skillFunTint, icon: Icons.videogame_asset),
+        // Giải trí (2026-11-28.13): quả mìn pixel của Dò mìn.
+        'fun' => const SkillStyle._(AppColors.skillFun, AppColors.skillFunTint,
+            dock: '$_icons/dock-fun.svg', dockScale: _pixelScale),
+        _ => const SkillStyle._(AppColors.muted, AppColors.panel2, icon: Icons.extension),
       };
 
   static String name(AppLocalizations l, String id) => switch (id) {
@@ -76,8 +79,7 @@ class SkillStyle {
     );
   }
 
-  /// Dock pixel icon of [id] at its skill-row scale (or [scale]). A skill without a pixel icon yet (Giải trí, a pack
-  /// since 2026-11-27 — phiếu thiết kế docs/phieu_thiet_ke/2026-11-27-skill-giai-tri.md) shows its chip icon.
+  /// Dock pixel icon of [id] at its skill-row scale (or [scale]); a skill without one shows its chip icon.
   static Widget dockIcon(String id, {required Color color, double? scale}) {
     final s = of(id);
     final dock = s.dock;

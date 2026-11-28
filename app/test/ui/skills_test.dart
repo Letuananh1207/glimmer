@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:glimmer_app/data/repositories/skill/skill_repository_local.dart';
 import 'package:glimmer_app/domain/use_cases/toggle_skill_use_case.dart';
 import 'package:glimmer_app/l10n/app_localizations.dart';
+import 'package:glimmer_app/ui/core/widgets/pixel_icon.dart';
 import 'package:glimmer_app/ui/core/themes/app_theme.dart';
 import 'package:glimmer_app/ui/core/widgets/skill_switch.dart';
 import 'package:glimmer_app/ui/core/widgets/count_badge.dart';
@@ -196,6 +197,9 @@ void main() {
       expect(find.text(_vi.skillPhotoName), findsOneWidget);
       expect(find.text(_vi.skillPhotoDesc), findsOneWidget, reason: 'no photos on the device → plain description');
       expect(find.byType(SkillSwitch), findsNWidgets(5)); // + Giải trí (Dò mìn)
+      expect(find.byWidgetPredicate((w) => w is PixelIcon && w.asset.endsWith('dock-fun.svg')), findsOneWidget,
+          reason: '2026-11-28.13: Giải trí = quả mìn pixel, không còn icon tay cầm');
+      expect(find.byIcon(Icons.videogame_asset), findsNothing);
       expect(find.bySemanticsLabel(_vi.skillsToggleA11y(_vi.skillClockName)), findsOneWidget);
     });
 

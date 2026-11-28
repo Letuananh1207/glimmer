@@ -13,7 +13,7 @@ class ConnectScreen extends StatelessWidget {
 
   final ConnectViewModel viewModel;
 
-  /// "Thiết bị mới / đang hiện glimmer-setup" → Cài Wi-Fi.
+  /// "Quét mã QR trên màn thiết bị" → Quét mã → Cài Wi-Fi (2026-11-28.12).
   final VoidCallback onNewDevice;
 
   /// Gap between the mascot and the title (design: 28).
@@ -98,7 +98,7 @@ class ConnectScreen extends StatelessWidget {
                 const SizedBox(height: _buttonGap),
                 OutlinedButton.icon(
                   onPressed: searching ? null : onNewDevice,
-                  icon: const Icon(Icons.wifi),
+                  icon: const Icon(Icons.qr_code_scanner),
                   label: Text(l.connectNewDevice),
                 ),
               ]);

@@ -90,6 +90,10 @@ class DashboardViewModel extends ChangeNotifier with SafeNotifier {
   /// Photos on the device (`photos` of `/api/state`): the Ảnh tab reloads when it changes.
   int? get photoCount => _device.state?.photos;
 
+  /// Kho ảnh (design 2026-11-28.11): the firmware points at the app's library (R-AK-5) — its slideshow, else null
+  /// (the Ảnh tab keeps the device's photos).
+  PhotoSourceInfo? get photoSource => _device.state?.photoSource;
+
   /// Đang tải: chưa có trạng thái nào từ thiết bị.
   DeviceState? get state => _device.state;
 

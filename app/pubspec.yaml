@@ -52,6 +52,7 @@ dependencies:
   flutter_secure_storage: ^11.2.0
   geolocator: ^14.0.1
   geocoding: ^5.0.1
+  mobile_scanner: ^7.5.0
 
 dev_dependencies:
   flutter_test:
@@ -83,6 +84,7 @@ flutter:
         - asset: assets/fonts/VT323-Regular.ttf
   assets:
     - assets/icons/
+    - assets/images/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

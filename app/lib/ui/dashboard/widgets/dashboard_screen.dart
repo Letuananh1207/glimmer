@@ -14,11 +14,13 @@ import '../../core/themes/app_text.dart';
 import '../../core/widgets/dock_tab_bar.dart';
 import '../../core/widgets/show_on_device_button.dart';
 import '../view_models/dashboard_view_model.dart';
+import '../view_models/library_tab_view_model.dart';
 import '../view_models/photo_tab_view_model.dart';
 import 'clock_tab.dart';
 import 'dashboard_cards.dart';
 import 'dashboard_header.dart';
 import 'dashboard_usage.dart';
+import 'library_tab.dart';
 import 'photo_tab.dart';
 import 'weather_tab.dart';
 
@@ -29,6 +31,7 @@ class DashboardScreen extends StatelessWidget {
     super.key,
     required this.viewModel,
     required this.photos,
+    required this.library,
     required this.onOpenSettings,
     required this.onCropPhoto,
     required this.onBack,
@@ -39,16 +42,23 @@ class DashboardScreen extends StatelessWidget {
   /// Tab Ảnh (R-SK-6: shown only while skill Ảnh is on).
   final PhotoTabViewModel photos;
 
+  /// Tab Ảnh as Kho ảnh when the firmware points at the phone's library (design 2026-11-28.11, R-AK-5).
+  final LibraryTabViewModel library;
+
   /// `weatherSetLocation`: màn Vị trí thời tiết (2026-11-26.9).
   final VoidCallback onOpenSettings;
 
-  /// Tab Ảnh: open PhotoCrop (push, above the tabs); completes when it closes.
-  final Future<void> Function(PhotoCropArgs args) onCropPhoto;
+  /// Tab Ảnh: open PhotoCrop (push, above the tabs); completes when it closes — with the crop when it was "Thêm vào
+  /// kho".
+  final Future<PhotoPixels?> Function(PhotoCropArgs args) onCropPhoto;
 
   /// Back to Điều khiển (Số liệu is pushed from it, 2026-11-26.5).
   final VoidCallback onBack;
 
-  Future<void> _crop(Uint8List image, PhotoInfo info) => onCropPhoto((image: image, info: info));
+  Future<void> _crop(Uint8List image, PhotoInfo info) => onCropPhoto((image: image, info: info, library: false));
+
+  Future<PhotoPixels?> _cropForLibrary(Uint8List image) =>
+      onCropPhoto((image: image, info: const PhotoInfo(), library: true));
 
   /// Dock icons in the tab bar: ×1.25.
   static const _tabIconScale = 1.25;
@@ -109,7 +119,20 @@ class DashboardScreen extends StatelessWidget {
                 ],
               ),
             ...switch (selected) {
-              'photo' => [PhotoTab(viewModel: photos, deviceCount: viewModel.photoCount, onCrop: _crop)],
+              'photo' => [
+                  if (viewModel.photoSource case final source?)
+                    LibraryTab(
+                      viewModel: library,
+                      source: source,
+                      onCrop: _cropForLibrary,
+                      showButton: ShowOnDeviceButton(
+                        label: l.homeShowOnDevice(skillName),
+                        onPressed: () => _act(context, viewModel.showOnDevice, l.devShowOnDeviceDone(skillName)),
+                      ),
+                    )
+                  else
+                    PhotoTab(viewModel: photos, deviceCount: viewModel.photoCount, onCrop: _crop),
+                ],
               'weather' => [WeatherCard(view: viewModel.weather, onSetLocation: onOpenSettings)],
               'clock' => [ClockCard(view: viewModel.clock)],
               _ => [
@@ -125,8 +148,9 @@ class DashboardScreen extends StatelessWidget {
                   ),
                 ],
             },
-            // weatherNoLoc: no button (nothing to show yet).
-            if (!(selected == 'weather' && viewModel.weather.status == WeatherStatus.noLocation))
+            // weatherNoLoc: no button (nothing to show yet); Kho ảnh draws its own (none while empty).
+            if (!(selected == 'weather' && viewModel.weather.status == WeatherStatus.noLocation) &&
+                !(selected == 'photo' && viewModel.photoSource != null))
               ShowOnDeviceButton(
                 label: l.homeShowOnDevice(skillName),
                 onPressed: () => _act(context, viewModel.showOnDevice, l.devShowOnDeviceDone(skillName)),

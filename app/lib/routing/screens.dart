@@ -6,13 +6,16 @@ import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 import '../data/repositories/backup/backup_repository.dart';
+import '../data/repositories/camera/camera_repository.dart';
 import '../data/repositories/device/device_repository.dart';
 import '../data/repositories/photo/photo_repository.dart';
 import '../data/repositories/release/release_repository.dart';
 import '../data/repositories/wifi/wifi_password_repository.dart';
 import '../domain/use_cases/control_device_use_case.dart';
 import '../domain/use_cases/delete_photo_use_case.dart';
+import '../domain/models/device_photo.dart';
 import '../domain/use_cases/load_photos_use_case.dart';
+import '../domain/use_cases/photo_library_use_case.dart';
 import '../domain/use_cases/send_photo_use_case.dart';
 import '../domain/use_cases/toggle_skill_use_case.dart';
 import '../ui/connect/view_models/connect_view_model.dart';
@@ -24,6 +27,7 @@ import '../ui/dashboard/view_models/dashboard_view_model.dart';
 import '../ui/dashboard/widgets/dashboard_screen.dart';
 import '../ui/device/view_models/device_view_model.dart';
 import '../ui/device/widgets/device_screen.dart';
+import '../ui/dashboard/view_models/library_tab_view_model.dart';
 import '../ui/dashboard/view_models/photo_tab_view_model.dart';
 import '../ui/home/view_models/home_view_model.dart';
 import '../ui/photo_crop/view_models/photo_crop_view_model.dart';
@@ -34,6 +38,8 @@ import '../ui/settings/widgets/settings_screen.dart';
 import '../ui/skills/view_models/skills_view_model.dart';
 import '../ui/skills/widgets/skills_screen.dart';
 import '../ui/wifi_setup/view_models/wifi_setup_view_model.dart';
+import '../ui/wifi_setup/view_models/wifi_scan_view_model.dart';
+import '../ui/wifi_setup/widgets/wifi_scan_screen.dart';
 import '../ui/wifi_setup/widgets/wifi_setup_screen.dart';
 import 'routes.dart';
 
@@ -42,9 +48,21 @@ Widget connectScreen({required VoidCallback onNewDevice}) => ViewModelHost(
       builder: (_, vm) => ConnectScreen(viewModel: vm, onNewDevice: onNewDevice),
     );
 
-Widget wifiSetupScreen() => ViewModelHost(
+/// Cài Wi-Fi (screen_specs §5); [scanned] = the display's code read on Quét mã before it opened, [onScan] opens Quét mã.
+Widget wifiSetupScreen({String? scanned, Future<String?> Function()? onScan}) => ViewModelHost(
       create: (c) => WifiSetupViewModel(device: c.read<DeviceRepository>(), passwords: c.read<WifiPasswordRepository>()),
-      builder: (_, vm) => WifiSetupScreen(viewModel: vm),
+      builder: (_, vm) => WifiSetupScreen(viewModel: vm, scanned: scanned, onScan: onScan),
+    );
+
+/// Quét mã (screen_specs §10, 2026-11-28.12).
+Widget wifiScanScreen({
+  required ValueChanged<String> onFound,
+  required VoidCallback onManual,
+  required VoidCallback onClose,
+}) =>
+    ViewModelHost(
+      create: (c) => WifiScanViewModel(camera: c.read<CameraRepository>()),
+      builder: (_, vm) => WifiScanScreen(viewModel: vm, onFound: onFound, onManual: onManual, onClose: onClose),
     );
 
 /// Điều khiển (tab 1, screen_specs §8). [onOpenDetails] pushes Số liệu at a skill's tab and completes when it closes.
@@ -76,7 +94,7 @@ Widget dashboardScreen({
   String? initialTab,
   required VoidCallback onBack,
   required VoidCallback onOpenSettings,
-  required Future<void> Function(PhotoCropArgs args) onCropPhoto,
+  required Future<PhotoPixels?> Function(PhotoCropArgs args) onCropPhoto,
 }) =>
     ViewModelHost(
       create: (c) => DashboardViewModel(
@@ -90,25 +108,35 @@ Widget dashboardScreen({
           deletePhoto: c.read<DeletePhotoUseCase>(),
           photos: c.read<PhotoRepository>(),
         ),
-        builder: (_, photos) => DashboardScreen(
-          viewModel: vm,
-          photos: photos,
-          onOpenSettings: onOpenSettings,
-          onCropPhoto: onCropPhoto,
-          onBack: onBack,
+        builder: (_, photos) => ViewModelHost(
+          create: (c) => LibraryTabViewModel(
+            library: c.read<PhotoLibraryUseCase>(),
+            send: c.read<SendPhotoUseCase>(),
+            photos: c.read<PhotoRepository>(),
+          ),
+          builder: (_, library) => DashboardScreen(
+            viewModel: vm,
+            photos: photos,
+            library: library,
+            onOpenSettings: onOpenSettings,
+            onCropPhoto: onCropPhoto,
+            onBack: onBack,
+          ),
         ),
       ),
     );
 
 /// Cắt ảnh (screen_specs §7); [onClose] = back to the Ảnh tab.
-Widget photoCropScreen(PhotoCropArgs args, {required VoidCallback onClose}) => ViewModelHost(
+Widget photoCropScreen(PhotoCropArgs args, {required VoidCallback onClose, ValueChanged<PhotoPixels>? onAdd}) =>
+    ViewModelHost(
       create: (c) => PhotoCropViewModel(
         image: args.image,
         info: args.info,
         send: c.read<SendPhotoUseCase>(),
         photos: c.read<PhotoRepository>(),
+        library: args.library,
       ),
-      builder: (_, vm) => PhotoCropScreen(viewModel: vm, onClose: onClose),
+      builder: (_, vm) => PhotoCropScreen(viewModel: vm, onClose: onClose, onAdd: onAdd),
     );
 
 Widget settingsScreen({required Future<void> Function() onOpenWeatherLocation}) => ViewModelHost(

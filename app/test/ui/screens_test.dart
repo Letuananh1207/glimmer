@@ -13,6 +13,8 @@ import 'package:glimmer_app/data/repositories/wifi/wifi_password_repository_loca
 import 'package:glimmer_app/domain/use_cases/control_device_use_case.dart';
 import 'package:glimmer_app/domain/use_cases/delete_photo_use_case.dart';
 import 'package:glimmer_app/domain/use_cases/load_photos_use_case.dart';
+import 'package:glimmer_app/domain/use_cases/photo_library_use_case.dart';
+import 'package:glimmer_app/domain/use_cases/photo_source_use_case.dart';
 import 'package:glimmer_app/domain/use_cases/send_photo_use_case.dart';
 import 'package:glimmer_app/domain/use_cases/toggle_skill_use_case.dart';
 import 'package:glimmer_app/l10n/app_localizations.dart';
@@ -26,6 +28,7 @@ import 'package:glimmer_app/ui/core/widgets/dock_tab_bar.dart';
 import 'package:glimmer_app/ui/device/view_models/device_view_model.dart';
 import 'package:glimmer_app/ui/device/widgets/device_screen.dart';
 import 'package:glimmer_app/ui/wifi_setup/view_models/wifi_setup_view_model.dart';
+import 'package:glimmer_app/ui/wifi_setup/widgets/wifi_setup_parts.dart';
 import 'package:glimmer_app/ui/wifi_setup/widgets/wifi_setup_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -76,11 +79,22 @@ Widget _app(DeviceRig rig, Widget home, {FakeReleaseRepository? releases, FakeBa
 /// Skill Ảnh over [rig] with in-memory copies and picker.
 List<Provider<Object>> photoProviders(DeviceRig rig) {
   final photos = PhotoRepositoryLocal(store: FakePhotoStoreService(), picker: FakePhotoPickerService());
+  final library = FakePhotoLibraryRepository();
+  final source = PhotoSourceUseCase(
+    device: rig.repo,
+    library: library,
+    server: FakePhotoServerRepository(),
+    phoneIps: () async => ['192.168.1.20'],
+    key: 'k',
+  );
   return [
     Provider<PhotoRepository>.value(value: photos),
     Provider<LoadPhotosUseCase>.value(value: LoadPhotosUseCase(device: rig.repo, photos: photos)),
     Provider<DeletePhotoUseCase>.value(value: DeletePhotoUseCase(device: rig.repo, photos: photos)),
     Provider<SendPhotoUseCase>.value(value: SendPhotoUseCase(device: rig.repo, photos: photos)),
+    Provider<PhotoLibraryUseCase>.value(
+      value: PhotoLibraryUseCase(device: rig.repo, library: library, photos: photos, source: source),
+    ),
   ];
 }
 
@@ -115,7 +129,7 @@ void main() {
 
   group('Tổng quan', () {
     testWidgets('loading while there is no state yet', (t) async {
-      await t.pumpWidget(_app(rig, dashboardScreen(onBack: () {}, onOpenSettings: () {}, onCropPhoto: (_) async {})));
+      await t.pumpWidget(_app(rig, dashboardScreen(onBack: () {}, onOpenSettings: () {}, onCropPhoto: (_) async => null)));
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
@@ -123,7 +137,7 @@ void main() {
       await t.runAsync(() => rig.connect(_url, _state(projects: [
             {'project': 'glimmer', 'agent': 'claude', 'state': 'approval', 'detail': 'Bash', 'shown': true},
           ])));
-      await t.pumpWidget(_app(rig, dashboardScreen(onBack: () {}, onOpenSettings: () {}, onCropPhoto: (_) async {})));
+      await t.pumpWidget(_app(rig, dashboardScreen(onBack: () {}, onOpenSettings: () {}, onCropPhoto: (_) async => null)));
       await _frames(t);
       expect(find.text(_vi.dashboardUsageTitle), findsOneWidget);
       expect(find.text('66'), findsOneWidget);
@@ -133,7 +147,7 @@ void main() {
 
     testWidgets('empty: no key, empty board text', (t) async {
       await t.runAsync(() => rig.connect(_url, _state(key: false)));
-      await t.pumpWidget(_app(rig, dashboardScreen(onBack: () {}, onOpenSettings: () {}, onCropPhoto: (_) async {})));
+      await t.pumpWidget(_app(rig, dashboardScreen(onBack: () {}, onOpenSettings: () {}, onCropPhoto: (_) async => null)));
       await _frames(t);
       expect(find.text(_vi.dashboardUsageNoKey), findsOneWidget);
       expect(find.text(_vi.dashboardProjectsEmpty), findsOneWidget);
@@ -141,14 +155,14 @@ void main() {
 
     testWidgets('R-DUNG-2 stale: "số liệu cũ (25m trước)"', (t) async {
       await t.runAsync(() => rig.connect(_url, _state(stale: true)));
-      await t.pumpWidget(_app(rig, dashboardScreen(onBack: () {}, onOpenSettings: () {}, onCropPhoto: (_) async {})));
+      await t.pumpWidget(_app(rig, dashboardScreen(onBack: () {}, onOpenSettings: () {}, onCropPhoto: (_) async => null)));
       await _frames(t);
       expect(find.text(_vi.dashboardUsageStale('25m')), findsOneWidget);
     });
 
     testWidgets('setup mode: amber note (the header line went with the Số liệu top bar)', (t) async {
       await t.runAsync(() => rig.connect(DeviceRepository.setupApUrl, _state(wifi: 'ap')));
-      await t.pumpWidget(_app(rig, dashboardScreen(onBack: () {}, onOpenSettings: () {}, onCropPhoto: (_) async {})));
+      await t.pumpWidget(_app(rig, dashboardScreen(onBack: () {}, onOpenSettings: () {}, onCropPhoto: (_) async => null)));
       await _frames(t);
       expect(find.text(_vi.dashboardSetupNote), findsOneWidget);
       expect(find.text(_vi.detailsTitle), findsOneWidget);
@@ -193,7 +207,7 @@ void main() {
         await rig.repo.connectTo(_url);
         await rig.repo.refresh();
       });
-      await t.pumpWidget(_app(rig, dashboardScreen(onBack: () {}, onOpenSettings: onOpenSettings ?? () {}, onCropPhoto: (_) async {})));
+      await t.pumpWidget(_app(rig, dashboardScreen(onBack: () {}, onOpenSettings: onOpenSettings ?? () {}, onCropPhoto: (_) async => null)));
       await _frames(t);
     }
 
@@ -313,13 +327,72 @@ void main() {
   });
 
   group('Cài Wi-Fi', () {
-    Future<WifiSetupViewModel> pump(WidgetTester t) async {
+    Future<WifiSetupViewModel> pump(WidgetTester t,
+        {Map<String, String> saved = const {}, String? scanned, Future<String?> Function()? onScan}) async {
       final vm = WifiSetupViewModel(
-          device: rig.repo, passwords: WifiPasswordRepositoryLocal(FakeWifiSecretsService(), {}), findAttempts: 1);
-      await t.pumpWidget(_app(rig, WifiSetupScreen(viewModel: vm)));
+          device: rig.repo,
+          passwords: WifiPasswordRepositoryLocal(FakeWifiSecretsService(saved), saved,
+              used: {for (final k in saved.keys) k: DateTime(2026, 11, 12)}),
+          findAttempts: 1);
+      await t.pumpWidget(_app(rig, WifiSetupScreen(viewModel: vm, scanned: scanned, onScan: onScan)));
+      await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
       await _frames(t);
       return vm;
     }
+
+    testWidgets('2026-11-28.12 form: scan button first, "HOẶC NHẬP TAY", saved passwords link → sheet → forget',
+        (t) async {
+      var scans = 0;
+      await pump(t, saved: {'Nha': 'a', 'VP': 'b'}, onScan: () async {
+        scans++;
+        return null;
+      });
+      expect(find.byType(WifiScanEntry), findsOneWidget);
+      expect(find.text(_vi.wifiOrManual), findsOneWidget);
+      await t.tap(find.text(_vi.wifiScanEntry));
+      await _frames(t);
+      expect(scans, 1);
+      await t.scrollUntilVisible(find.text(_vi.wifiSavedLink('2')), 100, scrollable: find.byType(Scrollable).first);
+      await t.tap(find.text(_vi.wifiSavedLink('2')));
+      await _frames(t);
+      expect(find.text(_vi.wifiSavedTitle), findsOneWidget);
+      expect(find.text(_vi.wifiSavedLastUsed('12/11')), findsNWidgets(2));
+      await t.tap(find.text(_vi.wifiForget).first);
+      await _frames(t);
+      expect(find.text(_vi.wifiForgetTitle('Nha')), findsOneWidget);
+      await t.tap(find.text(_vi.wifiForget).last);
+      await _frames(t);
+      expect(find.text('Nha'), findsNothing);
+      expect(find.text('VP'), findsOneWidget);
+    });
+
+    testWidgets('no remembered password → no saved link; no onScan → no scan button', (t) async {
+      await pump(t);
+      expect(find.byType(WifiScanEntry), findsNothing);
+      expect(find.byType(SavedPasswordsLink), findsNothing);
+    });
+
+    testWidgets('R-WF-4 scanned, phone on "Nha" with no saved password → password step; "Đổi mạng" → form', (t) async {
+      rig.wifi.ssid = 'Nha';
+      await pump(t, scanned: 'WIFI:T:nopass;S:glimmer-setup;;');
+      expect(find.text(_vi.wifiScannedTitle), findsOneWidget);
+      expect(find.text(_vi.wifiNetworkToSend), findsOneWidget);
+      expect(find.text('Nha'), findsOneWidget);
+      expect(find.text(_vi.wifiPassFor('Nha')), findsOneWidget);
+      expect(find.text(_vi.wifiRememberNote), findsOneWidget);
+      await t.tap(find.text(_vi.wifiChangeNetwork));
+      await _frames(t);
+      expect(find.text(_vi.wifiSsid), findsOneWidget);
+      expect(find.widgetWithText(TextField, 'Nha'), findsOneWidget);
+    });
+
+    testWidgets('R-WF-4 scanned, phone on no Wi-Fi → formScanned: banner + full form, no scan button', (t) async {
+      rig.wifi.ssid = null;
+      await pump(t, scanned: 'WIFI:T:nopass;S:glimmer-setup;;', onScan: () async => null);
+      expect(find.text(_vi.wifiScannedNoNetwork), findsOneWidget);
+      expect(find.text(_vi.wifiSsid), findsOneWidget);
+      expect(find.byType(WifiScanEntry), findsNothing);
+    });
 
     testWidgets('form: note, fields, send', (t) async {
       await pump(t);
@@ -346,7 +419,7 @@ void main() {
       await t.runAsync(() => vm.send('Nha', 'pw'));
       await _frames(t);
       expect(find.text(_vi.wifiDone('Nha')), findsOneWidget);
-      expect(find.text(_vi.wifiDoneDetail('192.168.1.50')), findsOneWidget);
+      expect(find.text(_vi.wifiDoneDetail('192.168.1.50', 'Nha')), findsOneWidget);
     });
   });
 
@@ -357,6 +430,8 @@ void main() {
       expect(redirectFor(true, Routes.connect), Routes.control);
       expect(redirectFor(true, Routes.settings), isNull);
       expect(redirectFor(false, Routes.deviceWifi), isNull);
+      expect(redirectFor(false, Routes.scan), isNull, reason: 'Quét mã works before any device is found');
+      expect(redirectFor(true, Routes.scan), isNull);
       expect(redirectFor(true, Routes.connectWifi), isNull);
     });
 

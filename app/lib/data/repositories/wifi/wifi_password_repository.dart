@@ -8,7 +8,10 @@ abstract class WifiPasswordRepository extends ChangeNotifier {
   /// Tên các mạng đã nhớ, theo bảng chữ cái.
   List<String> get networks;
 
-  /// Nhớ (hoặc thay) mật khẩu của [ssid]. Tên rỗng → bỏ qua.
+  /// Lần cuối thiết bị vào [ssid] bằng mật khẩu đã nhớ (bảng "Mật khẩu đã nhớ"); null khi chưa biết.
+  DateTime? lastUsed(String ssid);
+
+  /// Nhớ (hoặc thay) mật khẩu của [ssid], ghi lần dùng là bây giờ. Tên rỗng → bỏ qua.
   void remember(String ssid, String password);
 
   /// Quên mật khẩu của [ssid].

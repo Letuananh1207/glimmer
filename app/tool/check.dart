@@ -166,6 +166,8 @@ const _packageOwners = <String, Set<String>>{
   'package:file_picker/': {'service'},
   'package:share_plus/': {'service'},
   'package:image_picker/': {'service'},
+  // Camera đọc mã QR (WifiScanScreen, 2026-11-28.12): widget xem trước camera — chỉ màn.
+  'package:mobile_scanner/': {'view'},
   // Mã hoá JPEG thuần (không IO) cho skill Ảnh — chỉ quy tắc thuần `domain/rules/photo_rules.dart`.
   'package:image/': {'rules'},
   'package:dio/': {'service'},

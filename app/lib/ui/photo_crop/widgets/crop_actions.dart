@@ -19,6 +19,7 @@ class CropActions extends StatelessWidget {
     required this.onBackToCrop,
     required this.onPickOther,
     required this.onClose,
+    this.library = false,
   });
 
   final CropStatus status;
@@ -28,6 +29,9 @@ class CropActions extends StatelessWidget {
   final int sentCount;
   final int maxCount;
   final VoidCallback onSend, onCancel, onBackToCrop, onPickOther, onClose;
+
+  /// Kho ảnh (design 2026-11-28.11): the send button reads `photoCropAddToLibrary`.
+  final bool library;
 
   static const _pad = EdgeInsets.fromLTRB(AppSpace.l, AppSpace.l, AppSpace.l, AppSpace.xxl);
 
@@ -45,7 +49,9 @@ class CropActions extends StatelessWidget {
           _Buttons([_Pill(label: l.photoCropPickOther, icon: Icons.photo_library, primary: true, onPressed: onPickOther)]),
         ],
       CropStatus.crop => [
-          _Buttons([pickOther, _Pill(label: l.photoCropSend, icon: Icons.send, primary: true, onPressed: onSend)]),
+          _Buttons([pickOther, library
+              ? _Pill(label: l.photoCropAddToLibrary, icon: Icons.add, primary: true, onPressed: onSend)
+              : _Pill(label: l.photoCropSend, icon: Icons.send, primary: true, onPressed: onSend)]),
         ],
       CropStatus.sending => [
           _Sending(progress: progress),

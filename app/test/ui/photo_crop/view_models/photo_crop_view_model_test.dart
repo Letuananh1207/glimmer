@@ -202,4 +202,21 @@ void main() {
       expect(decoded.last.disposed, true);
     });
   });
+
+  test('Kho ảnh (2026-11-28.11): "Thêm vào kho" hands the crop over as side² pixels, nothing sent', () async {
+    final vm = PhotoCropViewModel(
+      image: Uint8List(1),
+      info: const PhotoInfo(),
+      send: SendPhotoUseCase(device: rig.repo, photos: photos, encode: (p, s, m) async => Uint8List(900)),
+      photos: photos,
+      library: true,
+      decode: (_) async => FakeCropImage(400, 300),
+    );
+    await pumpEventQueue();
+    final px = await vm.cropped();
+    expect((px!.width, px.height), (PhotoInfo.defaultSide, PhotoInfo.defaultSide));
+    expect(rig.api.calls.where((c) => c.method == 'UPLOAD'), isEmpty);
+    expect(vm.status, CropStatus.crop);
+    vm.dispose();
+  });
 }

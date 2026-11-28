@@ -6,12 +6,21 @@ import '../../core/themes/app_colors.dart';
 import '../../core/themes/app_text.dart';
 import '../../core/widgets/clawd.dart';
 import '../view_models/wifi_setup_view_model.dart';
+import 'wifi_saved_sheet.dart';
+import 'wifi_setup_parts.dart';
 
-/// Put the display on a Wi-Fi network (screen_specs §5).
+/// Put the display on a Wi-Fi network (screen_specs §5): the scan button + manual form, the password-only step after a
+/// scan, the remembered passwords (2026-11-28.12), then working / done / failed.
 class WifiSetupScreen extends StatefulWidget {
-  const WifiSetupScreen({super.key, required this.viewModel});
+  const WifiSetupScreen({super.key, required this.viewModel, this.scanned, this.onScan});
 
   final WifiSetupViewModel viewModel;
+
+  /// The display's setup code, read on WifiScanScreen before this opened (R-WF-4).
+  final String? scanned;
+
+  /// Open WifiScanScreen: completes with the code read, '' for "Nhập tay", null when closed.
+  final Future<String?> Function()? onScan;
 
   @override
   State<WifiSetupScreen> createState() => _WifiSetupScreenState();
@@ -25,14 +34,46 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
   /// Gap under the status line (design: 10).
   static const _statusGap = 10.0;
 
+  /// `password`: network row → password field (design: 18).
+  static const _fieldGap = 18.0;
+
   WifiSetupViewModel get vm => widget.viewModel;
 
   @override
   void initState() {
     super.initState();
     vm.addListener(_takeSuggestion);
-    vm.prefill();
+    final scanned = widget.scanned;
+    if (scanned != null && scanned.isNotEmpty) {
+      vm.scanned(scanned);
+    } else {
+      vm.prefill();
+    }
   }
+
+  Future<void> _scan() async {
+    final raw = await widget.onScan?.call();
+    if (raw != null && raw.isNotEmpty && mounted) await vm.scanned(raw);
+  }
+
+  void _saved() => showSavedPasswordsSheet(
+        context,
+        networks: () => vm.rememberedNetworks,
+        lastUsed: vm.lastUsed,
+        onForget: vm.forgetPassword,
+      );
+
+  Widget get _passField => TextField(
+        controller: _pass,
+        obscureText: !_show,
+        decoration: InputDecoration(
+          labelText: vm.step == WifiStep.password ? AppLocalizations.of(context).wifiPassFor(vm.ssid) : null,
+          suffixIcon: IconButton(
+            icon: Icon(_show ? Icons.visibility_off : Icons.visibility),
+            onPressed: () => setState(() => _show = !_show),
+          ),
+        ),
+      );
 
   void _takeSuggestion() {
     final s = vm.suggestedSsid;
@@ -59,7 +100,7 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
   String _detail(AppLocalizations l) => switch (vm.status) {
         WifiStatus.joinAp => l.wifiStepJoinApDetail,
         WifiStatus.wait => l.wifiStepWaitDetail,
-        WifiStatus.done => l.wifiDoneDetail(vm.ip),
+        WifiStatus.done => l.wifiDoneDetail(vm.ip, vm.ssid),
         WifiStatus.failed => vm.error == null ? '' : l.error(vm.error!),
         _ => '',
       };
@@ -88,7 +129,26 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
                 ),
               ),
               const SizedBox(height: AppSpace.xl),
-              if (step == WifiStep.form) ...[
+              if (step == WifiStep.password) ...[
+                ScannedBanner(body: l.wifiScannedBody),
+                NetworkToSend(ssid: vm.ssid, onChange: vm.changeNetwork),
+                const SizedBox(height: _fieldGap),
+                _passField,
+                const SizedBox(height: AppSpace.s),
+                const RememberNote(),
+                const SizedBox(height: AppSpace.xl),
+                FilledButton.icon(
+                  onPressed: () => vm.send(vm.ssid, _pass.text),
+                  icon: const Icon(Icons.send),
+                  label: Text(l.wifiSend),
+                ),
+              ] else if (step == WifiStep.form || step == WifiStep.formScanned) ...[
+                if (step == WifiStep.formScanned)
+                  ScannedBanner(body: l.wifiScannedNoNetwork)
+                else if (widget.onScan != null) ...[
+                  WifiScanEntry(onTap: _scan),
+                  const OrManualDivider(),
+                ],
                 Text(l.wifiNote, style: AppFonts.label),
                 const SizedBox(height: AppSpace.l),
                 TextField(controller: _ssid, decoration: InputDecoration(labelText: l.wifiSsid)),
@@ -110,6 +170,8 @@ class _WifiSetupScreenState extends State<WifiSetupScreen> {
                   icon: const Icon(Icons.send),
                   label: Text(l.wifiSend),
                 ),
+                if (step == WifiStep.form && vm.rememberedNetworks.isNotEmpty)
+                  SavedPasswordsLink(count: vm.rememberedNetworks.length, onTap: _saved),
               ] else ...[
                 Text(
                   _status(l),

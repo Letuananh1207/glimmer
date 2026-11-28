@@ -83,6 +83,7 @@ class PhotoCropViewModel extends ChangeNotifier with SafeNotifier {
     required PhotoInfo info,
     required SendPhotoUseCase send,
     required PhotoRepository photos,
+    this.library = false,
     CropDecoder? decode,
   })  : _info = info,
         _count = info.count,
@@ -93,6 +94,9 @@ class PhotoCropViewModel extends ChangeNotifier with SafeNotifier {
   }
 
   final PhotoInfo _info;
+
+  /// Kho ảnh (design 2026-11-28.11): "Thêm vào kho" hands the crop to the Ảnh tab ([cropped]) instead of sending.
+  final bool library;
   final SendPhotoUseCase _send;
   final PhotoRepository _photos;
   final CropDecoder _decode;
@@ -233,6 +237,17 @@ class PhotoCropViewModel extends ChangeNotifier with SafeNotifier {
         _status = statusOf(AppError.from(error));
     }
     notifyListeners();
+  }
+
+  /// "Thêm vào kho": the crop as [PhotoInfo.side]² pixels for the Ảnh tab to add; null = not ready / unreadable.
+  Future<PhotoPixels?> cropped() async {
+    final img = _img;
+    if (img == null || !canEdit) return null;
+    try {
+      return await img.render(crop, _info.side);
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Error kind → the screen state that explains it (screen_specs §7). Cancelled → back to cropping.

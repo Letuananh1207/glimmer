@@ -8,7 +8,9 @@ import '../../../utils/result.dart';
 import '../../../utils/safe_notifier.dart';
 
 /// [password] = after a QR scan: the network is known (the phone's), only its password is asked (R-WF-5).
-enum WifiStep { form, password, working, done, failed }
+/// [formScanned] = after a QR scan while the phone is on no Wi-Fi: the full form, under a "code read" banner
+/// (design 2026-11-28.12).
+enum WifiStep { form, formScanned, password, working, done, failed }
 
 /// What the working / done screen says.
 enum WifiStatus { direct, joinAp, send, wait, done, failed }
@@ -69,6 +71,9 @@ class WifiSetupViewModel extends ChangeNotifier with SafeNotifier {
   /// Networks whose password the app remembers (R-WF-5).
   List<String> get rememberedNetworks => _passwords.networks;
 
+  /// When the display last joined [ssid] with its remembered password ("dùng lần cuối …"); null = unknown.
+  DateTime? lastUsed(String ssid) => _passwords.lastUsed(ssid);
+
   /// Forget the remembered password of [ssid] (R-WF-5).
   void forgetPassword(String ssid) {
     _passwords.forget(ssid);
@@ -77,7 +82,7 @@ class WifiSetupViewModel extends ChangeNotifier with SafeNotifier {
 
   /// R-WF-4/5: the QR on the display's setup screen was scanned ([raw] = its text). Not glimmer's → failed
   /// with `notGlimmerQr`, nothing joined. The phone's Wi-Fi is the network to send; its password remembered →
-  /// sent at once, else [WifiStep.password] asks only the password ([WifiStep.form] when the phone's Wi-Fi is
+  /// sent at once, else [WifiStep.password] asks only the password ([WifiStep.formScanned] when the phone's Wi-Fi is
   /// unknown).
   Future<void> scanned(String raw) async {
     if (busy) return;
@@ -94,7 +99,7 @@ class WifiSetupViewModel extends ChangeNotifier with SafeNotifier {
     final phone = await _device.phoneSsid();
     final network = phone == null || phone.startsWith(setupApPrefix) ? null : phone;
     if (network == null) {
-      _step = WifiStep.form;
+      _step = WifiStep.formScanned;
       notifyListeners();
       return;
     }
@@ -124,6 +129,13 @@ class WifiSetupViewModel extends ChangeNotifier with SafeNotifier {
   }
 
   void backToForm() {
+    _step = WifiStep.form;
+    notifyListeners();
+  }
+
+  /// [WifiStep.password] "Đổi mạng": the full form, the phone's network already in the name field.
+  void changeNetwork() {
+    if (_step != WifiStep.password) return;
     _step = WifiStep.form;
     notifyListeners();
   }

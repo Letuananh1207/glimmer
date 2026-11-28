@@ -190,10 +190,10 @@ abstract class AppLocalizations {
   /// **'Nhập địa chỉ IP'**
   String get connectManual;
 
-  /// Nút viền, mở Cài Wi-Fi
+  /// Nút viền ở Kết nối → màn Quét mã (đổi 2026-11-28.12, icon qr)
   ///
   /// In vi, this message translates to:
-  /// **'Thiết bị mới / đang hiện glimmer-setup'**
+  /// **'Quét mã QR trên màn thiết bị'**
   String get connectNewDevice;
 
   /// Hộp thoại
@@ -940,10 +940,10 @@ abstract class AppLocalizations {
   /// **'Đang vào Wi-Fi glimmer-setup…'**
   String get wifiStepJoinAp;
 
-  /// Chi tiết
+  /// Chi tiết (đổi 2026-11-28.12)
   ///
   /// In vi, this message translates to:
-  /// **'Thiết bị phải đang hiện KẾT NỐI WI-FI · glimmer-setup (khoảng 1 phút sau khi cắm điện). Android sẽ hỏi bạn xác nhận kết nối.'**
+  /// **'Thiết bị phải đang hiện màn cài Wi-Fi có mã QR. Android sẽ hỏi bạn xác nhận kết nối.'**
   String get wifiStepJoinApDetail;
 
   /// Trạng thái
@@ -970,11 +970,11 @@ abstract class AppLocalizations {
   /// **'Xong! Thiết bị đã vào \"{ssid}\".'**
   String wifiDone(String ssid);
 
-  /// Chi tiết
+  /// Chi tiết khi xong; bỏ phần "đã nhớ…" nếu mạng mở (đổi 2026-11-28.12)
   ///
   /// In vi, this message translates to:
-  /// **'IP {ip}'**
-  String wifiDoneDetail(String ip);
+  /// **'IP {ip} · đã nhớ mật khẩu \"{ssid}\".'**
+  String wifiDoneDetail(String ip, String ssid);
 
   /// Nút
   ///
@@ -988,10 +988,10 @@ abstract class AppLocalizations {
   /// **'Chưa xong'**
   String get wifiFailed;
 
-  /// Chi tiết lỗi
+  /// Chi tiết lỗi (đổi 2026-11-28.12, R-WF-5)
   ///
   /// In vi, this message translates to:
-  /// **'Chưa thấy thiết bị trên \"{ssid}\". Sai mật khẩu, mạng chỉ có 5 GHz, hoặc mạng phải đăng nhập web — khi đó thiết bị sẽ lại hiện glimmer-setup.'**
+  /// **'Chưa thấy thiết bị trên \"{ssid}\". Sai mật khẩu, mạng chỉ có 5 GHz, hoặc mạng phải đăng nhập web — khi đó thiết bị sẽ lại hiện mã QR. Mật khẩu vừa gửi không được nhớ.'**
   String wifiNotFound(String ssid);
 
   /// Lỗi: thiết bị trả 401
@@ -1240,10 +1240,10 @@ abstract class AppLocalizations {
   /// **'Giải trí'**
   String get skillFunName;
 
-  /// Không dùng từ 2026-11-25.3 — Mô tả ô skill
+  /// Mô tả hàng Giải trí ở màn Skill (đổi 2026-11-28.13)
   ///
   /// In vi, this message translates to:
-  /// **'Nội dung vui cho màn hình.'**
+  /// **'Dò mìn, chơi bằng app'**
   String get skillFunDesc;
 
   /// Tiêu đề màn Skill
@@ -1252,10 +1252,10 @@ abstract class AppLocalizations {
   /// **'Skill'**
   String get skillsTitle;
 
-  /// Phụ đề màn Skill
+  /// Dòng phụ dưới tiêu đề màn Skill (đổi 2026-11-28.14)
   ///
   /// In vi, this message translates to:
-  /// **'Mỗi skill bật là một tab trên dock thiết bị.'**
+  /// **'Mỗi skill bật là một chương trình trên máy.'**
   String get skillsSubtitle;
 
   /// Không dùng từ 2026-11-25.3 — Nhãn ô skill đang dùng
@@ -1444,10 +1444,10 @@ abstract class AppLocalizations {
   /// **'Luôn có (firmware cũ)'**
   String get skillsAlwaysOn;
 
-  /// Chú thích dưới danh sách (R-SK-3)
+  /// Ghi chú dưới danh sách skill (đổi 2026-11-28.14: thiết bị không còn xoay tab / dock)
   ///
   /// In vi, this message translates to:
-  /// **'Thiết bị xoay các tab theo thứ tự trên. Thẻ cần duyệt vẫn chen ngang mọi tab.'**
+  /// **'Mỗi skill bật thêm chương trình vào desktop và Start của thiết bị. Thẻ cần duyệt vẫn chen ngang mọi màn.'**
   String get skillsOrderNote;
 
   /// Nhãn nhóm chip sắp có
@@ -2164,10 +2164,10 @@ abstract class AppLocalizations {
   /// **'Thiết bị chưa vào được Wi-Fi nên chưa điều khiển được.'**
   String get controlSetupBody;
 
-  /// Nút → Cài Wi-Fi
+  /// Nút chữ trên thanh báo glimmer-setup ở Điều khiển → màn Quét mã (đổi 2026-11-28.12, icon qr 18)
   ///
   /// In vi, this message translates to:
-  /// **'Cài Wi-Fi'**
+  /// **'Quét mã trên màn'**
   String get controlSetupAction;
 
   /// Thanh báo coral
@@ -3015,6 +3015,348 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Số liệu'**
   String get controlDetailsA11y;
+
+  /// Nhãn thẻ kho (thay photoOnDevice khi firmware có photo_source)
+  ///
+  /// In vi, this message translates to:
+  /// **'KHO ẢNH'**
+  String get photoLibraryTitle;
+
+  /// Meta khi kho > 8 ảnh (cached = 8)
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} ảnh · {cached} trên máy'**
+  String photoLibraryCount(String count, String cached);
+
+  /// Meta khi kho ≤ 8 ảnh
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} ảnh · cả {count} trên máy'**
+  String photoLibraryCountAll(String count);
+
+  /// Meta kho trống
+  ///
+  /// In vi, this message translates to:
+  /// **'chưa có ảnh'**
+  String get photoLibraryCountEmpty;
+
+  /// Dòng trạng thái, chấm mint (photo_source.state = online)
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiết bị đang lấy ảnh từ điện thoại'**
+  String get photoSourceOnline;
+
+  /// Bên phải dòng trạng thái online (photo_source.index / count)
+  ///
+  /// In vi, this message translates to:
+  /// **'đang chiếu {index}/{count}'**
+  String photoSourceShowing(String index, String count);
+
+  /// Dòng trạng thái, chấm muted (offline)
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiết bị chỉ chiếu 8 ảnh đã giữ'**
+  String get photoSourceOffline;
+
+  /// Dòng phụ khi offline
+  ///
+  /// In vi, this message translates to:
+  /// **'Điện thoại khác mạng, hoặc app đã tắt quá 2 phút.'**
+  String get photoSourceOfflineBody;
+
+  /// Nhãn trên ô ảnh thiết bị đang chiếu
+  ///
+  /// In vi, this message translates to:
+  /// **'ĐANG CHIẾU'**
+  String get photoLibraryShowingTag;
+
+  /// Nhãn đọc màn hình ô ảnh kho
+  ///
+  /// In vi, this message translates to:
+  /// **'Ảnh {n}{onDevice}{showing}, bấm để xoá'**
+  String photoLibraryTileA11y(String n, String onDevice, String showing);
+
+  /// Ghép vào photoLibraryTileA11y
+  ///
+  /// In vi, this message translates to:
+  /// **', đang ở trên thiết bị'**
+  String get photoLibraryOnDeviceA11y;
+
+  /// Ghép vào photoLibraryTileA11y
+  ///
+  /// In vi, this message translates to:
+  /// **', thiết bị đang chiếu'**
+  String get photoLibraryShowingA11y;
+
+  /// Dưới thẻ kho (thay photoNote)
+  ///
+  /// In vi, this message translates to:
+  /// **'8 ảnh mới nhất được giữ trên thiết bị để chiếu cả khi điện thoại vắng. Bấm ảnh để xoá khỏi kho.'**
+  String get photoLibraryNote;
+
+  /// Kho trống
+  ///
+  /// In vi, this message translates to:
+  /// **'Kho ảnh trống'**
+  String get photoLibraryEmptyTitle;
+
+  /// Kho trống
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm ảnh từ thư viện hoặc máy ảnh. Ảnh nằm trên điện thoại, không giới hạn số ảnh; thiết bị lấy ảnh từ đây để chiếu.'**
+  String get photoLibraryEmptyBody;
+
+  /// Phủ trên ô ảnh mới
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang thêm…'**
+  String get photoLibraryAdding;
+
+  /// Thanh báo coral
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa thêm được ảnh'**
+  String get photoLibraryAddErrorTitle;
+
+  /// Thanh báo; nút commonRetry
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiết bị không nhận bản đệm nên ảnh chưa vào kho. Vùng cắt được giữ.'**
+  String get photoLibraryAddErrorBody;
+
+  /// Hộp thoại xoá
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá ảnh khỏi kho?'**
+  String get photoLibraryDeleteTitle;
+
+  /// Hộp thoại xoá
+  ///
+  /// In vi, this message translates to:
+  /// **'Ảnh bị xoá khỏi điện thoại, và khỏi thiết bị nếu đang được giữ trên máy. Không lấy lại được.'**
+  String get photoLibraryDeleteBody;
+
+  /// Phủ trên ô đang xoá
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang xoá…'**
+  String get photoLibraryDeleting;
+
+  /// Thanh báo coral (tiêu đề photoDeleteErrorTitle); nút commonRetry
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiết bị không nhận lệnh xoá bản đệm. Ảnh vẫn còn trong kho.'**
+  String get photoLibraryDeleteErrorBody;
+
+  /// Nút chính màn Cắt ảnh khi firmware có photo_source (thay photoCropSend)
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm vào kho'**
+  String get photoCropAddToLibrary;
+
+  /// Nút lớn đầu form Cài Wi-Fi → màn Quét mã
+  ///
+  /// In vi, this message translates to:
+  /// **'Quét mã trên màn thiết bị'**
+  String get wifiScanEntry;
+
+  /// Dòng phụ nút quét
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhanh nhất: app tự gửi mạng điện thoại đang dùng.'**
+  String get wifiScanEntrySub;
+
+  /// Vạch chia giữa nút quét và form
+  ///
+  /// In vi, this message translates to:
+  /// **'HOẶC NHẬP TAY'**
+  String get wifiOrManual;
+
+  /// Nút chữ dưới form → bảng mật khẩu đã nhớ; count = 0 → ẩn
+  ///
+  /// In vi, this message translates to:
+  /// **'Mật khẩu đã nhớ ({count})'**
+  String wifiSavedLink(String count);
+
+  /// Thanh báo sau khi quét (mint)
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đọc mã của thiết bị'**
+  String get wifiScannedTitle;
+
+  /// Bước password
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiết bị sẽ vào mạng điện thoại đang dùng.'**
+  String get wifiScannedBody;
+
+  /// Bước formScanned
+  ///
+  /// In vi, this message translates to:
+  /// **'Điện thoại chưa ở mạng Wi-Fi nào nên app không biết mạng để gửi. Nhập tên mạng và mật khẩu.'**
+  String get wifiScannedNoNetwork;
+
+  /// Nhãn bước password
+  ///
+  /// In vi, this message translates to:
+  /// **'MẠNG SẼ GỬI'**
+  String get wifiNetworkToSend;
+
+  /// Nút chữ → form đầy đủ (tên mạng sửa được)
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi mạng'**
+  String get wifiChangeNetwork;
+
+  /// Nhãn ô mật khẩu bước password
+  ///
+  /// In vi, this message translates to:
+  /// **'Mật khẩu Wi-Fi “{ssid}”'**
+  String wifiPassFor(String ssid);
+
+  /// Ghi chú bước password (R-WF-5)
+  ///
+  /// In vi, this message translates to:
+  /// **'App nhớ mật khẩu này trong kho bảo mật của máy khi thiết bị vào được mạng — lần sau quét là xong.'**
+  String get wifiRememberNote;
+
+  /// Tiêu đề bảng
+  ///
+  /// In vi, this message translates to:
+  /// **'Mật khẩu đã nhớ'**
+  String get wifiSavedTitle;
+
+  /// Bảng mật khẩu đã nhớ
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ trên điện thoại này, trong kho bảo mật. Quét mã ở các mạng này sẽ gửi luôn, không hỏi.'**
+  String get wifiSavedBody;
+
+  /// Dòng phụ mỗi mạng
+  ///
+  /// In vi, this message translates to:
+  /// **'dùng lần cuối {when}'**
+  String wifiSavedLastUsed(String when);
+
+  /// Nút coral mỗi dòng / hộp thoại
+  ///
+  /// In vi, this message translates to:
+  /// **'Quên'**
+  String get wifiForget;
+
+  /// Hộp thoại
+  ///
+  /// In vi, this message translates to:
+  /// **'Quên mật khẩu “{ssid}”?'**
+  String wifiForgetTitle(String ssid);
+
+  /// Hộp thoại
+  ///
+  /// In vi, this message translates to:
+  /// **'Lần sau quét mã ở mạng này, app sẽ hỏi lại mật khẩu. Thiết bị không bị ảnh hưởng.'**
+  String get wifiForgetBody;
+
+  /// Tiêu đề màn Quét mã
+  ///
+  /// In vi, this message translates to:
+  /// **'Quét mã trên thiết bị'**
+  String get wifiScanTitle;
+
+  /// Nút × màn Quét mã
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng'**
+  String get wifiScanCloseA11y;
+
+  /// Bảng dưới màn quét
+  ///
+  /// In vi, this message translates to:
+  /// **'Đưa mã QR vào khung'**
+  String get wifiScanHelpTitle;
+
+  /// Bảng dưới, cạnh ảnh màn log-on
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiết bị hiện màn này khi chưa vào được Wi-Fi. Giữ máy cách màn khoảng một gang tay.'**
+  String get wifiScanHelpBody;
+
+  /// Nhãn ảnh nhỏ
+  ///
+  /// In vi, this message translates to:
+  /// **'Màn cài Wi-Fi của thiết bị có mã QR'**
+  String get wifiScanHelpImageA11y;
+
+  /// Nút chữ → form Cài Wi-Fi
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có mã? Nhập tay'**
+  String get wifiScanManual;
+
+  /// Đọc được mã (khung mint)
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đọc mã glimmer-setup'**
+  String get wifiScanFound;
+
+  /// Dòng phụ trước khi tự đóng (rung nhẹ)
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang chuyển sang bước tiếp…'**
+  String get wifiScanFoundBody;
+
+  /// Mã lạ (coral) — cùng nghĩa với lỗi devErrNotGlimmerQr của app
+  ///
+  /// In vi, this message translates to:
+  /// **'Đây không phải mã của glimmer'**
+  String get wifiScanWrongTitle;
+
+  /// Mã lạ (R-WF-4)
+  ///
+  /// In vi, this message translates to:
+  /// **'Quét mã trên màn cài đặt Wi-Fi của thiết bị. App không làm gì với mã này.'**
+  String get wifiScanWrongBody;
+
+  /// Nút chính khi mã lạ
+  ///
+  /// In vi, this message translates to:
+  /// **'Quét lại'**
+  String get wifiScanAgain;
+
+  /// Chưa có quyền camera
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần quyền camera'**
+  String get wifiScanCameraTitle;
+
+  /// Chưa có quyền camera
+  ///
+  /// In vi, this message translates to:
+  /// **'App chỉ dùng camera để đọc mã QR trên màn thiết bị, không chụp hay lưu ảnh.'**
+  String get wifiScanCameraBody;
+
+  /// Nút chính → hộp xin quyền của hệ thống
+  ///
+  /// In vi, this message translates to:
+  /// **'Cho phép camera'**
+  String get wifiScanAllowCamera;
+
+  /// Nút viền khi quyền bị từ chối hẳn
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở cài đặt điện thoại'**
+  String get wifiScanOpenSettings;
+
+  /// Nút đóng bảng
+  ///
+  /// In vi, this message translates to:
+  /// **'Đóng'**
+  String get commonClose;
+
+  /// Cài Wi-Fi · bảng mật khẩu đã nhớ: {when} của wifiSavedLastUsed khi là hôm nay (ngày khác: dd/MM)
+  ///
+  /// In vi, this message translates to:
+  /// **'hôm nay'**
+  String get devWifiUsedToday;
 }
 
 class _AppLocalizationsDelegate

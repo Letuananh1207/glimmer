@@ -3,6 +3,8 @@ import 'package:provider/single_child_widget.dart';
 
 import '../data/repositories/backup/backup_repository.dart';
 import '../data/repositories/backup/backup_repository_local.dart';
+import '../data/repositories/camera/camera_repository.dart';
+import '../data/repositories/camera/camera_repository_local.dart';
 import '../data/repositories/device/device_repository.dart';
 import '../data/repositories/device/device_repository_local.dart';
 import '../data/repositories/location/location_repository.dart';
@@ -15,6 +17,7 @@ import '../data/repositories/skill/skill_repository.dart';
 import '../data/repositories/skill/skill_repository_local.dart';
 import '../data/repositories/wifi/wifi_password_repository.dart';
 import '../data/repositories/wifi/wifi_password_repository_local.dart';
+import '../data/services/camera_permission_service.dart';
 import '../data/services/device_api_service.dart';
 import '../data/services/discovery_service.dart';
 import '../data/services/file_service.dart';
@@ -37,6 +40,7 @@ import '../data/repositories/photo/photo_server_repository_local.dart';
 import '../data/services/network_service.dart';
 import '../data/services/photo_library_service.dart';
 import '../data/services/photo_server_service.dart';
+import '../domain/use_cases/photo_library_use_case.dart';
 import '../domain/use_cases/photo_source_use_case.dart';
 
 /// The one place that picks implementations and creates them.
@@ -100,6 +104,7 @@ class Dependencies {
       create: (_) => ToggleSkillUseCase(skills: skills, device: device),
     ),
     Provider<PhotoRepository>.value(value: photos),
+    Provider<CameraRepository>(create: (_) => CameraRepositoryLocal(CameraPermissionService())),
     ChangeNotifierProvider<WifiPasswordRepository>.value(value: wifiPasswords),
     Provider<LoadPhotosUseCase>(
       create: (_) => LoadPhotosUseCase(device: device, photos: photos),
@@ -110,6 +115,9 @@ class Dependencies {
       create: (_) => SendPhotoUseCase(device: device, photos: photos, library: library, source: photoSource),
     ),
     Provider<ControlDeviceUseCase>(create: (_) => ControlDeviceUseCase(device: device)),
+    Provider<PhotoLibraryUseCase>(
+      create: (_) => PhotoLibraryUseCase(device: device, library: library, photos: photos, source: photoSource),
+    ),
     Provider<DeletePhotoUseCase>(
       create: (_) => DeletePhotoUseCase(device: device, photos: photos, library: library, source: photoSource),
     ),

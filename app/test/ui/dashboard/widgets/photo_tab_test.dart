@@ -22,6 +22,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../testing/fakes/fake_repositories.dart';
 import '../../../../testing/fakes/fake_services.dart';
+import 'library_tab_test.dart' show libraryProviders;
 
 const _url = 'http://192.168.1.50';
 final _vi = lookupAppLocalizations(const Locale('vi'));
@@ -85,6 +86,7 @@ void main() {
         Provider<PhotoRepository>.value(value: photos),
         Provider<LoadPhotosUseCase>.value(value: LoadPhotosUseCase(device: rig.repo, photos: photos)),
         Provider<DeletePhotoUseCase>.value(value: DeletePhotoUseCase(device: rig.repo, photos: photos)),
+        ...libraryProviders(rig, photos),
       ],
       child: MaterialApp(
         theme: AppTheme.dark(),
@@ -97,7 +99,10 @@ void main() {
           GlobalCupertinoLocalizations.delegate,
         ],
         home: Scaffold(
-          body: dashboardScreen(onBack: () {}, onOpenSettings: () {}, onCropPhoto: (a) async => cropped.add(a)),
+          body: dashboardScreen(onBack: () {}, onOpenSettings: () {}, onCropPhoto: (a) async {
+            cropped.add(a);
+            return null;
+          }),
         ),
       ),
     ));

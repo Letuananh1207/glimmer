@@ -3,7 +3,7 @@
 - Yêu cầu: "Mỗi lần vào mạng mới thì trên màn hình hiện mã QR và app chỉ cần quét là xong." Đã chốt với người
   dùng: gõ mật khẩu một lần, app nhớ theo tên mạng; thiết kế trước (soạn phiếu panel + app).
 - Loại: thêm · Cỡ: lớn (firmware + app, thêm 2 thư viện, dữ liệu lưu mới trong app)
-- Trạng thái: chờ thiết kế (nhiệm vụ 1–6 xong 2026-11-28; 7–9 đợi bản chốt panel + app)
+- Trạng thái: chờ thử máy thật (nhiệm vụ 1–8 xong 2026-11-28)
 
 ## Luồng mong muốn
 1. Thiết bị không vào được Wi-Fi → AP `glimmer-setup` → màn log-on (`XP-SetupMode`) có mã QR.
@@ -69,7 +69,7 @@ Không dính giao diện (làm trước):
 
 Chờ thiết kế:
 - [x] 7. Vẽ QR trên log-on (`display.cpp` `drawSetupMode`, `tools/screens.py`) — áp P-2026-11-28.26 (2026-11-28).
-- [ ] 8. Màn quét + bước chỉ hỏi mật khẩu + nút quét ở Kết nối / Wi-Fi, route, l10n, quyền camera — chờ thiết kế:
+- [x] 8. (áp thiết kế 2026-11-28.12; đọc QR bằng `mobile_scanner`, quyền camera `CameraRepository`) Màn quét + bước chỉ hỏi mật khẩu + nút quét ở Kết nối / Wi-Fi, route, l10n, quyền camera — chờ thiết kế:
   phiếu app quét QR.
 - [ ] 9. Thử máy thật: nạp firmware, xoá Wi-Fi để vào AP, quét bằng app, lần hai quét không hỏi.
 

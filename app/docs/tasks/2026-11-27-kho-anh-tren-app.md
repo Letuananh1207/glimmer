@@ -5,7 +5,7 @@
   chạy máy chủ ảnh nhỏ trong mạng nhà, thiết bị biết danh sách mã ảnh, tự xin khi cần hiện); **giữ bản đệm nhỏ** trên
   thiết bị (app quyết định ảnh nào) để vẫn hiện được khi app vắng.
 - Loại: thêm (đổi cách lưu ảnh) · Cỡ: lớn (firmware + app + 2 phiếu thiết kế)
-- Trạng thái: đang làm
+- Trạng thái: chờ thử máy thật (nhiệm vụ 1–10 xong 2026-11-28)
 
 ## Hiện trạng (đọc nhanh)
 
@@ -106,8 +106,8 @@ Phần không dính giao diện (firmware nguồn ảnh + API, máy chủ ảnh,
   trên localhost).
 - [x] 6. `SyncPhotoSourceUseCase` + sửa send / delete / load use case · test: `photo_use_cases_test.dart` (DeviceRig).
 - [x] 7. `DeviceState` đọc `photos.source` · test: model test.
-- [ ] 8. Giao diện Kho ảnh (app) — **chờ thiết kế: `docs/phieu_thiet_ke/2026-11-27-kho-anh.md`** · test: widget test.
-- [ ] 9. Giao diện cửa sổ Ảnh (thiết bị) — **chờ thiết kế: `../docs/phieu_panel/2026-11-27-anh-tu-dien-thoai.md`**.
+- [x] 8. (áp thiết kế 2026-11-28.11) Giao diện Kho ảnh (app) — **chờ thiết kế: `docs/phieu_thiet_ke/2026-11-27-kho-anh.md`** · test: widget test.
+- [x] 9. (áp P-2026-11-28.27) Giao diện cửa sổ Ảnh (thiết bị) — **chờ thiết kế: `../docs/phieu_panel/2026-11-27-anh-tu-dien-thoai.md`**.
 - [x] 10. `CLAUDE.md` (Photos), `docs/backend/README.md`, bản đồ tính năng `/lead`.
 
 ## Kiểm tra cuối

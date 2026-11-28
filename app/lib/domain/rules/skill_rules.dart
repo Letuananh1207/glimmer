@@ -1,4 +1,4 @@
-// Skill (gói chức năng): mỗi skill bật là một tab trên dock thiết bị (docs/testing/quy_tac.md §7).
+// Skill (gói chức năng): mỗi skill bật là một chương trình trên máy (desktop + Start của thiết bị) (docs/testing/quy_tac.md §7).
 import '../models/device_state.dart';
 import '../models/skill.dart';
 

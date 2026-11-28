@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import '../../../domain/models/device_photo.dart';
@@ -17,14 +19,35 @@ Future<bool> showDeletePhotoDialog(BuildContext context, GalleryPhoto photo) asy
     await showDialog<bool>(
       context: context,
       barrierColor: _scrim,
-      builder: (_) => DeletePhotoDialog(photo: photo),
+      builder: (_) => DeletePhotoDialog(preview: photo.preview, name: photo.name),
     ) ??
     false;
 
-class DeletePhotoDialog extends StatelessWidget {
-  const DeletePhotoDialog({super.key, required this.photo});
+/// Kho ảnh (design 2026-11-28.11, `libraryDelete`): the same dialog, `photoLibraryDeleteTitle` / `…Body`.
+Future<bool> showDeleteLibraryPhotoDialog(BuildContext context, Uint8List? preview) async {
+  final l = AppLocalizations.of(context);
+  return await showDialog<bool>(
+        context: context,
+        barrierColor: _scrim,
+        builder: (_) => DeletePhotoDialog(
+          preview: preview,
+          name: '',
+          title: l.photoLibraryDeleteTitle,
+          body: l.photoLibraryDeleteBody,
+        ),
+      ) ??
+      false;
+}
 
-  final GalleryPhoto photo;
+class DeletePhotoDialog extends StatelessWidget {
+  const DeletePhotoDialog({super.key, required this.preview, required this.name, this.title, this.body});
+
+  /// The app's copy (null → "không có bản xem" with [name]).
+  final Uint8List? preview;
+  final String name;
+
+  /// Defaults `photoDeleteTitle` / `photoDeleteBody`.
+  final String? title, body;
 
   static const _width = 312.0;
   static const _radius = 20.0;
@@ -35,7 +58,7 @@ class DeletePhotoDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final preview = photo.preview;
+    final preview = this.preview;
     return Dialog(
       backgroundColor: AppColors.panel,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(_radius)),
@@ -45,7 +68,7 @@ class DeletePhotoDialog extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(AppSpace.xxl),
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Text(l.photoDeleteTitle,
+            Text(title ?? l.photoDeleteTitle,
                 style: const TextStyle(
                     fontFamily: AppFonts.family, fontSize: _title, fontWeight: FontWeight.w700, color: AppColors.ink)),
             const SizedBox(height: _gap),
@@ -54,12 +77,12 @@ class DeletePhotoDialog extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppSize.radiusPhotoTile),
                 child: SizedBox.square(
                   dimension: _thumb,
-                  child: preview != null ? PhotoThumb(bytes: preview) : NoPreviewTile(name: photo.name),
+                  child: preview != null ? PhotoThumb(bytes: preview) : NoPreviewTile(name: name),
                 ),
               ),
               const SizedBox(width: _gap),
               Expanded(
-                child: Text(l.photoDeleteBody,
+                child: Text(body ?? l.photoDeleteBody,
                     style: const TextStyle(
                         fontFamily: AppFonts.family, fontSize: _body, height: _bodyLine, color: AppColors.inkDim)),
               ),

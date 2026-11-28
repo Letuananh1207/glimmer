@@ -63,7 +63,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get connectManual => 'Nhập địa chỉ IP';
 
   @override
-  String get connectNewDevice => 'Thiết bị mới / đang hiện glimmer-setup';
+  String get connectNewDevice => 'Quét mã QR trên màn thiết bị';
 
   @override
   String get connectManualTitle => 'Nhập địa chỉ thiết bị';
@@ -470,7 +470,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get wifiStepJoinApDetail =>
-      'Thiết bị phải đang hiện KẾT NỐI WI-FI · glimmer-setup (khoảng 1 phút sau khi cắm điện). Android sẽ hỏi bạn xác nhận kết nối.';
+      'Thiết bị phải đang hiện màn cài Wi-Fi có mã QR. Android sẽ hỏi bạn xác nhận kết nối.';
 
   @override
   String wifiStepSend(String ssid) {
@@ -492,8 +492,8 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String wifiDoneDetail(String ip) {
-    return 'IP $ip';
+  String wifiDoneDetail(String ip, String ssid) {
+    return 'IP $ip · đã nhớ mật khẩu \"$ssid\".';
   }
 
   @override
@@ -504,7 +504,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String wifiNotFound(String ssid) {
-    return 'Chưa thấy thiết bị trên \"$ssid\". Sai mật khẩu, mạng chỉ có 5 GHz, hoặc mạng phải đăng nhập web — khi đó thiết bị sẽ lại hiện glimmer-setup.';
+    return 'Chưa thấy thiết bị trên \"$ssid\". Sai mật khẩu, mạng chỉ có 5 GHz, hoặc mạng phải đăng nhập web — khi đó thiết bị sẽ lại hiện mã QR. Mật khẩu vừa gửi không được nhớ.';
   }
 
   @override
@@ -667,13 +667,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get skillFunName => 'Giải trí';
 
   @override
-  String get skillFunDesc => 'Nội dung vui cho màn hình.';
+  String get skillFunDesc => 'Dò mìn, chơi bằng app';
 
   @override
   String get skillsTitle => 'Skill';
 
   @override
-  String get skillsSubtitle => 'Mỗi skill bật là một tab trên dock thiết bị.';
+  String get skillsSubtitle => 'Mỗi skill bật là một chương trình trên máy.';
 
   @override
   String get skillsCurrent => 'Đang dùng';
@@ -794,7 +794,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get skillsOrderNote =>
-      'Thiết bị xoay các tab theo thứ tự trên. Thẻ cần duyệt vẫn chen ngang mọi tab.';
+      'Mỗi skill bật thêm chương trình vào desktop và Start của thiết bị. Thẻ cần duyệt vẫn chen ngang mọi màn.';
 
   @override
   String get skillsSoonTitle => 'SẮP CÓ';
@@ -1240,7 +1240,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Thiết bị chưa vào được Wi-Fi nên chưa điều khiển được.';
 
   @override
-  String get controlSetupAction => 'Cài Wi-Fi';
+  String get controlSetupAction => 'Quét mã trên màn';
 
   @override
   String get controlOfflineTitle => 'Không thấy thiết bị';
@@ -1731,4 +1731,205 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get controlDetailsA11y => 'Số liệu';
+
+  @override
+  String get photoLibraryTitle => 'KHO ẢNH';
+
+  @override
+  String photoLibraryCount(String count, String cached) {
+    return '$count ảnh · $cached trên máy';
+  }
+
+  @override
+  String photoLibraryCountAll(String count) {
+    return '$count ảnh · cả $count trên máy';
+  }
+
+  @override
+  String get photoLibraryCountEmpty => 'chưa có ảnh';
+
+  @override
+  String get photoSourceOnline => 'Thiết bị đang lấy ảnh từ điện thoại';
+
+  @override
+  String photoSourceShowing(String index, String count) {
+    return 'đang chiếu $index/$count';
+  }
+
+  @override
+  String get photoSourceOffline => 'Thiết bị chỉ chiếu 8 ảnh đã giữ';
+
+  @override
+  String get photoSourceOfflineBody =>
+      'Điện thoại khác mạng, hoặc app đã tắt quá 2 phút.';
+
+  @override
+  String get photoLibraryShowingTag => 'ĐANG CHIẾU';
+
+  @override
+  String photoLibraryTileA11y(String n, String onDevice, String showing) {
+    return 'Ảnh $n$onDevice$showing, bấm để xoá';
+  }
+
+  @override
+  String get photoLibraryOnDeviceA11y => ', đang ở trên thiết bị';
+
+  @override
+  String get photoLibraryShowingA11y => ', thiết bị đang chiếu';
+
+  @override
+  String get photoLibraryNote =>
+      '8 ảnh mới nhất được giữ trên thiết bị để chiếu cả khi điện thoại vắng. Bấm ảnh để xoá khỏi kho.';
+
+  @override
+  String get photoLibraryEmptyTitle => 'Kho ảnh trống';
+
+  @override
+  String get photoLibraryEmptyBody =>
+      'Thêm ảnh từ thư viện hoặc máy ảnh. Ảnh nằm trên điện thoại, không giới hạn số ảnh; thiết bị lấy ảnh từ đây để chiếu.';
+
+  @override
+  String get photoLibraryAdding => 'Đang thêm…';
+
+  @override
+  String get photoLibraryAddErrorTitle => 'Chưa thêm được ảnh';
+
+  @override
+  String get photoLibraryAddErrorBody =>
+      'Thiết bị không nhận bản đệm nên ảnh chưa vào kho. Vùng cắt được giữ.';
+
+  @override
+  String get photoLibraryDeleteTitle => 'Xoá ảnh khỏi kho?';
+
+  @override
+  String get photoLibraryDeleteBody =>
+      'Ảnh bị xoá khỏi điện thoại, và khỏi thiết bị nếu đang được giữ trên máy. Không lấy lại được.';
+
+  @override
+  String get photoLibraryDeleting => 'Đang xoá…';
+
+  @override
+  String get photoLibraryDeleteErrorBody =>
+      'Thiết bị không nhận lệnh xoá bản đệm. Ảnh vẫn còn trong kho.';
+
+  @override
+  String get photoCropAddToLibrary => 'Thêm vào kho';
+
+  @override
+  String get wifiScanEntry => 'Quét mã trên màn thiết bị';
+
+  @override
+  String get wifiScanEntrySub =>
+      'Nhanh nhất: app tự gửi mạng điện thoại đang dùng.';
+
+  @override
+  String get wifiOrManual => 'HOẶC NHẬP TAY';
+
+  @override
+  String wifiSavedLink(String count) {
+    return 'Mật khẩu đã nhớ ($count)';
+  }
+
+  @override
+  String get wifiScannedTitle => 'Đã đọc mã của thiết bị';
+
+  @override
+  String get wifiScannedBody => 'Thiết bị sẽ vào mạng điện thoại đang dùng.';
+
+  @override
+  String get wifiScannedNoNetwork =>
+      'Điện thoại chưa ở mạng Wi-Fi nào nên app không biết mạng để gửi. Nhập tên mạng và mật khẩu.';
+
+  @override
+  String get wifiNetworkToSend => 'MẠNG SẼ GỬI';
+
+  @override
+  String get wifiChangeNetwork => 'Đổi mạng';
+
+  @override
+  String wifiPassFor(String ssid) {
+    return 'Mật khẩu Wi-Fi “$ssid”';
+  }
+
+  @override
+  String get wifiRememberNote =>
+      'App nhớ mật khẩu này trong kho bảo mật của máy khi thiết bị vào được mạng — lần sau quét là xong.';
+
+  @override
+  String get wifiSavedTitle => 'Mật khẩu đã nhớ';
+
+  @override
+  String get wifiSavedBody =>
+      'Chỉ trên điện thoại này, trong kho bảo mật. Quét mã ở các mạng này sẽ gửi luôn, không hỏi.';
+
+  @override
+  String wifiSavedLastUsed(String when) {
+    return 'dùng lần cuối $when';
+  }
+
+  @override
+  String get wifiForget => 'Quên';
+
+  @override
+  String wifiForgetTitle(String ssid) {
+    return 'Quên mật khẩu “$ssid”?';
+  }
+
+  @override
+  String get wifiForgetBody =>
+      'Lần sau quét mã ở mạng này, app sẽ hỏi lại mật khẩu. Thiết bị không bị ảnh hưởng.';
+
+  @override
+  String get wifiScanTitle => 'Quét mã trên thiết bị';
+
+  @override
+  String get wifiScanCloseA11y => 'Đóng';
+
+  @override
+  String get wifiScanHelpTitle => 'Đưa mã QR vào khung';
+
+  @override
+  String get wifiScanHelpBody =>
+      'Thiết bị hiện màn này khi chưa vào được Wi-Fi. Giữ máy cách màn khoảng một gang tay.';
+
+  @override
+  String get wifiScanHelpImageA11y => 'Màn cài Wi-Fi của thiết bị có mã QR';
+
+  @override
+  String get wifiScanManual => 'Không có mã? Nhập tay';
+
+  @override
+  String get wifiScanFound => 'Đã đọc mã glimmer-setup';
+
+  @override
+  String get wifiScanFoundBody => 'Đang chuyển sang bước tiếp…';
+
+  @override
+  String get wifiScanWrongTitle => 'Đây không phải mã của glimmer';
+
+  @override
+  String get wifiScanWrongBody =>
+      'Quét mã trên màn cài đặt Wi-Fi của thiết bị. App không làm gì với mã này.';
+
+  @override
+  String get wifiScanAgain => 'Quét lại';
+
+  @override
+  String get wifiScanCameraTitle => 'Cần quyền camera';
+
+  @override
+  String get wifiScanCameraBody =>
+      'App chỉ dùng camera để đọc mã QR trên màn thiết bị, không chụp hay lưu ảnh.';
+
+  @override
+  String get wifiScanAllowCamera => 'Cho phép camera';
+
+  @override
+  String get wifiScanOpenSettings => 'Mở cài đặt điện thoại';
+
+  @override
+  String get commonClose => 'Đóng';
+
+  @override
+  String get devWifiUsedToday => 'hôm nay';
 }

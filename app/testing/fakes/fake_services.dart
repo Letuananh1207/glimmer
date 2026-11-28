@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:glimmer_app/data/repositories/camera/camera_repository.dart';
 import 'package:glimmer_app/data/services/cursor_service.dart';
 import 'package:glimmer_app/data/services/device_api_service.dart';
 import 'package:glimmer_app/data/services/discovery_service.dart';
@@ -9,6 +10,7 @@ import 'package:glimmer_app/data/services/photo_picker_service.dart';
 import 'package:glimmer_app/data/services/photo_store_service.dart';
 import 'package:glimmer_app/data/services/wifi_secrets_service.dart';
 import 'package:glimmer_app/data/services/wifi_service.dart';
+import 'package:glimmer_app/domain/models/camera_access.dart';
 import 'package:glimmer_app/utils/cancel_token.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -71,6 +73,9 @@ class FakeDeviceApiService implements DeviceApiService {
 
   /// Answer of [uploadFile]: a Map, or an exception to throw (null → `{ok, name: p1.jpg, count: 1}`).
   Object? uploadFileAnswer;
+
+  /// While set, file uploads wait for it (to see an "adding…" state).
+  Completer<void>? holdUploads;
   Uint8List? uploadedFile;
 
   /// Answer per upload (several uploads in one test, e.g. the library's cache sync); wins over [uploadFileAnswer].
@@ -87,6 +92,7 @@ class FakeDeviceApiService implements DeviceApiService {
       CancelToken? cancel,
       Duration timeout = const Duration(seconds: 30)}) async {
     calls.add(ApiCall(baseUrl, 'UPLOAD', path, field, token));
+    if (holdUploads != null) await holdUploads!.future;
     uploadedFile = bytes;
     if (cancel?.cancelled ?? false) throw const DeviceHttpException(-1, 'cancelled');
     onProgress?.call(0.5);
@@ -189,8 +195,40 @@ class FakeWifiSecretsService implements WifiSecretsService {
   @override
   Future<void> write(String ssid, String password) async => stored[ssid] = password;
 
+  final Map<String, DateTime> used = {};
+
   @override
-  Future<void> delete(String ssid) async => stored.remove(ssid);
+  Future<Map<String, DateTime>> readUsed() async => {...used};
+
+  @override
+  Future<void> writeUsed(String ssid, DateTime at) async => used[ssid] = at;
+
+  @override
+  Future<void> delete(String ssid) async {
+    stored.remove(ssid);
+    used.remove(ssid);
+  }
+}
+
+/// The camera permission without a phone: [answer] for every ask, [afterSettings] after the settings.
+class FakeCameraRepository implements CameraRepository {
+  FakeCameraRepository([this.answer = CameraAccess.granted]);
+
+  CameraAccess answer;
+  CameraAccess? afterSettings;
+  int asked = 0, settingsOpened = 0;
+
+  @override
+  Future<CameraAccess> request() async {
+    asked++;
+    return answer;
+  }
+
+  @override
+  Future<CameraAccess> status() async => afterSettings ?? answer;
+
+  @override
+  Future<void> openSettings() async => settingsOpened++;
 }
 
 /// A [LocalStoreService] over in-memory shared_preferences.

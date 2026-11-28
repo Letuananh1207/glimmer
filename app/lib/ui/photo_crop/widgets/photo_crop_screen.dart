@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../domain/models/app_error.dart';
+import '../../../domain/models/device_photo.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../utils/result.dart';
 import '../../core/labels.dart';
@@ -14,12 +15,20 @@ import 'device_photo_preview.dart';
 /// Cắt ảnh (screen_specs §7, 2026-11-25.4): push từ tab Ảnh, ngoài khung tab. Thanh trên 56, `CropFrame`, gợi ý,
 /// `DevicePhotoPreview` cập nhật theo khi kéo / phóng, đáy theo trạng thái gửi.
 class PhotoCropScreen extends StatelessWidget {
-  const PhotoCropScreen({super.key, required this.viewModel, required this.onClose});
+  const PhotoCropScreen({super.key, required this.viewModel, required this.onClose, this.onAdd});
 
   final PhotoCropViewModel viewModel;
 
   /// Back to the Ảnh tab (back arrow, "Xong", "Về danh sách ảnh").
   final VoidCallback onClose;
+
+  /// Kho ảnh (design 2026-11-28.11): "Thêm vào kho" → back to the Ảnh tab with the crop, which adds it.
+  final ValueChanged<PhotoPixels>? onAdd;
+
+  Future<void> _addToLibrary() async {
+    final pixels = await viewModel.cropped();
+    if (pixels != null) onAdd?.call(pixels);
+  }
 
   static const _barH = 56.0;
   static const _back = 48.0, _backIcon = 24.0;
@@ -118,7 +127,8 @@ class PhotoCropScreen extends StatelessWidget {
                 progress: vm.progress,
                 sentCount: vm.sent?.count ?? 0,
                 maxCount: vm.maxCount,
-                onSend: vm.send,
+                onSend: vm.library && onAdd != null ? _addToLibrary : vm.send,
+                library: vm.library && onAdd != null,
                 onCancel: vm.cancel,
                 onBackToCrop: vm.backToCrop,
                 onPickOther: () => _pickOther(context),

@@ -3,11 +3,13 @@ import '../../utils/json.dart';
 import 'cursor.dart';
 import 'device_sources.dart';
 import 'device_weather.dart';
+import 'library_photo.dart';
 import 'project.dart';
 import 'usage.dart';
 
 export 'device_sources.dart';
 export 'device_weather.dart';
+export 'library_photo.dart' show PhotoSourceInfo, PhotoSourceState;
 
 /// GET /api/state.
 class DeviceState {
@@ -38,6 +40,7 @@ class DeviceState {
     this.weather,
     this.photos,
     this.photoSourceApi = false,
+    this.photoSource,
     this.nightFace = false,
     this.paused,
     this.screenOn,
@@ -87,6 +90,9 @@ class DeviceState {
     weather: j['weather'] is Map<String, dynamic> ? DeviceWeather.fromJson(j['weather'] as Map<String, dynamic>) : null,
     photos: j['photos'] is num ? (j['photos'] as num).toInt() : null,
     photoSourceApi: j['photo_source'] is Map,
+    photoSource: j['photo_source'] is Map<String, dynamic>
+        ? PhotoSourceInfo.fromJson(j['photo_source'] as Map<String, dynamic>)
+        : null,
     nightFace: jsonBool(j['night_face']),
     paused: j['paused'] is bool ? j['paused'] as bool : null,
     screenOn: j['screen_on'] is bool ? j['screen_on'] as bool : null,
@@ -141,6 +147,7 @@ class DeviceState {
         weather: weather,
         photos: photos,
         photoSourceApi: photoSourceApi,
+        photoSource: photoSource,
         nightFace: nightFace,
         paused: paused ?? this.paused,
         screenOn: screenOn ?? this.screenOn,
@@ -186,6 +193,9 @@ class DeviceState {
 
   /// R-AK-5: the firmware points at the app's photo library (`photo_source` in /api/state, POST /api/photos/source).
   final bool photoSourceApi;
+
+  /// Where the device's slideshow is (`photo_source`, design 2026-11-28.11); null = firmware without it.
+  final PhotoSourceInfo? photoSource;
 
   /// The device shows its night face (`night_face`).
   final bool nightFace;

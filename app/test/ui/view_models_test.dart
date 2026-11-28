@@ -258,7 +258,7 @@ void main() {
       rig.wifi.ssid = null;
       final vm = WifiSetupViewModel(device: rig.repo, passwords: _pw({'Nha': 'pw'}));
       await vm.scanned('WIFI:T:nopass;S:glimmer-setup;;');
-      expect((vm.step, vm.error), (WifiStep.form, null));
+      expect((vm.step, vm.error), (WifiStep.formScanned, null));
       vm.dispose();
     });
 

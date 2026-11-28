@@ -62,7 +62,7 @@ chuyển file đó.
 ## File sinh tự động — không sửa tay
 
 - `lib/ui/core/themes/app_colors.dart`, `lib/l10n/app_vi.arb` (gộp: chuỗi thiết kế thắng, chuỗi riêng của code được
-  giữ), `assets/icons/*.svg`, `assets/data/*.json`, `.design_sync.json` (`appliedVersion` = bản CHANGELOG đã áp) —
+  giữ), `assets/icons/*.svg`, `assets/data/*.json`, `assets/images/*.png`, `.design_sync.json` (`appliedVersion` = bản CHANGELOG đã áp) —
   chỉ cập nhật bằng `dart run tool/sync_design.dart`. `lib/ui/core/themes/app_text.dart` (`AppFonts`, `AppSpace`,
   `AppSize`) viết tay — script báo khi token chữ/khoảng cách đổi.
 - `lib/l10n/app_localizations*.dart` (`flutter gen-l10n`)

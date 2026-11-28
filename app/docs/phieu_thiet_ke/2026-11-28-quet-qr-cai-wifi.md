@@ -1,6 +1,6 @@
 # Phiếu thiết kế: Quét mã QR trên màn thiết bị để cài Wi-Fi
 
-- Trạng thái: chờ thiết kế
+- Trạng thái: đã áp (2026-11-28.12)
 - Đã vẽ: 2026-11-28.12
 - Ngày: 2026-11-28 · Nguồn: yêu cầu người dùng — "mỗi lần vào mạng mới thì trên màn hình hiện mã QR và app chỉ cần
   quét là xong"; kế hoạch `docs/tasks/2026-11-28-qr-cai-wifi.md`. Phiếu màn thiết bị đi cùng:
