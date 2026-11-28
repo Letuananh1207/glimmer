@@ -6,6 +6,7 @@ import 'package:glimmer_app/data/services/discovery_service.dart';
 import 'package:glimmer_app/data/services/local_store_service.dart';
 import 'package:glimmer_app/data/services/photo_picker_service.dart';
 import 'package:glimmer_app/data/services/photo_store_service.dart';
+import 'package:glimmer_app/data/services/wifi_secrets_service.dart';
 import 'package:glimmer_app/data/services/wifi_service.dart';
 import 'package:glimmer_app/utils/cancel_token.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -157,6 +158,21 @@ class FakeWifiService implements WifiService {
 
   @override
   Future<void> leave() async => left++;
+}
+
+class FakeWifiSecretsService implements WifiSecretsService {
+  FakeWifiSecretsService([Map<String, String> saved = const {}]) : stored = {...saved};
+
+  final Map<String, String> stored;
+
+  @override
+  Future<Map<String, String>> readAll() async => {...stored};
+
+  @override
+  Future<void> write(String ssid, String password) async => stored[ssid] = password;
+
+  @override
+  Future<void> delete(String ssid) async => stored.remove(ssid);
 }
 
 /// A [LocalStoreService] over in-memory shared_preferences.

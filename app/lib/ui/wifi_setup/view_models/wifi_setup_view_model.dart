@@ -1,11 +1,14 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../data/repositories/device/device_repository.dart';
+import '../../../data/repositories/wifi/wifi_password_repository.dart';
 import '../../../domain/models/app_error.dart';
+import '../../../domain/rules/setup_qr_rules.dart';
 import '../../../utils/result.dart';
 import '../../../utils/safe_notifier.dart';
 
-enum WifiStep { form, working, done, failed }
+/// [password] = after a QR scan: the network is known (the phone's), only its password is asked (R-WF-5).
+enum WifiStep { form, password, working, done, failed }
 
 /// What the working / done screen says.
 enum WifiStatus { direct, joinAp, send, wait, done, failed }
@@ -15,11 +18,21 @@ enum WifiStatus { direct, joinAp, send, wait, done, failed }
 /// If the display is reachable (it's online here, or the phone is on its setup AP) the new network is
 /// sent directly. Otherwise the phone joins "glimmer-setup" just for this app (Android asks to confirm
 /// once), sends the network, lets go, and looks for the display on the normal Wi-Fi.
+///
+/// Scanning the QR on the display's setup screen ([scanned], R-WF-4) names the AP and takes the phone's network;
+/// a remembered password is sent without asking (R-WF-5). A password is remembered once the display shows up
+/// on that network.
 class WifiSetupViewModel extends ChangeNotifier with SafeNotifier {
-  WifiSetupViewModel({required DeviceRepository device, this.findAttempts = 10, this.findGap = const Duration(seconds: 8)})
-      : _device = device;
+  WifiSetupViewModel({
+    required DeviceRepository device,
+    required WifiPasswordRepository passwords,
+    this.findAttempts = 10,
+    this.findGap = const Duration(seconds: 8),
+  })  : _device = device,
+        _passwords = passwords;
 
   final DeviceRepository _device;
+  final WifiPasswordRepository _passwords;
 
   /// Looking for the display on the new network: tries × gap (+ the search itself) ≈ 4 min.
   final int findAttempts;
@@ -30,6 +43,9 @@ class WifiSetupViewModel extends ChangeNotifier with SafeNotifier {
   String _ssid = '';
   AppError? _error;
   String? _suggestedSsid;
+
+  /// Setup AP read from the QR (null = not scanned: "glimmer-setup").
+  String? _scannedAp;
 
   WifiStep get step => _step;
   bool get busy => _step == WifiStep.working;
@@ -46,6 +62,52 @@ class WifiSetupViewModel extends ChangeNotifier with SafeNotifier {
 
   /// The phone's current Wi-Fi, to prefill the name (R-WF-3); null until known.
   String? get suggestedSsid => _suggestedSsid;
+
+  /// The password remembered for [ssid] (R-WF-5), to prefill the form; null if none.
+  String? rememberedPassword(String ssid) => _passwords.passwordFor(ssid);
+
+  /// Networks whose password the app remembers (R-WF-5).
+  List<String> get rememberedNetworks => _passwords.networks;
+
+  /// Forget the remembered password of [ssid] (R-WF-5).
+  void forgetPassword(String ssid) {
+    _passwords.forget(ssid);
+    notifyListeners();
+  }
+
+  /// R-WF-4/5: the QR on the display's setup screen was scanned ([raw] = its text). Not glimmer's → failed
+  /// with `notGlimmerQr`, nothing joined. The phone's Wi-Fi is the network to send; its password remembered →
+  /// sent at once, else [WifiStep.password] asks only the password ([WifiStep.form] when the phone's Wi-Fi is
+  /// unknown).
+  Future<void> scanned(String raw) async {
+    if (busy) return;
+    final ap = setupApFromQr(raw);
+    if (ap == null) {
+      _error = const AppError(AppErrorKind.notGlimmerQr);
+      _step = WifiStep.failed;
+      _say(WifiStatus.failed);
+      return;
+    }
+    _scannedAp = ap;
+    _error = null;
+    await _device.ensureWifiPermissions();
+    final phone = await _device.phoneSsid();
+    final network = phone == null || phone.startsWith(setupApPrefix) ? null : phone;
+    if (network == null) {
+      _step = WifiStep.form;
+      notifyListeners();
+      return;
+    }
+    _ssid = network;
+    _suggestedSsid = network;
+    final saved = _passwords.passwordFor(network);
+    if (saved != null) {
+      await send(network, saved, remembered: true);
+    } else {
+      _step = WifiStep.password;
+      notifyListeners();
+    }
+  }
 
   Future<void> prefill() async {
     await _device.ensureWifiPermissions();
@@ -66,7 +128,9 @@ class WifiSetupViewModel extends ChangeNotifier with SafeNotifier {
     notifyListeners();
   }
 
-  Future<void> send(String ssid, String password) async {
+  /// [remembered] = the password came from memory: if the display doesn't show up with it, it is forgotten
+  /// and the next try asks for it (R-WF-5).
+  Future<void> send(String ssid, String password, {bool remembered = false}) async {
     final name = ssid.trim();
     if (name.isEmpty || busy) return;
     _ssid = name;
@@ -86,7 +150,9 @@ class WifiSetupViewModel extends ChangeNotifier with SafeNotifier {
         // 2. Through the display's setup AP.
         _say(WifiStatus.joinAp);
         if (!await _device.ensureWifiPermissions()) throw const AppError(AppErrorKind.wifiPermission);
-        if (!await _device.joinSetupAp()) throw const AppError(AppErrorKind.setupAp);
+        if (!await _device.joinSetupAp(ssid: _scannedAp ?? DeviceRepository.setupApSsid)) {
+          throw const AppError(AppErrorKind.setupAp);
+        }
         viaAp = true;
         at = DeviceRepository.setupApUrl;
       }
@@ -101,8 +167,10 @@ class WifiSetupViewModel extends ChangeNotifier with SafeNotifier {
       // 3. Find it on the new network.
       _say(WifiStatus.wait);
       if (!await _device.rediscover(attempts: findAttempts, gap: findGap)) {
+        if (remembered) _passwords.forget(name);
         throw AppError(AppErrorKind.notOnNetwork, detail: name);
       }
+      _passwords.remember(name, password);
       _step = WifiStep.done;
       _say(WifiStatus.done);
     } catch (e) {

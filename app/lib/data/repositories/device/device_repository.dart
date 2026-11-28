@@ -123,7 +123,8 @@ abstract class DeviceRepository extends ChangeNotifier {
   Future<bool> ensureWifiPermissions();
   Future<String?> phoneSsid();
 
-  /// Join "glimmer-setup" for this app only and check the display answers there.
-  Future<bool> joinSetupAp({int attempts = 3});
+  /// Join the setup AP [ssid] ("glimmer-setup", or the name read from its QR, R-WF-4) for this app only and
+  /// check the display answers there.
+  Future<bool> joinSetupAp({String ssid = setupApSsid, int attempts = 3});
   Future<void> leaveSetupAp();
 }

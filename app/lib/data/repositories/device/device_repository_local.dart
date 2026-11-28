@@ -364,9 +364,9 @@ class DeviceRepositoryLocal extends DeviceRepository with _ControlCalls {
   Future<String?> phoneSsid() => _wifi.currentSsid();
 
   @override
-  Future<bool> joinSetupAp({int attempts = 3}) async {
+  Future<bool> joinSetupAp({String ssid = DeviceRepository.setupApSsid, int attempts = 3}) async {
     for (var i = 0; i < attempts; i++) {
-      if (await _wifi.joinOpen(DeviceRepository.setupApSsid)) {
+      if (await _wifi.joinOpen(ssid)) {
         for (var j = 0; j < 5; j++) {
           if (await _probe(DeviceRepository.setupApUrl) != null) return true;
           await _delay(const Duration(seconds: 2));

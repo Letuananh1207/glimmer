@@ -60,6 +60,8 @@ Các quy tắc dưới đây ghi lại hành vi app đang có lúc chuyển sang
 | R-WF-1 | Gửi Wi-Fi mới thẳng cho thiết bị chỉ khi đang kết nối, thiết bị không ở chế độ cài đặt và trả lời ngay lúc đó; còn lại vào Wi-Fi glimmer-setup (cần quyền vị trí) rồi gửi qua đó. | Thiết bị đã rời mạng → đi qua glimmer-setup | ok |
 | R-WF-2 | Lệnh có khởi động lại (lưu Wi-Fi, khôi phục cấu hình, khởi động lại) mà thiết bị không kịp trả lời vẫn tính là thành công; lỗi HTTP vẫn là lỗi. | Gửi Wi-Fi, mất kết nối → bước tiếp | ok |
 | R-WF-3 | Gửi xong: rời glimmer-setup, tìm lại thiết bị trên mạng mới; không thấy → "Chưa thấy thiết bị trên …". Tên Wi-Fi điền sẵn bằng mạng điện thoại đang dùng (trừ glimmer-setup). | Không thấy sau ~4 phút → lỗi | ok |
+| R-WF-4 | Quét mã QR trên màn cài đặt của thiết bị (chuẩn Wi-Fi `WIFI:…;S:glimmer-setup…;;`, không mật khẩu) → nhận tên AP từ mã rồi đi theo R-WF-1 qua AP đó; mã khác (Wi-Fi khác, có mật khẩu, không phải Wi-Fi) → báo "không phải mã glimmer", không làm gì. Tên Wi-Fi gửi đi là mạng điện thoại đang dùng (như R-WF-3). | Quét `WIFI:T:nopass;S:glimmer-setup;;` → vào glimmer-setup; quét mã quán cà phê → từ chối | sửa |
+| R-WF-5 | App nhớ mật khẩu Wi-Fi theo tên mạng, trong kho bảo mật của máy, chỉ khi thiết bị đã hiện lại trên mạng đó (gửi sai không nhớ). Quét QR mà mạng điện thoại đã có mật khẩu nhớ → gửi luôn, không hỏi; chưa có → chỉ hỏi mật khẩu. Mật khẩu nhớ mà gửi xong thiết bị không hiện lại → quên nó, lần sau hỏi lại. Gửi tay cũng nhớ; quên được mật khẩu đã nhớ. | Lần 2 quét ở nhà → gửi ngay không hỏi | sửa |
 
 ## 7. Skill (gói chức năng)
 

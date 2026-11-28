@@ -19,6 +19,11 @@ namespace Display {
     void splashStep(uint32_t step);                // boot box at step (= ms / 200); no-op off the boot screen
     void splashWait(uint32_t ms);                  // delay(ms) that keeps the boot box running
     void drawSetupMode(const char* ap, const char* ip);   // log-on screen: tile ap (split at '-') + ip
+    // Setup-AP QR (R-WF-4, `SetupQr`): black modules on a white tile with the
+    // 4-module quiet zone, top-left (x, y), [module] px per module — the tile
+    // is SetupQr::tileSide(module) px square. No framebuffer: one fillRect per
+    // run of dark modules. False (nothing drawn) if [ssid] does not fit one code.
+    bool drawSetupQr(int16_t x, int16_t y, uint8_t module, const char* ssid);
     void drawConnecting(const char* ssid, int attempt);   // welcome: painted once
     void drawError(const char* title, const char* msg);
     void drawOtaProgress(uint8_t pct);             // "đang cập nhật...": painted once

@@ -45,6 +45,7 @@ extension Labels on AppLocalizations {
         AppErrorKind.noDeviceAt => connectNoDeviceAt(e.detail),
         AppErrorKind.wifiPermission => devErrWifiPermission,
         AppErrorKind.setupAp => devErrSetupAp,
+        AppErrorKind.notGlimmerQr => devErrNotGlimmerQr,
         AppErrorKind.notOnNetwork => wifiNotFound(e.detail),
         AppErrorKind.noAnswerAfterFlash => devErrNoAnswerAfterFlash,
         AppErrorKind.configUnreadable => devErrConfigUnreadable,

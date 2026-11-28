@@ -111,7 +111,7 @@ tiếp từ nhiệm vụ chưa đánh dấu.
 | Tổng quan, mức dùng, bảng project, thẻ | `dashboard`, `usage_rules`, `board_rules`, `device_state`, `clawd` |
 | Cài đặt (độ sáng, ban đêm, agent…) | `settings`, `device_repository`                  |
 | Thiết bị, firmware, sao lưu/khôi phục | `device`, `release_repository`, `backup_repository`, `update_rules` |
-| Cài / đổi Wi-Fi, glimmer-setup   | `wifi_setup`, `wifi_service`, `device_repository`    |
+| Cài / đổi Wi-Fi, glimmer-setup, quét QR, mật khẩu Wi-Fi đã nhớ | `wifi_setup`, `wifi_service`, `wifi_secrets_service`, `wifi_password_repository`, `setup_qr_rules`, `device_repository`, firmware `src/data/qr_payload.h` |
 | Trạng thái chung của app (thiết bị, polling) | `device_repository`, `polling_lifecycle`  |
 | Màu, font, giao diện chung       | `themes`, `app_text`, `status_colors`, `labels`      |
 | Skill, gói chức năng (Agent, Nhạc…), skill đang dùng | `skills`, `skill_rules`, `switch_skill_use_case`, `skill_style`, `skill_tile`, `home_shell`, firmware `src/data/skill_core.h` |

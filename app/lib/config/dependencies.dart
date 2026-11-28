@@ -11,6 +11,8 @@ import '../data/repositories/release/release_repository.dart';
 import '../data/repositories/release/release_repository_local.dart';
 import '../data/repositories/skill/skill_repository.dart';
 import '../data/repositories/skill/skill_repository_local.dart';
+import '../data/repositories/wifi/wifi_password_repository.dart';
+import '../data/repositories/wifi/wifi_password_repository_local.dart';
 import '../data/services/device_api_service.dart';
 import '../data/services/discovery_service.dart';
 import '../data/services/file_service.dart';
@@ -18,6 +20,7 @@ import '../data/services/local_store_service.dart';
 import '../data/services/photo_picker_service.dart';
 import '../data/services/photo_store_service.dart';
 import '../data/services/releases_service.dart';
+import '../data/services/wifi_secrets_service.dart';
 import '../data/services/wifi_service.dart';
 import '../domain/use_cases/control_device_use_case.dart';
 import '../domain/use_cases/delete_photo_use_case.dart';
@@ -33,6 +36,7 @@ class Dependencies {
     required this.backups,
     required this.skills,
     required this.photos,
+    required this.wifiPasswords,
   });
 
   final DeviceRepository device;
@@ -40,6 +44,7 @@ class Dependencies {
   final BackupRepository backups;
   final SkillRepository skills;
   final PhotoRepository photos;
+  final WifiPasswordRepository wifiPasswords;
 
   static Future<Dependencies> create() async {
     final store = await LocalStoreService.open();
@@ -54,6 +59,7 @@ class Dependencies {
       backups: BackupRepositoryLocal(files: FileService()),
       skills: SkillRepositoryLocal(store: store),
       photos: PhotoRepositoryLocal(store: PhotoStoreService(), picker: PhotoPickerService()),
+      wifiPasswords: await WifiPasswordRepositoryLocal.load(WifiSecretsService()),
     );
   }
 
@@ -64,6 +70,7 @@ class Dependencies {
         ChangeNotifierProvider<SkillRepository>.value(value: skills),
         Provider<ToggleSkillUseCase>(create: (_) => ToggleSkillUseCase(skills: skills, device: device)),
         Provider<PhotoRepository>.value(value: photos),
+        ChangeNotifierProvider<WifiPasswordRepository>.value(value: wifiPasswords),
         Provider<LoadPhotosUseCase>(create: (_) => LoadPhotosUseCase(device: device, photos: photos)),
         Provider<SendPhotoUseCase>(create: (_) => SendPhotoUseCase(device: device, photos: photos)),
         Provider<ControlDeviceUseCase>(create: (_) => ControlDeviceUseCase(device: device)),

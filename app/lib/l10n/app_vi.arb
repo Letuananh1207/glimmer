@@ -759,6 +759,10 @@
   "@devErrSetupAp": {
     "description": "Lỗi: không vào được AP cài đặt"
   },
+  "devErrNotGlimmerQr": "Đây không phải mã của glimmer. Quét mã trên màn cài đặt Wi-Fi của thiết bị.",
+  "@devErrNotGlimmerQr": {
+    "description": "Lỗi: mã QR vừa quét không phải mã trên màn cài đặt của thiết bị (R-WF-4)"
+  },
   "devErrNoAnswerAfterFlash": "thiết bị không trả lời sau khi nạp firmware",
   "@devErrNoAnswerAfterFlash": {
     "description": "Lỗi: cập nhật đầy đủ"

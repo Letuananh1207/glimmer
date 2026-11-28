@@ -13,6 +13,7 @@ import 'package:glimmer_app/ui/wifi_setup/view_models/wifi_setup_view_model.dart
 import 'package:glimmer_app/utils/result.dart';
 
 import 'package:glimmer_app/data/repositories/skill/skill_repository_local.dart';
+import 'package:glimmer_app/data/repositories/wifi/wifi_password_repository_local.dart';
 import 'package:glimmer_app/domain/use_cases/toggle_skill_use_case.dart';
 
 import '../../testing/fakes/fake_repositories.dart';
@@ -48,6 +49,9 @@ Future<DashboardViewModel> _dashboard(DeviceRig rig) async => DashboardViewModel
       device: rig.repo,
       toggleSkill: ToggleSkillUseCase(skills: SkillRepositoryLocal(store: await fakeStore()), device: rig.repo),
     );
+
+WifiPasswordRepositoryLocal _pw([Map<String, String> saved = const {}]) =>
+    WifiPasswordRepositoryLocal(FakeWifiSecretsService(saved), saved);
 
 void main() {
   late DeviceRig rig;
@@ -160,7 +164,7 @@ void main() {
   group('Wi-Fi setup', () {
     test('R-WF-1 reachable device → sent directly, no setup AP', () async {
       await rig.connect(_url);
-      final vm = WifiSetupViewModel(device: rig.repo, findAttempts: 2);
+      final vm = WifiSetupViewModel(device: rig.repo, passwords: _pw(), findAttempts: 2);
       await vm.send(' Nha ', 'pw');
       expect(rig.wifi.joined, isEmpty);
       expect(rig.posts('/api/settings').single.url, _url);
@@ -171,7 +175,7 @@ void main() {
 
     test('R-WF-1 device in setup mode → through glimmer-setup, then leaves it', () async {
       await rig.connect(DeviceRepository.setupApUrl, _state(wifi: 'ap'));
-      final vm = WifiSetupViewModel(device: rig.repo, findAttempts: 2);
+      final vm = WifiSetupViewModel(device: rig.repo, passwords: _pw(), findAttempts: 2);
       await vm.send('Nha', '');
       expect(rig.wifi.joined, [DeviceRepository.setupApSsid]);
       expect(rig.posts('/api/settings').single.url, DeviceRepository.setupApUrl);
@@ -181,7 +185,7 @@ void main() {
 
     test('R-WF-1 no permission → failed with wifiPermission', () async {
       rig.wifi.permissions = false;
-      final vm = WifiSetupViewModel(device: rig.repo);
+      final vm = WifiSetupViewModel(device: rig.repo, passwords: _pw());
       await vm.send('Nha', '');
       expect((vm.step, vm.error!.kind), (WifiStep.failed, AppErrorKind.wifiPermission));
       vm.dispose();
@@ -189,7 +193,7 @@ void main() {
 
     test('R-WF-1 not answering now → through glimmer-setup; no AP there → setupAp', () async {
       await rig.connect(_url);
-      final vm = WifiSetupViewModel(device: rig.repo, findAttempts: 2);
+      final vm = WifiSetupViewModel(device: rig.repo, passwords: _pw(), findAttempts: 2);
       rig.api.on(_url, 'POST', '/api/settings', <String, dynamic>{});
       // After the save the device leaves this network.
       rig.api.answers.remove('$_url GET /api/state');
@@ -204,7 +208,7 @@ void main() {
     test('R-WF-3 sent, but the display never shows up → notOnNetwork', () async {
       await rig.connect(_url);
       rig.api.on(_url, 'POST', '/api/settings', <String, dynamic>{});
-      final vm = WifiSetupViewModel(device: rig.repo, findAttempts: 2);
+      final vm = WifiSetupViewModel(device: rig.repo, passwords: _pw(), findAttempts: 2);
       rig.api.onCall = (c) {
         if (c.path == '/api/settings') rig.api.gone(_url);
       };
@@ -215,16 +219,84 @@ void main() {
 
     test('R-WF-3 prefills the phone SSID, but not glimmer-setup', () async {
       rig.wifi.ssid = 'Nha';
-      final vm = WifiSetupViewModel(device: rig.repo);
+      final vm = WifiSetupViewModel(device: rig.repo, passwords: _pw());
       await vm.prefill();
       expect(vm.suggestedSsid, 'Nha');
       rig.wifi.ssid = DeviceRepository.setupApSsid;
-      final vm2 = WifiSetupViewModel(device: rig.repo);
+      final vm2 = WifiSetupViewModel(device: rig.repo, passwords: _pw());
       await vm2.prefill();
       expect(vm2.suggestedSsid, isNull);
       vm.dispose();
       vm2.dispose();
     });
+
+    test("R-WF-4 a QR that is not glimmer's → notGlimmerQr, nothing joined or sent", () async {
+      await rig.connect(_url);
+      final vm = WifiSetupViewModel(device: rig.repo, passwords: _pw({'Nha': 'pw'}));
+      rig.wifi.ssid = 'Nha';
+      await vm.scanned('WIFI:T:WPA;S:CafeABC;P:123;;');
+      expect((vm.step, vm.error!.kind), (WifiStep.failed, AppErrorKind.notGlimmerQr));
+      expect(rig.wifi.joined, isEmpty);
+      expect(rig.posts('/api/settings'), isEmpty);
+      vm.dispose();
+    });
+
+    test('R-WF-4 scanned, no password remembered → asks only the password, then joins the AP from the QR', () async {
+      await rig.connect(DeviceRepository.setupApUrl, _state(wifi: 'ap'));
+      rig.wifi.ssid = 'Nha';
+      final vm = WifiSetupViewModel(device: rig.repo, passwords: _pw(), findAttempts: 1);
+      await vm.scanned('WIFI:T:nopass;S:glimmer-setup-2;;');
+      expect((vm.step, vm.ssid), (WifiStep.password, 'Nha'));
+      expect(rig.wifi.joined, isEmpty);
+      await vm.send(vm.ssid, 'pw');
+      expect(rig.wifi.joined, ['glimmer-setup-2']);
+      expect(rig.posts('/api/settings').single.body, {'wifiSSID': 'Nha', 'wifiPass': 'pw', '_restart': true});
+      vm.dispose();
+    });
+
+    test("R-WF-4 scanned while the phone's Wi-Fi is unknown → the full form", () async {
+      rig.wifi.ssid = null;
+      final vm = WifiSetupViewModel(device: rig.repo, passwords: _pw({'Nha': 'pw'}));
+      await vm.scanned('WIFI:T:nopass;S:glimmer-setup;;');
+      expect((vm.step, vm.error), (WifiStep.form, null));
+      vm.dispose();
+    });
+
+    test('R-WF-5 scanned, password remembered → sent at once without asking', () async {
+      await rig.connect(_url);
+      rig.wifi.ssid = 'Nha';
+      final vm = WifiSetupViewModel(device: rig.repo, passwords: _pw({'Nha': 'pw'}), findAttempts: 2);
+      await vm.scanned('WIFI:T:nopass;S:glimmer-setup;;');
+      expect(rig.posts('/api/settings').single.body, {'wifiSSID': 'Nha', 'wifiPass': 'pw', '_restart': true});
+      expect(vm.step, WifiStep.done);
+      vm.dispose();
+    });
+
+    test('R-WF-5 remembered only once the display shows up on the network', () async {
+      await rig.connect(_url);
+      final secrets = FakeWifiSecretsService();
+      final pw = WifiPasswordRepositoryLocal(secrets, {});
+      final vm = WifiSetupViewModel(device: rig.repo, passwords: pw, findAttempts: 2);
+      await vm.send('Nha', 'pw');
+      expect((vm.rememberedPassword('Nha'), secrets.stored['Nha']), ('pw', 'pw'));
+      vm.dispose();
+    });
+
+    for (final remembered in [false, true]) {
+      test('R-WF-5 display never shows up → ${remembered ? 'the remembered password is forgotten' : 'not remembered'}',
+          () async {
+        await rig.connect(_url);
+        rig.api.on(_url, 'POST', '/api/settings', <String, dynamic>{});
+        rig.api.onCall = (c) {
+          if (c.path == '/api/settings') rig.api.gone(_url);
+        };
+        final vm = WifiSetupViewModel(
+            device: rig.repo, passwords: _pw(remembered ? {'Nha-5G': 'old'} : {}), findAttempts: 2);
+        await vm.send('Nha-5G', remembered ? 'old' : 'sai', remembered: remembered);
+        expect((vm.error!.kind, vm.rememberedPassword('Nha-5G')), (AppErrorKind.notOnNetwork, null));
+        vm.dispose();
+      });
+    }
   });
 
   group('Device', () {

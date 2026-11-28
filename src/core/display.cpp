@@ -3,6 +3,8 @@
 #include "theme.h"
 #include "utf8.h"
 #include "xp_core.h"
+#include "qr_payload.h"
+#include <qrcode.h>
 #include <LittleFS.h>
 TFT_eSPI tft = TFT_eSPI();
 
@@ -447,6 +449,28 @@ static void italic(const uint8_t* bits, int w, int h, int x, int y) {
 
 // Log-on screen (XP-SetupMode): flag + "Window xp" + hint on the left, the
 // selected "user" tile (= the setup network) on the right, power button.
+bool Display::drawSetupQr(int16_t x, int16_t y, uint8_t module, const char* ssid) {
+    char text[SetupQr::kMaxBytes + 1];
+    if (!SetupQr::payload(text, sizeof(text), ssid)) return false;
+    uint8_t buf[106];                               // qrcode_getBufferSize(3) = 106
+    QRCode q;
+    if (qrcode_initText(&q, buf, SetupQr::kVersion, ECC_MEDIUM, text) != 0) return false;
+    const int16_t side = SetupQr::tileSide(module);
+    const int16_t ox = x + SetupQr::kQuiet * module, oy = y + SetupQr::kQuiet * module;
+    tft.fillRect(x, y, side, side, TFT_WHITE);
+    for (uint8_t my = 0; my < q.size; my++) {
+        uint8_t mx = 0;
+        while (mx < q.size) {
+            if (!qrcode_getModule(&q, mx, my)) { mx++; continue; }
+            uint8_t run = mx;
+            while (run < q.size && qrcode_getModule(&q, run, my)) run++;
+            tft.fillRect(ox + mx * module, oy + my * module, (run - mx) * module, module, TFT_BLACK);
+            mx = run;
+        }
+    }
+    return true;
+}
+
 void Display::drawSetupMode(const char* ap, const char* ip) {
     using namespace Theme::XP;
     resetSystemScreens();

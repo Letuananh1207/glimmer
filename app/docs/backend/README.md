@@ -86,3 +86,15 @@ trong ngày; < 0 hoặc thiếu = null, firmware cũ); `weatherPlace` trong `/ap
 khoá này nghĩa là firmware cửa sổ XP thật (`xpReal`). Model ô màn: `MirrorWeather.code` / `uv` / `place`,
 `MirrorDay.code`, `MirrorClock.place` (`lib/domain/models/mirror_ambient.dart`); chạm mới `TouchKind.trayClock` /
 `balloonBody` / `tab` (`lib/domain/models/touch.dart`). Không di trú, backend (nếu có) không cần đồng bộ.
+
+## Mật khẩu Wi-Fi đã nhớ (2026-11-28, R-WF-5)
+
+Lưu trong **kho bảo mật của máy** (`flutter_secure_storage` → Android Keystore; `WifiSecretsService`,
+`WifiPasswordRepositoryLocal`), không phải `shared_preferences`. Mỗi mạng một mục:
+
+| Khoá | Kiểu | Ý nghĩa |
+| --- | --- | --- |
+| `wifi_pw:<ssid>` | string | Mật khẩu của mạng `<ssid>` (tên đã cắt khoảng trắng hai đầu; rỗng = mạng mở). Chỉ ghi khi thiết bị đã hiện lại trên mạng đó; quên khi gửi bằng mật khẩu nhớ mà thiết bị không hiện lại. **Bí mật** — backend (nếu có) **không** đồng bộ. |
+
+`DeviceRepository.joinSetupAp` nhận thêm `ssid` (tên AP đọc từ mã QR, R-WF-4; mặc định `glimmer-setup`);
+`AppErrorKind.notGlimmerQr` = mã vừa quét không phải mã trên màn cài đặt. Không có dữ liệu cũ — không di trú.

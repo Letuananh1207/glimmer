@@ -24,6 +24,8 @@
 static inline struct tm* localtime_r(const time_t* t, struct tm* out) { *out = *localtime(t); return out; }
 #endif
 #include "clockfmt.h"
+#include "qr_payload.h"
+#include <qrcode.h>
 
 void setUp() {}
 void tearDown() {}
@@ -1317,8 +1319,56 @@ void test_clawd_work_timing() {
     TEST_ASSERT_EQUAL_INT(23, ClawdWorkBits::kCols);
 }
 
+// ── Setup-AP QR (R-WF-4) ─────────────────────────────────────────────────────
+
+static void test_setup_qr_payload_is_open_wifi() {
+    char b[64];
+    TEST_ASSERT_TRUE(SetupQr::payload(b, sizeof(b), "glimmer-setup"));
+    TEST_ASSERT_EQUAL_STRING("WIFI:T:nopass;S:glimmer-setup;;", b);
+    TEST_ASSERT_TRUE(strlen(b) <= SetupQr::kMaxBytes);
+}
+
+static void test_setup_qr_payload_escapes_and_refuses_overflow() {
+    char b[64];
+    TEST_ASSERT_TRUE(SetupQr::payload(b, sizeof(b), "a;b:c"));
+    TEST_ASSERT_EQUAL_STRING("WIFI:T:nopass;S:a\\;b\\:c;;", b);
+    TEST_ASSERT_FALSE(SetupQr::payload(b, sizeof(b), ""));
+    TEST_ASSERT_EQUAL_STRING("", b);
+    TEST_ASSERT_FALSE(SetupQr::payload(b, 20, "glimmer-setup"));      // buffer too small
+    TEST_ASSERT_EQUAL_STRING("", b);
+    TEST_ASSERT_FALSE(SetupQr::payload(b, sizeof(b), "a-very-long-network-name-xx")); // > one v3 code
+}
+
+static bool finderAt(QRCode& q, int x0, int y0) {
+    for (int y = 0; y < 7; y++)
+        for (int x = 0; x < 7; x++) {
+            bool ring = x == 0 || y == 0 || x == 6 || y == 6;
+            bool core = x >= 2 && x <= 4 && y >= 2 && y <= 4;
+            if (qrcode_getModule(&q, x0 + x, y0 + y) != (ring || core)) return false;
+        }
+    return true;
+}
+
+static void test_setup_qr_encodes_v3_with_finders() {
+    char b[64];
+    SetupQr::payload(b, sizeof(b), "glimmer-setup");
+    uint8_t buf[128];
+    TEST_ASSERT_EQUAL_UINT16(106, qrcode_getBufferSize(SetupQr::kVersion));   // display.cpp buf[106]
+    QRCode q;
+    TEST_ASSERT_EQUAL_INT(0, qrcode_initText(&q, buf, SetupQr::kVersion, ECC_MEDIUM, b));
+    TEST_ASSERT_EQUAL_UINT8(SetupQr::kModules, q.size);
+    const int e = q.size - 7;
+    TEST_ASSERT_TRUE(finderAt(q, 0, 0));
+    TEST_ASSERT_TRUE(finderAt(q, e, 0));
+    TEST_ASSERT_TRUE(finderAt(q, 0, e));
+    TEST_ASSERT_EQUAL_INT(148, SetupQr::tileSide(4));
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
+    RUN_TEST(test_setup_qr_payload_is_open_wifi);
+    RUN_TEST(test_setup_qr_payload_escapes_and_refuses_overflow);
+    RUN_TEST(test_setup_qr_encodes_v3_with_finders);
     RUN_TEST(test_claude_limits_drive_windows_and_ignore_codenames);
     RUN_TEST(test_claude_flat_fallback_uses_allowlist_only);
     RUN_TEST(test_claude_unrecognised_shape_is_rejected);

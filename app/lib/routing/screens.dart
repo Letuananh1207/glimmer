@@ -6,6 +6,7 @@ import '../data/repositories/backup/backup_repository.dart';
 import '../data/repositories/device/device_repository.dart';
 import '../data/repositories/photo/photo_repository.dart';
 import '../data/repositories/release/release_repository.dart';
+import '../data/repositories/wifi/wifi_password_repository.dart';
 import '../domain/use_cases/control_device_use_case.dart';
 import '../domain/use_cases/delete_photo_use_case.dart';
 import '../domain/use_cases/load_photos_use_case.dart';
@@ -39,7 +40,7 @@ Widget connectScreen({required VoidCallback onNewDevice}) => ViewModelHost(
     );
 
 Widget wifiSetupScreen() => ViewModelHost(
-      create: (c) => WifiSetupViewModel(device: c.read<DeviceRepository>()),
+      create: (c) => WifiSetupViewModel(device: c.read<DeviceRepository>(), passwords: c.read<WifiPasswordRepository>()),
       builder: (_, vm) => WifiSetupScreen(viewModel: vm),
     );
 

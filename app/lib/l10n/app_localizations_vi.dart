@@ -553,6 +553,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không vào được glimmer-setup. Thiết bị có đang hiện màn cài đặt Wi-Fi không?';
 
   @override
+  String get devErrNotGlimmerQr =>
+      'Đây không phải mã của glimmer. Quét mã trên màn cài đặt Wi-Fi của thiết bị.';
+
+  @override
   String get devErrNoAnswerAfterFlash =>
       'thiết bị không trả lời sau khi nạp firmware';
 

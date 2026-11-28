@@ -1054,6 +1054,12 @@ abstract class AppLocalizations {
   /// **'Không vào được glimmer-setup. Thiết bị có đang hiện màn cài đặt Wi-Fi không?'**
   String get devErrSetupAp;
 
+  /// Lỗi: mã QR vừa quét không phải mã trên màn cài đặt của thiết bị (R-WF-4)
+  ///
+  /// In vi, this message translates to:
+  /// **'Đây không phải mã của glimmer. Quét mã trên màn cài đặt Wi-Fi của thiết bị.'**
+  String get devErrNotGlimmerQr;
+
   /// Lỗi: cập nhật đầy đủ
   ///
   /// In vi, this message translates to:

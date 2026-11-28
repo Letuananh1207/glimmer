@@ -25,6 +25,9 @@ https://claude.ai/artifact/WzLqGhKvD1MYxqaiRkzq1r, exported to `design/` by a de
   (LittleFS image, `data/` → `/`), `pio test -e native` (host tests).
   Version: `-D FW_VERSION` in `platformio.ini`.
 - **mDNS** `glimmer.local`; setup AP `glimmer-setup` (open) at `192.168.4.1`.
+  The log-on screen's QR (`Display::drawSetupQr`, `qr_payload.h`, R-WF-4) = `ricmoo/QRCode` built with
+  `-D LOCK_VERSION=3` (else ~560 B of version tables land in RAM); native tests need `lib_compat_mode = off` +
+  `tools/pio_native_cflags.py` (host gcc defaults to C23, which breaks its `typedef bool`).
 - **LittleFS files**: `/config.json` (settings), `/usage.bin` (history ring),
   `/weather.json` (last-good weather), `/photos/p<N>.jpg` (skill `photo`),
   `/wallpaper.jpg` (desktop wallpaper), `/fonts/*.vlw`, `/web/*`. A

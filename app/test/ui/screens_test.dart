@@ -8,6 +8,8 @@ import 'package:glimmer_app/data/repositories/photo/photo_repository_local.dart'
 import 'package:glimmer_app/data/repositories/release/release_repository.dart';
 import 'package:glimmer_app/data/repositories/skill/skill_repository.dart';
 import 'package:glimmer_app/data/repositories/skill/skill_repository_local.dart';
+import 'package:glimmer_app/data/repositories/wifi/wifi_password_repository.dart';
+import 'package:glimmer_app/data/repositories/wifi/wifi_password_repository_local.dart';
 import 'package:glimmer_app/domain/use_cases/control_device_use_case.dart';
 import 'package:glimmer_app/domain/use_cases/delete_photo_use_case.dart';
 import 'package:glimmer_app/domain/use_cases/load_photos_use_case.dart';
@@ -312,7 +314,8 @@ void main() {
 
   group('Cài Wi-Fi', () {
     Future<WifiSetupViewModel> pump(WidgetTester t) async {
-      final vm = WifiSetupViewModel(device: rig.repo, findAttempts: 1);
+      final vm = WifiSetupViewModel(
+          device: rig.repo, passwords: WifiPasswordRepositoryLocal(FakeWifiSecretsService(), {}), findAttempts: 1);
       await t.pumpWidget(_app(rig, WifiSetupScreen(viewModel: vm)));
       await _frames(t);
       return vm;
@@ -366,6 +369,8 @@ void main() {
           Provider<ReleaseRepository>.value(value: FakeReleaseRepository()),
           Provider<BackupRepository>.value(value: FakeBackupRepository()),
           ChangeNotifierProvider<SkillRepository>.value(value: skills),
+          ChangeNotifierProvider<WifiPasswordRepository>.value(
+              value: WifiPasswordRepositoryLocal(FakeWifiSecretsService(), {})),
           Provider<ToggleSkillUseCase>.value(value: ToggleSkillUseCase(skills: skills, device: rig.repo)),
           Provider<ControlDeviceUseCase>.value(value: ControlDeviceUseCase(device: rig.repo)),
           ...photoProviders(rig),

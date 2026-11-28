@@ -36,6 +36,9 @@ enum AppErrorKind {
   /// Could not join or reach the setup AP "glimmer-setup".
   setupAp,
 
+  /// The scanned QR is not the one on the display's setup screen (R-WF-4).
+  notGlimmerQr,
+
   /// The device did not show up on Wi-Fi [AppError.detail] after the change.
   notOnNetwork,
 
