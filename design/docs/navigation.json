@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-28.12",
+  "version": "2026-11-28.13",
   "start": "Connect",
   "rule": "Chưa kết nối được thiết bị → Connect. Kết nối được → khung 4 tab: tab 1 = Control (điều khiển: ô màn thiết bị + nút), tab 2 = Skills, tab 3 = Settings, tab 4 = Device. Dashboard (Số liệu) là màn phụ đẩy từ Control, mở đúng tab của kênh đang hiện. Settings và Device dùng chung; Connect, WifiSetup, PhotoCrop ngoài khung tab.",
   "screens": {
@@ -166,7 +166,11 @@
         "lastOne",
         "legacy",
         "photoHint",
-        "photoFw"
+        "photoFw",
+        "funOn",
+        "funSending",
+        "funFw",
+        "funLastOne"
       ],
       "rules": [
         "R-SK-1",
@@ -356,7 +360,9 @@
         "id": "fun",
         "name": "skillFunName",
         "accent": "skillFun",
-        "pack": false
+        "pack": true,
+        "icon": "icons/dock-fun.svg",
+        "program": "Dò mìn"
       }
     ],
     "enabled": "Danh sách; ít nhất một; mặc định agent + weather + clock",

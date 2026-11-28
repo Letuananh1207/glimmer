@@ -215,7 +215,16 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
 - Các trạng thái khác: dòng trạng thái `heading` căn giữa (ink / mint / coral) → 10 → chi tiết `body` → 24 → vòng xoay
   (working) hoặc nút `commonRetry` (failed) / `wifiDoneButton` (done). Đang làm thì không quay lại được.
 
-## 6. Skill — `SkillsScreen` (Skills.png, SkillsSwitching.png, SkillsError.png, SkillsLegacy.png, SkillsLastOne.png, SkillsPhotoHint.png, SkillsPhotoFirmware.png)
+## 6. Skill — `SkillsScreen` (Skills.png, SkillsSwitching.png, SkillsError.png, SkillsLegacy.png, SkillsLastOne.png, SkillsPhotoHint.png, SkillsPhotoFirmware.png, SkillsFunOn.png, SkillsFunSending.png, SkillsFunFw.png, SkillsFunLastOne.png)
+
+> **2026-11-28.13 — Hàng skill Giải trí (Dò mìn)** (phiếu `app/docs/phieu_thiet_ke/2026-11-27-skill-giai-tri.md`; R-SK-1, R-SK-2, R-SK-4, R-DK-23): Giải trí thành `SkillRow` thật,
+> đứng cuối (thứ tự dock: Agent, Ảnh, Thời tiết, Đồng hồ, Giải trí), **mặc định tắt**. Icon `icons/dock-fun.svg` (quả mìn pixel
+> 15×15, ×1.5 = 22,5) màu `skillFun` khi bật / muted khi tắt; nền ô `skillFunTint` / `panel2`. Mô tả `skillFunDesc` (đổi chữ).
+> Có trong mọi trạng thái trừ `legacy`. Chip "Sắp có" bỏ Giải trí (còn Tin nhắn, Nhạc, Mạng xã hội). Khung +72: 972 (lỗi 1062).
+> Prop `state` thêm `funOn`, `funSending` (vòng xoay 24 thay công tắc + `skillsSending`), `funFw` (thiết bị không báo `fun` trong
+> `skills`: ô icon muted, `skillsNeedFirmware` amber, nút viền `skillsUpdateFirmware` → tab Thiết bị — như `photoFw`),
+> `funLastOne` (Giải trí là skill duy nhất bật: công tắc khoá mờ 38 %, mô tả `skillsLastOne` amber). Mọi ảnh `Skills*.png` chụp lại.
+> Màu `skillFun` (amber) trùng Đồng hồ — giữ theo token có sẵn (người dùng chốt 2026-11-28.13).
 
 > **2026-11-26.5:** thanh dưới tab 1 đổi thành "Điều khiển" (`navControl`, `icons/nav-control.svg`, huy hiệu agent chờ giữ nguyên); ảnh chụp lại.
 

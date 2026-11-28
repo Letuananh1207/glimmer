@@ -727,9 +727,9 @@
   "@skillFunName": {
     "description": "Tên skill (sắp có)"
   },
-  "skillFunDesc": "Nội dung vui cho màn hình.",
+  "skillFunDesc": "Dò mìn, chơi bằng app",
   "@skillFunDesc": {
-    "description": "Không dùng từ 2026-11-25.3 — Mô tả ô skill"
+    "description": "Mô tả hàng Giải trí ở màn Skill (đổi 2026-11-28.13)"
   },
   "skillsTitle": "Skill",
   "@skillsTitle": {

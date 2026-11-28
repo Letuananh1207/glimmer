@@ -5,6 +5,22 @@ widget và việc cần làm — không ghi đường dẫn file hay cách code.
 
 ---
 
+## 2026-11-28.13 — Skill Giải trí (Dò mìn) bật / tắt được trên màn Skill
+
+- **Skill · `SkillsScreen`** (`source/Skills.dc.html`, `screen_specs.md` §6; ảnh `Skills*.png`, 4 ảnh mới `SkillsFun*.png`):
+  - Hàng `SkillRow` Giải trí cuối danh sách, mặc định tắt, icon quả mìn pixel `icons/dock-fun.svg` (màu `skillFun` khi bật),
+    mô tả "Dò mìn, chơi bằng app". Bỏ chip "Giải trí" khỏi "Sắp có".
+  - Trạng thái: tắt, bật, đang gửi, cần firmware mới (không có `fun` trong `skills`), skill cuối còn bật (công tắc khoá).
+  - Hiện app: hàng dùng icon tay cầm Material của chip cũ.
+- **Chuỗi**: `skillFunDesc` đổi chữ; còn lại dùng khoá có sẵn (`skillsSending`, `skillsNeedFirmware`, `skillsUpdateFirmware`,
+  `skillsLastOne`). Token không đổi (`skillFun` = amber, trùng Đồng hồ — giữ).
+- Phiếu: `app/docs/phieu_thiet_ke/2026-11-27-skill-giai-tri.md`
+- Không cần firmware mới: `skills` có `fun` khi firmware có Dò mìn (P-2026-11-27.25).
+
+**Việc cần làm trong code:**
+- `SkillRow` Giải trí: icon `dock-fun.svg` (thay icon chip `videogame_asset`), mô tả mới; bật / tắt / đang gửi / khoá khi là skill
+  cuối như các hàng khác; thiết bị không báo `fun` → kiểu "Cần firmware mới" + nút Cập nhật.
+
 ## 2026-11-28.12 — Quét mã QR trên màn thiết bị để cài Wi-Fi
 
 - **Quét mã · `WifiScanScreen`** (màn mới; `source/WifiScan.dc.html`, `screen_specs.md` §10; ảnh `WifiScan*.png`, 4 trạng thái):
