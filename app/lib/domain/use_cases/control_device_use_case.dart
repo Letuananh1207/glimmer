@@ -3,6 +3,7 @@ import '../../utils/result.dart';
 import '../models/app_error.dart';
 import '../models/clock_view.dart';
 import '../models/control.dart';
+import '../models/device_state.dart';
 import '../models/cursor.dart';
 import '../models/mines_game.dart';
 import '../models/touch.dart';
@@ -93,6 +94,32 @@ class ControlDeviceUseCase {
     if (!caps.mines) return const Result.ok(null);
     return _device.setMines(minesBody(g, now));
   }
+
+  /// R-DK-24…29: the XP programs this firmware draws.
+  XpPrograms get xp => _device.state?.xpPrograms ?? const XpPrograms();
+
+  /// R-DK-24, 26, 27, 28: the view of XP program [program] (`taskmgr`, `display`, `calc`, `explorer`) to draw.
+  /// Nothing on firmware without it.
+  Future<Result<void>> programView(String program, Map<String, Object?> body) async {
+    final has = switch (program) {
+      'taskmgr' => xp.taskMgr,
+      'display' => xp.display,
+      'calc' => xp.calc,
+      'explorer' => xp.explorer,
+      _ => false,
+    };
+    if (!has) return const Result.ok(null);
+    return _device.setProgramView(program, body);
+  }
+
+  /// R-DK-25: the Alt+Tab box with tile [sel] chosen; null closes it.
+  Future<Result<void>> altTab(int? sel) async {
+    if (!xp.altTab) return const Result.ok(null);
+    return _device.setMenu(sel == null ? const {'kind': 'none'} : {'kind': 'alttab', 'sel': sel});
+  }
+
+  /// R-DK-26: Thuộc tính màn hình's OK / Áp dụng — the pending values saved as the device's settings.
+  Future<Result<ControlOutcome>> saveSettings(Map<String, dynamic> values) => _setting(values);
 
   /// R-DK-20: the power button. Refused without the mouse firmware (R-DK-21).
   Future<Result<PowerState>> power(bool on) async {

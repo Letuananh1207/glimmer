@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import '../../../data/repositories/device/device_repository.dart';
 import '../../../domain/models/app_error.dart';
 import '../../../domain/models/attention_card.dart';
+import '../../../domain/models/calc_state.dart';
 import '../../../domain/models/clock_view.dart';
 import '../../../domain/models/control.dart';
 import '../../../domain/models/cursor.dart';
@@ -14,7 +15,9 @@ import '../../../domain/models/device_state.dart';
 import '../../../domain/models/mirror_frame.dart';
 import '../../../domain/models/touch.dart';
 import '../../../domain/models/windows.dart';
+import '../../../domain/models/xp_views.dart';
 import '../../../domain/rules/board_rules.dart';
+import '../../../domain/rules/calc_rules.dart';
 import '../../../domain/rules/clock_rules.dart';
 import '../../../domain/rules/control_rules.dart' as rules;
 import '../../../domain/rules/cursor_rules.dart';
@@ -23,11 +26,13 @@ import '../../../domain/rules/mines_rules.dart';
 import '../../../domain/rules/start_rules.dart';
 import '../../../domain/rules/mirror_rules.dart';
 import '../../../domain/rules/touch_rules.dart';
+import '../../../domain/rules/xp_program_rules.dart';
 import '../../../domain/use_cases/control_device_use_case.dart';
 import '../../../utils/result.dart';
 import '../../../utils/safe_notifier.dart';
 
 part 'control_pointer.dart';
+part 'control_programs.dart';
 
 /// Whole-screen situation of the remote (screen_specs §8 `setup` / `offline`).
 enum ControlMode { normal, setup, offline }
@@ -71,6 +76,9 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
 
   /// R-DK-23: the Dò mìn game the app keeps (the device draws it).
   MinesGame _minesGame = MinesGame.fresh;
+
+  /// R-DK-24…29: the XP programs' views the app keeps (control_programs.dart).
+  final _p = _XpPrograms();
 
   /// How long the "not done" snackbar stays.
   final Duration failureFor;
@@ -254,11 +262,13 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
   /// R-DK-7: the device shows a program the app did not open → it is on top now; the desktop → the top one went down.
   /// Cards, the night face and setup leave the windows alone. R-DK-9: windows of programs no longer installed go.
   void _follow(String active) {
-    final installed = rules.programSet(_device.state?.skillsOn ?? const [], _settings);
-    var w = _windows.only(installed.contains);
+    final skillsOn = _device.state?.skillsOn ?? const <String>[];
+    final installed = rules.programSet(skillsOn, _settings);
+    bool kept(String p) => installed.contains(p) || rules.keepsWindow(p, skillsOn);
+    var w = _windows.only(kept);
     final win = _windowOf(active);
     if (win == 'Weather' && _real) _weatherTab = active;
-    if (rules.isProgram(active) && installed.contains(win) && w.top != win) {
+    if (rules.isProgram(active) && kept(win) && w.top != win) {
       w = w.opened(win);
     } else if (active == 'Home' && w.top != null) {
       w = w.minimize(w.top!);
@@ -391,6 +401,7 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
         return TouchTarget.none;
       }
     }
+    if (touchable && _programTap(f.channel, x, y)) return TouchTarget.none; // R-DK-24…28
     final t = touchTargetAt(x, y, f);
     if (!touchable) return t.kind == TouchKind.start ? t : TouchTarget.none;
     switch (t.kind) {
@@ -412,6 +423,8 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
         unawaited(openProgram('Weather'));
       case TouchKind.tab:
         unawaited(weatherTab(t.program!));
+      case TouchKind.trash:
+        if (_control.xp.explorer) unawaited(openExplorer(ExplorerPlace.trash)); // R-DK-29
       case TouchKind.none when f.channel == 'Home' && _windows.sel != null:
         _windows = _windows.select(null); // a tap on an empty spot drops the selection (XP)
         _pushWindows();
@@ -484,7 +497,8 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
       case MenuItem.refresh:
         unawaited(closeMenu()); // the device repaints the desktop when the menu closes
       case MenuItem.properties:
-        unawaited(openProgram('Info'));
+        // R-DK-29: the desktop's Thuộc tính = Display Properties (XP); older firmware: System Properties.
+        unawaited(openProgram(_control.xp.display ? displayProgram : 'Info'));
       case MenuItem.restore when p != null:
         unawaited(openProgram(p));
       case MenuItem.minimize when p != null:
@@ -515,6 +529,7 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
     if (win == 'Clock' && channel != 'Clock') _clockView = ClockView.today; // XP's dialog opens on today
     final show = win == 'Weather' && _real && program == 'Weather' ? _weatherTab : program;
     if (win == 'Mines') unawaited(_sendMines()); // the device draws the game the app keeps (R-DK-23)
+    _programOpening(win); // R-DK-24…28: so do the XP programs
     final before = _windows;
     _windows = _windows.opened(win);
     _pendingChannel = show;

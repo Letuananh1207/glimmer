@@ -94,11 +94,11 @@ TouchTarget touchTargetAt(double x, double y, MirrorFrame frame) {
     }
   }
 
-  // Desktop icons (the trash opens nothing).
+  // Desktop icons (R-DK-29: the Recycle Bin opens Explorer › Thùng rác).
   if (ch == 'Home') {
     for (final ic in frame.agents.desktop.icons) {
       if ((x - ic.cx).abs() <= _iconHalfW && y >= ic.y && y < ic.y + _iconCell) {
-        return ic.program == null ? TouchTarget.none : TouchTarget(TouchKind.icon, program: ic.program);
+        return ic.program == null ? const TouchTarget(TouchKind.trash) : TouchTarget(TouchKind.icon, program: ic.program);
       }
     }
   }
@@ -155,7 +155,8 @@ String? programOf(String channel) =>
       'Forecast',
       'Clock',
       'Info',
-      'Mines', //
+      'Mines',
+      'TaskMgr', 'Display', 'Calc', 'Explorer', // R-DK-24…29
     }.contains(channel)
     ? channel
     : null;

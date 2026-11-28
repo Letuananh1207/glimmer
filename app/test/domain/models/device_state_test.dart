@@ -88,4 +88,19 @@ void main() {
     expect(DeviceState.fromJson({'fw': 'x'}).balloon, isNull);
     expect(DeviceState.fromJson({'fw': 'x', 'balloon': false}).withControl(balloon: true).balloon, isTrue);
   });
+
+  test('R-DK-24…29 XP programs: each block present → the firmware draws it; trash count; kept by withControl', () {
+    final s = DeviceState.fromJson({
+      'fw': 'x',
+      'taskmgr': {'tab': 0, 'sel': -1, 'cpu': 3},
+      'display': {'tab': 0},
+      'calc': {'display': '0.'},
+      'explorer': {'place': 'computer', 'sel': -1, 'trash': 2},
+    });
+    final p = s.xpPrograms;
+    expect((p.taskMgr, p.altTab, p.display, p.calc, p.explorer, p.trash), (true, true, true, true, true, 2));
+    expect(s.withControl(balloon: true).xpPrograms.trash, 2);
+    final old = DeviceState.fromJson({'fw': 'x'}).xpPrograms;
+    expect((old.taskMgr, old.altTab, old.display, old.calc, old.explorer), (false, false, false, false, false));
+  });
 }

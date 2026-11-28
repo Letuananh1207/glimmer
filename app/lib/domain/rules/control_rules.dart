@@ -28,8 +28,8 @@ String? channelSkill(String channel) => switch (channel) {
   'Photo' => SkillIds.photo,
   'Weather' || 'Forecast' => SkillIds.weather,
   'Clock' => SkillIds.clock,
-  'Mines' => SkillIds.fun,
-  'Attention' || 'Night' || 'Info' => null,
+  'Mines' || 'Calc' => SkillIds.fun,
+  'Attention' || 'Night' || 'Info' || 'TaskMgr' || 'Display' || 'Explorer' => null,
   _ => SkillIds.agent,
 };
 
@@ -114,6 +114,7 @@ AttentionCard? holdingCard(DeviceState? s, List<AttentionCard> cards) {
 /// Programs (windows) of the device: the channels that are neither the desktop nor a system screen.
 const programChannels = {
   'Claude', 'Codex', 'AI', 'Trend', 'Agents', 'Photo', 'Weather', 'Forecast', 'Clock', 'Info', 'Mines', //
+  'TaskMgr', 'Display', 'Calc', 'Explorer', // R-DK-24…29 (panel P-2026-11-28.28…32)
 };
 
 bool isProgram(String channel) => programChannels.contains(channel);
@@ -150,6 +151,12 @@ Map<ProgramGroup, List<String>> programsOf(List<String> skillsOn, Map<String, dy
 }
 
 const _otherFlag = {'Weather': 'showWeather', 'Forecast': 'showForecast', 'Clock': 'showClock'};
+
+/// R-DK-24…29: XP windows outside [programsOf] (no Start row / desktop icon) that stay in the window list —
+/// Trình quản lý tác vụ, Thuộc tính màn hình, Explorer (system); Máy tính bỏ túi while Giải trí is on.
+bool keepsWindow(String program, List<String> skillsOn) =>
+    const {'TaskMgr', 'Display', 'Explorer'}.contains(program) ||
+    (program == 'Calc' && skillsOn.contains(SkillIds.fun));
 
 /// Every program of [programsOf], flat.
 Set<String> programSet(List<String> skillsOn, Map<String, dynamic>? settings) => {

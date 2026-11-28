@@ -110,6 +110,10 @@ extension ControlPointer on ControlViewModel {
         await startMenu(false);
         await pressPower();
         return null;
+      case StartPickKind.appScreen when p.screen == AppScreen.device && _control.xp.explorer:
+        _closeStartLocal(); // R-DK-29: Start › Thiết bị = My Computer
+        await openExplorer(ExplorerPlace.computer);
+        return null;
       case StartPickKind.close || StartPickKind.appScreen || StartPickKind.restart:
         _closeStartLocal();
         await startMenu(false);
@@ -134,6 +138,7 @@ extension ControlPointer on ControlViewModel {
   /// R-DK-19: a control key.
   Future<void> pressKey(ControlKey key) async {
     if (!pointerUsable) return;
+    if (await _programKey(key)) return; // R-DK-25…28: Alt+Tab box, keys of the XP program on screen
     final a = keyAction(
       key,
       windows: _windows,

@@ -17,6 +17,9 @@ enum TouchKind {
   trayClock,
   balloonBody,
   tab,
+
+  /// The desktop's Recycle Bin (R-DK-29).
+  trash,
 }
 
 class TouchTarget {

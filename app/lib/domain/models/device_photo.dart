@@ -34,6 +34,7 @@ class PhotoInfo {
     this.maxCount = defaultMaxCount,
     this.maxBytes = defaultMaxBytes,
     this.side = defaultSide,
+    this.samples = 0,
   });
 
   factory PhotoInfo.fromJson(Map<String, dynamic> j) => PhotoInfo(
@@ -45,6 +46,7 @@ class PhotoInfo {
         maxCount: jsonInt(j['max_count'], defaultMaxCount),
         maxBytes: jsonInt(j['max_bytes'], defaultMaxBytes),
         side: jsonInt(j['side'], defaultSide),
+        samples: (j['samples'] as List? ?? const []).length,
       );
 
   /// Firmware limits (`Photos::kMax`, `kMaxBytes`, `kSide`) — used when the device does not say.
@@ -54,6 +56,9 @@ class PhotoInfo {
 
   /// Device order (= order of the Photo channel's slides).
   final List<DevicePhoto> photos;
+
+  /// The firmware's sample photos still on it (`samples`; Explorer › Ảnh của tôi lists them after [photos]).
+  final int samples;
 
   /// Free bytes on the device filesystem (after its reserve).
   final int free;

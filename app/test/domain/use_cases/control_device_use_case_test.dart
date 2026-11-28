@@ -161,4 +161,29 @@ void main() {
       expect((rig.posts('/api/menu').single.body as Map).containsKey('hover'), isFalse);
     });
   });
+
+  group('R-DK-24…29 XP programs', () {
+    test('a view goes to POST /api/<program> only when the firmware draws it', () async {
+      await rig.connect(_url, {..._state(), 'calc': {'display': '0.'}});
+      rig.api.on(_url, 'POST', '/api/calc', {'ok': true});
+      await control.programView('calc', {'display': '5.'});
+      await control.programView('taskmgr', {'tab': 1});
+      expect(rig.posts('/api/calc').single.body, {'display': '5.'});
+      expect(rig.posts('/api/taskmgr'), isEmpty);
+    });
+
+    test('R-DK-25 Alt+Tab box: {kind: alttab, sel}, null closes; nothing on firmware without it', () async {
+      await rig.connect(_url, _state());
+      await control.altTab(1);
+      expect(rig.posts('/api/menu'), isEmpty);
+      await rig.connect(_url, {..._state(), 'taskmgr': {'tab': 0}});
+      rig.api.on(_url, 'POST', '/api/menu', {'ok': true});
+      await control.altTab(1);
+      await control.altTab(null);
+      expect(rig.posts('/api/menu').map((c) => c.body), [
+        {'kind': 'alttab', 'sel': 1},
+        {'kind': 'none'},
+      ]);
+    });
+  });
 }

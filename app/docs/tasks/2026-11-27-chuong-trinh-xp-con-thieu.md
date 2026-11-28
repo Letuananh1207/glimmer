@@ -3,7 +3,7 @@
 - Yêu cầu: "nghiên cứu xem các chương trình cơ bản của window xp còn thiếu là gì để chuẩn bị phát triển thêm" → bạn
   đồng ý thứ tự đề xuất (2026-11-27).
 - Loại: thêm (nhiều chương trình, mỗi cái một đợt) · Cỡ: lớn, chia nhỏ
-- Trạng thái: đang làm (mục 0–1 xong; phiếu 2–5 đã soạn, chờ thiết kế)
+- Trạng thái: đang làm (mục 0–1 xong; 2–5: firmware P-2026-11-28.28–.32 + app `2026-11-28-app-cho-chuong-trinh-xp.md` xong, còn lối mở / xoá / quay lại chờ phiếu)
 
 ## Thiết bị đang có
 

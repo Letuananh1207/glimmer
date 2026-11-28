@@ -68,4 +68,14 @@ void main() {
     expect(holdingCard(_s({'active_channel': 'Attention'}), cards)?.id, 'c');
     expect(holdingCard(_s({'active_channel': 'Claude'}), cards), isNull);
   });
+
+  test('R-DK-29 the XP system windows stay in the window list; Máy tính bỏ túi with Giải trí', () {
+    expect(keepsWindow('TaskMgr', const []), isTrue);
+    expect(keepsWindow('Display', const []), isTrue);
+    expect(keepsWindow('Explorer', const []), isTrue);
+    expect(keepsWindow('Calc', const ['agent']), isFalse);
+    expect(keepsWindow('Calc', const ['agent', 'fun']), isTrue);
+    expect(keepsWindow('Claude', const ['agent']), isFalse, reason: 'skill programs follow programsOf');
+    expect((channelSkill('Calc'), channelSkill('TaskMgr'), channelSkill('Explorer')), ('fun', null, null));
+  });
 }

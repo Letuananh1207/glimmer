@@ -38,6 +38,10 @@ mixin _ControlCalls on DeviceRepository {
       _call(() async => _json('POST', '/api/mines', body: body, tries: 1));
 
   @override
+  Future<Result<void>> setProgramView(String program, Map<String, Object?> body) =>
+      _call(() async => _json('POST', '/api/$program', body: body, tries: 1));
+
+  @override
   Future<Result<void>> setClock(Map<String, Object?> body) =>
       _call(() async => _json('POST', '/api/clock', body: body, tries: 1));
 

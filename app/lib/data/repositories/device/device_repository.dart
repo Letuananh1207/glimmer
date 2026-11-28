@@ -106,6 +106,10 @@ abstract class DeviceRepository extends ChangeNotifier {
   /// R-DK-23: the Dò mìn board to draw (`POST /api/mines {board, face, left, secs, run}`); the app keeps the game.
   Future<Result<void>> setMines(Map<String, Object?> body);
 
+  /// R-DK-24…28: the view of XP program [program] (`taskmgr`, `display`, `calc`, `explorer`) the app keeps —
+  /// `POST /api/<program>`; the device draws it. Explorer answers 409 when its `do` could not be done.
+  Future<Result<void>> setProgramView(String program, Map<String, Object?> body);
+
   /// R-DK-20: the power button (`POST /api/power {on}`); [state] takes the answer. Ok(power after).
   Future<Result<PowerState>> setPower(bool on);
 

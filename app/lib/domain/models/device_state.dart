@@ -57,6 +57,7 @@ class DeviceState {
     this.power,
     this.startRecent = const [],
     this.minesApi = false,
+    this.xpPrograms = const XpPrograms(),
   });
 
   factory DeviceState.fromJson(Map<String, dynamic> j) => DeviceState(
@@ -109,6 +110,7 @@ class DeviceState {
     power: PowerState.fromName(j['power']),
     startRecent: List.unmodifiable((j['start_recent'] as List? ?? const []).whereType<String>()),
     minesApi: j['mines'] is Map,
+    xpPrograms: XpPrograms.fromJson(j),
   );
 
   /// The same state with what a control command changed (answer of `/api/channel`, `/api/screen`).
@@ -163,6 +165,7 @@ class DeviceState {
         power: power ?? this.power,
         startRecent: startRecent,
         minesApi: minesApi,
+        xpPrograms: xpPrograms,
         ntpLast: ntpLast,
       );
 
@@ -226,6 +229,9 @@ class DeviceState {
   /// The firmware draws Dò mìn (`mines` in `/api/state`, R-DK-23).
   final bool minesApi;
 
+  /// The XP programs of panel P-2026-11-28.28…32 this firmware draws (R-DK-24…29).
+  final XpPrograms xpPrograms;
+
   /// Backlight on; null = firmware without `/api/screen` (R-DK-3).
   final bool? screenOn;
 
@@ -269,4 +275,35 @@ class DeviceState {
       int.tryParse(t[2]) ?? 0,
     );
   }
+}
+
+/// Panel P-2026-11-28.28…32 (R-DK-24…29): which XP programs the firmware draws — each block present in `/api/state`
+/// — and the Recycle Bin's item count. The Alt+Tab box came with Trình quản lý tác vụ (same firmware).
+class XpPrograms {
+  const XpPrograms({
+    this.taskMgr = false,
+    this.display = false,
+    this.calc = false,
+    this.explorer = false,
+    this.trash = 0,
+  });
+
+  factory XpPrograms.fromJson(Map<String, dynamic> j) {
+    final ex = j['explorer'];
+    return XpPrograms(
+      taskMgr: j['taskmgr'] is Map,
+      display: j['display'] is Map,
+      calc: j['calc'] is Map,
+      explorer: ex is Map,
+      trash: ex is Map && ex['trash'] is num ? (ex['trash'] as num).toInt() : 0,
+    );
+  }
+
+  final bool taskMgr, display, calc, explorer;
+
+  /// Items in the Recycle Bin (`explorer.trash`).
+  final int trash;
+
+  /// R-DK-25: the Alt+Tab box (`/api/menu {kind: alttab}`).
+  bool get altTab => taskMgr;
 }

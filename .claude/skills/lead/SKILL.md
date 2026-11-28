@@ -119,6 +119,7 @@ tiếp từ nhiệm vụ chưa đánh dấu.
 | Kho ảnh (app là bộ nhớ, thiết bị trỏ vào lấy): nguồn ảnh, máy chủ ảnh, bộ đệm | `library`, `library_rules`, `photo_library`, `photo_server_service`, `photo_source_use_case`, `photo_source_lifecycle`, firmware `src/data/photo_source_core.h`, `src/data/photos.cpp` |
 | Điều khiển: chuột (con trỏ), bàn phím, nút nguồn, Start trên thiết bị | `cursor`, `keyboard_rules`, `start_rules`, `trackpad`, `key_pad`, `power_button`, `control_pointer`, `cursor_service`, `control_device_use_case`, firmware `src/data/cursor_core.h`, `src/channels/cursor.cpp` |
 | Dò mìn, skill Giải trí (`fun`)   | `mines`, `mines_rules`, `mines_game`, firmware `src/data/mines_core.h`, `src/channels/ch_mines.cpp` |
+| Chương trình XP: Trình quản lý tác vụ, Alt+Tab, Thuộc tính màn hình, Máy tính bỏ túi, Explorer / Thùng rác | `xp_program_rules`, `calc_rules`, `calc_state`, `xp_views`, `control_programs`, firmware `src/data/{perf,display,calc,explorer}_core.h`, `src/channels/ch_{taskmgr,display,calc,explorer}.cpp`, `xp_alttab.cpp` |
 | Quy tắc nghiệp vụ, test quy tắc  | `docs/testing/quy_tac.md` (mã `R-…`), `lib/domain/rules/`, test ghi mã trong `test/` |
 
 Thêm tính năng hoặc thư mục mới → bổ sung một dòng vào bảng này cùng lúc.

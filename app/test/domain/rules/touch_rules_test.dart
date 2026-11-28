@@ -93,10 +93,10 @@ void main() {
     ]);
   });
 
-  test('R-DK-8 desktop icons open their program; the trash opens nothing', () {
+  test('R-DK-8 desktop icons open their program; R-DK-29 the trash → Explorer › Thùng rác', () {
     expect(_at(40, 20, 'Home'), const TouchTarget(TouchKind.icon, program: 'Claude'));
     expect(_at(40, 70, 'Home'), const TouchTarget(TouchKind.icon, program: 'Codex'));
-    expect(_at(40, 120, 'Home').kind, TouchKind.none); // trash
+    expect(_at(40, 120, 'Home').kind, TouchKind.trash);
     expect(_at(120, 20, 'Home'), const TouchTarget(TouchKind.icon, program: 'Weather'));
     expect(_at(40, 120, 'Home', skills: ['agent', 'photo']), const TouchTarget(TouchKind.icon, program: 'Photo'));
     expect(_at(200, 60, 'Home').kind, TouchKind.none);
