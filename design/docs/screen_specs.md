@@ -18,7 +18,36 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
   `connectManualHint` (label) → ô `connectManualIp` (đã điền IP lần trước) → ô `connectManualToken` (ẩn chữ) → nút chữ
   `commonCancel` + nút chính `connectManualOk` căn phải.
 
-## 2. Màn hình — `DashboardScreen` (Dashboard.png, DashboardEmpty.png, DashboardStale.png, DashboardSetup.png, DashboardLoading.png, DashboardWeather.png, DashboardWeatherNoLocation.png, DashboardClock.png, DashboardSingle.png, DashboardPhoto.png, DashboardPhotoEmpty.png, DashboardPhotoFull.png, DashboardPhotoAdd.png, DashboardPhotoDelete.png, DashboardPhotoDeleting.png, DashboardPhotoDeleteError.png)
+## 2. Màn hình — `DashboardScreen` (Dashboard.png, DashboardEmpty.png, DashboardStale.png, DashboardSetup.png, DashboardLoading.png, DashboardWeather.png, DashboardWeatherNoLocation.png, DashboardClock.png, DashboardSingle.png, DashboardPhoto.png, DashboardPhotoEmpty.png, DashboardPhotoFull.png, DashboardPhotoAdd.png, DashboardPhotoDelete.png, DashboardPhotoDeleting.png, DashboardPhotoDeleteError.png, DashboardLibrary.png, DashboardLibraryFew.png, DashboardLibraryEight.png, DashboardLibraryEmpty.png, DashboardLibraryOffline.png, DashboardLibraryAdding.png, DashboardLibraryAddError.png, DashboardLibraryDelete.png, DashboardLibraryDeleting.png, DashboardLibraryDeleteError.png)
+
+> **2026-11-28.11 — Tab Ảnh thành Kho ảnh** (phiếu `app/docs/phieu_thiet_ke/2026-11-27-kho-anh.md`; luật R-AK-1…5): khi `/api/state` có `photo_source`, tab Ảnh hiện
+> kho ảnh trên điện thoại (không giới hạn) thay cho "ảnh trên thiết bị". Không có `photo_source` (firmware cũ) → tab Ảnh giữ
+> nguyên các trạng thái `photo*` bên dưới (R-AK-5). Prop `state` thêm `library` (23 ảnh, online), `libraryFew` (5),
+> `libraryEight` (8), `libraryEmpty`, `libraryOffline`, `libraryAdding`, `libraryAddError`, `libraryDelete`, `libraryDeleting`,
+> `libraryDeleteError`; ảnh `DashboardLibrary*.png`. Khung: 844 (ít ảnh / trống), 900 (8), 1320–1440 (23 ảnh).
+> - **Thẻ kho** (như thẻ ảnh cũ, đệm 16): nhãn `photoLibraryTitle` + meta phải `photoLibraryCount` (> 8) / `photoLibraryCountAll`
+>   (≤ 8) / `photoLibraryCountEmpty`.
+> - **Dòng nguồn ảnh** (`PhotoSourceStatus`, lề trên 12): nền `panel2`, bo 10, đệm 10 12; chấm 8 + chữ 12 ink. `online`: chấm mint
+>   `photoSourceOnline`, bên phải `photoSourceShowing` 11 muted. `offline`: chấm muted `photoSourceOffline` + dòng phụ
+>   `photoSourceOfflineBody` 11 muted (thụt 16). `state = none` (chưa gửi nguồn) → như offline. Kho trống → không có dòng này.
+> - **Lưới** 3 cột cách 8, lề trên 12: ô đầu luôn là "+ Thêm ảnh" (như cũ) → bảng `photoAdd`; sau đó ảnh **mới nhất trước**
+>   (mã giảm dần). Ô ảnh (`LibraryTile`) vuông bo 10, cả ô là nút → `libraryDelete` (`photoLibraryTileA11y`).
+>   - 8 ảnh mới nhất (bộ đệm, R-AK-3): dấu màn hình góc phải dưới — ô 22 bo 6 nền `bg` 78 %, icon tv 14 mint, cách mép 5.
+>     Chỉ để biết, không bấm, không có nút ghim.
+>   - Ảnh thiết bị đang chiếu (`photo_source.index` theo thứ tự thêm, chỉ khi `online`): viền trong 2 mint + nhãn
+>     `photoLibraryShowingTag` (9/700, nền mint, chữ `bg`, bo 4, đệm 2 5, góc trái trên cách 5). Có thể là ảnh ngoài bộ đệm.
+>   - Kho có ảnh không có bản xem: như ô `photoNoPreview` cũ.
+> - Dưới thẻ: icon tv 12 mint + `photoLibraryNote` 12 muted (lề 6 20 0; thay `photoNote`), rồi `ShowOnDeviceButton`.
+> - **`libraryEmpty`**: giữa thẻ (đệm 28 8 8, cách 10): icon ảnh pixel ×3 muted, `photoLibraryEmptyTitle` 16/700,
+>   `photoLibraryEmptyBody` 13 inkDim, nút đặc mint cao 48 bo 24 "+ `photoAdd`" → bảng `photoAdd`. Không ghi chú, không nút hiện.
+> - **`libraryAdding`**: sau "Thêm vào kho" ở Cắt ảnh, app về tab này ngay; ô mới đứng sau ô thêm, phủ `bg` 66 % + vòng xoay 24
+>   mint + `photoLibraryAdding` 11 ink; meta đã tính ảnh mới. Xong → ô thường có dấu "trên máy"; ảnh thứ 9 tính từ mới nhất
+>   mất dấu.
+> - **`libraryAddError`** (thiết bị không nhận bản đệm → ảnh không vào kho): thanh báo trên thẻ (như `photoDeleteError`)
+>   `photoLibraryAddErrorTitle` coral / `photoLibraryAddErrorBody` + `commonRetry` (gửi lại vùng cắt đã giữ).
+> - **`libraryDelete`**: hộp thoại như `photoDelete`, chữ `photoLibraryDeleteTitle` / `photoLibraryDeleteBody`.
+> - **`libraryDeleting`**: ô phủ `bg` 66 % + vòng xoay 24 mint + `photoLibraryDeleting`; ô khác vẫn bấm được.
+> - **`libraryDeleteError`**: thanh báo `photoDeleteErrorTitle` coral / `photoLibraryDeleteErrorBody` + `commonRetry`.
 
 > **2026-11-26.9 — Nút đặt vị trí** (phiếu `app/docs/phieu_thiet_ke/2026-11-26-vi-tri-thoi-tiet.md`): ở `weatherNoLoc`, nút viền đổi thành `weatherSetLocation` ("Đặt vị trí thời tiết"), icon place (thay tune), mở thẳng màn **Vị trí thời tiết** (§9) thay vì tab Cài đặt. Ảnh `DashboardWeatherNoLocation.png` chụp lại.
 
@@ -222,6 +251,8 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
 - Thanh điều hướng dưới, tab 2 (Skill).
 
 ## 7. Cắt ảnh — `PhotoCropScreen` (PhotoCrop.png, PhotoCropSending.png, PhotoCropDone.png, PhotoCropFull.png, PhotoCropTooBig.png, PhotoCropNoSpace.png, PhotoCropRejected.png, PhotoCropOffline.png)
+
+> **2026-11-28.11 — Thêm vào kho** (phiếu `app/docs/phieu_thiet_ke/2026-11-27-kho-anh.md`): firmware có `photo_source` → nút chính đổi thành `photoCropAddToLibrary`; bấm là lưu vào kho và quay về tab Ảnh ngay (`libraryAdding`), việc gửi bản đệm hiện trên ô ảnh. Các trạng thái `sending`, `done`, `full`, `noSpace` của màn này chỉ còn cho firmware cũ. Chưa vẽ lại artboard (chỉ đổi chữ nút).
 
 > **2026-11-25.4 — Màn mới** (phiếu `app/docs/phieu_thiet_ke/2026-11-25-gui-anh-len-thiet-bi.md`). Push từ tab Ảnh sau khi chọn / chụp ảnh; ngoài khung tab (không thanh dưới).
 > Prop `state`: `crop`, `sending`, `done`, `full`, `tooBig`, `noSpace`, `rejected`, `offline`. Mọi trạng thái 844.

@@ -2144,5 +2144,129 @@
   "controlDetailsA11y": "Số liệu",
   "@controlDetailsA11y": {
     "description": "Nút vuông → màn Số liệu"
+  },
+  "photoLibraryTitle": "KHO ẢNH",
+  "@photoLibraryTitle": {
+    "description": "Nhãn thẻ kho (thay photoOnDevice khi firmware có photo_source)"
+  },
+  "photoLibraryCount": "{count} ảnh · {cached} trên máy",
+  "@photoLibraryCount": {
+    "description": "Meta khi kho > 8 ảnh (cached = 8)",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      },
+      "cached": {
+        "type": "String"
+      }
+    }
+  },
+  "photoLibraryCountAll": "{count} ảnh · cả {count} trên máy",
+  "@photoLibraryCountAll": {
+    "description": "Meta khi kho ≤ 8 ảnh",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "photoLibraryCountEmpty": "chưa có ảnh",
+  "@photoLibraryCountEmpty": {
+    "description": "Meta kho trống"
+  },
+  "photoSourceOnline": "Thiết bị đang lấy ảnh từ điện thoại",
+  "@photoSourceOnline": {
+    "description": "Dòng trạng thái, chấm mint (photo_source.state = online)"
+  },
+  "photoSourceShowing": "đang chiếu {index}/{count}",
+  "@photoSourceShowing": {
+    "description": "Bên phải dòng trạng thái online (photo_source.index / count)",
+    "placeholders": {
+      "index": {
+        "type": "String"
+      },
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "photoSourceOffline": "Thiết bị chỉ chiếu 8 ảnh đã giữ",
+  "@photoSourceOffline": {
+    "description": "Dòng trạng thái, chấm muted (offline)"
+  },
+  "photoSourceOfflineBody": "Điện thoại khác mạng, hoặc app đã tắt quá 2 phút.",
+  "@photoSourceOfflineBody": {
+    "description": "Dòng phụ khi offline"
+  },
+  "photoLibraryShowingTag": "ĐANG CHIẾU",
+  "@photoLibraryShowingTag": {
+    "description": "Nhãn trên ô ảnh thiết bị đang chiếu"
+  },
+  "photoLibraryTileA11y": "Ảnh {n}{onDevice}{showing}, bấm để xoá",
+  "@photoLibraryTileA11y": {
+    "description": "Nhãn đọc màn hình ô ảnh kho",
+    "placeholders": {
+      "n": {
+        "type": "String"
+      },
+      "onDevice": {
+        "type": "String"
+      },
+      "showing": {
+        "type": "String"
+      }
+    }
+  },
+  "photoLibraryOnDeviceA11y": ", đang ở trên thiết bị",
+  "@photoLibraryOnDeviceA11y": {
+    "description": "Ghép vào photoLibraryTileA11y"
+  },
+  "photoLibraryShowingA11y": ", thiết bị đang chiếu",
+  "@photoLibraryShowingA11y": {
+    "description": "Ghép vào photoLibraryTileA11y"
+  },
+  "photoLibraryNote": "8 ảnh mới nhất được giữ trên thiết bị để chiếu cả khi điện thoại vắng. Bấm ảnh để xoá khỏi kho.",
+  "@photoLibraryNote": {
+    "description": "Dưới thẻ kho (thay photoNote)"
+  },
+  "photoLibraryEmptyTitle": "Kho ảnh trống",
+  "@photoLibraryEmptyTitle": {
+    "description": "Kho trống"
+  },
+  "photoLibraryEmptyBody": "Thêm ảnh từ thư viện hoặc máy ảnh. Ảnh nằm trên điện thoại, không giới hạn số ảnh; thiết bị lấy ảnh từ đây để chiếu.",
+  "@photoLibraryEmptyBody": {
+    "description": "Kho trống"
+  },
+  "photoLibraryAdding": "Đang thêm…",
+  "@photoLibraryAdding": {
+    "description": "Phủ trên ô ảnh mới"
+  },
+  "photoLibraryAddErrorTitle": "Chưa thêm được ảnh",
+  "@photoLibraryAddErrorTitle": {
+    "description": "Thanh báo coral"
+  },
+  "photoLibraryAddErrorBody": "Thiết bị không nhận bản đệm nên ảnh chưa vào kho. Vùng cắt được giữ.",
+  "@photoLibraryAddErrorBody": {
+    "description": "Thanh báo; nút commonRetry"
+  },
+  "photoLibraryDeleteTitle": "Xoá ảnh khỏi kho?",
+  "@photoLibraryDeleteTitle": {
+    "description": "Hộp thoại xoá"
+  },
+  "photoLibraryDeleteBody": "Ảnh bị xoá khỏi điện thoại, và khỏi thiết bị nếu đang được giữ trên máy. Không lấy lại được.",
+  "@photoLibraryDeleteBody": {
+    "description": "Hộp thoại xoá"
+  },
+  "photoLibraryDeleting": "Đang xoá…",
+  "@photoLibraryDeleting": {
+    "description": "Phủ trên ô đang xoá"
+  },
+  "photoLibraryDeleteErrorBody": "Thiết bị không nhận lệnh xoá bản đệm. Ảnh vẫn còn trong kho.",
+  "@photoLibraryDeleteErrorBody": {
+    "description": "Thanh báo coral (tiêu đề photoDeleteErrorTitle); nút commonRetry"
+  },
+  "photoCropAddToLibrary": "Thêm vào kho",
+  "@photoCropAddToLibrary": {
+    "description": "Nút chính màn Cắt ảnh khi firmware có photo_source (thay photoCropSend)"
   }
 }

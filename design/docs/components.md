@@ -55,3 +55,5 @@
 | `MouseButtons` | **2026-11-27.10:** hai nút Trái / Phải cao 60 liền dưới bàn rê (bo dưới 20); đang bấm lõm. §8. |
 | `KeyPad` | **2026-11-27.10:** phím vật lý cao 52 bo 10 có gờ dưới: Windows · Alt+Tab · Alt+F4 · Esc / Tab · Enter · Chữ (mờ) / ← ↑ ↓ →. §8. |
 | `PowerButton` | **2026-11-27.10:** nút nguồn tròn 48 góc phải đầu màn: viền mint (bật) / coral (tắt) / vòng quay (đang tắt, đang khởi động); máy tắt → nút "Bật máy" 120 giữa bàn rê. §8. |
+| `LibraryTile` | **2026-11-28.11:** ô ảnh của Kho ảnh — như `PhotoTile`, thêm dấu "trên máy" (ô 22 bo 6, icon tv 14 mint, góc phải dưới) cho 8 ảnh mới nhất, viền mint + nhãn ĐANG CHIẾU cho ảnh thiết bị đang chiếu, phủ vòng xoay khi đang thêm / xoá. Số đo `screen_specs.md` §2. |
+| `PhotoSourceStatus` | **2026-11-28.11:** dòng nguồn ảnh trong thẻ kho — nền `panel2` bo 10, chấm 8 mint (online) / muted (offline, none), chữ 12, bên phải "đang chiếu x/n", dòng phụ lý do khi offline. |

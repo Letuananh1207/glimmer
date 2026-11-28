@@ -1,5 +1,5 @@
 {
-  "version": "2026-11-27.10",
+  "version": "2026-11-28.11",
   "start": "Connect",
   "rule": "Chưa kết nối được thiết bị → Connect. Kết nối được → khung 4 tab: tab 1 = Control (điều khiển: ô màn thiết bị + nút), tab 2 = Skills, tab 3 = Settings, tab 4 = Device. Dashboard (Số liệu) là màn phụ đẩy từ Control, mở đúng tab của kênh đang hiện. Settings và Device dùng chung; Connect, WifiSetup, PhotoCrop ngoài khung tab.",
   "screens": {
@@ -81,7 +81,17 @@
         "photoAdd",
         "photoDelete",
         "photoDeleting",
-        "photoDeleteError"
+        "photoDeleteError",
+        "library",
+        "libraryFew",
+        "libraryEight",
+        "libraryEmpty",
+        "libraryOffline",
+        "libraryAdding",
+        "libraryAddError",
+        "libraryDelete",
+        "libraryDeleting",
+        "libraryDeleteError"
       ],
       "refresh": "Kéo để làm mới; tự làm mới mỗi 5 s khi app mở",
       "dockTabs": {
@@ -104,7 +114,8 @@
         "Settings": "Nút 'Đặt vị trí trong Cài đặt' (weatherNoLoc)",
         "PhotoCrop": "Bảng 'Thêm ảnh' → chọn trong thư viện / chụp ảnh (push)"
       },
-      "route": "push từ Control, có nút quay lại, không thanh dưới; tên hiện \"Số liệu\""
+      "route": "push từ Control, có nút quay lại, không thanh dưới; tên hiện \"Số liệu\"",
+      "photoTab": "Firmware có photo_source → tab Ảnh là Kho ảnh (state library*); không có → tab Ảnh như cũ (state photo*, ≤ 8 ảnh trên thiết bị, R-AK-5)"
     },
     "Settings": {
       "source": "source/Settings.dc.html",
@@ -187,7 +198,8 @@
       "to": {
         "Dashboard": "Quay lại / 'Xong' / 'Về danh sách ảnh' (về tab Ảnh)",
         "photoPicker": "'Chọn ảnh khác' / 'Thêm ảnh khác' (mở lại trình chọn ảnh của hệ thống)"
-      }
+      },
+      "library": "Firmware có photo_source: nút photoCropAddToLibrary → thêm vào kho, quay về tab Ảnh (libraryAdding) ngay"
     },
     "WeatherLocation": {
       "source": "source/WeatherLocation.dc.html",
