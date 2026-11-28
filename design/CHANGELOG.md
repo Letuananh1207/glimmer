@@ -5,6 +5,87 @@ widget và việc cần làm — không ghi đường dẫn file hay cách code.
 
 ---
 
+## 2026-11-28.14 — Màn Skill: bỏ chữ cũ về dock và xoay tab
+
+- **Skill · `SkillsScreen`** (`source/Skills.dc.html`, `screen_specs.md` §6; ảnh `Skills*.png` chụp lại):
+  - `skillsSubtitle`: "Mỗi skill bật là một tab trên dock thiết bị." → "Mỗi skill bật là một chương trình trên máy."
+  - `skillsOrderNote`: "Thiết bị xoay các tab theo thứ tự trên…" → "Mỗi skill bật thêm chương trình vào desktop và Start của
+    thiết bị. Thẻ cần duyệt vẫn chen ngang mọi màn." (thiết bị không còn dock / tự xoay từ P-2026-11-26.14).
+  - Bố cục, số đo không đổi.
+
+**Việc cần làm trong code:**
+- `SkillsScreen`: lấy chữ mới của hai khoá trên.
+
+## 2026-11-28.13 — Skill Giải trí (Dò mìn) bật / tắt được trên màn Skill
+
+- **Skill · `SkillsScreen`** (`source/Skills.dc.html`, `screen_specs.md` §6; ảnh `Skills*.png`, 4 ảnh mới `SkillsFun*.png`):
+  - Hàng `SkillRow` Giải trí cuối danh sách, mặc định tắt, icon quả mìn pixel `icons/dock-fun.svg` (màu `skillFun` khi bật),
+    mô tả "Dò mìn, chơi bằng app". Bỏ chip "Giải trí" khỏi "Sắp có".
+  - Trạng thái: tắt, bật, đang gửi, cần firmware mới (không có `fun` trong `skills`), skill cuối còn bật (công tắc khoá).
+  - Hiện app: hàng dùng icon tay cầm Material của chip cũ.
+- **Chuỗi**: `skillFunDesc` đổi chữ; còn lại dùng khoá có sẵn (`skillsSending`, `skillsNeedFirmware`, `skillsUpdateFirmware`,
+  `skillsLastOne`). Token không đổi (`skillFun` = amber, trùng Đồng hồ — giữ).
+- Phiếu: `app/docs/phieu_thiet_ke/2026-11-27-skill-giai-tri.md`
+- Không cần firmware mới: `skills` có `fun` khi firmware có Dò mìn (P-2026-11-27.25).
+
+**Việc cần làm trong code:**
+- `SkillRow` Giải trí: icon `dock-fun.svg` (thay icon chip `videogame_asset`), mô tả mới; bật / tắt / đang gửi / khoá khi là skill
+  cuối như các hàng khác; thiết bị không báo `fun` → kiểu "Cần firmware mới" + nút Cập nhật.
+
+## 2026-11-28.12 — Quét mã QR trên màn thiết bị để cài Wi-Fi
+
+- **Quét mã · `WifiScanScreen`** (màn mới; `source/WifiScan.dc.html`, `screen_specs.md` §10; ảnh `WifiScan*.png`, 4 trạng thái):
+  - Camera toàn màn, khung ngắm 240 giữa, bảng dưới có ảnh nhỏ màn cài Wi-Fi thật của thiết bị (`images/panel-setup-qr.png`) +
+    hướng dẫn + "Không có mã? Nhập tay".
+  - Đọc được mã glimmer-setup → khung mint, rung nhẹ, tự đóng sang Cài Wi-Fi đúng bước. Mã lạ → báo coral, không làm gì
+    (R-WF-4), "Quét lại". Chưa có quyền camera → xin quyền / mở cài đặt điện thoại.
+- **Cài Wi-Fi · `WifiSetupScreen`** (`screen_specs.md` §5; mọi ảnh `WifiSetup*.png`):
+  - `form`: nút lớn "Quét mã trên màn thiết bị" ở đầu, vạch "HOẶC NHẬP TAY", nút "Mật khẩu đã nhớ (n)" dưới cùng. Khung 900.
+  - Mới `password` (chỉ hỏi mật khẩu, tên mạng chỉ đọc + "Đổi mạng", ghi chú app sẽ nhớ), `formScanned` (điện thoại không ở Wi-Fi
+    nào → form đầy đủ), `saved` (bảng mật khẩu đã nhớ, nút Quên), `forget` (hỏi trước khi quên) — R-WF-5.
+  - Mạng đã nhớ mật khẩu → quét xong vào thẳng `working`. Chữ `working` / `done` / `failed` cập nhật.
+- **Kết nối** (§1): nút thứ ba → "Quét mã QR trên màn thiết bị" (icon qr) mở màn Quét mã. **Điều khiển** (§8): nút trên thanh báo
+  glimmer-setup → "Quét mã trên màn". Ảnh `Connect*.png`, `ControlSetup.png` chụp lại.
+- **Chuỗi**: 32 khoá mới (`wifiScan…`, `wifiSaved…`, `wifiForget…`, `wifiPassFor`…), đổi chữ `connectNewDevice`,
+  `controlSetupAction`, `wifiStepJoinApDetail`, `wifiDoneDetail`, `wifiNotFound`. Token không đổi.
+- Phiếu: `app/docs/phieu_thiet_ke/2026-11-28-quet-qr-cai-wifi.md`
+- Không cần firmware mới: mã QR do firmware vẽ (panel P-2026-11-28.26, `WIFI:T:nopass;S:glimmer-setup;;`).
+
+**Việc cần làm trong code:**
+- `WifiScanScreen` (mới): camera + khung ngắm, đọc mã theo R-WF-4 (`scanned()`); đọc được → rung, đóng, vào bước `working` /
+  `password` / `formScanned` theo mạng điện thoại và kho mật khẩu; mã lạ → báo, quét lại; không có quyền camera → xin quyền /
+  mở cài đặt.
+- `WifiSetupScreen`: nút quét ở đầu `form`; bước `password` (chỉ ô mật khẩu, tên mạng chỉ đọc + Đổi mạng); `formScanned`; bảng
+  mật khẩu đã nhớ + hộp thoại quên (`rememberedNetworks`, `forgetPassword()`).
+- `ConnectScreen`, `ControlScreen` (thanh báo setup): nút mới mở màn Quét mã.
+
+## 2026-11-28.11 — Kho ảnh: ảnh nằm trên điện thoại, thiết bị giữ 8 ảnh mới nhất
+
+- **Số liệu · tab Ảnh · `DashboardScreen`** (`source/Dashboard.dc.html`, `screen_specs.md` §2; ảnh `DashboardLibrary*.png`,
+  10 trạng thái):
+  - Firmware có `photo_source` → tab Ảnh thành **Kho ảnh**: thẻ `KHO ẢNH` + meta "23 ảnh · 8 trên máy"; dòng nguồn ảnh
+    (`PhotoSourceStatus`): chấm mint "Thiết bị đang lấy ảnh từ điện thoại · đang chiếu 5/23" hoặc chấm xám "Thiết bị chỉ chiếu
+    8 ảnh đã giữ" + lý do.
+  - Lưới: ô "+ Thêm ảnh" đầu tiên, rồi ảnh mới nhất trước. 8 ảnh mới nhất có dấu màn hình nhỏ mint (không bấm, không ghim);
+    ảnh đang chiếu có viền mint + nhãn ĐANG CHIẾU. Bấm ảnh → "Xoá ảnh khỏi kho?".
+  - Trạng thái: 5 ảnh, 8 ảnh, 23 ảnh, trống, thiết bị chỉ chiếu bộ đệm, đang thêm, thêm lỗi, hỏi xoá, đang xoá, xoá lỗi.
+  - Ghi chú dưới thẻ đổi: "8 ảnh mới nhất được giữ trên thiết bị…" (bỏ câu cập nhật đầy đủ xoá ảnh).
+  - Firmware không có `photo_source`: tab Ảnh giữ nguyên các trạng thái `photo*` (R-AK-5).
+- **Cắt ảnh · `PhotoCropScreen`** (`screen_specs.md` §7): firmware có kho → nút "Thêm vào kho", về tab Ảnh ngay; chưa vẽ lại
+  artboard, ảnh `PhotoCrop*.png` giữ nguyên.
+- **Chuỗi**: 23 khoá mới `photoLibrary…`, `photoSource…`, `photoCropAddToLibrary`. Token không đổi (mint = `skillPhoto`).
+- Phiếu: `app/docs/phieu_thiet_ke/2026-11-27-kho-anh.md`
+- Không cần firmware mới: dùng `photo_source {state, index, count}` đã có.
+
+**Việc cần làm trong code:**
+- Tab Ảnh: chọn giao diện theo firmware (có `photo_source` → Kho ảnh, không → như cũ). Kho: lưới mới nhất trước, ô thêm đầu,
+  dấu "trên máy" cho 8 ảnh mới nhất của kho (R-AK-3), dòng nguồn ảnh theo `photo_source.state`, ảnh đang chiếu từ
+  `photo_source.index` (thứ tự thêm, cũ trước) khi `online`.
+- Thêm ảnh: "Thêm vào kho" ở Cắt ảnh → về tab Ảnh, ô mới hiện đang thêm; thiết bị không nhận bản đệm → ảnh không vào kho,
+  thanh báo + thử lại với vùng cắt đã giữ.
+- Xoá: hỏi "Xoá ảnh khỏi kho?" → xoá khỏi kho (và bản đệm trên thiết bị nếu có); lỗi → thanh báo, ảnh còn trong kho.
+- `LibraryTile`, `PhotoSourceStatus`: widget mới theo `components.md`.
+
 ## 2026-11-27.10 — Màn Điều khiển: app là chuột, bàn phím, nút nguồn; bỏ ô màn trên app
 
 - **Điều khiển · `ControlScreen`** (`source/Control.dc.html`, `screen_specs.md` §8; ảnh 14 `Control*.png`, mới `ControlDragging.png`,

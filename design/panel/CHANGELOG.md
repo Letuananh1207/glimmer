@@ -5,6 +5,145 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-28.32 — Máy tính, Ảnh của tôi và Thùng rác kiểu Windows XP
+
+- **Kênh mới Explorer** (`source/XP-Explorer-Computer|Photos|Confirm|Trash|TrashEmpty.dc.html`,
+  `source/XP-Desk-TrashFull.dc.html`; `screen_specs.md` §17 mục XP-Explorer; ảnh `XPExplorer*.png`, `XPDeskTrashFull.png`)
+  — theo *Windows Explorer* / *Recycle Bin*:
+  - Một cửa sổ, 3 chỗ xem; bỏ thanh công cụ / địa chỉ / khung tác vụ; thân trắng, thanh trạng thái 2 ô.
+  - Máy tính: nhóm `Ổ đĩa` (`Bộ nhớ (C:)`, thanh dung lượng, `trống 412 KB / 1 MB`), nhóm `Thư mục` (`Ảnh của tôi`,
+    `Hình nền`).
+  - Ảnh của tôi: ảnh thu nhỏ 47 px (1/4), 4 cột, tên dưới; chỉ ảnh trên máy (8 ảnh mới nhất của app + ảnh mẫu).
+  - Xoá ảnh: hộp `Xác nhận xoá tệp` (`Có` / `Không`).
+  - Thùng rác: `Dọn sạch Thùng rác` / `Khôi phục` + ListView `Tên | Cỡ | Đã xoá`; rỗng → nút mờ.
+  - Desktop: Thùng rác có mục → biểu tượng thùng đầy.
+  - Máy chưa có; biểu tượng Thùng rác chưa mở được.
+- Phiếu: `docs/phieu_panel/2026-11-27-my-computer-thung-rac.md`
+- Đổi luật: Start › `Thiết bị` (chỗ My Computer của Start XP) mở cửa sổ Máy tính; không thêm biểu tượng Máy tính lên
+  desktop (cột đã đủ 4 ô); biểu tượng Thùng rác mở Thùng rác.
+- Cần firmware: dung lượng LittleFS tổng / trống; Thùng rác (xoá = chuyển vào `/trash/`, khôi phục, dọn); giải mã ảnh
+  thu 1/4; biểu tượng thùng đầy; màu `#ACA899` (khung ảnh) đã có.
+
+**Việc cần làm trong code:**
+- Kênh `Explorer` (hệ thống): 3 chỗ xem theo lệnh app; mục chọn / mở / xoá / khôi phục / dọn do app gửi; hộp xác nhận
+  như menu; mỗi ảnh thu nhỏ vẽ riêng (an toàn khi vẽ lại dưới con trỏ).
+- Desktop: biểu tượng Thùng rác đổi bản đầy / trống theo số mục.
+
+## P-2026-11-28.31 — Máy tính bỏ túi (Calculator) kiểu Windows XP
+
+- **Kênh mới Calc** (`source/XP-Calc.dc.html`, `XP-Calc-Down.dc.html`, `XP-Calc-Hover.dc.html`, `XP-Calc-Error.dc.html`;
+  `screen_specs.md` §17 mục XP-Calc; ảnh `XPCalc.png`, `XPCalcDown.png`, `XPCalcHover.png`, `XPCalcError.png`) — theo
+  *Calculator* Standard:
+  - Tiêu đề `Máy tính bỏ túi`; bỏ thanh menu (như Dò mìn).
+  - Ô hiển thị trắng, số JBMono-16B căn phải (`0.` lúc đầu); ô bộ nhớ `M`; `Backspace` / `CE` / `C` đỏ.
+  - Lưới 6 × 4 nút 34×26: MC MR MS M+ · 7 8 9 / sqrt · 4 5 6 * % · 1 2 3 - 1/x · 0 +/- . + =; số xanh, phép tính đỏ.
+  - Nút nhấn lõm, nút hot viền cam; lỗi `Không thể chia cho 0.`
+  - Máy chưa có.
+- Phiếu: `docs/phieu_panel/2026-11-27-calculator.md`
+- Đổi luật: Máy tính bỏ túi thuộc skill Giải trí (`fun`, cùng Dò mìn) — có mục Start › Tất cả chương trình, không biểu
+  tượng desktop.
+- Cần firmware: `POST /api/calc {display, mem, down}` (hoặc tương tự) và `/api/state` `calc`; màu mặt nút nhấn
+  `#DCD8CC` / `#A7A495`.
+
+**Việc cần làm trong code:**
+- Kênh `Calc`: vẽ theo đặc tả; nhận chuỗi hiển thị, bộ nhớ, nút đang nhấn từ app; chỉ vẽ lại nút đổi + ô hiển thị.
+- App: giữ phép tính như XP Standard (trái sang phải, `=` lặp), click nút / phím số gửi trạng thái.
+
+## P-2026-11-28.30 — Thuộc tính màn hình (Display Properties) kiểu Windows XP
+
+- **Kênh mới Display** (`source/XP-Display-Desktop|Saver|SaverList|Settings.dc.html`, `screen_specs.md` §17 mục
+  XP-Display; ảnh `XPDisplayDesktop.png`, `XPDisplaySaver.png`, `XPDisplaySaverList.png`, `XPDisplaySettings.png`) — theo
+  *Display Properties*:
+  - Tiêu đề `Thuộc tính màn hình`; tab `Màn nền` / `Bảo vệ màn hình` / `Cài đặt` (bỏ Themes, Appearance); màn hình CRT
+    xem trước mỗi tab; nút `OK` / `Hủy` / `Áp dụng` (mờ tới khi có thay đổi).
+  - Màn nền: danh sách (Không) / Đồi xanh / Ảnh của bạn; `Duyệt...` mờ; `Gửi ảnh nền từ app glimmer.`
+  - Bảo vệ màn hình: ô chọn chế độ = `nightMode` 0–3, giờ bắt đầu / kết thúc chỉ đọc, ☑ `Tối khi rảnh 15 phút`.
+  - Cài đặt: thanh trượt `Độ sáng` (Ít · % · Nhiều), `240 x 240`, ☑ `Đảo màu`.
+  - Máy chưa có; mục `Thuộc tính` của menu desktop chưa mở gì.
+- Phiếu: `docs/phieu_panel/2026-11-27-display-properties.md`
+- Cần firmware: màu vỏ màn hình `#8A8A8A` / `#D4D0C8`, đèn `#21A121`; giải mã hình nền thu 1/4 cho màn xem trước;
+  chọn hình nền (Không) = nền một màu, Đồi xanh = nền dự phòng (dù đã có /wallpaper.jpg).
+
+**Việc cần làm trong code:**
+- Kênh `Display` (hệ thống): menu desktop › `Thuộc tính` mở nó; tab, mục chọn, danh sách mở, nút do app gửi; đổi giá
+  trị qua `/api/settings` (cùng chỗ lưu với app); đổi một mục chỉ vẽ lại mục đó + màn xem trước.
+- App: cửa sổ Thuộc tính màn hình trong màn mô phỏng chạm được như Đồng hồ.
+
+## P-2026-11-28.29 — Alt+Tab: đổi qua lại các cửa sổ như Windows XP
+
+- **Lớp vẽ đè Alt+Tab** (`source/XP-AltTab-3|1|6.dc.html`, `screen_specs.md` §17 mục XP-AltTab; ảnh `XPAltTab3.png`,
+  `XPAltTab1.png`, `XPAltTab6.png`) — theo hộp chuyển tác vụ của XP:
+  - Hộp giữa vùng y 0–213: viền `#0A246A`, nền `#D3E5FA`; hàng biểu tượng 32 px các cửa sổ đang mở (dùng gần nhất
+    trước), ô 40×38, tối đa 5 mỗi hàng; ô chọn khung xpSelect 2 px; ô tên trắng dưới cùng, JBMono-11 căn giữa.
+  - Mở → chọn sẵn cửa sổ thứ hai; 1 cửa sổ → chính nó; không cửa sổ → không hiện hộp; Shift+Tab lùi.
+  - Máy chưa có.
+- Phiếu: `docs/phieu_panel/2026-11-27-alt-tab.md`
+- Cần firmware: menu kind `alttab` + `sel` trong `/api/menu` và `/api/state` `menu`; màu `#0A246A`, `#D3E5FA` (đã có ở
+  Start menu); biểu tượng 32 px cho Ngày và Giờ / Trình quản lý tác vụ (16 px ×2).
+
+**Việc cần làm trong code:**
+- Vẽ hộp Alt+Tab như menu (dừng `tick()` kênh dưới); đổi `sel` chỉ vẽ lại 2 ô + ô tên; `kind:none` → `draw()` lại.
+- App: giữ Alt + Tab / Shift+Tab → gửi `alttab` + `sel`; nhả Alt → mở cửa sổ đã chọn (như chạm nút thanh tác vụ).
+
+## P-2026-11-28.28 — Trình quản lý tác vụ kiểu Windows XP
+
+- **Kênh mới TaskMgr** (`source/XP-TaskMgr-Apps|Hover|Empty|Perf|Net.dc.html`, `screen_specs.md` §17 mục XP-TaskMgr;
+  ảnh `XPTaskMgrApps.png`, `XPTaskMgrHover.png`, `XPTaskMgrEmpty.png`, `XPTaskMgrPerf.png`, `XPTaskMgrNet.png`) — theo
+  *Windows Task Manager*:
+  - Tiêu đề `Trình quản lý tác vụ` (140 px), biểu tượng cửa sổ có đồ thị xanh; bỏ thanh menu; 3 tab `Ứng dụng` /
+    `Hiệu năng` / `Mạng` (bỏ Processes, Users).
+  - Ứng dụng: ListView `Tác vụ | Trạng thái` (mỗi cửa sổ đang mở một dòng, `Đang chạy`, dòng chọn xpSelect); nút
+    `Kết thúc tác vụ`, `Chuyển tới` (bỏ `Tác vụ mới...`); trống → nút mờ; con trỏ trên nút → viền cam *hot* như XP.
+  - Hiệu năng: đo CPU / Bộ nhớ (LED xanh trên đen) + đồ thị lịch sử lưới xanh; `Bộ nhớ (KB)` Còn trống / Khối lớn;
+    `Đã chạy`.
+  - Mạng: đồ thị cường độ Wi-Fi % + ListView `Mạng | Tín hiệu | IP`.
+  - Thanh trạng thái 3 ô: `Tác vụ: N` · `CPU: x%` · `Trống: yK`.
+  - Đổi chữ so với phiếu: `Khối lớn nhất` → `Khối lớn`, `Thời gian chạy` → `Đã chạy` (vừa ô).
+  - Máy chưa có.
+- Phiếu: `docs/phieu_panel/2026-11-27-task-manager.md`
+- Cần firmware: màu đồ thị XP — đen `#000000`, xanh `#00FF00`, xanh tối `#007F00`, lưới `#008040`; biểu tượng `#0A4BE0` /
+  `#004000`; CPU % (ví dụ tỷ lệ thời gian `loop()` bận); lịch sử 38 điểm CPU / heap và 48 điểm RSSI trong RAM.
+
+**Việc cần làm trong code:**
+- Kênh `TaskMgr` (hệ thống, không skill, không biểu tượng desktop): mở từ Ctrl+Alt+Del / menu thanh tác vụ của app; tab,
+  dòng chọn, nút do app gửi; Kết thúc tác vụ = app gửi danh sách cửa sổ mới.
+- Mỗi giây: cuộn đồ thị tab đang hiện + số đo + ô thanh trạng thái đổi — không vẽ lại cả cửa sổ; lịch sử không xoá khi
+  vẽ lại dưới con trỏ.
+- Menu chuột phải thanh tác vụ: thêm mục `Trình quản lý tác vụ` (như XP).
+
+## P-2026-11-28.27 — Cửa sổ Ảnh lấy ảnh từ điện thoại
+
+- **Kênh Photo** (mới `source/XP-Photo-Phone.dc.html`, `XP-Photo-Asking.dc.html`, `XP-Photo-Offline.dc.html`; sửa
+  `XP-Photo-Empty.dc.html`; `screen_specs.md` mục XP-Photo; ảnh `XPPhotoPhone.png`, `XPPhotoAsking.png`,
+  `XPPhotoOffline.png`, `XPPhotoEmpty.png`) — theo *Windows Picture and Fax Viewer*:
+  - Từ điện thoại: tiêu đề `Ảnh · 3/40` (70 px) — thứ tự trong kho của app.
+  - Đang xin ảnh kế tiếp: giữ ảnh cũ + con trỏ chờ XP-Open (mũi tên (132, 160) + đồng hồ cát (142, 169)); ảnh mới về
+    vẽ đè, con trỏ mất. Không hộp tải về, không màn trống.
+  - Điện thoại vắng: tiêu đề `Ảnh · 3/8 · đã lưu` (126 px) — vị trí trong ảnh máy đã giữ; không thanh trạng thái.
+  - Kho rỗng: `Chưa có ảnh` + `Thêm ảnh trong app glimmer` (182 px); bỏ `hoặc glimmer.local`.
+  - Máy đang: vẽ đè ảnh mới ngay khi về, meta `index/count` / `i/n`; chưa có con trỏ chờ khi xin, chưa có `· đã lưu`.
+- Phiếu: `docs/phieu_panel/2026-11-27-anh-tu-dien-thoai.md`
+
+**Việc cần làm trong code:**
+- Kênh `Photo`: lúc xin ảnh kế tiếp hiện con trỏ chờ trên ảnh cũ (chế độ chuột: con trỏ của app thành chờ); offline thêm
+  `· đã lưu` vào tiêu đề; online ↔ offline chỉ vẽ lại tiêu đề; chữ kho rỗng như trên.
+
+## P-2026-11-28.26 — Màn cài Wi-Fi hiện mã QR để quét bằng app
+
+- **Màn hệ thống Đăng nhập** (`source/XP-SetupMode.dc.html`, `screen_specs.md` mục XP-SetupMode; ảnh `XPSetupMode.png`):
+  - Mã QR giữa màn: khối trắng (46, 35, 148×148), 29×29 ô × 4 px từ (62, 51), viền trắng 4 ô, đen trên trắng —
+    `WIFI:T:nopass;S:glimmer-setup;;` (phiên bản 3, ECC M; `drawSetupQr` có sẵn).
+  - Cờ + `Window` nghiêng + `xp` thu vào dải trên (cờ (8, 3), chữ (40, 9), `xp` (110, 8)).
+  - Hướng dẫn `Quét mã bằng app glimmer` JBMono-11 white, căn giữa, y 187 (168 px).
+  - Dải dưới: nút nguồn + `Cài đặt Wi-Fi` giữ; thêm `glimmer-setup` xpWelcomeSub TL (141, 219), 91 px — dự phòng khi
+    không có app (vào Wi-Fi tay).
+  - Bỏ bố cục trái / phải (vạch x 116, ô người dùng, `192.168.4.1`).
+  - Máy đang vẽ log-on không có QR.
+- Phiếu: `docs/phieu_panel/2026-11-28-qr-man-log-on.md`
+
+**Việc cần làm trong code:**
+- Màn `SetupMode`: vẽ theo tọa độ trên, QR bằng `drawSetupQr(46, 35, 4, ssid)`; vẽ một lần, không đổi khi đang ở AP.
+
 ## P-2026-11-27.25 — Start đủ mọi chương trình, Dò mìn
 
 - **Start › Tất cả chương trình** (`source/XP-Start-All-Full.dc.html`, `screen_specs.md` §17 XP-Start-All; ảnh `XPStartAllFull.png`):

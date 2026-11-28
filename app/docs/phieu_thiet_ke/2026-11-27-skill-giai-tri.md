@@ -1,6 +1,7 @@
 # Phiếu thiết kế: hàng skill Giải trí (Dò mìn) trên màn Skill
 
 - Trạng thái: chờ thiết kế
+- Đã vẽ: 2026-11-28.13
 - Ngày: 2026-11-27 · Nguồn: áp panel P-2026-11-27.25 (Dò mìn) — skill Giải trí `fun` thành gói thật
 
 ## Dán vào canvas

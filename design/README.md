@@ -13,6 +13,7 @@ Thiết kế giao diện app Android (`app/`), làm trước code. Vẽ trên ca
 | `docs/components.md` | Widget dùng chung |
 | `docs/navigation.json` | Màn, trạng thái, luồng chuyển |
 | `screens/@3x/` | Ảnh 1170 px rộng của mọi trạng thái (màn dài cao hơn 2532) |
+| `images/` | Ảnh dùng trong thiết kế (vd ảnh màn thiết bị); `source/*.dc.html` trỏ tới bản tải lên canvas `/_blob/…` cùng nội dung |
 | `source/` | Bản gốc `.dc.html` chép nguyên từ canvas; `<Màn>.dc.html` có prop `state`, các file `<Màn><TrạngThái>.dc.html` chỉ nhúng lại |
 
 Khung 390 × 844 dp. Bảng màu theo màn hình thiết bị (`src/core/theme.h`), chữ JetBrains Mono, linh vật Clawd.

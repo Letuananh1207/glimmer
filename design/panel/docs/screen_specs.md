@@ -1844,6 +1844,16 @@ Nguồn `source/Photo-Empty.dc.html` · ảnh `screens/@2x/PhotoEmpty.png`
 
 ## 17. Kiểu XP (Luna) — giao diện toàn máy
 
+> **P-2026-11-28.32 — Máy tính / Ảnh của tôi / Thùng rác:** cửa sổ Explorer kiểu XP, hộp xác nhận xoá, biểu tượng Thùng rác đầy — xem mục XP-Explorer.
+
+> **P-2026-11-28.31 — Máy tính bỏ túi:** Calculator Standard kiểu XP (skill Giải trí) — xem mục XP-Calc.
+
+> **P-2026-11-28.30 — Thuộc tính màn hình:** hộp thoại Display Properties (Màn nền / Bảo vệ màn hình / Cài đặt) — xem mục XP-Display.
+
+> **P-2026-11-28.29 — Alt+Tab:** hộp chuyển tác vụ kiểu XP giữa màn — xem mục XP-AltTab.
+
+> **P-2026-11-28.28 — Trình quản lý tác vụ:** cửa sổ mới kiểu Windows Task Manager (tab Ứng dụng / Hiệu năng / Mạng) — xem mục XP-TaskMgr.
+
 > **P-2026-11-26.23 — dọn thiết kế:** bỏ 76 màn lỗi thời khỏi canvas và `source/` (màn kiểu cũ trước XP, màn XP đã có bản thay); XP-Desk-All = desktop hiện hành (Claude thu nhỏ); Thời tiết lỗi / cũ / Dự báo chưa có vẽ lại theo cửa sổ có tab. Các mục đặc tả của màn đã bỏ giữ làm lịch sử.
 
 > **P-2026-11-26.22 — Ngày và Giờ chạm được:** 3 tab (Ngày và giờ / Múi giờ / Internet), tháng + năm tách, danh sách tháng, chọn múi giờ, đồng bộ lại — xem mục XP-Real.
@@ -1930,7 +1940,7 @@ BBBBBB.YYYYY..
 
 - **Khởi động** (`XP-Splash`): nền đen; cờ ×3 (42×36) trên-phải; `Clawdsoft` 11 white, `Window` 16B white, `xp` 11 xpWelcomeOrange chỉ số trên, `Professional` 11 xpWelcomeOrange — cụm căn giữa (x0 = (240 − (w + 16)) / 2); ô 56×11 tại (92, 152) viền xpBootGrey góc vạt, 3 khối xanh 6×5 bước 8 chạy qua lại; góc dưới phải chữ `Clawdsoft` nghiêng white (bitmap, mép phải x 231, y 226) — chỗ tên hãng của XP.
 - **Welcome** (`XP-Connecting`): nền xpWelcome; dải trên y 0–29 + đường y 30, dải dưới y 206–239 xpWelcomeBand; viền y 205–206 cam giữa nhạt dần ra hai bên; chỉ chữ `welcome` nghiêng white + bóng tại (70, 106).
-- **Đăng nhập** (`XP-SetupMode`): nền welcome; trái cờ ×2 + `Window` nghiêng + `xp` + `Để bắt đầu, kết nối Wi-Fi`; vạch dọc x 116 mờ hai đầu; phải ô chọn (ảnh khung trắng + `glimmer-setup` + `192.168.4.1` nhỏ); dưới-trái nút nguồn đỏ + `Cài đặt Wi-Fi`. Chi tiết: token `themeXP.welcome`.
+- **Đăng nhập** (`XP-SetupMode`) — **P-2026-11-28.26: mã QR giữa màn, xem mục XP-SetupMode** (dòng dưới là bản cũ): nền welcome; trái cờ ×2 + `Window` nghiêng + `xp` + `Để bắt đầu, kết nối Wi-Fi`; vạch dọc x 116 mờ hai đầu; phải ô chọn (ảnh khung trắng + `glimmer-setup` + `192.168.4.1` nhỏ); dưới-trái nút nguồn đỏ + `Cài đặt Wi-Fi`. Chi tiết: token `themeXP.welcome`.
 - **Cập nhật** (`XP-OtaProgress`): nền welcome; `đang cập nhật...` nghiêng (20, 96); `Đừng tắt hay rút điện máy.` 11 TC (120, 130).
 - **Đêm** (`XP-Night`): nền đen, chữ #4D4D4D, không cửa sổ.
 
@@ -2161,6 +2171,19 @@ Nguồn `source/XP-Setup.dc.html` · ảnh `screens/@2x/XPSetup.png`
 | 222, 176 | TR | `JBMono-11` | `192.168.100.40` | 98 |
 
 ### XP-Photo — Kiểu XP · Ảnh
+
+> **P-2026-11-28.27 — ảnh từ điện thoại** (phiếu `docs/phieu_panel/2026-11-27-anh-tu-dien-thoai.md`; theo *Windows Picture
+> and Fax Viewer*: giữ ảnh cũ tới khi ảnh mới mở xong, con trỏ đồng hồ cát, không màn trống). Ảnh 188×188 tại (26, 24) như cũ.
+>
+> | trạng thái | nguồn / ảnh | tiêu đề (`JBMono-12B` white TL (24, 4), bóng (+1, +1)) | khác |
+> |---|---|---|---|
+> | từ điện thoại (`source.state` online, `remote`) | `XP-Photo-Phone` · `XPPhotoPhone.png` | `Ảnh · 3/40` 70 px — `index/count` của kho trên app | — |
+> | đang xin ảnh kế tiếp (≤ 3 s) | `XP-Photo-Asking` · `XPPhotoAsking.png` | giữ tiêu đề của ảnh đang hiện | ảnh cũ giữ nguyên; con trỏ chờ XP-Open: mũi tên 12×19 tại (132, 160) + đồng hồ cát 9×12 tại (142, 169), 4 khung × 200 ms (chế độ chuột: con trỏ của app thành chờ tại chỗ, `Cursor::busy`). Ảnh mới về → vẽ đè ảnh, con trỏ mất (vẽ lại vùng con trỏ). Không hộp tải về. |
+> | điện thoại vắng (offline, chiếu ảnh đã lưu) | `XP-Photo-Offline` · `XPPhotoOffline.png` | `Ảnh · 3/8 · đã lưu` 126 px — `current/total` của ảnh trên máy | không thanh trạng thái (ảnh chiếm hết thân) |
+> | kho rỗng (app + máy) | `XP-Photo-Empty` · `XPPhotoEmpty.png` | `Ảnh` | `Chưa có ảnh` 16B TC (120, 100) 110 px như cũ; `Thêm ảnh trong app glimmer` 11 TC (120, 128) 182 px; bỏ `hoặc` + `glimmer.local` |
+>
+> Đổi trạng thái online ↔ offline chỉ vẽ lại tiêu đề (vùng chữ x 22–181, y 2–19), không vẽ lại ảnh.
+
 
 Nguồn `source/XP-Photo.dc.html` · ảnh `screens/@2x/XPPhoto.png`
 
@@ -2504,6 +2527,8 @@ Nguồn `source/XP-Agents-Idle.dc.html` · ảnh `screens/@2x/XPAgentsIdle.png`
 
 ### XP-Photo-Empty — XP · Ảnh · chưa có ảnh
 
+> **P-2026-11-28.27:** dòng 2 = `Thêm ảnh trong app glimmer` (182 px); bỏ `hoặc` / `glimmer.local` — xem mục XP-Photo.
+
 Nguồn `source/XP-Photo-Empty.dc.html` · ảnh `screens/@2x/XPPhotoEmpty.png`
 
 | x, y | datum | font | nội dung | px |
@@ -2604,6 +2629,25 @@ Nguồn `source/XP-Connecting.dc.html` · ảnh `screens/@2x/XPConnecting.png`
 |---|---|---|---|---|
 
 ### XP-SetupMode — XP · màn đăng nhập / cài đặt Wi-Fi
+
+> **P-2026-11-28.26 — mã QR cài Wi-Fi, QR giữa màn:** thay bảng dưới (bản cũ chia trái / phải ở x 116). Phiếu
+> `docs/phieu_panel/2026-11-28-qr-man-log-on.md`. Nền, dải trên / dưới, vạch viền màu như cũ (token `themeXP.welcome`);
+> không thanh tác vụ, không hoạt ảnh; vẽ một lần, không đổi khi đang ở AP.
+>
+> | khối | tọa độ | màu / font | chữ, rộng đo |
+> |---|---|---|---|
+> | cờ ×2 | 28×24 tại (8, 3) — trong dải trên | 4 màu cờ | — |
+> | `Window` nghiêng | bitmap 68×12 white tại (40, 9), bóng xpWelcomeShadow (41, 10) | — | — |
+> | `xp` | TL (110, 8) | `JBMono-11` xpWelcomeOrange | 14 |
+> | mã QR | khối white (46, 35, 148×148); 29×29 ô × 4 px từ (62, 51) (viền trắng 4 ô); ô tối black | `drawSetupQr(46, 35, 4, ssid)` | `WIFI:T:nopass;S:glimmer-setup;;` (v3, ECC M) |
+> | hướng dẫn | TL (36, 187) — căn giữa x 120 | `JBMono-11` white | `Quét mã bằng app glimmer` 168 |
+> | nút nguồn | 14×14 tại (8, 218), như cũ | white / xpClose | — |
+> | `Cài đặt Wi-Fi` | TL (28, 219) | `JBMono-11` white | 91 |
+> | tên AP (dự phòng khi không có app) | TL (141, 219) | `JBMono-11` xpWelcomeSub | `glimmer-setup` 91 |
+>
+> Bỏ: chữ `Để bắt đầu, kết nối Wi-Fi`, vạch dọc x 116, ô chọn người dùng (ảnh Clawd, `glimmer-` / `setup`, `192.168.4.1`).
+> Hoa văn QR trong ảnh là mặt nạ 2; thư viện firmware tự chọn mặt nạ — cùng nội dung, cùng cỡ.
+
 
 Nguồn `source/XP-SetupMode.dc.html` · ảnh `screens/@2x/XPSetupMode.png`
 
@@ -2826,6 +2870,181 @@ nào mở (như XP thật: boot → Welcome → desktop).
 
 **Start menu** (`XPStartMenu`, `XPStartAll`): nút dưới phải `Tắt màn` → **`Tắt máy`** (49 px, nút đỏ giữ) = *Turn Off Computer*
 của XP, mở hộp Tắt máy tính. `Khởi động lại` bên trái giữ như P-.20.
+
+### XP-TaskMgr — Trình quản lý tác vụ (kênh `TaskMgr`)
+
+> **P-2026-11-28.28 — Task Manager kiểu XP.** Phiếu `docs/phieu_panel/2026-11-27-task-manager.md`.
+
+Nguồn `source/XP-TaskMgr-Apps|Hover|Empty|Perf|Net.dc.html` · ảnh `XPTaskMgrApps.png`, `XPTaskMgrHover.png`,
+`XPTaskMgrEmpty.png`, `XPTaskMgrPerf.png`, `XPTaskMgrNet.png`. Token `themeXP.taskMgr`. Thành phần XP thật: *Windows Task
+Manager* (tab Applications, Performance, Networking; thanh trạng thái 3 ô). Chương trình hệ thống: không thuộc skill, không
+biểu tượng desktop; mở bằng Ctrl+Alt+Del của app hoặc chuột phải thanh tác vụ › Trình quản lý tác vụ.
+
+- **Khung**: cửa sổ XP, tiêu đề `Trình quản lý tác vụ` 12B (140 px), biểu tượng 16×16 tại (4, 3): khung xpLabel, dải tiêu đề
+  `#0A4BE0`, thân đen, lưới `#004000`, đường đồ thị `#00FF00`. Không thanh menu. □ tắt như mọi cửa sổ.
+- **Tab** (y 26–41, như Đồng hồ): `Ứng dụng` (6, w 66) · `Hiệu năng` (72, w 73) · `Mạng` (145, w 38); chữ TL (x+5, 29).
+  Trang (6, 41, 228×152) viền xpFieldBorder, nền white (y 42–191).
+- **Thanh trạng thái** (2, 196, 236×18) xpBody, vạch trên xpDim; 3 ô lõm (viền trái / trên xpDim, phải / dưới white):
+  x 3–78 `Tác vụ: 3` (63), x 80–148 `CPU: 12%` (56), x 150–236 `Trống: 21K` (70); chữ JBMono-11 TL (x+4, 199).
+  Vẽ lại mỗi giây chỉ ô nào đổi số.
+
+**Ứng dụng** (`XPTaskMgrApps`):
+
+| khối | tọa độ | màu / font | chữ, rộng đo |
+|---|---|---|---|
+| ListView | (10, 46, 220×112) viền xpFieldBorder | white | — |
+| hàng tiêu đề | (11, 47, 218×15) xpBody, vạch y 62 xpGroup + y 63 xpDim; vạch cột (150, 50, 1×10) xpDim | `JBMono-11` black TL (16, 48) / (156, 48) | `Tác vụ` 42 / `Trạng thái` 70 |
+| dòng | cao 18 từ y 64; biểu tượng 16 (Start icons) tại (14, dòng+1…4); tên TL (34, dòng+2); trạng thái TL (156, dòng+2) | `JBMono-11` black | `Claude`, `Thời tiết`, `Ngày và Giờ` 77; `Đang chạy` 63 |
+| dòng chọn | (11, dòng, 218×18) xpSelect, chữ white | — | — |
+| nút | `Kết thúc tác vụ` (26, 165, 117×21) · `Chuyển tới` (147, 165, 82×21): viền `#003C74` góc cắt 1 px, nền `#F4F3EE`, 2 hàng đáy `#D6D0C5`, chữ căn giữa (y+3) | `JBMono-11` black | 105 / 70 |
+
+- Mỗi cửa sổ trong `windows.open` một dòng, theo thứ tự mở; tên = tiêu đề cửa sổ. Dòng chọn do app gửi.
+- **Không cửa sổ nào** (`XPTaskMgrEmpty`): danh sách trống, hai nút chữ xpDim (mờ), `Tác vụ: 0`.
+- **Con trỏ trên nút** (`XPTaskMgrHover`, nút *hot* của XP): viền trong cam — hàng y+1 `#FFF0CF`, y+2 và y+h−3 `#F9B348`,
+  cột x+1 / x+w−2 (y+2…y+h−3) `#F9B348`, hàng y+h−2 `#E59700`. Chỉ vẽ lại nút đó.
+
+**Hiệu năng** (`XPTaskMgrPerf`):
+
+| khối | tọa độ | màu / font | chữ |
+|---|---|---|---|
+| groupbox `CPU` | (10, 50, 52×46) | như XP-Real | `CPU` 21 |
+| đồng hồ đo CPU | nền đen (14, 56, 44×36); 6 nấc × 2 cột 6×2 px từ (29, 59), bước 3; nấc sáng `#00FF00`, tắt `#007F00`; số TC (36, 79) | `JBMono-11` `#00FF00` | `12 %` 28 |
+| groupbox `Lịch sử dùng CPU` | (66, 50, 164×46) | — | 112 |
+| đồ thị | nền đen (70, 56, 156×36); lưới `#008040` mỗi 12 px; đường `#00FF00` 1 px, mỗi điểm 4 px (1 s), 38 điểm, mới nhất ở mép phải | — | — |
+| groupbox `Bộ nhớ` + đo | (10, 104, 52×46); đo (14, 110, 44×36) = heap đã dùng / tổng; số | — | `Bộ nhớ` 42; `20K` 21 |
+| groupbox `Lịch sử bộ nhớ` + đồ thị | (66, 104, 164×46); (70, 110, 156×36) | — | 98 |
+| groupbox `Bộ nhớ (KB)` | (10, 158, 130×34); `Còn trống` TL (14, 162) + giá trị TR (136, 162); `Khối lớn` TL (14, 176) + TR (136, 176) | `JBMono-11` black | 63 / 56; `21412` / `15200` 35 (heap, maxblk) |
+| groupbox `Đã chạy` | (144, 158, 86×34); giá trị TC (187, 170) | `JBMono-11` | 49; `2NG 3G 14P` 70 (`shortDuration`) |
+
+Mỗi giây: cuộn 2 đồ thị (vẽ lại cả ô đen 156×36), số đo, 2 giá trị KB; `Đã chạy` mỗi phút. Lịch sử giữ trong RAM (38 điểm × 3),
+không xoá khi `draw()` vẽ lại dưới con trỏ.
+
+**Mạng** (`XPTaskMgrNet`):
+
+- `Wi-Fi · Đã kết nối` TL (10, 46) xpGroupLabel (126); nhãn trục `100%` TR (38, 62), `0%` TR (38, 120) xpLabel.
+- Đồ thị (40, 61, 190×72) như trên = cường độ Wi-Fi % (RSSI −100…−40 dBm → 0…100 %), 48 điểm.
+- ListView (10, 140, 220×38): tiêu đề `Mạng` (15) · `Tín hiệu` (80) · `IP` (145), vạch cột x 75 / 140; dòng y 160:
+  ssid (tối đa 8 ký tự = 56 px, cắt `Utf8::copy`), `-58 dBm` 49, `192.168.1.23` 84.
+
+### XP-AltTab — ô chuyển tác vụ (Alt+Tab)
+
+> **P-2026-11-28.29 — Alt+Tab kiểu XP.** Phiếu `docs/phieu_panel/2026-11-27-alt-tab.md`.
+
+Nguồn `source/XP-AltTab-3|1|6.dc.html` (nền nhúng `XP-Weather-Props`) · ảnh `XPAltTab3.png`, `XPAltTab1.png`,
+`XPAltTab6.png`. Token `themeXP.altTab`. Thành phần XP thật: hộp chuyển tác vụ (*CoolSwitch*) — hàng biểu tượng các cửa sổ
+đang mở theo thứ tự dùng gần nhất, ô chọn có khung vuông, tên cửa sổ dưới cùng.
+
+- **Lớp vẽ đè** như menu (menu kind `alttab`, `sel`): `tick()` của kênh dưới dừng; thanh tác vụ không bị che.
+- **Hộp**: rộng `W = max(12 + 40 × cột, 160)`, cao `H = 8 + 38 × hàng + 4 + 18 + 8`; căn giữa x 0–239, y 0–213
+  (`x0 = (240 − W) / 2`, `y0 = (214 − H) / 2`). Viền `#0A246A` 1 px, góc cắt 1 px; viền trong white 1 px; nền `#D3E5FA`.
+  3 cửa sổ → (40, 69, 160×76); 6 cửa sổ → (14, 50, 212×114).
+- **Ô**: 40×38, tối đa 5 mỗi hàng (XP: 7), lưới căn giữa hộp, từ y0 + 8. Biểu tượng 32 px căn giữa ô 40×36: Claude = Clawd ×2
+  36×20, Codex / Ảnh = bitmap desktop 32×23 (P-.19), Thời tiết = `XP::weatherIcon` 32, Ngày và Giờ / Trình quản lý tác vụ =
+  biểu tượng 16 px ×2.
+- **Ô chọn**: khung xpSelect 2 px — (ô.x + 1, ô.y, 38×36) tô xpSelect rồi (ô.x + 3, ô.y + 2, 34×32) nền hộp, vẽ lại biểu tượng.
+- **Ô tên**: (x0 + 8, y0 + 8 + 38 × hàng + 4, W − 16 × 18) viền xpFieldBorder, nền white; tên `JBMono-11` black căn giữa
+  (y + 1). Tên = tiêu đề cửa sổ (dài nhất `Trình quản lý tác vụ` 140 px).
+- **Hành vi** (như XP): mở → chọn sẵn cửa sổ thứ hai (một cửa sổ → chính nó); Tab tiến, Shift+Tab lùi, vòng quanh; không
+  cửa sổ nào → không hiện hộp. Đổi ô chọn chỉ vẽ lại 2 ô + ô tên. Nhả Alt → đóng hộp (`draw()` kênh dưới) rồi mở cửa sổ đã
+  chọn như XP-Open (nút lún, khung trống + con trỏ chờ).
+
+### XP-Display — Thuộc tính màn hình (kênh `Display`)
+
+> **P-2026-11-28.30 — Display Properties kiểu XP.** Phiếu `docs/phieu_panel/2026-11-27-display-properties.md`.
+
+Nguồn `source/XP-Display-Desktop|Saver|SaverList|Settings.dc.html` · ảnh `XPDisplayDesktop.png`, `XPDisplaySaver.png`,
+`XPDisplaySaverList.png`, `XPDisplaySettings.png`. Token `themeXP.display`. Thành phần XP thật: *Display Properties* (tab
+Desktop, Screen Saver, Settings; màn hình xem trước; OK / Cancel / Apply). Chương trình hệ thống, không skill; mở từ menu
+chuột phải desktop › `Thuộc tính` (mục đã có, nay mở cửa sổ này).
+
+- **Khung**: cửa sổ XP, tiêu đề `Thuộc tính màn hình` 12B (133 px), biểu tượng 16 = biểu tượng `Desktop` của Start tại (4, 3).
+- **Tab** (y 26–41): `Màn nền` (6, w 57) · `Bảo vệ màn hình` (63, w 113) · `Cài đặt` (176, w 57); chữ TL (x+4, 29).
+  Trang (6, 41, 228×140) viền xpFieldBorder, nền white.
+- **Nút** (y 187, cao 21, kiểu nút Task Manager): `OK` (53, w 49) · `Hủy` (106, w 49) · `Áp dụng` (159, w 70; chữ 49).
+  `Áp dụng` chữ xpDim tới khi có thay đổi chưa áp. Con trỏ trên nút → viền cam *hot*.
+- **Màn hình xem trước** (76×73): vỏ (x, y, 76×64) viền `#8A8A8A`, nền `#D4D0C8`, cạnh sáng trên / trái white; khung màn
+  (x+7, y+4, 62×56) xpLabel; màn (x+8, y+5, 60×54); đèn nguồn (x+64, y+61, 4×1) `#21A121`; cổ (x+30, y+64, 16×5) `#B2B2B2`,
+  đế (x+22, y+69, 32×4) `#D4D0C8` + vạch đáy `#8A8A8A`. Màn = hình nền thu 1/4 (TJpgDec scale 2) + dải thanh tác vụ 6 px.
+
+| tab | khối | tọa độ · font · chữ (px) |
+|---|---|---|
+| Màn nền | màn xem trước | (12, 48) |
+| | `Hình nền:` | TL (96, 46) 11 · 63 |
+| | danh sách | (96, 62, 132×52) viền xpFieldBorder; dòng 16 từ y 63, chữ TL (100, +1): `(Không)` 49 · `Đồi xanh` 56 · `Ảnh của bạn` 77; mục chọn (97, y, 130×16) xpSelect chữ white. `Ảnh của bạn` chỉ có khi đã có /wallpaper.jpg |
+| | `Duyệt...` | nút (163, 120, 65×21) mờ |
+| | ghi chú | `Gửi ảnh nền từ app glimmer.` TL (12, 150) xpLabel · 189 |
+| Bảo vệ màn hình | màn xem trước | (12, 48), màn đen + `23:47` 11 xpLabel căn giữa (y+18) |
+| | `Chế độ:` + ô chọn | TL (96, 46); ô (96, 61, 132×18) chữ (99, 63) + nút xổ (212, 63, 14×14) xpBtn. Mục: `(Không)` / `Tối dần` / `Đồng hồ` / `Tắt màn` = `nightMode` 0–3 |
+| | danh sách mở (`XPDisplaySaverList`) | (96, 79, 132×66) viền black, nền white, dòng 16; mục hiện tại xpSelect |
+| | `Bắt đầu` / `Kết thúc` | nhãn TL (96, 89) / (96, 111) 49 / 56; ô chỉ đọc (160, 86 / 108, 68×18) nền xpBody, `22:00` / `07:00` TL (164, +2) |
+| | groupbox `Khi rảnh` | (10, 140, 220×34) 56; ☑ (16, 152) + `Tối khi rảnh 15 phút` TL (34, 152) · 140 (`idleDim`) |
+| Cài đặt | màn xem trước | (82, 46) |
+| | groupbox `Độ sáng` | (10, 128, 128×48) 49; thanh trượt XP: rãnh (20, 142, 108×2) xpDim + hàng sáng white, 11 vạch 1×3 tại y 156; nút trượt 11×13 (viền `#003C74`, viền trong white, lõi xpStartHi, mũi nhọn xuống) căn tâm x = 20 + độ sáng % × 107; `Ít` TL (18, 160) · `80%` TC (74, 160) · `Nhiều` TR (132, 160) |
+| | groupbox `Màu` | (142, 128, 88×48) 21; `240 x 240` TL (148, 141) 63; ☑ (148, 158) + `Đảo màu` TL (166, 158) 49 (`invertDisplay`) |
+
+- App tính chạm và gửi lệnh; đổi giá trị = `POST /api/settings` như màn Cài đặt của app (một nơi lưu). Đổi một mục chỉ
+  vẽ lại mục đó + màn xem trước; vẽ lại dưới con trỏ dùng `clipHits` cho màn xem trước (giải mã JPEG).
+
+### XP-Calc — Máy tính bỏ túi (kênh `Calc`)
+
+> **P-2026-11-28.31 — Calculator kiểu XP.** Phiếu `docs/phieu_panel/2026-11-27-calculator.md`.
+
+Nguồn `source/XP-Calc|XP-Calc-Down|XP-Calc-Hover|XP-Calc-Error.dc.html` · ảnh `XPCalc.png`, `XPCalcDown.png`,
+`XPCalcHover.png`, `XPCalcError.png`. Token `themeXP.calc`. Thành phần XP thật: *Calculator* chế độ Standard. Thuộc skill
+Giải trí (`fun`, cùng Dò mìn); có mục Start › Tất cả chương trình, không biểu tượng desktop.
+
+- **Khung**: cửa sổ XP, tiêu đề `Máy tính bỏ túi` 12B (105 px); biểu tượng 16 tại (4, 3): vỏ xpLabel, mặt `#D4D0C8`, màn
+  white + vạch black, 3 × 3 phím xpGroupLabel / cột phải xpRed. Không thanh menu, không thanh trạng thái.
+- **Ô hiển thị** (8, 27, 224×24): viền xpFieldBorder, nền white; số `JBMono-16B` black TR (227, 30) — `0.` lúc đầu, tối đa
+  16 ký tự. Lỗi: `Không thể chia cho 0.` `JBMono-12B` TR (227, 31), 147 px.
+- **Ô bộ nhớ** (8, 56, 34×24) lõm: viền xpDim, cạnh trong trên / trái xpLabel, nền xpBody; `M` 12B black căn giữa khi có bộ nhớ.
+- **Hàng 1** (y 56, cao 24): `Backspace` (46, w 76; 63 px) · `CE` (126, w 52) · `C` (182, w 50) — chữ xpRed.
+- **Lưới** 6 × 4, nút 34×26, gốc (8 + 38c, 86 + 30r):
+  `MC 7 8 9 / sqrt` · `MR 4 5 6 * %` · `MS 1 2 3 - 1/x` · `M+ 0 +/- . + =`. Chữ `JBMono-12B` căn giữa; số, `.`, `+/-` =
+  xpGroupLabel `#0046D5`; MC MR MS M+ và phép tính = xpRed `#C1272D`.
+- **Nút** (như nút Task Manager): viền `#003C74` góc cắt 1 px, mặt `#F4F3EE`, 2 hàng đáy `#D6D0C5`.
+  **Nhấn** (`XPCalcDown`): mặt `#DCD8CC`, 2 hàng trên `#A7A495`, chữ xuống 1 px. **Hot** (`XPCalcHover`): viền cam như
+  Task Manager.
+- App giữ phép tính (trái sang phải như XP Standard, `=` lặp phép cuối, `Backspace` / `CE` / `C`, bộ nhớ); thiết bị chỉ
+  vẽ. Bấm một nút: vẽ lại nút đó (lõm rồi thả) + ô hiển thị (+ ô bộ nhớ nếu đổi).
+
+### XP-Explorer — Máy tính, Ảnh của tôi, Thùng rác (kênh `Explorer`)
+
+> **P-2026-11-28.32 — Explorer kiểu XP.** Phiếu `docs/phieu_panel/2026-11-27-my-computer-thung-rac.md`.
+
+Nguồn `source/XP-Explorer-Computer|Photos|Confirm|Trash|TrashEmpty.dc.html`, `XP-Desk-TrashFull.dc.html` · ảnh
+`XPExplorerComputer.png`, `XPExplorerPhotos.png`, `XPExplorerConfirm.png`, `XPExplorerTrash.png`, `XPExplorerTrashEmpty.png`,
+`XPDeskTrashFull.png`. Token `themeXP.explorer`. Thành phần XP thật: cửa sổ *Windows Explorer* (My Computer chia nhóm,
+Thumbnails, Details), *Recycle Bin* (trống / đầy), hộp *Confirm File Delete*. Một kênh, 3 chỗ xem; bỏ thanh công cụ,
+thanh địa chỉ, khung tác vụ bên trái (không đủ chỗ) — tiêu đề cửa sổ = chỗ đang xem.
+
+- **Khung**: cửa sổ XP; thân white (2, 22, 236×174); thanh trạng thái (2, 196, 236×18) xpBody, 2 ô lõm x 3–150 / 152–236,
+  chữ `JBMono-11` TL (x+4, 199).
+- **Máy tính** (`XPExplorerComputer`; tiêu đề `Máy tính` 56, biểu tượng My Computer 16):
+  - Tiêu đề nhóm `JBMono-12B` xpGroupLabel TL (8, y) + vạch (8, y+15, 140×1) xpDividerFade + (148, y+15, 40×1) xpDivider:
+    `Ổ đĩa` y 26, `Thư mục` y 98.
+  - Ổ: biểu tượng ổ cứng 32×23 tại (10, 50); `Bộ nhớ (C:)` TL (48, 47) 77; thanh (48, 62, 122×10) viền xpFieldBorder,
+    nền white, phần đã dùng xpUserSel `#2C55C4` từ x 49, rộng = 120 × đã dùng / tổng; `trống 412 KB / 1 MB` xpLabel TL
+    (48, 75) 133.
+  - Thư mục: My Pictures 32×23 (P-.19) tại (10, 122) + `Ảnh của tôi` (48, 121) 77 + `8 tệp · 214 KB` xpLabel (48, 135);
+    thư mục vàng 32×23 tại (10, 160) + `Hình nền` (48, 159) 56 + `wallpaper.jpg` xpLabel (48, 173) 91.
+  - Trạng thái: `3 đối tượng` · `Máy tính`.
+- **Ảnh của tôi** (`XPExplorerPhotos`; tiêu đề 77, biểu tượng Ảnh 16): ô 57 × 72 px, 4 cột từ (6, 28); khung (ô.x + 3, ô.y,
+  51×51) viền `#ACA899`, nền white; ảnh thu 1/4 = 47×47 tại (+2, +2) (TJpgDec scale 2, mỗi ảnh `clipHits` riêng); tên
+  `JBMono-11` căn giữa ô tại y + 53 (`mau1.jpg` 56). Mục chọn: viền khung xpSelect + nhãn (ô.x + 1, y + 53, 55×14) xpSelect
+  chữ white. Chỉ ảnh trên máy (`p1`…`p8` = 8 ảnh mới nhất của app, rồi ảnh mẫu `mau*`). Trạng thái `8 đối tượng · 214 KB`
+  · `Ảnh của tôi`. Rỗng: thân trống, `0 đối tượng`. Mở ảnh → cửa sổ Ảnh tại ảnh đó.
+- **Xác nhận xoá** (`XPExplorerConfirm`): hộp (18, 60, 204×104) viền xpFrame 2 px; thanh tiêu đề 20 px 4 dải `#3D95FF`
+  `#2B80F5` `#1C6BE8` `#0F5BDC`, `Xác nhận xoá tệp` 12B white (24, 63) 112; nút × (204, 63, 14×14) xpClose; thân xpBody;
+  Thùng rác đầy 32×23 tại (28, 92); `Chuyển 'p3.jpg'` (68, 90) / `vào Thùng rác?` (68, 104) `JBMono-11`; `Có` (58, 134,
+  56×21) chọn sẵn (viền hot), `Không` (126, 134, 56×21).
+- **Thùng rác** (`XPExplorerTrash` / `XPExplorerTrashEmpty`; tiêu đề 63, biểu tượng thùng 16 đầy / trống): dải nút
+  (2, 22, 236×28) xpBody: `Dọn sạch Thùng rác` (6, 26, 136×21) 126 · `Khôi phục` (146, 26, 75×21) 63 — mờ khi rỗng.
+  ListView (6, 52, 228×140): tiêu đề `Tên` (12) · `Cỡ` (110) · `Đã xoá` (168), vạch cột x 104 / 162; dòng 18 từ y 70:
+  biểu tượng Ảnh 16 (10, +2), tên (30, +2), cỡ `32 KB`, giờ xoá `14:02`; dòng chọn xpSelect. Trạng thái
+  `2 đối tượng · 61 KB` / `0 đối tượng` · `Thùng rác`. `Dọn sạch` hỏi lại bằng hộp xác nhận (`Xoá hẳn N mục?`).
+- **Desktop** (`XPDeskTrashFull`): Thùng rác có mục → biểu tượng 32×23 tại (24, 152) đổi sang bản đầy (3 tờ giấy nhô khỏi
+  miệng thùng, viền `#8A8A8A`); rỗng → bản P-.19.
 
 ### XP-Start-All — Start đủ chương trình (mọi chương trình mở được từ Start)
 

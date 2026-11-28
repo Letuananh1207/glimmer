@@ -74,9 +74,9 @@
   "@connectManual": {
     "description": "Nút viền"
   },
-  "connectNewDevice": "Thiết bị mới / đang hiện glimmer-setup",
+  "connectNewDevice": "Quét mã QR trên màn thiết bị",
   "@connectNewDevice": {
-    "description": "Nút viền, mở Cài Wi-Fi"
+    "description": "Nút viền ở Kết nối → màn Quét mã (đổi 2026-11-28.12, icon qr)"
   },
   "connectManualTitle": "Nhập địa chỉ thiết bị",
   "@connectManualTitle": {
@@ -627,9 +627,9 @@
   "@wifiStepJoinAp": {
     "description": "Trạng thái"
   },
-  "wifiStepJoinApDetail": "Thiết bị phải đang hiện KẾT NỐI WI-FI · glimmer-setup (khoảng 1 phút sau khi cắm điện). Android sẽ hỏi bạn xác nhận kết nối.",
+  "wifiStepJoinApDetail": "Thiết bị phải đang hiện màn cài Wi-Fi có mã QR. Android sẽ hỏi bạn xác nhận kết nối.",
   "@wifiStepJoinApDetail": {
-    "description": "Chi tiết"
+    "description": "Chi tiết (đổi 2026-11-28.12)"
   },
   "wifiStepSend": "Gửi \"{ssid}\" cho thiết bị…",
   "@wifiStepSend": {
@@ -662,11 +662,14 @@
       }
     }
   },
-  "wifiDoneDetail": "IP {ip}",
+  "wifiDoneDetail": "IP {ip} · đã nhớ mật khẩu \"{ssid}\".",
   "@wifiDoneDetail": {
-    "description": "Chi tiết",
+    "description": "Chi tiết khi xong; bỏ phần \"đã nhớ…\" nếu mạng mở (đổi 2026-11-28.12)",
     "placeholders": {
       "ip": {
+        "type": "String"
+      },
+      "ssid": {
         "type": "String"
       }
     }
@@ -679,9 +682,9 @@
   "@wifiFailed": {
     "description": "Trạng thái, coral"
   },
-  "wifiNotFound": "Chưa thấy thiết bị trên \"{ssid}\". Sai mật khẩu, mạng chỉ có 5 GHz, hoặc mạng phải đăng nhập web — khi đó thiết bị sẽ lại hiện glimmer-setup.",
+  "wifiNotFound": "Chưa thấy thiết bị trên \"{ssid}\". Sai mật khẩu, mạng chỉ có 5 GHz, hoặc mạng phải đăng nhập web — khi đó thiết bị sẽ lại hiện mã QR. Mật khẩu vừa gửi không được nhớ.",
   "@wifiNotFound": {
-    "description": "Chi tiết lỗi",
+    "description": "Chi tiết lỗi (đổi 2026-11-28.12, R-WF-5)",
     "placeholders": {
       "ssid": {
         "type": "String"
@@ -724,17 +727,17 @@
   "@skillFunName": {
     "description": "Tên skill (sắp có)"
   },
-  "skillFunDesc": "Nội dung vui cho màn hình.",
+  "skillFunDesc": "Dò mìn, chơi bằng app",
   "@skillFunDesc": {
-    "description": "Không dùng từ 2026-11-25.3 — Mô tả ô skill"
+    "description": "Mô tả hàng Giải trí ở màn Skill (đổi 2026-11-28.13)"
   },
   "skillsTitle": "Skill",
   "@skillsTitle": {
     "description": "Tiêu đề màn Skill"
   },
-  "skillsSubtitle": "Mỗi skill bật là một tab trên dock thiết bị.",
+  "skillsSubtitle": "Mỗi skill bật là một chương trình trên máy.",
   "@skillsSubtitle": {
-    "description": "Phụ đề màn Skill"
+    "description": "Dòng phụ dưới tiêu đề màn Skill (đổi 2026-11-28.14)"
   },
   "skillsCurrent": "Đang dùng",
   "@skillsCurrent": {
@@ -915,9 +918,9 @@
   "@skillsAlwaysOn": {
     "description": "Mô tả Thời tiết / Đồng hồ khi firmware cũ"
   },
-  "skillsOrderNote": "Thiết bị xoay các tab theo thứ tự trên. Thẻ cần duyệt vẫn chen ngang mọi tab.",
+  "skillsOrderNote": "Mỗi skill bật thêm chương trình vào desktop và Start của thiết bị. Thẻ cần duyệt vẫn chen ngang mọi màn.",
   "@skillsOrderNote": {
-    "description": "Chú thích dưới danh sách (R-SK-3)"
+    "description": "Ghi chú dưới danh sách skill (đổi 2026-11-28.14: thiết bị không còn xoay tab / dock)"
   },
   "skillsSoonTitle": "SẮP CÓ",
   "@skillsSoonTitle": {
@@ -1508,9 +1511,9 @@
   "@controlSetupBody": {
     "description": "Thanh báo"
   },
-  "controlSetupAction": "Cài Wi-Fi",
+  "controlSetupAction": "Quét mã trên màn",
   "@controlSetupAction": {
-    "description": "Nút → Cài Wi-Fi"
+    "description": "Nút chữ trên thanh báo glimmer-setup ở Điều khiển → màn Quét mã (đổi 2026-11-28.12, icon qr 18)"
   },
   "controlOfflineTitle": "Không thấy thiết bị",
   "@controlOfflineTitle": {
@@ -2144,5 +2147,281 @@
   "controlDetailsA11y": "Số liệu",
   "@controlDetailsA11y": {
     "description": "Nút vuông → màn Số liệu"
+  },
+  "photoLibraryTitle": "KHO ẢNH",
+  "@photoLibraryTitle": {
+    "description": "Nhãn thẻ kho (thay photoOnDevice khi firmware có photo_source)"
+  },
+  "photoLibraryCount": "{count} ảnh · {cached} trên máy",
+  "@photoLibraryCount": {
+    "description": "Meta khi kho > 8 ảnh (cached = 8)",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      },
+      "cached": {
+        "type": "String"
+      }
+    }
+  },
+  "photoLibraryCountAll": "{count} ảnh · cả {count} trên máy",
+  "@photoLibraryCountAll": {
+    "description": "Meta khi kho ≤ 8 ảnh",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "photoLibraryCountEmpty": "chưa có ảnh",
+  "@photoLibraryCountEmpty": {
+    "description": "Meta kho trống"
+  },
+  "photoSourceOnline": "Thiết bị đang lấy ảnh từ điện thoại",
+  "@photoSourceOnline": {
+    "description": "Dòng trạng thái, chấm mint (photo_source.state = online)"
+  },
+  "photoSourceShowing": "đang chiếu {index}/{count}",
+  "@photoSourceShowing": {
+    "description": "Bên phải dòng trạng thái online (photo_source.index / count)",
+    "placeholders": {
+      "index": {
+        "type": "String"
+      },
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "photoSourceOffline": "Thiết bị chỉ chiếu 8 ảnh đã giữ",
+  "@photoSourceOffline": {
+    "description": "Dòng trạng thái, chấm muted (offline)"
+  },
+  "photoSourceOfflineBody": "Điện thoại khác mạng, hoặc app đã tắt quá 2 phút.",
+  "@photoSourceOfflineBody": {
+    "description": "Dòng phụ khi offline"
+  },
+  "photoLibraryShowingTag": "ĐANG CHIẾU",
+  "@photoLibraryShowingTag": {
+    "description": "Nhãn trên ô ảnh thiết bị đang chiếu"
+  },
+  "photoLibraryTileA11y": "Ảnh {n}{onDevice}{showing}, bấm để xoá",
+  "@photoLibraryTileA11y": {
+    "description": "Nhãn đọc màn hình ô ảnh kho",
+    "placeholders": {
+      "n": {
+        "type": "String"
+      },
+      "onDevice": {
+        "type": "String"
+      },
+      "showing": {
+        "type": "String"
+      }
+    }
+  },
+  "photoLibraryOnDeviceA11y": ", đang ở trên thiết bị",
+  "@photoLibraryOnDeviceA11y": {
+    "description": "Ghép vào photoLibraryTileA11y"
+  },
+  "photoLibraryShowingA11y": ", thiết bị đang chiếu",
+  "@photoLibraryShowingA11y": {
+    "description": "Ghép vào photoLibraryTileA11y"
+  },
+  "photoLibraryNote": "8 ảnh mới nhất được giữ trên thiết bị để chiếu cả khi điện thoại vắng. Bấm ảnh để xoá khỏi kho.",
+  "@photoLibraryNote": {
+    "description": "Dưới thẻ kho (thay photoNote)"
+  },
+  "photoLibraryEmptyTitle": "Kho ảnh trống",
+  "@photoLibraryEmptyTitle": {
+    "description": "Kho trống"
+  },
+  "photoLibraryEmptyBody": "Thêm ảnh từ thư viện hoặc máy ảnh. Ảnh nằm trên điện thoại, không giới hạn số ảnh; thiết bị lấy ảnh từ đây để chiếu.",
+  "@photoLibraryEmptyBody": {
+    "description": "Kho trống"
+  },
+  "photoLibraryAdding": "Đang thêm…",
+  "@photoLibraryAdding": {
+    "description": "Phủ trên ô ảnh mới"
+  },
+  "photoLibraryAddErrorTitle": "Chưa thêm được ảnh",
+  "@photoLibraryAddErrorTitle": {
+    "description": "Thanh báo coral"
+  },
+  "photoLibraryAddErrorBody": "Thiết bị không nhận bản đệm nên ảnh chưa vào kho. Vùng cắt được giữ.",
+  "@photoLibraryAddErrorBody": {
+    "description": "Thanh báo; nút commonRetry"
+  },
+  "photoLibraryDeleteTitle": "Xoá ảnh khỏi kho?",
+  "@photoLibraryDeleteTitle": {
+    "description": "Hộp thoại xoá"
+  },
+  "photoLibraryDeleteBody": "Ảnh bị xoá khỏi điện thoại, và khỏi thiết bị nếu đang được giữ trên máy. Không lấy lại được.",
+  "@photoLibraryDeleteBody": {
+    "description": "Hộp thoại xoá"
+  },
+  "photoLibraryDeleting": "Đang xoá…",
+  "@photoLibraryDeleting": {
+    "description": "Phủ trên ô đang xoá"
+  },
+  "photoLibraryDeleteErrorBody": "Thiết bị không nhận lệnh xoá bản đệm. Ảnh vẫn còn trong kho.",
+  "@photoLibraryDeleteErrorBody": {
+    "description": "Thanh báo coral (tiêu đề photoDeleteErrorTitle); nút commonRetry"
+  },
+  "photoCropAddToLibrary": "Thêm vào kho",
+  "@photoCropAddToLibrary": {
+    "description": "Nút chính màn Cắt ảnh khi firmware có photo_source (thay photoCropSend)"
+  },
+  "wifiScanEntry": "Quét mã trên màn thiết bị",
+  "@wifiScanEntry": {
+    "description": "Nút lớn đầu form Cài Wi-Fi → màn Quét mã"
+  },
+  "wifiScanEntrySub": "Nhanh nhất: app tự gửi mạng điện thoại đang dùng.",
+  "@wifiScanEntrySub": {
+    "description": "Dòng phụ nút quét"
+  },
+  "wifiOrManual": "HOẶC NHẬP TAY",
+  "@wifiOrManual": {
+    "description": "Vạch chia giữa nút quét và form"
+  },
+  "wifiSavedLink": "Mật khẩu đã nhớ ({count})",
+  "@wifiSavedLink": {
+    "description": "Nút chữ dưới form → bảng mật khẩu đã nhớ; count = 0 → ẩn",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "wifiScannedTitle": "Đã đọc mã của thiết bị",
+  "@wifiScannedTitle": {
+    "description": "Thanh báo sau khi quét (mint)"
+  },
+  "wifiScannedBody": "Thiết bị sẽ vào mạng điện thoại đang dùng.",
+  "@wifiScannedBody": {
+    "description": "Bước password"
+  },
+  "wifiScannedNoNetwork": "Điện thoại chưa ở mạng Wi-Fi nào nên app không biết mạng để gửi. Nhập tên mạng và mật khẩu.",
+  "@wifiScannedNoNetwork": {
+    "description": "Bước formScanned"
+  },
+  "wifiNetworkToSend": "MẠNG SẼ GỬI",
+  "@wifiNetworkToSend": {
+    "description": "Nhãn bước password"
+  },
+  "wifiChangeNetwork": "Đổi mạng",
+  "@wifiChangeNetwork": {
+    "description": "Nút chữ → form đầy đủ (tên mạng sửa được)"
+  },
+  "wifiPassFor": "Mật khẩu Wi-Fi “{ssid}”",
+  "@wifiPassFor": {
+    "description": "Nhãn ô mật khẩu bước password",
+    "placeholders": {
+      "ssid": {
+        "type": "String"
+      }
+    }
+  },
+  "wifiRememberNote": "App nhớ mật khẩu này trong kho bảo mật của máy khi thiết bị vào được mạng — lần sau quét là xong.",
+  "@wifiRememberNote": {
+    "description": "Ghi chú bước password (R-WF-5)"
+  },
+  "wifiSavedTitle": "Mật khẩu đã nhớ",
+  "@wifiSavedTitle": {
+    "description": "Tiêu đề bảng"
+  },
+  "wifiSavedBody": "Chỉ trên điện thoại này, trong kho bảo mật. Quét mã ở các mạng này sẽ gửi luôn, không hỏi.",
+  "@wifiSavedBody": {
+    "description": "Bảng mật khẩu đã nhớ"
+  },
+  "wifiSavedLastUsed": "dùng lần cuối {when}",
+  "@wifiSavedLastUsed": {
+    "description": "Dòng phụ mỗi mạng",
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "wifiForget": "Quên",
+  "@wifiForget": {
+    "description": "Nút coral mỗi dòng / hộp thoại"
+  },
+  "wifiForgetTitle": "Quên mật khẩu “{ssid}”?",
+  "@wifiForgetTitle": {
+    "description": "Hộp thoại",
+    "placeholders": {
+      "ssid": {
+        "type": "String"
+      }
+    }
+  },
+  "wifiForgetBody": "Lần sau quét mã ở mạng này, app sẽ hỏi lại mật khẩu. Thiết bị không bị ảnh hưởng.",
+  "@wifiForgetBody": {
+    "description": "Hộp thoại"
+  },
+  "wifiScanTitle": "Quét mã trên thiết bị",
+  "@wifiScanTitle": {
+    "description": "Tiêu đề màn Quét mã"
+  },
+  "wifiScanCloseA11y": "Đóng",
+  "@wifiScanCloseA11y": {
+    "description": "Nút × màn Quét mã"
+  },
+  "wifiScanHelpTitle": "Đưa mã QR vào khung",
+  "@wifiScanHelpTitle": {
+    "description": "Bảng dưới màn quét"
+  },
+  "wifiScanHelpBody": "Thiết bị hiện màn này khi chưa vào được Wi-Fi. Giữ máy cách màn khoảng một gang tay.",
+  "@wifiScanHelpBody": {
+    "description": "Bảng dưới, cạnh ảnh màn log-on"
+  },
+  "wifiScanHelpImageA11y": "Màn cài Wi-Fi của thiết bị có mã QR",
+  "@wifiScanHelpImageA11y": {
+    "description": "Nhãn ảnh nhỏ"
+  },
+  "wifiScanManual": "Không có mã? Nhập tay",
+  "@wifiScanManual": {
+    "description": "Nút chữ → form Cài Wi-Fi"
+  },
+  "wifiScanFound": "Đã đọc mã glimmer-setup",
+  "@wifiScanFound": {
+    "description": "Đọc được mã (khung mint)"
+  },
+  "wifiScanFoundBody": "Đang chuyển sang bước tiếp…",
+  "@wifiScanFoundBody": {
+    "description": "Dòng phụ trước khi tự đóng (rung nhẹ)"
+  },
+  "wifiScanWrongTitle": "Đây không phải mã của glimmer",
+  "@wifiScanWrongTitle": {
+    "description": "Mã lạ (coral) — cùng nghĩa với lỗi devErrNotGlimmerQr của app"
+  },
+  "wifiScanWrongBody": "Quét mã trên màn cài đặt Wi-Fi của thiết bị. App không làm gì với mã này.",
+  "@wifiScanWrongBody": {
+    "description": "Mã lạ (R-WF-4)"
+  },
+  "wifiScanAgain": "Quét lại",
+  "@wifiScanAgain": {
+    "description": "Nút chính khi mã lạ"
+  },
+  "wifiScanCameraTitle": "Cần quyền camera",
+  "@wifiScanCameraTitle": {
+    "description": "Chưa có quyền camera"
+  },
+  "wifiScanCameraBody": "App chỉ dùng camera để đọc mã QR trên màn thiết bị, không chụp hay lưu ảnh.",
+  "@wifiScanCameraBody": {
+    "description": "Chưa có quyền camera"
+  },
+  "wifiScanAllowCamera": "Cho phép camera",
+  "@wifiScanAllowCamera": {
+    "description": "Nút chính → hộp xin quyền của hệ thống"
+  },
+  "wifiScanOpenSettings": "Mở cài đặt điện thoại",
+  "@wifiScanOpenSettings": {
+    "description": "Nút viền khi quyền bị từ chối hẳn"
+  },
+  "commonClose": "Đóng",
+  "@commonClose": {
+    "description": "Nút đóng bảng"
   }
 }

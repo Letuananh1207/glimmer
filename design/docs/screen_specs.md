@@ -6,6 +6,8 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
 
 ## 1. Kết nối — `ConnectScreen` (ConnectSearching.png, ConnectNotFound.png, ConnectManual.png)
 
+> **2026-11-28.12 — Lối vào quét mã** (phiếu `app/docs/phieu_thiet_ke/2026-11-28-quet-qr-cai-wifi.md`): nút viền thứ ba đổi thành `connectNewDevice` ("Quét mã QR trên màn thiết bị"), icon qr_code_scanner thay wifi, mở màn **Quét mã** (§10) thay Cài Wi-Fi. Ảnh `ConnectSearching.png`, `ConnectNotFound.png`, `ConnectManual.png` chụp lại.
+
 > **2026-11-25.1 — Bản đầu:** vẽ lại đúng app hiện có.
 
 - Đệm 24 bốn phía. Từ trên xuống: khoảng trống co giãn → Clawd 144 (giữa) → 28 → tiêu đề `screenTitle`
@@ -18,7 +20,36 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
   `connectManualHint` (label) → ô `connectManualIp` (đã điền IP lần trước) → ô `connectManualToken` (ẩn chữ) → nút chữ
   `commonCancel` + nút chính `connectManualOk` căn phải.
 
-## 2. Màn hình — `DashboardScreen` (Dashboard.png, DashboardEmpty.png, DashboardStale.png, DashboardSetup.png, DashboardLoading.png, DashboardWeather.png, DashboardWeatherNoLocation.png, DashboardClock.png, DashboardSingle.png, DashboardPhoto.png, DashboardPhotoEmpty.png, DashboardPhotoFull.png, DashboardPhotoAdd.png, DashboardPhotoDelete.png, DashboardPhotoDeleting.png, DashboardPhotoDeleteError.png)
+## 2. Màn hình — `DashboardScreen` (Dashboard.png, DashboardEmpty.png, DashboardStale.png, DashboardSetup.png, DashboardLoading.png, DashboardWeather.png, DashboardWeatherNoLocation.png, DashboardClock.png, DashboardSingle.png, DashboardPhoto.png, DashboardPhotoEmpty.png, DashboardPhotoFull.png, DashboardPhotoAdd.png, DashboardPhotoDelete.png, DashboardPhotoDeleting.png, DashboardPhotoDeleteError.png, DashboardLibrary.png, DashboardLibraryFew.png, DashboardLibraryEight.png, DashboardLibraryEmpty.png, DashboardLibraryOffline.png, DashboardLibraryAdding.png, DashboardLibraryAddError.png, DashboardLibraryDelete.png, DashboardLibraryDeleting.png, DashboardLibraryDeleteError.png)
+
+> **2026-11-28.11 — Tab Ảnh thành Kho ảnh** (phiếu `app/docs/phieu_thiet_ke/2026-11-27-kho-anh.md`; luật R-AK-1…5): khi `/api/state` có `photo_source`, tab Ảnh hiện
+> kho ảnh trên điện thoại (không giới hạn) thay cho "ảnh trên thiết bị". Không có `photo_source` (firmware cũ) → tab Ảnh giữ
+> nguyên các trạng thái `photo*` bên dưới (R-AK-5). Prop `state` thêm `library` (23 ảnh, online), `libraryFew` (5),
+> `libraryEight` (8), `libraryEmpty`, `libraryOffline`, `libraryAdding`, `libraryAddError`, `libraryDelete`, `libraryDeleting`,
+> `libraryDeleteError`; ảnh `DashboardLibrary*.png`. Khung: 844 (ít ảnh / trống), 900 (8), 1320–1440 (23 ảnh).
+> - **Thẻ kho** (như thẻ ảnh cũ, đệm 16): nhãn `photoLibraryTitle` + meta phải `photoLibraryCount` (> 8) / `photoLibraryCountAll`
+>   (≤ 8) / `photoLibraryCountEmpty`.
+> - **Dòng nguồn ảnh** (`PhotoSourceStatus`, lề trên 12): nền `panel2`, bo 10, đệm 10 12; chấm 8 + chữ 12 ink. `online`: chấm mint
+>   `photoSourceOnline`, bên phải `photoSourceShowing` 11 muted. `offline`: chấm muted `photoSourceOffline` + dòng phụ
+>   `photoSourceOfflineBody` 11 muted (thụt 16). `state = none` (chưa gửi nguồn) → như offline. Kho trống → không có dòng này.
+> - **Lưới** 3 cột cách 8, lề trên 12: ô đầu luôn là "+ Thêm ảnh" (như cũ) → bảng `photoAdd`; sau đó ảnh **mới nhất trước**
+>   (mã giảm dần). Ô ảnh (`LibraryTile`) vuông bo 10, cả ô là nút → `libraryDelete` (`photoLibraryTileA11y`).
+>   - 8 ảnh mới nhất (bộ đệm, R-AK-3): dấu màn hình góc phải dưới — ô 22 bo 6 nền `bg` 78 %, icon tv 14 mint, cách mép 5.
+>     Chỉ để biết, không bấm, không có nút ghim.
+>   - Ảnh thiết bị đang chiếu (`photo_source.index` theo thứ tự thêm, chỉ khi `online`): viền trong 2 mint + nhãn
+>     `photoLibraryShowingTag` (9/700, nền mint, chữ `bg`, bo 4, đệm 2 5, góc trái trên cách 5). Có thể là ảnh ngoài bộ đệm.
+>   - Kho có ảnh không có bản xem: như ô `photoNoPreview` cũ.
+> - Dưới thẻ: icon tv 12 mint + `photoLibraryNote` 12 muted (lề 6 20 0; thay `photoNote`), rồi `ShowOnDeviceButton`.
+> - **`libraryEmpty`**: giữa thẻ (đệm 28 8 8, cách 10): icon ảnh pixel ×3 muted, `photoLibraryEmptyTitle` 16/700,
+>   `photoLibraryEmptyBody` 13 inkDim, nút đặc mint cao 48 bo 24 "+ `photoAdd`" → bảng `photoAdd`. Không ghi chú, không nút hiện.
+> - **`libraryAdding`**: sau "Thêm vào kho" ở Cắt ảnh, app về tab này ngay; ô mới đứng sau ô thêm, phủ `bg` 66 % + vòng xoay 24
+>   mint + `photoLibraryAdding` 11 ink; meta đã tính ảnh mới. Xong → ô thường có dấu "trên máy"; ảnh thứ 9 tính từ mới nhất
+>   mất dấu.
+> - **`libraryAddError`** (thiết bị không nhận bản đệm → ảnh không vào kho): thanh báo trên thẻ (như `photoDeleteError`)
+>   `photoLibraryAddErrorTitle` coral / `photoLibraryAddErrorBody` + `commonRetry` (gửi lại vùng cắt đã giữ).
+> - **`libraryDelete`**: hộp thoại như `photoDelete`, chữ `photoLibraryDeleteTitle` / `photoLibraryDeleteBody`.
+> - **`libraryDeleting`**: ô phủ `bg` 66 % + vòng xoay 24 mint + `photoLibraryDeleting`; ô khác vẫn bấm được.
+> - **`libraryDeleteError`**: thanh báo `photoDeleteErrorTitle` coral / `photoLibraryDeleteErrorBody` + `commonRetry`.
 
 > **2026-11-26.9 — Nút đặt vị trí** (phiếu `app/docs/phieu_thiet_ke/2026-11-26-vi-tri-thoi-tiet.md`): ở `weatherNoLoc`, nút viền đổi thành `weatherSetLocation` ("Đặt vị trí thời tiết"), icon place (thay tune), mở thẳng màn **Vị trí thời tiết** (§9) thay vì tab Cài đặt. Ảnh `DashboardWeatherNoLocation.png` chụp lại.
 
@@ -152,7 +183,28 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
 - Thẻ sao lưu: `deviceBackup` (+phụ, icon save_alt), `deviceRestore` (icon restore).
 - Thanh điều hướng dưới, tab 4 (Thiết bị).
 
-## 5. Cài Wi-Fi — `WifiSetupScreen` (WifiSetup.png, WifiSetupWorking.png, WifiSetupDone.png, WifiSetupFailed.png)
+## 5. Cài Wi-Fi — `WifiSetupScreen` (WifiSetup.png, WifiSetupWorking.png, WifiSetupDone.png, WifiSetupFailed.png, WifiSetupFormScanned.png, WifiSetupPassword.png, WifiSetupSaved.png, WifiSetupForget.png)
+
+> **2026-11-28.12 — Quét mã, chỉ hỏi mật khẩu, mật khẩu đã nhớ** (phiếu `app/docs/phieu_thiet_ke/2026-11-28-quet-qr-cai-wifi.md`; R-WF-4, R-WF-5): prop `state` thêm
+> `formScanned`, `password`, `saved`, `forget`. Khung `form` / `saved` / `forget` 900. Mọi ảnh `WifiSetup*.png` chụp lại.
+> - **`form`:** trên ghi chú, nút **quét** (`WifiScanEntry`): cao ≥ 64, bo 14, viền 1 `clawd`, nền `clawd` 8 %, đệm 10 14, cách 12:
+>   ô 40 bo 12 nền `clawd` 16 % + icon qr 24 `clawd`; `wifiScanEntry` 15/500 ink + `wifiScanEntrySub` 12 muted; chevron 24 muted →
+>   màn Quét mã. Dưới: vạch `wifiOrManual` (label giữa hai kẻ 1 `line`, lề 16 0 14), rồi ghi chú + form như cũ. Dưới nút gửi
+>   (lề trên 10, căn giữa, cao 44): icon key 16 + `wifiSavedLink` 13 inkDim → `saved`; không có mật khẩu nhớ → ẩn.
+> - **`password`** (quét được, mạng điện thoại chưa nhớ mật khẩu): thanh báo `panel2` bo 14 đệm 12 14 (lề dưới 18): icon check 20
+>   mint + `wifiScannedTitle` 14/700 + `wifiScannedBody` 13 inkDim. Nhãn `wifiNetworkToSend`; hàng cao 52 bo 12 nền `panel`: icon
+>   wifi 22 inkDim + tên mạng 16 ink (chỉ đọc) + nút chữ `wifiChangeNetwork` 13/500 `clawd` → `form` (tên đã điền, sửa được). Cách 18:
+>   ô mật khẩu nhãn `wifiPassFor`, nút mắt. Dưới ô: icon lock 14 + `wifiRememberNote` 12 muted. Nút `wifiSend`.
+> - **`formScanned`** (quét được, điện thoại không ở Wi-Fi nào): thanh báo như trên với `wifiScannedNoNetwork`, rồi ghi chú + form
+>   (tên trống), không có nút quét / mật khẩu đã nhớ.
+> - Quét được + mạng đã nhớ mật khẩu → vào thẳng `working`, không hỏi.
+> - **`saved`** (bảng dưới): lớp phủ 60 %; `panel`, bo trên 20, đệm 10 20 28: tay nắm, `wifiSavedTitle` 16/700, `wifiSavedBody` 12
+>   muted; mỗi mạng một dòng ≥ 60 kẻ trên `line`: icon wifi 22 inkDim, tên 15 ink + `wifiSavedLastUsed` 12 muted, nút chữ `wifiForget`
+>   13/500 coral → `forget`; nút `commonClose` cao 48 bo 14 `panel2`.
+> - **`forget`** (hộp thoại 312, bo 20, đệm 24): `wifiForgetTitle` 18/700, `wifiForgetBody` 13 inkDim, `commonCancel` / `wifiForget`
+>   (coral 700).
+> - `working`: chi tiết `wifiStepJoinApDetail` mới. `done`: `wifiDoneDetail` có "đã nhớ mật khẩu"; nút Xong → Điều khiển. `failed`:
+>   `wifiNotFound` mới (mật khẩu vừa gửi không được nhớ).
 
 > **2026-11-25.1 — Bản đầu:** vẽ lại đúng app hiện có.
 
@@ -163,7 +215,18 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
 - Các trạng thái khác: dòng trạng thái `heading` căn giữa (ink / mint / coral) → 10 → chi tiết `body` → 24 → vòng xoay
   (working) hoặc nút `commonRetry` (failed) / `wifiDoneButton` (done). Đang làm thì không quay lại được.
 
-## 6. Skill — `SkillsScreen` (Skills.png, SkillsSwitching.png, SkillsError.png, SkillsLegacy.png, SkillsLastOne.png, SkillsPhotoHint.png, SkillsPhotoFirmware.png)
+## 6. Skill — `SkillsScreen` (Skills.png, SkillsSwitching.png, SkillsError.png, SkillsLegacy.png, SkillsLastOne.png, SkillsPhotoHint.png, SkillsPhotoFirmware.png, SkillsFunOn.png, SkillsFunSending.png, SkillsFunFw.png, SkillsFunLastOne.png)
+
+> **2026-11-28.14 — Sửa chữ cũ:** `skillsSubtitle` → "Mỗi skill bật là một chương trình trên máy."; `skillsOrderNote` → "Mỗi skill bật thêm chương trình vào desktop và Start của thiết bị. Thẻ cần duyệt vẫn chen ngang mọi màn." (thiết bị không còn dock / tự xoay, P-2026-11-26.14). Bố cục không đổi; ảnh `Skills*.png` chụp lại.
+
+> **2026-11-28.13 — Hàng skill Giải trí (Dò mìn)** (phiếu `app/docs/phieu_thiet_ke/2026-11-27-skill-giai-tri.md`; R-SK-1, R-SK-2, R-SK-4, R-DK-23): Giải trí thành `SkillRow` thật,
+> đứng cuối (thứ tự dock: Agent, Ảnh, Thời tiết, Đồng hồ, Giải trí), **mặc định tắt**. Icon `icons/dock-fun.svg` (quả mìn pixel
+> 15×15, ×1.5 = 22,5) màu `skillFun` khi bật / muted khi tắt; nền ô `skillFunTint` / `panel2`. Mô tả `skillFunDesc` (đổi chữ).
+> Có trong mọi trạng thái trừ `legacy`. Chip "Sắp có" bỏ Giải trí (còn Tin nhắn, Nhạc, Mạng xã hội). Khung +72: 972 (lỗi 1062).
+> Prop `state` thêm `funOn`, `funSending` (vòng xoay 24 thay công tắc + `skillsSending`), `funFw` (thiết bị không báo `fun` trong
+> `skills`: ô icon muted, `skillsNeedFirmware` amber, nút viền `skillsUpdateFirmware` → tab Thiết bị — như `photoFw`),
+> `funLastOne` (Giải trí là skill duy nhất bật: công tắc khoá mờ 38 %, mô tả `skillsLastOne` amber). Mọi ảnh `Skills*.png` chụp lại.
+> Màu `skillFun` (amber) trùng Đồng hồ — giữ theo token có sẵn (người dùng chốt 2026-11-28.13).
 
 > **2026-11-26.5:** thanh dưới tab 1 đổi thành "Điều khiển" (`navControl`, `icons/nav-control.svg`, huy hiệu agent chờ giữ nguyên); ảnh chụp lại.
 
@@ -223,6 +286,8 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
 
 ## 7. Cắt ảnh — `PhotoCropScreen` (PhotoCrop.png, PhotoCropSending.png, PhotoCropDone.png, PhotoCropFull.png, PhotoCropTooBig.png, PhotoCropNoSpace.png, PhotoCropRejected.png, PhotoCropOffline.png)
 
+> **2026-11-28.11 — Thêm vào kho** (phiếu `app/docs/phieu_thiet_ke/2026-11-27-kho-anh.md`): firmware có `photo_source` → nút chính đổi thành `photoCropAddToLibrary`; bấm là lưu vào kho và quay về tab Ảnh ngay (`libraryAdding`), việc gửi bản đệm hiện trên ô ảnh. Các trạng thái `sending`, `done`, `full`, `noSpace` của màn này chỉ còn cho firmware cũ. Chưa vẽ lại artboard (chỉ đổi chữ nút).
+
 > **2026-11-25.4 — Màn mới** (phiếu `app/docs/phieu_thiet_ke/2026-11-25-gui-anh-len-thiet-bi.md`). Push từ tab Ảnh sau khi chọn / chụp ảnh; ngoài khung tab (không thanh dưới).
 > Prop `state`: `crop`, `sending`, `done`, `full`, `tooBig`, `noSpace`, `rejected`, `offline`. Mọi trạng thái 844.
 
@@ -251,6 +316,8 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
   Gửi xong app giữ bản sao (làm hình thu nhỏ ở tab Ảnh).
 
 ## 8. Điều khiển — `ControlScreen` (Control.png, ControlDragging.png, ControlKeyAlt.png, ControlClickRight.png, ControlPoweringOff.png, ControlOff.png, ControlPoweringOn.png, ControlCard.png, ControlNight.png, ControlBrightness.png, ControlFailed.png, ControlOldFw.png, ControlSetup.png, ControlOffline.png)
+
+> **2026-11-28.12 — Thanh báo glimmer-setup** (phiếu `app/docs/phieu_thiet_ke/2026-11-28-quet-qr-cai-wifi.md`): nút chữ đổi thành icon qr 18 + `controlSetupAction` ("Quét mã trên màn") → màn **Quét mã** (§10). Ảnh `ControlSetup.png` chụp lại.
 
 > **2026-11-27.10 — App là chuột, bàn phím, nút nguồn** (phiếu `app/docs/phieu_thiet_ke/2026-11-27-dieu-khien-chuot-ban-phim-nguon.md`). **Bỏ toàn bộ ô màn trên app** (`TouchMirror`, thanh tác
 > vụ vẽ lại, desktop, `StartMenuSheet`, `AllProgramsSheet`, nút tròn "Tắt màn"): người dùng nhìn màn thật; con trỏ, Start, menu
@@ -434,3 +501,25 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
 - `clear`: hộp thoại rộng 312, `panel`, bo 20, đệm 24, cách 14: `weatherLocationClearTitle` 18/700, `weatherLocationClearBody` 13
   inkDim, nút chữ `commonCancel` inkDim và `weatherLocationClearOk` coral 700, cao 44. Xoá = gửi `weatherLat` 0, `weatherLon` 0,
   `weatherPlace` "" (thiết bị coi là chưa đặt) → về `unset`.
+
+## 10. Quét mã — `WifiScanScreen` (WifiScan.png, WifiScanFound.png, WifiScanWrongCode.png, WifiScanNoCamera.png)
+
+> **2026-11-28.12 — Màn mới** (phiếu `app/docs/phieu_thiet_ke/2026-11-28-quet-qr-cai-wifi.md`; R-WF-4): đọc mã QR trên màn cài Wi-Fi của thiết bị (panel P-2026-11-28.26). Màn đẩy toàn
+> màn, không thanh dưới. Mở từ Kết nối, thanh báo glimmer-setup của Điều khiển, nút quét ở Cài Wi-Fi. Prop `state`: `scanning`,
+> `found`, `wrongCode`, `noCamera`. Khung 844.
+
+- **Camera** phủ cả màn (nền tối khi chưa có hình). Khung ngắm 240 × 240 tại (75, 98), bo 12, ngoài khung phủ đen 50 %; bốn góc
+  34 × 34, nét 4, bo ngoài 14: `scanning` ink + vạch quét ngang 2 `clawd` có quầng; `found` mint + phủ mint 18 % + vòng 72 mint
+  dấu check 44 màu `bg`; `wrongCode` coral.
+- **Thanh trên** 64 (nền chuyển đen 55 % → trong): nút × 48 (`wifiScanCloseA11y`) → màn mở nó, `wifiScanTitle` 18/700 ink.
+- **Bảng dưới** (`panel`, bo trên 20, đệm 20 20 28, cách 14):
+  - `scanning`: ảnh màn log-on thật của thiết bị 88 × 88 bo 8 viền 1 `line`, vẽ sắc (`images/panel-setup-qr.png`, xuất từ
+    `design/panel/screens/@2x/XPSetupMode.png`; nhãn `wifiScanHelpImageA11y`) + `wifiScanHelpTitle` 15/700 + `wifiScanHelpBody` 13
+    inkDim; nút chữ `wifiScanManual` 13/500 `clawd` cao 44 căn giữa → Cài Wi-Fi `form`.
+  - `found`: icon check 28 mint + `wifiScanFound` 15/700 + `wifiScanFoundBody` 13 inkDim. Rung nhẹ, ~0,6 s rồi tự đóng sang Cài
+    Wi-Fi ở bước đúng (`working` nếu mạng đã nhớ mật khẩu, `password`, hoặc `formScanned`).
+  - `wrongCode`: `wifiScanWrongTitle` 15/700 coral + `wifiScanWrongBody` 13 inkDim; nút chính `wifiScanAgain` (icon qr);
+    `wifiScanManual`. Không vào Wi-Fi nào, không gửi gì.
+  - `noCamera`: thay camera là nền `#0B0A0E`, giữa (trên bảng): icon camera 56 muted, `wifiScanCameraTitle` 16/700,
+    `wifiScanCameraBody` 13 inkDim. Bảng: nút chính `wifiScanAllowCamera` (icon camera) → hộp xin quyền; nút viền
+    `wifiScanOpenSettings` (khi bị từ chối hẳn); `wifiScanManual`.

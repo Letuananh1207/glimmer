@@ -1,6 +1,7 @@
 # Phiếu màn thiết bị: cửa sổ Ảnh lấy ảnh từ điện thoại
 
-- Trạng thái: chờ thiết kế
+- Trạng thái: đã vẽ (P-2026-11-28.27) — chờ áp
+- Đã vẽ: P-2026-11-28.27
 - Ngày: 2026-11-27 · Nguồn: yêu cầu người dùng, kế hoạch `app/docs/tasks/2026-11-27-kho-anh-tren-app.md` (bước 9)
 
 ## Dán vào canvas
