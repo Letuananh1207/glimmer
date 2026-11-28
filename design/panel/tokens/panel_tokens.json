@@ -3549,6 +3549,118 @@
           "h": 13
         }
       }
+    },
+    "calc": {
+      "xp": "Calculator (Standard)",
+      "title": "Máy tính bỏ túi",
+      "skill": "fun",
+      "display": {
+        "rect": [
+          8,
+          27,
+          224,
+          24
+        ],
+        "font": "JBMono-16B",
+        "right": 227,
+        "y": 30,
+        "error": {
+          "text": "Không thể chia cho 0.",
+          "font": "JBMono-12B",
+          "y": 31
+        }
+      },
+      "memBox": [
+        8,
+        56,
+        34,
+        24
+      ],
+      "row1": [
+        [
+          "Backspace",
+          46,
+          76
+        ],
+        [
+          "CE",
+          126,
+          52
+        ],
+        [
+          "C",
+          182,
+          50
+        ]
+      ],
+      "row1Y": 56,
+      "row1H": 24,
+      "grid": {
+        "origin": [
+          8,
+          86
+        ],
+        "step": [
+          38,
+          30
+        ],
+        "btn": [
+          34,
+          26
+        ],
+        "keys": [
+          [
+            "MC",
+            "7",
+            "8",
+            "9",
+            "/",
+            "sqrt"
+          ],
+          [
+            "MR",
+            "4",
+            "5",
+            "6",
+            "*",
+            "%"
+          ],
+          [
+            "MS",
+            "1",
+            "2",
+            "3",
+            "-",
+            "1/x"
+          ],
+          [
+            "M+",
+            "0",
+            "+/-",
+            ".",
+            "+",
+            "="
+          ]
+        ]
+      },
+      "colors": {
+        "digit": "xpGroupLabel",
+        "op": "xpRed"
+      },
+      "btn": {
+        "edge": "#003C74",
+        "fill": "#F4F3EE",
+        "bottom": "#D6D0C5",
+        "down": {
+          "fill": "#DCD8CC",
+          "shade": "#A7A495"
+        },
+        "hot": [
+          "#FFF0CF",
+          "#F9B348",
+          "#E59700"
+        ]
+      }
     }
   }
 }

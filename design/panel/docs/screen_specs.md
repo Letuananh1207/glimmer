@@ -1844,6 +1844,8 @@ Nguồn `source/Photo-Empty.dc.html` · ảnh `screens/@2x/PhotoEmpty.png`
 
 ## 17. Kiểu XP (Luna) — giao diện toàn máy
 
+> **P-2026-11-28.31 — Máy tính bỏ túi:** Calculator Standard kiểu XP (skill Giải trí) — xem mục XP-Calc.
+
 > **P-2026-11-28.30 — Thuộc tính màn hình:** hộp thoại Display Properties (Màn nền / Bảo vệ màn hình / Cài đặt) — xem mục XP-Display.
 
 > **P-2026-11-28.29 — Alt+Tab:** hộp chuyển tác vụ kiểu XP giữa màn — xem mục XP-AltTab.
@@ -2980,6 +2982,29 @@ chuột phải desktop › `Thuộc tính` (mục đã có, nay mở cửa sổ 
 
 - App tính chạm và gửi lệnh; đổi giá trị = `POST /api/settings` như màn Cài đặt của app (một nơi lưu). Đổi một mục chỉ
   vẽ lại mục đó + màn xem trước; vẽ lại dưới con trỏ dùng `clipHits` cho màn xem trước (giải mã JPEG).
+
+### XP-Calc — Máy tính bỏ túi (kênh `Calc`)
+
+> **P-2026-11-28.31 — Calculator kiểu XP.** Phiếu `docs/phieu_panel/2026-11-27-calculator.md`.
+
+Nguồn `source/XP-Calc|XP-Calc-Down|XP-Calc-Hover|XP-Calc-Error.dc.html` · ảnh `XPCalc.png`, `XPCalcDown.png`,
+`XPCalcHover.png`, `XPCalcError.png`. Token `themeXP.calc`. Thành phần XP thật: *Calculator* chế độ Standard. Thuộc skill
+Giải trí (`fun`, cùng Dò mìn); có mục Start › Tất cả chương trình, không biểu tượng desktop.
+
+- **Khung**: cửa sổ XP, tiêu đề `Máy tính bỏ túi` 12B (105 px); biểu tượng 16 tại (4, 3): vỏ xpLabel, mặt `#D4D0C8`, màn
+  white + vạch black, 3 × 3 phím xpGroupLabel / cột phải xpRed. Không thanh menu, không thanh trạng thái.
+- **Ô hiển thị** (8, 27, 224×24): viền xpFieldBorder, nền white; số `JBMono-16B` black TR (227, 30) — `0.` lúc đầu, tối đa
+  16 ký tự. Lỗi: `Không thể chia cho 0.` `JBMono-12B` TR (227, 31), 147 px.
+- **Ô bộ nhớ** (8, 56, 34×24) lõm: viền xpDim, cạnh trong trên / trái xpLabel, nền xpBody; `M` 12B black căn giữa khi có bộ nhớ.
+- **Hàng 1** (y 56, cao 24): `Backspace` (46, w 76; 63 px) · `CE` (126, w 52) · `C` (182, w 50) — chữ xpRed.
+- **Lưới** 6 × 4, nút 34×26, gốc (8 + 38c, 86 + 30r):
+  `MC 7 8 9 / sqrt` · `MR 4 5 6 * %` · `MS 1 2 3 - 1/x` · `M+ 0 +/- . + =`. Chữ `JBMono-12B` căn giữa; số, `.`, `+/-` =
+  xpGroupLabel `#0046D5`; MC MR MS M+ và phép tính = xpRed `#C1272D`.
+- **Nút** (như nút Task Manager): viền `#003C74` góc cắt 1 px, mặt `#F4F3EE`, 2 hàng đáy `#D6D0C5`.
+  **Nhấn** (`XPCalcDown`): mặt `#DCD8CC`, 2 hàng trên `#A7A495`, chữ xuống 1 px. **Hot** (`XPCalcHover`): viền cam như
+  Task Manager.
+- App giữ phép tính (trái sang phải như XP Standard, `=` lặp phép cuối, `Backspace` / `CE` / `C`, bộ nhớ); thiết bị chỉ
+  vẽ. Bấm một nút: vẽ lại nút đó (lõm rồi thả) + ô hiển thị (+ ô bộ nhớ nếu đổi).
 
 ### XP-Start-All — Start đủ chương trình (mọi chương trình mở được từ Start)
 

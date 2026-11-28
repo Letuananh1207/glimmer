@@ -5,6 +5,26 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-28.31 — Máy tính bỏ túi (Calculator) kiểu Windows XP
+
+- **Kênh mới Calc** (`source/XP-Calc.dc.html`, `XP-Calc-Down.dc.html`, `XP-Calc-Hover.dc.html`, `XP-Calc-Error.dc.html`;
+  `screen_specs.md` §17 mục XP-Calc; ảnh `XPCalc.png`, `XPCalcDown.png`, `XPCalcHover.png`, `XPCalcError.png`) — theo
+  *Calculator* Standard:
+  - Tiêu đề `Máy tính bỏ túi`; bỏ thanh menu (như Dò mìn).
+  - Ô hiển thị trắng, số JBMono-16B căn phải (`0.` lúc đầu); ô bộ nhớ `M`; `Backspace` / `CE` / `C` đỏ.
+  - Lưới 6 × 4 nút 34×26: MC MR MS M+ · 7 8 9 / sqrt · 4 5 6 * % · 1 2 3 - 1/x · 0 +/- . + =; số xanh, phép tính đỏ.
+  - Nút nhấn lõm, nút hot viền cam; lỗi `Không thể chia cho 0.`
+  - Máy chưa có.
+- Phiếu: `docs/phieu_panel/2026-11-27-calculator.md`
+- Đổi luật: Máy tính bỏ túi thuộc skill Giải trí (`fun`, cùng Dò mìn) — có mục Start › Tất cả chương trình, không biểu
+  tượng desktop.
+- Cần firmware: `POST /api/calc {display, mem, down}` (hoặc tương tự) và `/api/state` `calc`; màu mặt nút nhấn
+  `#DCD8CC` / `#A7A495`.
+
+**Việc cần làm trong code:**
+- Kênh `Calc`: vẽ theo đặc tả; nhận chuỗi hiển thị, bộ nhớ, nút đang nhấn từ app; chỉ vẽ lại nút đổi + ô hiển thị.
+- App: giữ phép tính như XP Standard (trái sang phải, `=` lặp), click nút / phím số gửi trạng thái.
+
 ## P-2026-11-28.30 — Thuộc tính màn hình (Display Properties) kiểu Windows XP
 
 - **Kênh mới Display** (`source/XP-Display-Desktop|Saver|SaverList|Settings.dc.html`, `screen_specs.md` §17 mục
