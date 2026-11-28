@@ -126,7 +126,7 @@ Mức độ: `chặn dùng` · `khó chịu` · `nhỏ` (chữ, giao diện).
 - Code: firmware `src/core/host.h` `deviceHost()` (mDNS, hostname Wi-Fi, chữ trên màn), `/api/state` `host`, `/hook` header `X-Glimmer-Host`; `chrome.cpp` dải khoá lỗi dùng IP khi tên không vừa. Máy tính: `tools/agents/discover.mjs` (dò HTTP cả /24 — tường lửa Windows chặn trả lời mDNS cho Node), `install.mjs` ghi tên riêng, `glimmer-hook.mjs` kiểm `X-Glimmer-Host`, `glimmer-setup.mjs` chờ thiết bị theo tên riêng. `tools/screens.py` vẽ `glimmer-1a2b.local`.
 - Tạm thời (trước khi nạp): `~/.glimmer/config.json` `url` = `http://192.168.100.40`.
 - Thử máy: nạp firmware → `node tools/agents/install.mjs` → `~/.glimmer/config.json` có `http://glimmer-xxxx.local` → dùng Claude Code: cửa sổ Claude hiện glimmer Đang chạy. Bật cả máy .64: vẫn đúng.
-- Commit: …
+- Commit: `49cfb74`. Đã nạp 2026-11-28: máy .40 = `glimmer-5769`, `install.mjs` ghi `http://glimmer-5769.local`, hook tới đúng máy (bảng: glimmer Đang chạy). Còn thử: bật lại máy .64 cùng lúc.
 
 **Lịch sử**
 - 2026-11-28: ghi; tạm trỏ hook vào IP; bạn chọn tên riêng tự sinh; sửa.
