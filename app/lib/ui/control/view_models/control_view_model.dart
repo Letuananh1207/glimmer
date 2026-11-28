@@ -1,25 +1,33 @@
 import 'dart:async';
-import 'dart:ui' as ui;
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 
 import '../../../data/repositories/device/device_repository.dart';
 import '../../../domain/models/app_error.dart';
 import '../../../domain/models/attention_card.dart';
+import '../../../domain/models/clock_view.dart';
 import '../../../domain/models/control.dart';
-import '../../../domain/models/device_photo.dart';
+import '../../../domain/models/cursor.dart';
+import '../../../domain/models/mines_game.dart';
 import '../../../domain/models/device_state.dart';
 import '../../../domain/models/mirror_frame.dart';
 import '../../../domain/models/touch.dart';
 import '../../../domain/models/windows.dart';
 import '../../../domain/rules/board_rules.dart';
+import '../../../domain/rules/clock_rules.dart';
 import '../../../domain/rules/control_rules.dart' as rules;
+import '../../../domain/rules/cursor_rules.dart';
+import '../../../domain/rules/keyboard_rules.dart';
+import '../../../domain/rules/mines_rules.dart';
+import '../../../domain/rules/start_rules.dart';
 import '../../../domain/rules/mirror_rules.dart';
 import '../../../domain/rules/touch_rules.dart';
 import '../../../domain/use_cases/control_device_use_case.dart';
-import '../../../domain/use_cases/load_photos_use_case.dart';
 import '../../../utils/result.dart';
 import '../../../utils/safe_notifier.dart';
+
+part 'control_pointer.dart';
 
 /// Whole-screen situation of the remote (screen_specs §8 `setup` / `offline`).
 enum ControlMode { normal, setup, offline }
@@ -34,13 +42,20 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
   ControlViewModel({
     required DeviceRepository device,
     required ControlDeviceUseCase control,
-    LoadPhotosUseCase? loadPhotos,
     DateTime Function() now = DateTime.now,
+    math.Random? random,
     this.failureFor = const Duration(seconds: 6),
   }) : _device = device,
        _control = control,
-       _loadPhotos = loadPhotos,
-       _now = now {
+       _now = now,
+       _random = random ?? math.Random() {
+    // R-DK-7 (L-7): back on the tab in the same run of the app → the windows as they were, no `Home`.
+    final kept = control.session;
+    if (kept != null) {
+      _windows = kept;
+      _sentWindows = kept;
+      _started = true;
+    }
     _device.addListener(_onDevice);
     _onDevice();
     unawaited(reload());
@@ -49,12 +64,13 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
   final DeviceRepository _device;
   final ControlDeviceUseCase _control;
 
-  /// The device's photos + the app's copies (Photo channel of the mirror); null = not wired (tests).
-  final LoadPhotosUseCase? _loadPhotos;
-  PhotoGallery? _gallery;
-  ui.Image? _photoImage;
-  Uint8List? _photoJpeg;
   final DateTime Function() _now;
+
+  /// Where Dò mìn's mines go (R-DK-23); seeded in tests.
+  final math.Random _random;
+
+  /// R-DK-23: the Dò mìn game the app keeps (the device draws it).
+  MinesGame _minesGame = MinesGame.fresh;
 
   /// How long the "not done" snackbar stays.
   final Duration failureFor;
@@ -94,6 +110,15 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
 
   /// Skills on at the last state read (R-DK-9: a skill turned on → its desktop icon selected).
   List<String>? _skillsBefore;
+
+  // R-DK-17…20 (control_pointer.dart): the pointer, the lit menu item, Start open, the power button pressed.
+  Cursor _cursor = Cursor.home;
+  MenuItem? _lit;
+  bool _startOpen = false;
+  bool _startAll = false;
+  PowerState? _pendingPower;
+  DateTime? _cursorSentAt;
+  Timer? _cursorTimer;
 
   // ── what the device shows ──
 
@@ -179,7 +204,7 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
       now: _now(),
       windows: _windows,
       menu: _menu,
-      gallery: _gallery,
+      clockView: _clockView,
     );
   }
 
@@ -219,6 +244,10 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
     );
   }
 
+  /// R-DK-16: the Ngày và Giờ window as the user touched it here (the device keeps the same, POST /api/clock).
+  ClockView _clockView = ClockView.today;
+  ClockView get clockView => _clockView;
+
   /// R-DK-11: the menu on screen.
   MenuView? get menu => _menu;
 
@@ -255,7 +284,6 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
       _follow(s.activeChannel);
     }
     _pushWindows();
-    await _reloadPhotos();
     notifyListeners();
   }
 
@@ -276,33 +304,6 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
     _rotationStopped = true;
     final r = await _control.stopRotation(_settings);
     if (r is Ok<ControlOutcome>) _settings = {...?_settings, 'autoRotate': false};
-  }
-
-  /// The app's copy of the photo the mirror's Photo channel draws, decoded; null = none.
-  ui.Image? get photoImage => _photoImage;
-
-  /// Photo skill on: the device's photo list and the app's copies (the device cannot send its photos back).
-  Future<void> _reloadPhotos() async {
-    final load = _loadPhotos;
-    if (load == null || !(_device.state?.skillsOn.contains('photo') ?? false)) return;
-    final r = await load();
-    if (r is! Ok<PhotoGallery>) return;
-    _gallery = r.value;
-    final jpeg = frame?.agents.photo.jpeg;
-    if (identical(jpeg, _photoJpeg)) return;
-    _photoJpeg = jpeg;
-    ui.Image? img;
-    if (jpeg != null) {
-      try {
-        final codec = await ui.instantiateImageCodec(jpeg);
-        img = (await codec.getNextFrame()).image;
-        codec.dispose();
-      } on Exception {
-        img = null;
-      }
-    }
-    _photoImage?.dispose();
-    _photoImage = img;
   }
 
   // ── commands ──
@@ -382,6 +383,14 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
       _menuTap(m, x, y);
       return TouchTarget.none;
     }
+    if (f.channel == 'Clock' && touchable && caps.clock) {
+      final d = f.deviceNow;
+      final h = clockHitAt(x, y, _clockView, year: d.year, month: d.month);
+      if (h.kind != ClockHitKind.none) {
+        unawaited(_clockTouch(h, d));
+        return TouchTarget.none;
+      }
+    }
     final t = touchTargetAt(x, y, f);
     if (!touchable) return t.kind == TouchKind.start ? t : TouchTarget.none;
     switch (t.kind) {
@@ -393,12 +402,10 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
         unawaited(taskbar(t.program!));
       case TouchKind.icon:
         unawaited(openProgram(t.program!));
-      case TouchKind.tray when f.channel == 'Home':
-        unawaited(balloon(true));
+      case TouchKind.tray:
+        unawaited(openProgram('Weather')); // R-DK-13 (P-2026-11-26.21): the tray icon opens the Weather window
       case TouchKind.balloonClose:
         unawaited(balloon(false));
-      case TouchKind.tray:
-        break; // the balloon belongs to the desktop (R-DK-13)
       case TouchKind.trayClock:
         unawaited(openProgram('Clock')); // R-DK-14: XP's tray clock opens Date and Time Properties
       case TouchKind.balloonBody:
@@ -440,6 +447,17 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
     }
   }
 
+  /// R-DK-15: the app's Start sheet opened / switched to Tất cả chương trình ([all]) / closed — the device draws XP's
+  /// Start menu meanwhile (it only draws; the sheet picks). A context menu on screen gives way to it.
+  Future<void> startMenu(bool open, {bool all = false}) async {
+    if (!touchable || !caps.windows) return;
+    if (open && _menu != null) {
+      _menu = null;
+      notifyListeners();
+    }
+    await _control.startMenu(open, all: all);
+  }
+
   /// Close the menu without choosing (a tap outside it, XP).
   Future<void> closeMenu() async {
     if (_menu == null) return;
@@ -456,6 +474,11 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
     }
     final item = menuItemAt(m, x, y);
     if (item == null || !m.enabled(item)) return;
+    _menuDo(m, item);
+  }
+
+  /// Item [item] of menu [m] chosen (a tap / click on it, Enter on the lit one — R-DK-19).
+  void _menuDo(MenuView m, MenuItem item) {
     final p = m.program;
     switch (item) {
       case MenuItem.refresh:
@@ -489,11 +512,52 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
   Future<void> openProgram(String program) async {
     if (_device.state == null || !usable || !_can(ControlCommand.open)) return;
     final win = _windowOf(program);
+    if (win == 'Clock' && channel != 'Clock') _clockView = ClockView.today; // XP's dialog opens on today
     final show = win == 'Weather' && _real && program == 'Weather' ? _weatherTab : program;
+    if (win == 'Mines') unawaited(_sendMines()); // the device draws the game the app keeps (R-DK-23)
     final before = _windows;
     _windows = _windows.opened(win);
     _pendingChannel = show;
     await _run(ControlCommand.open, () => _control.open(show), app: win, undo: () => _windows = before);
+  }
+
+  /// R-DK-16: a touch on the Ngày và Giờ window — the view changes at once (the device draws the same), a picked
+  /// zone goes to the settings (`tzMinutes`), "Cập nhật ngay" asks the time servers again.
+  Future<void> _clockTouch(ClockHit h, DateTime today) async {
+    final v = _clockView;
+    final year = v.year ?? today.year, month = v.month ?? today.month;
+    final zone = clockZones.indexOf((_settings?['tzMinutes'] as num?)?.toInt() ?? 0);
+    var sync = false;
+    int? newZone;
+    _clockView = switch (h.kind) {
+      ClockHitKind.tab => v.copyWith(tab: ClockTab.values[h.value], list: ClockList.none),
+      ClockHitKind.monthList =>
+        v.list == ClockList.month
+            ? v.copyWith(list: ClockList.none)
+            : v.copyWith(list: ClockList.month, top: listTopFor(ClockList.month, month - 1)),
+      ClockHitKind.yearUp => v.copyWith(year: (year + 1).clamp(1970, 2099), month: month, clearDay: true),
+      ClockHitKind.yearDown => v.copyWith(year: (year - 1).clamp(1970, 2099), month: month, clearDay: true),
+      ClockHitKind.day => v.copyWith(year: year, month: month, day: h.value),
+      ClockHitKind.pickMonth => v.copyWith(year: year, month: h.value, list: ClockList.none, clearDay: true),
+      ClockHitKind.zoneList =>
+        v.list == ClockList.zone
+            ? v.copyWith(list: ClockList.none)
+            : v.copyWith(list: ClockList.zone, top: listTopFor(ClockList.zone, zone < 0 ? 0 : zone)),
+      ClockHitKind.pickZone => v.copyWith(list: ClockList.none),
+      ClockHitKind.scrollUp => v.copyWith(top: (v.top - 1).clamp(0, listMaxTop(v.list))),
+      ClockHitKind.scrollDown => v.copyWith(top: (v.top + 1).clamp(0, listMaxTop(v.list))),
+      ClockHitKind.closeList => v.copyWith(list: ClockList.none),
+      ClockHitKind.sync || ClockHitKind.none => v,
+    };
+    if (h.kind == ClockHitKind.sync) sync = true;
+    if (h.kind == ClockHitKind.pickZone) newZone = clockZones[h.value];
+    notifyListeners();
+    await _control.clock(_clockView, sync: sync);
+    if (newZone != null) {
+      final r = await _control.timeZone(newZone);
+      if (r is Ok<ControlOutcome>) _settings = {...?_settings, 'tzMinutes': newZone};
+      notifyListeners();
+    }
   }
 
   /// R-DK-14: a tab of the Weather window (Weather = Hiện tại, Forecast = Dự báo); the shown tab does nothing.
@@ -559,15 +623,6 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
     await _control.restart();
   }
 
-  /// Tắt / bật màn now.
-  Future<void> toggleScreen() async {
-    final on = screenOff;
-    final c = on ? ControlCommand.screenOn : ControlCommand.screenOff;
-    if (!_can(c)) return;
-    _pendingScreen = on;
-    await _run(c, () => _control.screen(on));
-  }
-
   /// Chế độ đêm: `nightMode` 0 ↔ the last mode used (default 2, clock face).
   Future<void> toggleNight() async {
     if (!_can(ControlCommand.night)) return;
@@ -621,9 +676,10 @@ class ControlViewModel extends ChangeNotifier with SafeNotifier {
 
   @override
   void dispose() {
+    _control.session = _windows;
     _device.removeListener(_onDevice);
     _failureTimer?.cancel();
-    _photoImage?.dispose();
+    _cursorTimer?.cancel();
     super.dispose();
   }
 }

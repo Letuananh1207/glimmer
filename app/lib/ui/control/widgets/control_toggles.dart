@@ -4,17 +4,6 @@ import '../../../l10n/app_localizations.dart';
 import '../../core/themes/app_colors.dart';
 import '../../core/themes/app_text.dart';
 
-/// How a remote button looks.
-enum PadLook {
-  normal,
-
-  /// Not usable now (screen off, night, offline): 38 %.
-  disabled,
-
-  /// Firmware lacks the command (R-DK-3): 38 % + lock 14 top right.
-  locked,
-}
-
 /// Mờ của nút / chú thích không dùng được hoặc thiếu firmware.
 const padDisabledOpacity = 0.38;
 
@@ -29,7 +18,11 @@ class BrightnessSlider extends StatelessWidget {
     required this.onChanged,
     required this.onRelease,
     this.enabled = true,
+    this.margin = const EdgeInsets.fromLTRB(AppSpace.l, AppSpace.m, AppSpace.l, 0),
   });
+
+  /// Outside the card (lề 12 16 0 alone; none in the bottom row of 2026-11-27.10).
+  final EdgeInsets margin;
 
   final int value;
   final bool dragging;
@@ -80,7 +73,7 @@ class BrightnessSlider extends StatelessWidget {
     return Opacity(
       opacity: enabled ? 1 : padDisabledOpacity,
       child: Container(
-        margin: const EdgeInsets.fromLTRB(AppSpace.l, AppSpace.m, AppSpace.l, 0),
+        margin: margin,
         padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
         constraints: const BoxConstraints(minHeight: _minH),
         decoration: BoxDecoration(color: AppColors.panel, borderRadius: BorderRadius.circular(AppSize.radiusCard)),
@@ -107,97 +100,3 @@ class BrightnessSlider extends StatelessWidget {
   }
 }
 
-/// One `RoundToggle`.
-class RoundItem {
-  const RoundItem({required this.icon, required this.label, required this.onTap, this.on, this.look = PadLook.normal});
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  /// Accent when on (screen off amber, night lilac); null = off.
-  final Color? on;
-  final PadLook look;
-}
-
-/// Hàng `RoundToggle` (§8): đệm 16 16 0, 3 cột — vòng 56 (`roundButton`) nền `panel` viền 1 `line`, icon 24 ink +
-/// nhãn 12 inkDim cách 6. Bật: nền tint + viền + icon + nhãn màu nhấn.
-class RoundToggleRow extends StatelessWidget {
-  const RoundToggleRow({super.key, required this.items});
-
-  final List<RoundItem> items;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(AppSpace.l, AppSpace.l, AppSpace.l, 0),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [for (final i in items) Expanded(child: RoundToggle(item: i))],
-    ),
-  );
-}
-
-class RoundToggle extends StatelessWidget {
-  const RoundToggle({super.key, required this.item});
-
-  final RoundItem item;
-
-  static const _icon = 24.0;
-  static const _gap = 6.0;
-  static const _label = 12.0;
-  static const _tint = 0.16;
-  static const _lock = 14.0;
-
-  @override
-  Widget build(BuildContext context) {
-    final on = item.on;
-    final usable = item.look == PadLook.normal;
-    return Semantics(
-      button: true,
-      toggled: on != null,
-      enabled: usable,
-      label: item.label,
-      excludeSemantics: true,
-      child: Opacity(
-        opacity: usable ? 1 : padDisabledOpacity,
-        child: InkWell(
-          onTap: usable ? item.onTap : null,
-          customBorder: const CircleBorder(),
-          child: Column(
-            children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: AppSize.roundButton,
-                    height: AppSize.roundButton,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: on == null
-                          ? AppColors.panel
-                          : Color.alphaBlend(on.withValues(alpha: _tint), AppColors.panel),
-                      border: Border.all(color: on ?? AppColors.line),
-                    ),
-                    child: Icon(item.icon, size: _icon, color: on ?? AppColors.ink),
-                  ),
-                  if (item.look == PadLook.locked)
-                    const Positioned(
-                      top: 0,
-                      right: -AppSpace.xs,
-                      child: Icon(Icons.lock_outline, size: _lock, color: AppColors.inkDim),
-                    ),
-                ],
-              ),
-              const SizedBox(height: _gap),
-              Text(
-                item.label,
-                textAlign: TextAlign.center,
-                style: TextStyle(fontFamily: AppFonts.family, fontSize: _label, color: on ?? AppColors.inkDim),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}

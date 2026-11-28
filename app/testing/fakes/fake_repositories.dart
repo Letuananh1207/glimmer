@@ -2,10 +2,12 @@ import 'dart:typed_data';
 
 import 'package:glimmer_app/data/repositories/backup/backup_repository.dart';
 import 'package:glimmer_app/data/repositories/device/device_repository_local.dart';
+import 'package:glimmer_app/data/repositories/location/location_repository.dart';
 import 'package:glimmer_app/data/repositories/release/release_repository.dart';
 import 'package:glimmer_app/domain/models/app_error.dart';
 import 'package:glimmer_app/domain/models/config_backup.dart';
 import 'package:glimmer_app/domain/models/release.dart';
+import 'package:glimmer_app/domain/models/weather_location.dart';
 import 'package:glimmer_app/utils/result.dart';
 
 import 'fake_services.dart';
@@ -13,9 +15,10 @@ import 'fake_services.dart';
 /// A real [DeviceRepositoryLocal] over fake services — the ViewModel tests drive the device through
 /// [api] (answers) and [wifi] (phone Wi-Fi), with instant delays.
 class DeviceRig {
-  DeviceRig._(this.api, this.nsd, this.wifi, this.delay, this.repo);
+  DeviceRig._(this.api, this.nsd, this.wifi, this.delay, this.repo, this.cursor);
 
   final FakeDeviceApiService api;
+  final FakeCursorService cursor;
   final FakeDiscoveryService nsd;
   final FakeWifiService wifi;
   final FakeDelay delay;
@@ -24,15 +27,17 @@ class DeviceRig {
   static Future<DeviceRig> create({Map<String, Object> saved = const {}}) async {
     final api = FakeDeviceApiService(), nsd = FakeDiscoveryService(), wifi = FakeWifiService();
     final delay = FakeDelay();
+    final cursor = FakeCursorService();
     final repo = DeviceRepositoryLocal(
       api: api,
       discovery: nsd,
       store: await fakeStore(saved),
       wifi: wifi,
+      cursor: cursor,
       delay: delay.call,
       pollEvery: const Duration(hours: 1),
     );
-    return DeviceRig._(api, nsd, wifi, delay, repo);
+    return DeviceRig._(api, nsd, wifi, delay, repo, cursor);
   }
 
   /// Device answering at [url] with [state]; connected.
@@ -89,4 +94,30 @@ class FakeBackupRepository implements BackupRepository {
 
   static Result<ConfigBackup?> invalid() =>
       const Result.error(AppError(AppErrorKind.invalidBackup, detail: 'no wifi_ssid'));
+}
+
+/// [LocationRepository] with scripted answers; [searches] / [gpsCalls] record what was asked.
+class FakeLocationRepository implements LocationRepository {
+  GpsOutcome gpsAnswer = const GpsOutcome.failed(GpsFailure.failed);
+  Result<List<PlaceResult>> searchAnswer = const Result.ok([]);
+  final searches = <String>[];
+  int gpsCalls = 0, appSettings = 0, locationSettings = 0;
+
+  @override
+  Future<GpsOutcome> currentPlace() async {
+    gpsCalls++;
+    return gpsAnswer;
+  }
+
+  @override
+  Future<Result<List<PlaceResult>>> search(String query) async {
+    searches.add(query);
+    return searchAnswer;
+  }
+
+  @override
+  Future<void> openAppSettings() async => appSettings++;
+
+  @override
+  Future<void> openLocationSettings() async => locationSettings++;
 }

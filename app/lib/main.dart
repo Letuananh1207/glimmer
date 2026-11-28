@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'config/dependencies.dart';
 import 'l10n/app_localizations.dart';
+import 'routing/photo_source_lifecycle.dart';
 import 'routing/polling_lifecycle.dart';
 import 'routing/router.dart';
 import 'ui/core/themes/app_theme.dart';
@@ -34,23 +35,27 @@ class _GlimmerAppState extends State<GlimmerApp> {
 
   @override
   Widget build(BuildContext context) => MultiProvider(
-        providers: widget.deps.providers,
-        child: PollingLifecycle(
-          device: widget.deps.device,
-          child: MaterialApp.router(
-            title: 'glimmer',
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.dark(),
-            locale: const Locale('vi'),
-            supportedLocales: AppLocalizations.supportedLocales,
-            localizationsDelegates: const [
-              AppLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            routerConfig: _router,
-          ),
+    providers: widget.deps.providers,
+    child: PollingLifecycle(
+      device: widget.deps.device,
+      child: PhotoSourceLifecycle(
+        device: widget.deps.device,
+        source: widget.deps.photoSource,
+        child: MaterialApp.router(
+          title: 'glimmer',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.dark(),
+          locale: const Locale('vi'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          routerConfig: _router,
         ),
-      );
+      ),
+    ),
+  );
 }

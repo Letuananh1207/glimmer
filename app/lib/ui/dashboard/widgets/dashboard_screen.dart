@@ -39,7 +39,7 @@ class DashboardScreen extends StatelessWidget {
   /// Tab Ảnh (R-SK-6: shown only while skill Ảnh is on).
   final PhotoTabViewModel photos;
 
-  /// `weatherSetLocation`: tab Cài đặt (ô vị trí chưa vẽ).
+  /// `weatherSetLocation`: màn Vị trí thời tiết (2026-11-26.9).
   final VoidCallback onOpenSettings;
 
   /// Tab Ảnh: open PhotoCrop (push, above the tabs); completes when it closes.

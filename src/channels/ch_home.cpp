@@ -2,36 +2,23 @@
 // themeXP.desktop, source/XP-Desktop.dc.html). Replaces the "Trang chủ" window.
 //
 // chHomeDraw  → wallpaper (user JPEG /wallpaper.jpg, else the fallback pixel
-//               wallpaper), desktop icons + labels, the tray balloon while it is
-//               up; seeds the cache.
-// chHomeTick  → 5 Hz: repaints only a label whose text changed (the wallpaper
-//               under it restored from the JPEG / fallback first), the
-//               balloon's two text lines (solid INFO_BAR), shows the balloon
-//               when the weather changes, and erases it when its 10 s are up
-//               (wallpaper + the icons / labels under it repainted).
+//               wallpaper), desktop icons + labels; seeds the cache.
+// chHomeTick  → nothing moves (P-2026-11-26.18: labels are plain names;
+//               P-2026-11-26.21: no tray balloon). The selection changing
+//               repaints the desktop from main.cpp.
 //
 //   y 0..213   wallpaper 240×214 at (0, 0) — no window, no title bar
-//   icons      one per program of the enabled skills (P-2026-11-26.14, XP
-//              Auto Arrange, XPCore::deskIcons): column 0 centre x 40 —
-//              Claude, Codex, Ảnh, then Thùng rác; column 1 centre x 120 —
-//              Thời tiết, Đồng hồ; cells 48 tall from y 8. ×2, at (cx, cell):
-//                Clawd 18×10 (cx−18, +1) · terminal 16×10 (cx−16, 0)
-//                photo 16×11 (cx−16, 0) · trash 14×10 (cx−14, 0)
-//                weather / clock 16×14 (cx−16, −6)
-//   labels     JBMono-11 white TC (cx, cell + 24), black shadow (+1, +1):
-//                "Claude 38%" · "Codex 71%" · "Ảnh" · "Thùng rác" · "Thời tiết" · "Đồng hồ"
-//   selected   (the app's `sel`): icon tinted xpSelectIcon (Clawd xpSelectClawd),
-//              label white on xpSelect (text + 1 px each side, 13 tall), no
-//              shadow, 1-px dotted white border around it — as XP.
-//   balloon    P-2026-11-26.15 (XP notification balloon, XP-Desk-Balloon): not
-//              always up — ~10 s when the desktop comes up, when the weather
-//              changes, when the app taps the tray icon (POST /api/balloon);
-//              × / a card hides it. Weather skill on only. Box 140×62 at
-//              (96, 138), corners stepped 2 px, black border, INFO_BAR; tail
-//              from the bottom x 178..190 to its tip (190, 211), pointing at
-//              the tray icon (180, 220). Weather icon ×1 xpAmber (102, 144),
-//              "Thời tiết" 12B TL (122, 144), × button 12×12 at (220, 143);
-//              lines JBMono-11 TL (102, 164) black and (102, 178) xpLabel.
+//   icons      one per program of the enabled skills (XPCore::deskIcons, one
+//              column x 40, cells 48 tall from y 8): Clawd ×2 (22, cell+1);
+//              Codex / Ảnh / Thùng rác = XP colour bitmaps 32×23 at (24, cell)
+//              (P-2026-11-26.19, desk_icons.h, tools/deskicons.py)
+//   labels     JBMono-11 white TC (40, cell + 24), black shadow (+1, +1):
+//                "Claude" · "Codex" · "Ảnh" · "Thùng rác" (P-2026-11-26.18)
+//   selected   (the app's `sel`): Clawd xpSelectClawd, bitmaps xpSelectIcon on
+//              (x+y)-even cells; label white on xpSelect (text + 1 px each
+//              side, 13 tall), no shadow, 1-px dotted white border — as XP.
+//   (P-2026-11-26.21: no weather balloon — the Thời tiết window and the tray
+//   icon say it.)
 //   taskbar    main.cpp's; no button pressed (XPCore::buttonFor("Home")).
 
 #include "channel.h"
@@ -44,6 +31,8 @@
 #include "xp.h"
 #include "wallpaper.h"
 #include "desk_wallpaper.h"
+#include "desk_icons.h"
+#include "mines_icons.h"
 #include <time.h>
 #include <math.h>
 
@@ -53,37 +42,6 @@ using namespace Theme::XP;
 constexpr int kLabels = XPCore::kDeskMax;    // icons on the desktop at most
 constexpr int kLabelH = 16;                  // band y−1 .. y+14 (line box 13 + shadow + accents)
 constexpr int kLabelMaxW = 80;               // column x 0..79
-constexpr uint16_t kTrash = 0xDF3D;          // #DDE6EE xpDesk_DDE6EE
-
-using XPCore::kBalX;
-using XPCore::kBalY;
-using XPCore::kBalW;
-using XPCore::kBalH;
-constexpr int kLineX = 102, kLine1Y = 164, kLine2Y = 178;
-constexpr int kLineW = kBalX + kBalW - 2 - kLineX;   // text up to x 233
-constexpr int kCloseX = 220, kCloseY = 143;          // × button 12×12
-
-// Terminal 16×10 and trash 14×10 (source XP-Desktop.dc.html), bit (w-1-x) = pixel x.
-const uint16_t kTermBits[10] PROGMEM = {
-    0xFFFF, 0x8001, 0xFFFF, 0x8001, 0xA001, 0x9001, 0xA701, 0x8001, 0x8001, 0xFFFF,
-};
-const uint16_t kPromptBits[3] PROGMEM = {0x20, 0x10, 0x27};   // 6×3 ">_"
-const uint16_t kTrashBits[10] PROGMEM = {
-    0x07F8, 0x0FFC, 0x1FFE, 0x0AA8, 0x0AA8, 0x0AA8, 0x0AA8, 0x0AA8, 0x0AA8, 0x07FC,
-};
-
-void drawCells(const uint16_t* rows, int w, int h, int x, int y, int scale, uint16_t color) {
-    for (int r = 0; r < h; r++) {
-        const uint16_t row = pgm_read_word(&rows[r]);
-        for (int c = 0; c < w;) {
-            if (!(row >> (w - 1 - c) & 1)) { c++; continue; }
-            int run = 0;
-            while (c + run < w && (row >> (w - 1 - c - run) & 1)) run++;
-            tft.fillRect(x + c * scale, y + r * scale, run * scale, scale, color);
-            c += run;
-        }
-    }
-}
 
 // The icons of the current paint (seeded by draw()).
 XPCore::DeskIcon s_icons[kLabels];
@@ -101,10 +59,6 @@ Band bandFor(int i, int tw) {
     if (x < 0) x = 0;
     return {x, labelY(i) - 1, w, kLabelH};
 }
-Band unite(const Band& a, const Band& b) {
-    const int x0 = a.x < b.x ? a.x : b.x, x1 = (a.x + a.w > b.x + b.w) ? a.x + a.w : b.x + b.w;
-    return {x0, a.y, x1 - x0, a.h};
-}
 
 // The capture the label text blends its anti-aliased edges against.
 const Wallpaper::Cap* s_bg = nullptr;
@@ -121,21 +75,6 @@ uint16_t shadowAt(uint16_t, uint16_t) { return BLACK; }
 // ── File-static cache so tick() can diff vs last paint ──
 static char     s_label[kLabels][16];      // label as drawn ("Claude 100%")
 static int16_t  s_labelW[kLabels];         // drawn band width (0 = none)
-static XPCore::Balloon s_bal;               // timer (until = hide time, 0 = hidden)
-static bool     s_balPainted = false;      // balloon pixels are on screen now
-static uint32_t s_balloonSig = 0;          // hash of the two lines + dim flag
-// The weather the last balloon told (to notice news worth a new one).
-static bool     s_newsValid = false;
-static uint8_t  s_newsCode = 0xFF;
-static float    s_newsTemp = 0.f;
-
-static uint32_t sigOf(const char* a, const char* b, bool dim) {
-    uint32_t h = dim ? 0x9E3779B9u : 2166136261u;   // FNV-1a
-    for (const char* p = a; *p; p++) h = (h ^ (uint8_t)*p) * 16777619u;
-    h = (h ^ 0xFFu) * 16777619u;
-    for (const char* p = b; *p; p++) h = (h ^ (uint8_t)*p) * 16777619u;
-    return h;
-}
 
 extern int8_t mainSelectedIcon();   // the app's selected desktop icon (Control::Windows::sel)
 
@@ -146,45 +85,20 @@ bool chHomeEnabled(const ChannelCtx& ctx) {
 
 // ── Text of the moving parts ──
 
-// "Claude 38%" while a usage % is known; the bare name otherwise (no key,
-// loading, a credential problem) — theo XP thật a desktop icon is its name.
-static void usageLabel(char* out, size_t n, const char* name, bool isClaude, Cred cred, float pct) {
-    char note[64]; Chrome::credLine(isClaude, cred, note, sizeof(note));
-    if (pct < 0 || note[0]) { snprintf_P(out, n, PSTR("%s"), name); return; }
-    snprintf_P(out, n, PSTR("%s %.0f%%"), name, Api::shownPct(pct));
-}
-
 static void labelText(int i, const ChannelCtx& ctx, char* out, size_t n) {
     switch (s_icons[i].prog) {
-        case XPCore::PROG_CLAUDE: usageLabel(out, n, "Claude", true, ctx.claude->cred,
-                                             Api::claudeHeroPct(*ctx.settings, *ctx.claude)); break;
-        case XPCore::PROG_CODEX:  usageLabel(out, n, "Codex", false, ctx.codex->cred,
-                                             Api::codexHeroPct(*ctx.settings, *ctx.codex)); break;
+        // P-2026-11-26.18: the program's name only, as XP (no usage % on a desktop icon).
+        case XPCore::PROG_CLAUDE:  Utf8::copy(out, n, "Claude"); break;
+        case XPCore::PROG_CODEX:   Utf8::copy(out, n, "Codex"); break;
         case XPCore::PROG_PHOTO:   Utf8::copy(out, n, "Ảnh"); break;
         case XPCore::PROG_WEATHER: Utf8::copy(out, n, "Thời tiết"); break;
         case XPCore::PROG_CLOCK:   Utf8::copy(out, n, "Đồng hồ"); break;
+        case XPCore::PROG_MINES:   Utf8::copy(out, n, "Dò mìn"); break;
         default:                   Utf8::copy(out, n, "Thùng rác"); break;
     }
 }
 
 static bool selected(int i) { return s_sel >= 0 && s_icons[i].prog == s_sel; }
-
-// Balloon lines: "29° · Ít mây" / "cảm giác 33°"; no reading yet →
-// "chưa có thời tiết" in xpDim (as the old Home's NoWeather).
-static void balloonText(const ChannelCtx& ctx, char* l1, size_t n1, char* l2, size_t n2, bool& dim) {
-    const WeatherData& w = Weather::snapshot();
-    const bool f = ctx.settings->useFahrenheit;
-    dim = !w.valid;
-    if (!w.valid) {
-        Utf8::copy(l1, n1, "Chưa có thời tiết");
-        l2[0] = '\0';
-        return;
-    }
-    char d[40]; Utf8::copy(d, sizeof(d), Weather::describe(w.code));
-    snprintf_P(l1, n1, PSTR("%.0f\xC2\xB0 \xC2\xB7 %s"), Weather::toDisplay(w.tempC, f), d);
-    if (w.feelsC > -900.f) snprintf_P(l2, n2, PSTR("cảm giác %.0f\xC2\xB0"), Weather::toDisplay(w.feelsC, f));
-    else l2[0] = '\0';
-}
 
 // ── Painting ──
 
@@ -229,154 +143,36 @@ static int measure(const char* text) {
     return w > kLabelMaxW ? kLabelMaxW : w;
 }
 
-// One label from tick(): restore the wallpaper under the old ∪ new text, then
-// draw. The capture buffer (≤ 84×16×2 B) is malloc'd for the call.
-static void paintLabel(int i, const char* text) {
-    char t[24]; Utf8::copy(t, sizeof(t), text);
-    Display::useFont("JBMono-11");
-    XP::fitText(t, kLabelMaxW);
-    Band b = bandFor(i, measure(t));
-    if (s_labelW[i]) b = unite(b, bandFor(i, s_labelW[i] - 3));
-    Wallpaper::Cap cap{(int16_t)b.x, (int16_t)b.y, (int16_t)b.w, (int16_t)b.h, nullptr};
-    cap.buf = (uint16_t*)malloc((size_t)b.w * b.h * 2);
-    Wallpaper::paint(b.x, b.y, b.w, b.h, &cap, 1);
-    drawLabelText(i, t, cap.buf ? &cap : nullptr);
-    free(cap.buf);
-    s_labelW[i] = (int16_t)(measure(t) + 3);
-    Utf8::copy(s_label[i], sizeof(s_label[i]), text);
-}
 
-static void paintBalloonLines(const char* line1, const char* line2, bool dim) {
-    tft.fillRect(kLineX, kLine1Y - 1, kLineW, 30, INFO_BAR);   // y 163..192 (border at 198)
-    Display::useFont("JBMono-11");
-    tft.setTextDatum(TL_DATUM);
-    char a[48]; Utf8::copy(a, sizeof(a), line1);
-    XP::fitText(a, kLineW);
-    tft.setTextColor(dim ? DIM : BLACK, INFO_BAR);
-    tft.drawString(a, kLineX, kLine1Y);
-    if (line2[0]) {
-        char b[32]; Utf8::copy(b, sizeof(b), line2);
-        XP::fitText(b, kLineW);
-        tft.setTextColor(LABEL, INFO_BAR);
-        tft.drawString(b, kLineX, kLine2Y);
+// An XP colour icon (P-2026-11-26.19, desk_icons.h) at real pixels; transparent cells keep the wallpaper.
+// Selected: every colour → xpSelectIcon on the (x+y)-even cells (dither for XP's 50 % select tint).
+template <typename Run>
+static void drawRuns(const Run* runs, int n, const uint16_t* pal, int x0, int y0, bool sel) {
+    for (int k = 0; k < n; k++) {
+        Run r;
+        memcpy_P(&r, &runs[k], sizeof(r));
+        const int x = x0 + r.x, y = y0 + r.y;
+        tft.fillRect(x, y, r.w, 1, pgm_read_word(&pal[r.c]));
+        if (!sel) continue;
+        for (int i = (x + y) & 1; i < r.w; i += 2) tft.drawPixel(x + i, y, SELECT_ICON);
     }
-}
-
-static void paintBalloon(const char* line1, const char* line2, bool dim) {
-    // Box: rows 0 / last inset 2, rows 1 / last-1 inset 1 (stepped corners);
-    // black outline, INFO_BAR inside.
-    const int x1 = kBalX + kBalW - 1, y1 = kBalY + kBalH - 1;
-    tft.drawFastHLine(kBalX + 2, kBalY, kBalW - 4, BLACK);
-    tft.drawFastHLine(kBalX + 1, kBalY + 1, kBalW - 2, BLACK);
-    tft.drawFastHLine(kBalX + 2, kBalY + 1, kBalW - 4, INFO_BAR);
-    tft.fillRect(kBalX, kBalY + 2, kBalW, kBalH - 4, BLACK);
-    tft.fillRect(kBalX + 1, kBalY + 2, kBalW - 2, kBalH - 4, INFO_BAR);
-    tft.drawFastHLine(kBalX + 1, y1 - 1, kBalW - 2, BLACK);
-    tft.drawFastHLine(kBalX + 2, y1 - 1, kBalW - 4, INFO_BAR);
-    tft.drawFastHLine(kBalX + 2, y1, kBalW - 4, BLACK);
-    (void)x1;
-    // Tail: opens the bottom border at x 179..189, then row k (y 200 + k) runs
-    // from x 178 + k to the straight right edge x 190; tip (189..190, 211).
-    tft.drawFastHLine(XPCore::kBalTailX0 + 1, y1, XPCore::kBalTailX1 - XPCore::kBalTailX0 - 1, INFO_BAR);
-    for (int y = y1 + 1; y <= XPCore::kBalTailTipY; y++) {
-        const int x0 = XPCore::kBalTailX0 + (y - y1 - 1);
-        tft.drawFastHLine(x0, y, XPCore::kBalTailX1 - x0 + 1, INFO_BAR);
-        tft.drawPixel(x0, y, BLACK);
-        tft.drawPixel(XPCore::kBalTailX1, y, BLACK);
-    }
-    XP::drawIcon(XPCore::ICON_WEATHER, 102, 144, 1, AMBER);
-    Display::useFont("JBMono-12B");
-    tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(BLACK, INFO_BAR);
-    tft.drawString("Thời tiết", 122, 144);
-    // × button: xpDim border, white face, black × 6×6 at (+3, +3).
-    tft.fillRect(kCloseX, kCloseY, 12, 12, DIM);
-    tft.fillRect(kCloseX + 1, kCloseY + 1, 10, 10, WHITE);
-    for (int k = 0; k < 6; k++) {
-        tft.drawPixel(kCloseX + 3 + k, kCloseY + 3 + k, BLACK);
-        tft.drawPixel(kCloseX + 8 - k, kCloseY + 3 + k, BLACK);
-    }
-    paintBalloonLines(line1, line2, dim);
 }
 
 static void drawIcon(int i) {
     const XPCore::DeskIcon& ic = s_icons[i];
     const bool sel = selected(i);
-    const uint16_t white = sel ? SELECT_ICON : WHITE;
     const int cx = ic.cx, y = ic.y;
+    using namespace DeskIcons;
     switch (ic.prog) {
         case XPCore::PROG_CLAUDE:                              // Clawd orange, black eyes
             XP::drawIcon(XPCore::ICON_CLAWD, cx - 18, y + 1, 2, sel ? SELECT_CLAWD : Display::CLAWD_ORANGE);
             break;
-        case XPCore::PROG_CODEX:                               // command window
-            drawCells(kTermBits, 16, 10, cx - 16, y, 2, white);
-            tft.fillRect(cx - 14, y + 6, 28, 12, BLACK);
-            drawCells(kPromptBits, 6, 3, cx - 12, y + 8, 2, BAR);
+        case XPCore::PROG_CODEX: drawRuns(kCodexRuns, kCodexRunCount, kCodexPal, cx - 16, y, sel); break;   // Command Prompt
+        case XPCore::PROG_PHOTO: drawRuns(kPhotoRuns, kPhotoRunCount, kPhotoPal, cx - 16, y, sel); break;   // My Pictures
+        case XPCore::PROG_MINES:                                                                        // P-2026-11-27.25
+            drawRuns(MinesIcons::kDeskMinesRuns, MinesIcons::kDeskMinesRunCount, MinesIcons::kDeskMinesPal, cx - 16, y, sel);
             break;
-        case XPCore::PROG_PHOTO:   XP::drawIcon(XPCore::ICON_PHOTO, cx - 16, y, 2, white); break;
-        case XPCore::PROG_WEATHER: XP::drawIcon(XPCore::ICON_WEATHER, cx - 16, y - 6, 2, white); break;
-        case XPCore::PROG_CLOCK:   XP::drawIcon(XPCore::ICON_CLOCK, cx - 16, y - 6, 2, white); break;
-        default:                   drawCells(kTrashBits, 14, 10, cx - 14, y, 2, sel ? SELECT_ICON : kTrash); break;
-    }
-}
-
-// ── Balloon on / off ──
-
-static bool weatherSkill(const ChannelCtx& ctx) {
-    return Skill::inList(ctx.settings->skillsOn.c_str(), "weather");
-}
-
-// Remember the weather this balloon tells, so tick() sees what is news.
-static void noteNews() {
-    const WeatherData& w = Weather::snapshot();
-    s_newsValid = w.valid;
-    s_newsCode = w.valid ? (uint8_t)w.code : 0xFF;
-    s_newsTemp = w.valid ? w.tempC : 0.f;
-}
-
-static void showBalloon(const ChannelCtx& ctx) {
-    char l1[48], l2[32]; bool dim;
-    balloonText(ctx, l1, sizeof(l1), l2, sizeof(l2), dim);
-    paintBalloon(l1, l2, dim);
-    s_balloonSig = sigOf(l1, l2, dim);
-    s_balPainted = true;
-    noteNews();
-}
-
-// Put back what the balloon covered: the wallpaper of its box + tail, then
-// every icon / label it overlapped (theo XP thật the balloon just closes).
-static void eraseBalloon() {
-    using namespace XPCore;
-    Wallpaper::paint(kBalAreaX, kBalAreaY, kBalAreaW, kBalAreaH);
-    for (int i = 0; i < s_iconN; i++) {
-        const int cx = s_icons[i].cx, y = s_icons[i].y;
-        if (hits(cx - 18, y - 6, 36, 30, kBalAreaX, kBalAreaY, kBalAreaW, kBalAreaH)) drawIcon(i);
-        const Band b = bandFor(i, s_labelW[i] ? s_labelW[i] - 3 : 0);
-        if (hits(b.x, b.y, b.w, b.h, kBalAreaX, kBalAreaY, kBalAreaW, kBalAreaH)) {
-            char t[16]; Utf8::copy(t, sizeof(t), s_label[i]);
-            paintLabel(i, t);
-        }
-    }
-    s_balPainted = false;
-}
-
-// The desktop came up (main.cpp, from another screen): the balloon pops up.
-void chHomeEntered() { XPCore::balloonShow(s_bal, millis()); }
-
-// The desktop went away (a card, a window): the balloon is gone with it.
-void chHomeLeft() { XPCore::balloonHide(s_bal); s_balPainted = false; }
-
-bool chHomeBalloonShown() { return s_balPainted; }
-
-// POST /api/balloon while the desktop is on screen: show (10 s) / hide now.
-void chHomeBalloon(const ChannelCtx& ctx, bool show) {
-    if (show) {
-        if (!weatherSkill(ctx)) return;
-        XPCore::balloonShow(s_bal, millis());
-        if (!s_balPainted) showBalloon(ctx);
-    } else {
-        XPCore::balloonHide(s_bal);
-        if (s_balPainted) eraseBalloon();
+        default:                 drawRuns(kTrashRuns, kTrashRunCount, kTrashPal, cx - 16, y, sel); break;   // Recycle Bin
     }
 }
 
@@ -399,9 +195,17 @@ void chHomeDraw(const ChannelCtx& ctx) {
     // One decode paints the whole wallpaper and keeps the four label bands
     // for the text's anti-aliasing (~2 KB each; a failed malloc just means
     // that label blends against black).
+    // A clipped repaint (cursor moving) decodes only down to the clip and
+    // keeps the bands of the labels it touches.
+    int cx, cy, cw, ch;
+    Display::clipRect(cx, cy, cw, ch);
+    auto touches = [&](const Wallpaper::Cap& c) {
+        return c.x < cx + cw && cx < c.x + c.w && c.y < cy + ch && cy < c.y + c.h;
+    };
     if (Wallpaper::present()) Display::releaseFont();
-    for (int i = 0; i < s_iconN; i++) caps[i].buf = (uint16_t*)malloc((size_t)caps[i].w * caps[i].h * 2);
-    Wallpaper::paint(0, 0, Wallpaper::kW, Wallpaper::kH, caps, s_iconN);
+    for (int i = 0; i < s_iconN; i++)
+        if (touches(caps[i])) caps[i].buf = (uint16_t*)malloc((size_t)caps[i].w * caps[i].h * 2);
+    Wallpaper::paint(cx, cy, cw, ch, caps, s_iconN);
 
     for (int i = 0; i < s_iconN; i++) {
         drawIcon(i);
@@ -409,39 +213,8 @@ void chHomeDraw(const ChannelCtx& ctx) {
         free(caps[i].buf);
         labelText(i, ctx, s_label[i], sizeof(s_label[i]));
     }
-
-    // Tray balloon — only while its 10 s run (P-2026-11-26.15), weather skill on.
-    s_balPainted = false;
-    if (weatherSkill(ctx) && XPCore::balloonVisible(s_bal, millis())) showBalloon(ctx);
-    else noteNews();
 }
 
 // ── Tick: 5 Hz, region-only repaints ──
 
-void chHomeTick(const ChannelCtx& ctx) {
-    char t[16];
-    for (int i = 0; i < s_iconN; i++) {       // only Claude / Codex change
-        if (s_icons[i].prog != XPCore::PROG_CLAUDE && s_icons[i].prog != XPCore::PROG_CODEX) continue;
-        labelText(i, ctx, t, sizeof(t));
-        if (strcmp(t, s_label[i])) paintLabel(i, t);
-    }
-    if (!weatherSkill(ctx)) return;
-    const uint32_t now = millis();
-    if (s_balPainted && !XPCore::balloonVisible(s_bal, now)) { eraseBalloon(); return; }
-    // News (another description, or ≥ 3° off what the last balloon said) pops it up again.
-    const WeatherData& w = Weather::snapshot();
-    char a[40], b[40];
-    Utf8::copy(a, sizeof(a), w.valid ? Weather::describe(w.code) : "");
-    Utf8::copy(b, sizeof(b), s_newsCode != 0xFF ? Weather::describe(s_newsCode) : "");
-    if (XPCore::weatherNews(w.valid, !strcmp(a, b), w.valid ? w.tempC : 0.f, s_newsValid, s_newsTemp)) {
-        XPCore::balloonShow(s_bal, now);
-        if (!s_balPainted) { showBalloon(ctx); return; }
-        noteNews();
-    }
-    if (s_balPainted) {
-        char l1[48], l2[32]; bool dim;
-        balloonText(ctx, l1, sizeof(l1), l2, sizeof(l2), dim);
-        const uint32_t sig = sigOf(l1, l2, dim);
-        if (sig != s_balloonSig) { paintBalloonLines(l1, l2, dim); s_balloonSig = sig; }
-    }
-}
+void chHomeTick(const ChannelCtx&) {}   // nothing on the desktop changes by itself

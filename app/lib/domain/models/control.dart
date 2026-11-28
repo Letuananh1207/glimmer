@@ -37,13 +37,34 @@ class ControlCaps {
     this.dismissCard = false,
     this.windows = false,
     this.balloon = false,
+    this.clock = false,
+    this.mouse = false,
+    this.mines = false,
   });
 
   /// Everything (current firmware).
-  static const all = ControlCaps(touch: true, screen: true, dismissCard: true, windows: true, balloon: true);
+  static const all = ControlCaps(
+    mines: true,
+    mouse: true,
+    clock: true,
+    touch: true,
+    screen: true,
+    dismissCard: true,
+    windows: true,
+    balloon: true,
+  );
 
   /// The device draws the app's open windows on its taskbar and context menus (R-DK-11).
   final bool windows;
+
+  /// The Ngày và Giờ window takes touches (R-DK-16).
+  final bool clock;
+
+  /// The mouse pointer, menu hover and the power button (R-DK-17…21: `cursor` in `/api/state`).
+  final bool mouse;
+
+  /// The firmware draws Dò mìn (R-DK-23: `mines` in `/api/state`).
+  final bool mines;
 
   /// The desktop's tray balloon comes and goes, the app shows / hides it (R-DK-13, `balloon` reported).
   final bool balloon;

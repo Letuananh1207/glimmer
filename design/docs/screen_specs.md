@@ -250,7 +250,34 @@ Mỗi màn có một prop `state` trong `source/<Màn>.dc.html` để chọn tr�
 - Gửi: thu nhỏ vùng cắt về 188 × 188, JPEG **baseline**, ≤ 40 KB — quá thì giảm chất lượng dần, chỉ báo `tooBig` khi đã hết bậc.
   Gửi xong app giữ bản sao (làm hình thu nhỏ ở tab Ảnh).
 
-## 8. Điều khiển — `ControlScreen` (Control.png, ControlOpened.png, ControlTwoOpen.png, ControlMinimized.png, ControlClosed.png, ControlInstalled.png, ControlStart.png, ControlAllPrograms.png, ControlFailed.png, ControlCard.png, ControlScreenOff.png, ControlNight.png, ControlBrightness.png, ControlOldFw.png, ControlSetup.png, ControlOffline.png)
+## 8. Điều khiển — `ControlScreen` (Control.png, ControlDragging.png, ControlKeyAlt.png, ControlClickRight.png, ControlPoweringOff.png, ControlOff.png, ControlPoweringOn.png, ControlCard.png, ControlNight.png, ControlBrightness.png, ControlFailed.png, ControlOldFw.png, ControlSetup.png, ControlOffline.png)
+
+> **2026-11-27.10 — App là chuột, bàn phím, nút nguồn** (phiếu `app/docs/phieu_thiet_ke/2026-11-27-dieu-khien-chuot-ban-phim-nguon.md`). **Bỏ toàn bộ ô màn trên app** (`TouchMirror`, thanh tác
+> vụ vẽ lại, desktop, `StartMenuSheet`, `AllProgramsSheet`, nút tròn "Tắt màn"): người dùng nhìn màn thật; con trỏ, Start, menu
+> vẽ trên thiết bị. Mọi mục 2026-11-26.5 → .8 bên dưới **bỏ**, trừ thẻ agent, thanh báo, thanh báo nổi. Prop `state`:
+> `normal`, `dragging`, `keyAlt`, `clickRight`, `poweringOff`, `off`, `poweringOn`, `card`, `night`, `brightness`, `failed`, `oldFw`, `setup`, `offline`. Tất cả 844. Ảnh 14 `Control*.png`.
+> - **Đầu màn** (đệm 10 16 6 20, cách 12): Clawd ×1.75, "glimmer" 16/700, chấm + mạng · IP 11 muted; phải **`PowerButton`** tròn 48
+>   (`powerButton`, lề phải −4) viền 2, icon ⏻ 24: bật = viền mint, icon ink, nền `panel` (`powerOff`); tắt = viền + icon coral, nền
+>   coral 12 % (`powerOn`); đang tắt / đang khởi động = vòng cung 3 px amber / mint quay quanh nút (`powerShutting`, `powerBooting`).
+> - **`Trackpad`** (lề 6 16 0): cao 280 (`trackpad`; 190 khi có thẻ agent, 220 khi có thanh báo), viền 1 `line` (không viền dưới), bo
+>   20 20 0 0, gradient `trackpadTop` → `trackpadBottom`, bóng trong 0 2 8 đen 45 %; giữa có icon chuột 40 ink mờ 18 %. Cả vùng là
+>   bề mặt rê (`controlTrackpadA11y`). Đang rê (`dragging`): viền mint 55 %, vệt ngón tay mint 35 % rộng 10 + quầng mint 22 % ở đầu
+>   ngón. Không vẽ con trỏ trên app.
+> - **`MouseButtons`** liền dưới bàn rê: hai nửa bằng nhau cao 60 (`mouseButton`), khe 2 màu `line`, viền ngoài `line`, bo 0 0 20 20,
+>   nền `panel`, chữ 13/500 inkDim `controlMouseLeft` / `controlMouseRight`. Đang bấm: nền `panel2` + bóng trong (lõm).
+> - **`KeyPad`** (lề 12 16 0, 3 hàng cách 8): phím cao 52 (`key`) bo 10, mặt gradient `keyFaceTop` → `keyFaceBottom`, gờ dưới inset 3
+>   `keyEdge` + viền sáng trên 1 px trắng 6 %, chữ 13/700 ink; đang bấm: `keyPressed` + bóng trong. Hàng 1: `keyWindows` (lá cờ 4 màu
+>   16) · `keyAltTab` · `keyAltF4` (mỗi phím rộng 1.2) · `keyEsc`. Hàng 2: `keyTab` (icon tab 20 + chữ) · `keyEnter` (rộng 1.6, icon
+>   enter + chữ) · `keyText` mờ 35 % với icon bàn phím + `keyTextSoon` 10 muted. Hàng 3: 4 mũi tên ← ↑ ↓ → bằng nhau, icon 22.
+>   Tổ hợp là **phím có sẵn**, bấm một chạm (không phím dính). Rung nhẹ mỗi lần bấm phím / nút chuột / chạm click.
+> - **Hàng cuối** (lề 12 16 0, cách 8): thẻ độ sáng (như cũ, co giãn) + hai nút vuông 52 (`controlSquare`) bo 14 viền `line`: chế độ
+>   đêm (`controlNightA11y`; bật = nền lilac 16 %, viền + icon lilac) và Số liệu (`controlDetailsA11y`) → màn Số liệu.
+> - Trạng thái: `keyAlt` (Alt+Tab lõm), `clickRight` (nửa Phải lõm), `poweringOff` / `poweringOn` (nút nguồn vòng quay; bàn rê, nút
+>   chuột, phím, hàng cuối mờ 35 %, không bấm được), `off` (nút nguồn coral; mọi thứ mờ trừ nút nguồn; giữa bàn rê nút tròn 120 viền
+>   coral nền coral 10 %, icon ⏻ 40 + `powerOn` 14/700 coral), `card` (`HoldCardPanel` trên bàn rê), `night` (bàn rê, chuột, phím mờ —
+>   màn đêm không có con trỏ; độ sáng 15 %; nút đêm sáng lilac), `brightness` (bong bóng % trên núm), `failed` (`CommandSnackbar`
+>   "Thiết bị không nhận lệnh "Alt+F4"."), `oldFw` (`controlOldFwTitle` / `controlOldFwBody` + `controlUpdateFirmware`; bàn rê, chuột,
+>   phím, nút nguồn mờ, độ sáng vẫn dùng), `setup` / `offline` (thanh báo như cũ; mọi điều khiển mờ).
 
 > **2026-11-26.8 — Bỏ thẻ hướng dẫn chạm.** `TouchLegend` ("Chạm màn như dùng chuột") **bỏ**: dưới ô màn không còn chữ nào về chuyển,
 > thu nhỏ, tắt app. Thứ tự dưới ô màn: thẻ độ sáng (lề 12 16 0), ba nút tròn. Ảnh 16 `Control*.png` chụp lại.

@@ -1,10 +1,15 @@
 import '../../data/repositories/device/device_repository.dart';
 import '../../utils/result.dart';
 import '../models/app_error.dart';
+import '../models/clock_view.dart';
 import '../models/control.dart';
+import '../models/cursor.dart';
+import '../models/mines_game.dart';
 import '../models/touch.dart';
 import '../models/windows.dart';
 import '../rules/control_rules.dart';
+import '../rules/cursor_rules.dart';
+import '../rules/mines_rules.dart';
 
 /// The app remote (tab Điều khiển, R-DK-1…10): sends one command, once, and says whether the device did what was
 /// asked. Optimistic display is the caller's; this only reconciles (R-DK-1: no automatic retry). A command the
@@ -13,6 +18,11 @@ class ControlDeviceUseCase {
   ControlDeviceUseCase({required DeviceRepository device}) : _device = device;
 
   final DeviceRepository _device;
+  int _cursorSeq = 0;
+
+  /// R-DK-7 (L-7): the open windows of this run of the app. The Điều khiển tab's ViewModel goes away with the tab;
+  /// coming back to it is not "the app just opened" — it takes these back instead of sending the desktop.
+  WindowStack? session;
 
   /// R-DK-3: what the connected firmware supports.
   ControlCaps get caps => controlCaps(_device.state);
@@ -63,15 +73,53 @@ class ControlDeviceUseCase {
   }
 
   /// R-DK-11: a context menu over the device screen; null closes it. Refused without the firmware for it.
-  Future<Result<void>> menu(MenuView? m) async {
+  /// R-DK-18: [hover] = the item lit under the pointer / by the arrow keys (only with the mouse firmware).
+  Future<Result<void>> menu(MenuView? m, {MenuItem? hover}) async {
     if (!caps.windows) return Result.error(AppError(AppErrorKind.controlUnsupported, detail: 'menu'));
-    return _device.setMenu(m == null ? const {'kind': 'none'} : m.toJson());
+    if (m == null) return _device.setMenu(const {'kind': 'none'});
+    return _device.setMenu({...m.toJson(), if (caps.mouse && hover != null) 'hover': menuHoverIndex(m, hover)});
+  }
+
+  /// R-DK-17: the pointer to the device (UDP, ~30 / s, the caller sends only on change). False = not sent (R-DK-21:
+  /// firmware without the mouse, or no network); nothing to undo.
+  Future<bool> cursor(Cursor c) async {
+    if (!caps.mouse) return false;
+    _cursorSeq = (_cursorSeq + 1) & 0xFFFF;
+    return _device.sendCursor(cursorPacket(_cursorSeq, c));
+  }
+
+  /// R-DK-23: the Dò mìn game [g] at [now] goes down to be drawn. Nothing on firmware without it.
+  Future<Result<void>> mines(MinesGame g, DateTime now) async {
+    if (!caps.mines) return const Result.ok(null);
+    return _device.setMines(minesBody(g, now));
+  }
+
+  /// R-DK-20: the power button. Refused without the mouse firmware (R-DK-21).
+  Future<Result<PowerState>> power(bool on) async {
+    if (!caps.mouse) return Result.error(AppError(AppErrorKind.controlUnsupported, detail: 'power'));
+    return _device.setPower(on);
   }
 
   /// R-DK-13: the desktop's tray balloon (tray icon → show 10 s, × → hide). Refused without the firmware for it.
   Future<Result<bool>> balloon(bool show) async {
     if (!caps.balloon) return Result.error(AppError(AppErrorKind.controlUnsupported, detail: 'balloon'));
     return _device.setBalloon(show);
+  }
+
+  /// R-DK-16: the Ngày và Giờ window as touched ([sync]: ask the time servers again now). Nothing on older firmware.
+  Future<Result<void>> clock(ClockView v, {bool sync = false}) async {
+    if (!caps.clock) return const Result.ok(null);
+    return _device.setClock({...v.toJson(), if (sync) 'sync': true});
+  }
+
+  /// R-DK-16: the device's time zone picked in the Múi giờ list (`tzMinutes`, as Cài đặt).
+  Future<Result<ControlOutcome>> timeZone(int minutes) => _setting({'tzMinutes': minutes});
+
+  /// R-DK-15: XP's Start menu on the device (panel P-2026-11-26.20) — open ([all] = Tất cả chương trình) or closed.
+  /// Nothing on firmware without menus.
+  Future<Result<void>> startMenu(bool open, {bool all = false}) async {
+    if (!caps.windows) return const Result.ok(null);
+    return _device.setMenu(open ? {'kind': 'start', 'all': all} : const {'kind': 'none'});
   }
 
   /// Start → Khởi động lại (asked again by the screen first).

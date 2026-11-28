@@ -1,6 +1,6 @@
 // What the DeviceMirror's usage channels show — Claude, Codex, AI hôm nay, Xu hướng (firmware ch_claude.cpp,
 // ch_codex.cpp, ch_aidash.cpp, ch_trend.cpp, chrome.cpp). Built by `usageMirrorOf` (domain/rules/
-// usage_mirror_rules.dart) from /api/state; painted by ui/control/widgets/device_mirror/channels/. Words are
+// usage_mirror_rules.dart) from /api/state; the app no longer paints it (design 2026-11-27.10). Words are
 // enums here — the painters turn them into `devXp…` strings.
 import 'clawd_mood.dart';
 import 'usage_meta.dart';

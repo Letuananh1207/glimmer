@@ -1,25 +1,27 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../domain/models/control.dart';
-import '../../../domain/models/touch.dart';
+import '../../../domain/models/cursor.dart';
+import '../../../domain/models/start_pick.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../core/labels.dart';
 import '../../core/themes/app_colors.dart';
+import '../../core/themes/app_text.dart';
 import '../../../utils/durations.dart';
 import '../view_models/control_view_model.dart';
 import 'control_parts.dart';
 import 'control_toggles.dart';
-import 'device_mirror/channels/photo_channel.dart';
-import 'device_mirror/mirror_channel.dart';
-import 'device_mirror/touch_mirror.dart';
 import 'hold_card_panel.dart';
+import 'key_pad.dart';
+import 'power_button.dart';
 import 'program_style.dart';
-import 'start_menu_sheet.dart';
+import 'trackpad.dart';
 
-/// Điều khiển (tab 1, screen_specs §8, design 2026-11-26.6 / .7 / .8): đầu màn, thanh báo (firmware chưa nhận chạm /
-/// glimmer-setup / mất kết nối), `TouchMirror` chạm như chuột, `HoldCardPanel` hoặc dòng màn tắt / ban đêm,
-/// `BrightnessSlider`, `RoundToggle` (tắt màn, chế độ đêm, số liệu); chạm start → `StartMenuSheet`; `CommandSnackbar`
-/// nổi trên thanh dưới khi lệnh không được nhận. Không chip, không chữ nào về chuyển / thu nhỏ / tắt app.
+/// Điều khiển (tab 1, screen_specs §8, design 2026-11-27.10): the app is the computer's mouse, keyboard and power
+/// button, the device its screen (R-DK-17…22). Đầu màn + `PowerButton`; thanh báo (firmware chưa có chuột /
+/// glimmer-setup / mất kết nối); `HoldCardPanel` khi thẻ agent giữ màn; `Trackpad` + `MouseButtons`; `KeyPad`; hàng
+/// cuối độ sáng + chế độ đêm + Số liệu; `CommandSnackbar` khi lệnh không được nhận. No picture of the screen.
 class ControlScreen extends StatelessWidget {
   const ControlScreen({
     super.key,
@@ -36,12 +38,13 @@ class ControlScreen extends StatelessWidget {
   /// Số liệu (push), at the tab of skill (null = first); completes when it closes.
   final Future<void> Function(String? skill) onOpenDetails;
 
-  /// [onUpdateFirmware] = tab Thiết bị (also Start → Thiết bị).
+  /// [onUpdateFirmware] = tab Thiết bị (also Start → Thiết bị on the device, R-DK-22).
   final VoidCallback onUpdateFirmware, onSetupWifi, onOpenSettings, onOpenSkills;
 
   static const _snackSide = 12.0;
   static const _bottomPad = 16.0;
-  static const _mirrorTop = 6.0;
+  static const _padH = 190.0, _padBanner = 220.0;
+  static const _nightWash = 0.16;
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
@@ -53,7 +56,12 @@ class ControlScreen extends StatelessWidget {
       final l = AppLocalizations.of(context);
       final mode = vm.mode;
       final failed = vm.failed;
-      final touches = vm.usable;
+      final power = vm.power;
+      final pointer = vm.pointerUsable;
+      final banner = _banner(l, vm);
+      final card = mode == ControlMode.setup ? null : vm.holding;
+      final settled = power == PowerState.on || power == PowerState.off;
+      final rowOn = mode == ControlMode.normal && power == PowerState.on;
       return Stack(
         children: [
           ListView(
@@ -70,31 +78,32 @@ class ControlScreen extends StatelessWidget {
                   ControlMode.offline => AppColors.coral,
                   ControlMode.normal => AppColors.mint,
                 },
-                onRefresh: mode == ControlMode.normal ? vm.refreshData : null,
+                trailing: PowerButton(power: power, onPressed: vm.mouseReady ? vm.pressPower : null),
               ),
-              ?_banner(l, vm),
-              const SizedBox(height: _mirrorTop),
-              Center(
-                child: TouchMirror(
-                  frame: vm.frame,
-                  channels: withPhoto(mirrorChannels, vm.photoImage),
-                  semanticLabel: l.controlScreenA11y(_title(l, vm)),
-                  dim: vm.dim,
-                  offline: mode == ControlMode.offline,
-                  onTap: touches ? (x, y) => _tap(context, vm, x, y) : null,
-                  // R-DK-11: giữ = chuột phải → menu ngữ cảnh vẽ trên thiết bị.
-                  onHold: vm.touchable && vm.caps.windows ? (x, y) => vm.hold(x, y) : null,
+              ?banner,
+              if (card != null)
+                HoldCardPanel(
+                  agent: _agentName(card.agent),
+                  project: card.project,
+                  tool: card.value,
+                  input: card.kind == 'input',
+                  onDismiss: vm.sending || !vm.caps.dismissCard ? null : vm.dismissCard,
                 ),
+              Trackpad(
+                height: card != null ? _padH : (banner != null ? _padBanner : AppSize.trackpad),
+                enabled: pointer,
+                onMove: vm.movePointer,
+                onTap: () => unawaited(_click(context, vm)),
+                onPowerOn: vm.mouseReady && power == PowerState.off ? vm.pressPower : null,
               ),
-              ?_status(l, vm),
-              BrightnessSlider(
-                value: vm.brightness,
-                dragging: vm.dragging,
-                onChanged: vm.dragBrightness,
-                onRelease: vm.releaseBrightness,
-                enabled: mode == ControlMode.normal && !vm.screenOff,
+              MouseButtons(
+                enabled: pointer,
+                pressedRight: vm.menuOpen,
+                onLeft: () => unawaited(_click(context, vm)),
+                onRight: () => unawaited(vm.clickRight()),
               ),
-              RoundToggleRow(items: _toggles(l, vm)),
+              KeyPad(enabled: pointer, onKey: (k) => unawaited(vm.pressKey(k))),
+              _bottomRow(context, l, vm, enabled: rowOn && settled),
             ],
           ),
           if (failed != null)
@@ -109,27 +118,25 @@ class ControlScreen extends StatelessWidget {
     },
   );
 
-  /// A touch on the mirror; start opens Start (R-DK-10: also on firmware without touches).
-  void _tap(BuildContext context, ControlViewModel vm, double x, double y) {
-    if (vm.tap(x, y).kind == TouchKind.start) _start(context, vm);
+  /// A left click; with Start open on the device it may pick a phone screen or Khởi động lại (R-DK-22).
+  Future<void> _click(BuildContext context, ControlViewModel vm) async {
+    final pick = await vm.clickLeft();
+    if (pick == null || !context.mounted) return;
+    switch (pick.screen) {
+      case AppScreen.details:
+        await _details(vm);
+      case AppScreen.settings:
+        onOpenSettings();
+      case AppScreen.skills:
+        onOpenSkills();
+      case AppScreen.device:
+        onUpdateFirmware();
+      case null:
+        if (pick.kind == StartPickKind.restart) {
+          await _confirmRestart(context, vm);
+        }
+    }
   }
-
-  void _start(BuildContext context, ControlViewModel vm) => showStartMenu(
-    context,
-    StartActions(
-      programs: vm.programs,
-      open: {...vm.windows.open},
-      programsEnabled: vm.usable,
-      onOpen: vm.openProgram,
-      onDesktop: vm.desktop,
-      onDetails: () => _details(vm),
-      onControlPanel: onOpenSettings,
-      onAddRemove: onOpenSkills,
-      onDevice: onUpdateFirmware,
-      onTurnOff: vm.toggleScreen,
-      onRestart: () => _confirmRestart(context, vm),
-    ),
-  );
 
   Future<void> _confirmRestart(BuildContext context, ControlViewModel vm) async {
     final l = AppLocalizations.of(context);
@@ -140,7 +147,7 @@ class ControlScreen extends StatelessWidget {
         content: Text(l.deviceRebootBody),
         actions: [
           TextButton(onPressed: () => Navigator.of(c).pop(false), child: Text(l.commonCancel)),
-          TextButton(onPressed: () => Navigator.of(c).pop(true), child: Text(l.startRestart)),
+          TextButton(onPressed: () => Navigator.of(c).pop(true), child: Text(l.deviceReboot)),
         ],
       ),
     );
@@ -152,6 +159,41 @@ class ControlScreen extends StatelessWidget {
     await onOpenDetails(vm.channelSkill);
     await vm.reload();
   }
+
+  /// Hàng cuối (lề 12 16 0, cách 8): thẻ độ sáng co giãn + chế độ đêm + Số liệu, vuông 52 bo 14 viền `line`.
+  Widget _bottomRow(BuildContext context, AppLocalizations l, ControlViewModel vm, {required bool enabled}) => Padding(
+    padding: const EdgeInsets.fromLTRB(AppSpace.l, AppSpace.m, AppSpace.l, 0),
+    child: Opacity(
+      opacity: enabled || vm.mode == ControlMode.normal ? 1 : Trackpad.dimOpacity,
+      child: Row(
+        children: [
+          Expanded(
+            child: BrightnessSlider(
+              value: vm.brightness,
+              dragging: vm.dragging,
+              onChanged: vm.dragBrightness,
+              onRelease: vm.releaseBrightness,
+              enabled: vm.mode == ControlMode.normal && vm.power != PowerState.off,
+              margin: EdgeInsets.zero,
+            ),
+          ),
+          const SizedBox(width: AppSpace.s),
+          _SquareButton(
+            icon: Icons.dark_mode_outlined,
+            label: l.controlNightA11y,
+            lit: vm.nightOn ? AppColors.lilac : null,
+            onTap: enabled ? vm.toggleNight : null,
+          ),
+          const SizedBox(width: AppSpace.s),
+          _SquareButton(
+            icon: Icons.bar_chart,
+            label: l.controlDetailsA11y,
+            onTap: vm.mode == ControlMode.setup ? null : () => unawaited(_details(vm)),
+          ),
+        ],
+      ),
+    ),
+  );
 
   Widget? _banner(AppLocalizations l, ControlViewModel vm) => switch (vm.mode) {
     ControlMode.setup => ControlBanner(
@@ -168,7 +210,7 @@ class ControlScreen extends StatelessWidget {
       action: l.commonRetry,
       onAction: vm.reload,
     ),
-    ControlMode.normal when !vm.caps.touch => ControlBanner(
+    ControlMode.normal when !vm.caps.mouse => ControlBanner(
       title: l.controlOldFwTitle,
       body: l.controlOldFwBody(vm.firmware),
       color: AppColors.amber,
@@ -178,74 +220,7 @@ class ControlScreen extends StatelessWidget {
     _ => null,
   };
 
-  /// The card that holds the screen, or the screen-off / night line; nothing otherwise (2026-11-26.7).
-  Widget? _status(AppLocalizations l, ControlViewModel vm) {
-    if (vm.mode == ControlMode.setup) return null;
-    final card = vm.holding;
-    if (card != null) {
-      return HoldCardPanel(
-        agent: _agentName(card.agent),
-        project: card.project,
-        tool: card.value,
-        input: card.kind == 'input',
-        onDismiss: vm.sending || !vm.caps.dismissCard ? null : vm.dismissCard,
-      );
-    }
-    if (vm.screenOff) {
-      return ChannelLine(
-        title: l.controlScreenOffTitle,
-        note: l.controlScreenOffNote,
-        noteColor: AppColors.amber,
-        accent: AppColors.muted,
-      );
-    }
-    if (vm.nightFace) {
-      return ChannelLine(
-        title: l.controlNightTitle,
-        note: l.controlNightNote(vm.nightEnd),
-        noteColor: AppColors.lilac,
-        accent: AppColors.lilac,
-      );
-    }
-    return null;
-  }
-
-  List<RoundItem> _toggles(AppLocalizations l, ControlViewModel vm) {
-    final normal = vm.mode == ControlMode.normal;
-    final off = vm.screenOff;
-    return [
-      RoundItem(
-        icon: Icons.power_settings_new,
-        label: off ? l.controlScreenOn : l.controlScreenOff,
-        on: off ? AppColors.amber : null,
-        look: !vm.caps.screen ? PadLook.locked : (normal ? PadLook.normal : PadLook.disabled),
-        onTap: vm.toggleScreen,
-      ),
-      RoundItem(
-        icon: Icons.dark_mode_outlined,
-        label: l.controlNight,
-        on: vm.nightOn ? AppColors.lilac : null,
-        look: normal && !off ? PadLook.normal : PadLook.disabled,
-        onTap: vm.toggleNight,
-      ),
-      RoundItem(
-        icon: Icons.bar_chart,
-        label: l.controlDetails,
-        look: vm.mode == ControlMode.setup ? PadLook.disabled : PadLook.normal,
-        onTap: () => _details(vm),
-      ),
-    ];
-  }
-
   static String _agentName(String agent) => agent.isEmpty ? agent : '${agent[0].toUpperCase()}${agent.substring(1)}';
-
-  /// Name of what the mirror shows ("Claude", "Desktop", card title…).
-  static String _title(AppLocalizations l, ControlViewModel vm) => switch (vm.channel) {
-    'Attention' => l.cardKind(vm.cards.isEmpty ? '' : vm.cards.first.kind),
-    'Night' => l.controlNightTitle,
-    'Setup' => l.devXpTitleSetup,
-    final c => ProgramStyle.name(l, c),
-  };
 
   /// Command name in the "not done" snackbar.
   static String _commandName(AppLocalizations l, ControlViewModel vm, ControlCommand c) {
@@ -254,13 +229,47 @@ class ControlScreen extends StatelessWidget {
       ControlCommand.open => l.devControlCmdOpen(app),
       ControlCommand.minimize => l.devControlCmdMinimize(app),
       ControlCommand.close => l.devControlCmdClose(app),
-      ControlCommand.desktop => l.startDesktop,
-      ControlCommand.screenOff => l.controlScreenOff,
-      ControlCommand.screenOn => l.controlScreenOn,
+      ControlCommand.desktop => l.devControlCmdDesktop,
+      ControlCommand.screenOff => l.powerOff,
+      ControlCommand.screenOn => l.powerOn,
       ControlCommand.dismissCard => l.controlDismissCard,
       ControlCommand.brightness => l.controlBrightness,
       ControlCommand.night => l.controlNight,
       ControlCommand.refresh => l.controlRefreshA11y,
     };
   }
+}
+
+/// Nút vuông 52 bo 14 viền `line` nền `panel`, icon 22; [lit] = bật (nền 16 %, viền + icon màu đó).
+class _SquareButton extends StatelessWidget {
+  const _SquareButton({required this.icon, required this.label, required this.onTap, this.lit});
+
+  final IconData icon;
+  final String label;
+  final VoidCallback? onTap;
+  final Color? lit;
+
+  static const _icon = 22.0;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: label,
+    child: Opacity(
+      opacity: onTap == null ? padDisabledOpacity : 1,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: AppSize.controlSquare,
+          height: AppSize.controlSquare,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppSize.radiusCard),
+            border: Border.all(color: lit ?? AppColors.line),
+            color: lit?.withValues(alpha: ControlScreen._nightWash) ?? AppColors.panel,
+          ),
+          child: Icon(icon, size: _icon, color: lit ?? AppColors.inkDim),
+        ),
+      ),
+    ),
+  );
 }

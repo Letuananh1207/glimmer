@@ -1324,7 +1324,7 @@
   },
   "controlScreenA11y": "Màn thiết bị đang hiện {app}. Chạm như chuột: nút cửa sổ, thanh tác vụ, start, biểu tượng",
   "@controlScreenA11y": {
-    "description": "Nhãn đọc màn hình ô màn chạm được",
+    "description": "Không dùng từ 2026-11-27.10. Nhãn đọc màn hình ô màn chạm được",
     "placeholders": {
       "app": {
         "type": "String"
@@ -1350,15 +1350,15 @@
   },
   "controlScreenOffTitle": "Màn đang tắt",
   "@controlScreenOffTitle": {
-    "description": "Dòng kênh khi màn tắt"
+    "description": "Không dùng từ 2026-11-27.10. Dòng kênh khi màn tắt"
   },
   "controlScreenOffNote": "· bấm Bật màn để mở lại",
   "@controlScreenOffNote": {
-    "description": "Dòng kênh khi màn tắt"
+    "description": "Không dùng từ 2026-11-27.10. Dòng kênh khi màn tắt"
   },
   "controlScreenOffOverlay": "MÀN ĐANG TẮT",
   "@controlScreenOffOverlay": {
-    "description": "Chữ mờ giữa ô màn tối"
+    "description": "Không dùng từ 2026-11-27.10. Chữ mờ giữa ô màn tối"
   },
   "controlNightTitle": "Chế độ đêm",
   "@controlNightTitle": {
@@ -1408,19 +1408,19 @@
   },
   "controlScreenOff": "Tắt màn",
   "@controlScreenOff": {
-    "description": "Nút tròn"
+    "description": "Không dùng từ 2026-11-27.10. Nút tròn"
   },
   "controlScreenOn": "Bật màn",
   "@controlScreenOn": {
-    "description": "Nút tròn khi màn đang tắt (amber)"
+    "description": "Không dùng từ 2026-11-27.10. Nút tròn khi màn đang tắt (amber)"
   },
   "controlNight": "Chế độ đêm",
   "@controlNight": {
-    "description": "Nút tròn (lilac khi bật)"
+    "description": "Không dùng từ 2026-11-27.10. Nút tròn (lilac khi bật)"
   },
   "controlDetails": "Số liệu",
   "@controlDetails": {
-    "description": "Nút tròn → màn Số liệu"
+    "description": "Không dùng từ 2026-11-27.10. Nút tròn → màn Số liệu"
   },
   "controlSending": "Đang gửi…",
   "@controlSending": {
@@ -1483,11 +1483,11 @@
       }
     }
   },
-  "controlOldFwTitle": "Firmware chưa nhận chạm",
+  "controlOldFwTitle": "Firmware chưa có chuột",
   "@controlOldFwTitle": {
     "description": "Thanh báo firmware cũ"
   },
-  "controlOldFwBody": "Thiết bị đang chạy {version}: chạm trên màn chưa dùng được, chỉ mở app qua Start.",
+  "controlOldFwBody": "Thiết bị đang chạy {version}: chưa nhận chuột, phím và nút nguồn từ app.",
   "@controlOldFwBody": {
     "description": "Thanh báo firmware cũ",
     "placeholders": {
@@ -1651,95 +1651,95 @@
   },
   "startSubtitle": "Start · mở chương trình trên thiết bị",
   "@startSubtitle": {
-    "description": "Đầu Start menu, dưới \"glimmer\""
+    "description": "Không dùng từ 2026-11-27.10. Đầu Start menu, dưới \"glimmer\""
   },
   "startA11y": "Start",
   "@startA11y": {
-    "description": "Nhãn đọc màn hình nút / bảng Start"
+    "description": "Không dùng từ 2026-11-27.10. Nhãn đọc màn hình nút / bảng Start"
   },
   "startClaudeSub": "mức dùng, project",
   "@startClaudeSub": {
-    "description": "Dòng phụ Claude trong Start"
+    "description": "Không dùng từ 2026-11-27.10. Dòng phụ Claude trong Start"
   },
   "startCodexSub": "mức dùng",
   "@startCodexSub": {
-    "description": "Dòng phụ Codex trong Start"
+    "description": "Không dùng từ 2026-11-27.10. Dòng phụ Codex trong Start"
   },
   "startDesktop": "Desktop",
   "@startDesktop": {
-    "description": "Start, cột phải"
+    "description": "Không dùng từ 2026-11-27.10. Start, cột phải"
   },
   "startDetails": "Số liệu",
   "@startDetails": {
-    "description": "Start, cột phải → màn Số liệu"
+    "description": "Không dùng từ 2026-11-27.10. Start, cột phải → màn Số liệu"
   },
   "startControlPanel": "Bảng điều khiển",
   "@startControlPanel": {
-    "description": "Start, cột phải → Cài đặt"
+    "description": "Không dùng từ 2026-11-27.10. Start, cột phải → Cài đặt"
   },
   "startControlPanelSub": "Cài đặt",
   "@startControlPanelSub": {
-    "description": "Dòng phụ"
+    "description": "Không dùng từ 2026-11-27.10. Dòng phụ"
   },
   "startAddRemove": "Thêm / gỡ",
   "@startAddRemove": {
-    "description": "Start, cột phải → Skill"
+    "description": "Không dùng từ 2026-11-27.10. Start, cột phải → Skill"
   },
   "startAddRemoveSub": "chương trình · Skill",
   "@startAddRemoveSub": {
-    "description": "Dòng phụ"
+    "description": "Không dùng từ 2026-11-27.10. Dòng phụ"
   },
   "startDevice": "Thiết bị",
   "@startDevice": {
-    "description": "Start, cột phải → Thiết bị"
+    "description": "Không dùng từ 2026-11-27.10. Start, cột phải → Thiết bị"
   },
   "startDeviceSub": "firmware, sao lưu",
   "@startDeviceSub": {
-    "description": "Dòng phụ"
+    "description": "Không dùng từ 2026-11-27.10. Dòng phụ"
   },
   "startAllPrograms": "Tất cả chương trình",
   "@startAllPrograms": {
-    "description": "Hàng cuối Start → bảng Tất cả chương trình"
+    "description": "Không dùng từ 2026-11-27.10. Hàng cuối Start → bảng Tất cả chương trình"
   },
   "startTurnOff": "Tắt màn",
   "@startTurnOff": {
-    "description": "Chân Start (amber)"
+    "description": "Không dùng từ 2026-11-27.10. Chân Start (amber)"
   },
   "startRestart": "Khởi động lại",
   "@startRestart": {
-    "description": "Chân Start (coral) → POST /api/reboot"
+    "description": "Không dùng từ 2026-11-27.10. Chân Start (coral) → POST /api/reboot"
   },
   "allProgramsTitle": "Tất cả chương trình",
   "@allProgramsTitle": {
-    "description": "Tiêu đề bảng"
+    "description": "Không dùng từ 2026-11-27.10. Tiêu đề bảng"
   },
   "allProgramsBackA11y": "Về Start",
   "@allProgramsBackA11y": {
-    "description": "Nút quay lại"
+    "description": "Không dùng từ 2026-11-27.10. Nút quay lại"
   },
   "allProgramsGroupAgent": "AGENT",
   "@allProgramsGroupAgent": {
-    "description": "Nhóm"
+    "description": "Không dùng từ 2026-11-27.10. Nhóm"
   },
   "allProgramsGroupOther": "THỜI TIẾT · ĐỒNG HỒ · ẢNH",
   "@allProgramsGroupOther": {
-    "description": "Nhóm"
+    "description": "Không dùng từ 2026-11-27.10. Nhóm"
   },
   "allProgramsGroupSystem": "HỆ THỐNG",
   "@allProgramsGroupSystem": {
-    "description": "Nhóm"
+    "description": "Không dùng từ 2026-11-27.10. Nhóm"
   },
   "allProgramsOpenLegend": "● = đang mở",
   "@allProgramsOpenLegend": {
-    "description": "Chú thích chấm mint"
+    "description": "Không dùng từ 2026-11-27.10. Chú thích chấm mint"
   },
   "allProgramsAddRemove": "Thêm / gỡ chương trình",
   "@allProgramsAddRemove": {
-    "description": "Hàng cuối bảng → Skill"
+    "description": "Không dùng từ 2026-11-27.10. Hàng cuối bảng → Skill"
   },
   "allProgramsAddRemoveSub": "bật skill mới: {names} sắp có",
   "@allProgramsAddRemoveSub": {
-    "description": "Dòng phụ",
+    "description": "Không dùng từ 2026-11-27.10. Dòng phụ",
     "placeholders": {
       "names": {
         "type": "String"
@@ -1748,47 +1748,47 @@
   },
   "appClaude": "Claude",
   "@appClaude": {
-    "description": "Tên chương trình"
+    "description": "Không dùng từ 2026-11-27.10. Tên chương trình"
   },
   "appCodex": "Codex",
   "@appCodex": {
-    "description": "Tên chương trình"
+    "description": "Không dùng từ 2026-11-27.10. Tên chương trình"
   },
   "appAi": "AI",
   "@appAi": {
-    "description": "Tên chương trình"
+    "description": "Không dùng từ 2026-11-27.10. Tên chương trình"
   },
   "appTrend": "Xu hướng",
   "@appTrend": {
-    "description": "Tên chương trình"
+    "description": "Không dùng từ 2026-11-27.10. Tên chương trình"
   },
   "appAgents": "Agents",
   "@appAgents": {
-    "description": "Tên chương trình"
+    "description": "Không dùng từ 2026-11-27.10. Tên chương trình"
   },
   "appPhoto": "Ảnh",
   "@appPhoto": {
-    "description": "Tên chương trình"
+    "description": "Không dùng từ 2026-11-27.10. Tên chương trình"
   },
   "appWeather": "Thời tiết",
   "@appWeather": {
-    "description": "Tên chương trình"
+    "description": "Không dùng từ 2026-11-27.10. Tên chương trình"
   },
   "appForecast": "Dự báo",
   "@appForecast": {
-    "description": "Tên chương trình"
+    "description": "Không dùng từ 2026-11-27.10. Tên chương trình"
   },
   "appClock": "Đồng hồ",
   "@appClock": {
-    "description": "Tên chương trình"
+    "description": "Không dùng từ 2026-11-27.10. Tên chương trình"
   },
   "appInfo": "Thông tin",
   "@appInfo": {
-    "description": "Tên chương trình"
+    "description": "Không dùng từ 2026-11-27.10. Tên chương trình"
   },
   "appChat": "Tin nhắn",
   "@appChat": {
-    "description": "Tên chương trình (skill sắp có)"
+    "description": "Không dùng từ 2026-11-27.10. Tên chương trình (skill sắp có)"
   },
   "settingsSectionWeather": "THỜI TIẾT",
   "@settingsSectionWeather": {
@@ -2048,5 +2048,101 @@
   "weatherLocationClearOk": "Xoá",
   "@weatherLocationClearOk": {
     "description": "Nút coral hộp thoại"
+  },
+  "controlTrackpadA11y": "Bàn rê: rê một ngón để di chuột trên thiết bị, chạm nhẹ để click",
+  "@controlTrackpadA11y": {
+    "description": "Nhãn đọc màn hình bàn rê"
+  },
+  "controlMouseLeft": "Trái",
+  "@controlMouseLeft": {
+    "description": "Nút chuột trái dưới bàn rê"
+  },
+  "controlMouseRight": "Phải",
+  "@controlMouseRight": {
+    "description": "Nút chuột phải dưới bàn rê"
+  },
+  "controlMouseLeftA11y": "Chuột trái",
+  "@controlMouseLeftA11y": {
+    "description": "Nhãn đọc màn hình"
+  },
+  "controlMouseRightA11y": "Chuột phải",
+  "@controlMouseRightA11y": {
+    "description": "Nhãn đọc màn hình"
+  },
+  "controlKeysA11y": "Phím",
+  "@controlKeysA11y": {
+    "description": "Nhóm phím"
+  },
+  "keyWindows": "Windows",
+  "@keyWindows": {
+    "description": "Phím Windows (lá cờ) — mở / đóng Start trên thiết bị"
+  },
+  "keyAltTab": "Alt+Tab",
+  "@keyAltTab": {
+    "description": "Phím tổ hợp có sẵn — cửa sổ kế"
+  },
+  "keyAltF4": "Alt+F4",
+  "@keyAltF4": {
+    "description": "Phím tổ hợp có sẵn — đóng cửa sổ trên cùng"
+  },
+  "keyEsc": "Esc",
+  "@keyEsc": {
+    "description": "Phím"
+  },
+  "keyTab": "Tab",
+  "@keyTab": {
+    "description": "Phím"
+  },
+  "keyEnter": "Enter",
+  "@keyEnter": {
+    "description": "Phím"
+  },
+  "keyLeft": "Trái",
+  "@keyLeft": {
+    "description": "Nhãn đọc màn hình phím mũi tên"
+  },
+  "keyUp": "Lên",
+  "@keyUp": {
+    "description": "Nhãn đọc màn hình phím mũi tên"
+  },
+  "keyDown": "Xuống",
+  "@keyDown": {
+    "description": "Nhãn đọc màn hình phím mũi tên"
+  },
+  "keyRight": "Phải",
+  "@keyRight": {
+    "description": "Nhãn đọc màn hình phím mũi tên"
+  },
+  "keyText": "Chữ",
+  "@keyText": {
+    "description": "Phím mở bàn phím chữ (chưa dùng, mờ)"
+  },
+  "keyTextSoon": "sắp có",
+  "@keyTextSoon": {
+    "description": "Dòng phụ dưới phím Chữ"
+  },
+  "powerOff": "Tắt máy",
+  "@powerOff": {
+    "description": "Nhãn đọc màn hình nút nguồn khi đang bật"
+  },
+  "powerOn": "Bật máy",
+  "@powerOn": {
+    "description": "Nút nguồn khi máy tắt; nút to giữa bàn rê"
+  },
+  "powerShutting": "Đang tắt máy",
+  "@powerShutting": {
+    "description": "Nhãn đọc màn hình nút nguồn khi đang tắt"
+  },
+  "powerBooting": "Đang khởi động",
+  "@powerBooting": {
+    "description": "Nhãn đọc màn hình nút nguồn khi đang khởi động"
+  },
+  "controlNightA11y": "Chế độ đêm",
+  "@controlNightA11y": {
+    "description": "Nút vuông chế độ đêm"
+  },
+  "controlDetailsA11y": "Số liệu",
+  "@controlDetailsA11y": {
+    "description": "Nút vuông → màn Số liệu"
   }
 }

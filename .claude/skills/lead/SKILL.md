@@ -116,6 +116,9 @@ tiếp từ nhiệm vụ chưa đánh dấu.
 | Màu, font, giao diện chung       | `themes`, `app_text`, `status_colors`, `labels`      |
 | Skill, gói chức năng (Agent, Nhạc…), skill đang dùng | `skills`, `skill_rules`, `switch_skill_use_case`, `skill_style`, `skill_tile`, `home_shell`, firmware `src/data/skill_core.h` |
 | Ảnh (skill Ảnh): gửi / xoá ảnh, cắt ảnh, bản sao | `photo`, `device_photo`, `photo_rules`, `photo_repository`, `photo_store_service`, `photo_picker_service`, `send_photo_use_case`, firmware `src/data/photos.cpp` |
+| Kho ảnh (app là bộ nhớ, thiết bị trỏ vào lấy): nguồn ảnh, máy chủ ảnh, bộ đệm | `library`, `library_rules`, `photo_library`, `photo_server_service`, `photo_source_use_case`, `photo_source_lifecycle`, firmware `src/data/photo_source_core.h`, `src/data/photos.cpp` |
+| Điều khiển: chuột (con trỏ), bàn phím, nút nguồn, Start trên thiết bị | `cursor`, `keyboard_rules`, `start_rules`, `trackpad`, `key_pad`, `power_button`, `control_pointer`, `cursor_service`, `control_device_use_case`, firmware `src/data/cursor_core.h`, `src/channels/cursor.cpp` |
+| Dò mìn, skill Giải trí (`fun`)   | `mines`, `mines_rules`, `mines_game`, firmware `src/data/mines_core.h`, `src/channels/ch_mines.cpp` |
 | Quy tắc nghiệp vụ, test quy tắc  | `docs/testing/quy_tac.md` (mã `R-…`), `lib/domain/rules/`, test ghi mã trong `test/` |
 
 Thêm tính năng hoặc thư mục mới → bổ sung một dòng vào bảng này cùng lúc.

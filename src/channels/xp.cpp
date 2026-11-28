@@ -6,6 +6,9 @@
 #include "layout.h"
 #include "config.h"
 #include "utf8.h"
+#include "cursor.h"
+#include "pointer_core.h"
+#include "mines_icons.h"
 
 using namespace Theme::XP;
 using XPCore::Icon;
@@ -86,6 +89,7 @@ IconBits bitsOf(Icon i) {
         case XPCore::ICON_WEATHER: return {16, 14, kWeatherBits};
         case XPCore::ICON_CLOCK:   return {16, 14, kClockBits};
         case XPCore::ICON_INFO:    return {6, 9, kInfoBits};
+        case XPCore::ICON_MINES:   return {13, 13, MinesIcons::kMineMask};   // P-2026-11-27.25
         default:                   return {0, 0, nullptr};
     }
 }
@@ -106,6 +110,7 @@ char s_title[48] = "";
 Icon s_defaultIcon = XPCore::ICON_CLAWD;
 
 void paintTitleText(const char* text) {
+    if (!Display::clipHits(kTitleX, kTitleY, kTitleMaxW + 2, 16)) return;
     char t[64];
     Utf8::copy(t, sizeof(t), text);
     Display::useFont("JBMono-12B");
@@ -122,12 +127,22 @@ void titleIcon(Icon icon) {
         case XPCore::ICON_NONE: return;
         case XPCore::ICON_CLAWD: XP::drawIcon(icon, 4, 6, 1, Display::CLAWD_ORANGE); return;
         case XPCore::ICON_INFO:  XP::drawIcon(icon, 8, 6, 1, WHITE); return;   // XP-Info
+        case XPCore::ICON_MINES: {                                              // XP-Mines: black mine + glint
+            using namespace MinesIcons;
+            for (int k = 0; k < kTitleMineRunCount; k++) {
+                Run r; memcpy_P(&r, &kTitleMineRuns[k], sizeof(r));
+                tft.fillRect(6 + r.x, 5 + r.y, r.w, 1, pgm_read_word(&kTitleMinePal[r.c]));
+            }
+            return;
+        }
         default: {
             int w, h; XP::iconSize(icon, w, h);
             XP::drawIcon(icon, 13 - w / 2, 11 - h / 2, 1, WHITE);   // centred on (13, 11)
         }
     }
 }
+
+int8_t s_hot = -1;   // PointerCore::kHotNone
 
 // 16×16 caption button at (x, 3): 1-px white border, fill, glyph.
 void captionButton(int x, uint16_t fill, char kind) {
@@ -251,13 +266,18 @@ const char* title() { return s_title; }
 
 void titleBar(const char* t, Icon icon) {
     Utf8::copy(s_title, sizeof(s_title), t);
+    if (!Display::clipHits(0, 0, SCREEN_W, 22)) return;   // clipped repaint below the title bar
     titleBands(0, SCREEN_W);
     titleIcon(icon);
     paintTitleText(s_title);
-    captionButton(184, TITLE_LIGHT, '_');
+    // P-2026-11-27.24: _ and × light under the mouse (XP Luna hot), □ never.
+    captionButton(184, s_hot == PointerCore::kHotMin ? TITLE_HI : TITLE_LIGHT, '_');
     captionButton(202, TITLE_LIGHT, 'o');
-    captionButton(220, CLOSE, 'x');
+    captionButton(220, s_hot == PointerCore::kHotClose ? CLOSE_HOT : CLOSE, 'x');
 }
+
+void setHot(int8_t hot) { s_hot = hot; }
+int8_t hot() { return s_hot; }
 
 void titleMeta(const char* meta) {
     char t[80];
@@ -279,6 +299,7 @@ void window(const char* t, Icon icon, bool status) {
 void statusBar(const char* left, const char* right, uint16_t leftColor, uint16_t rightColor) {
     using namespace Layout;
     const int y = XP_STATUS_Y;
+    if (!Display::clipHits(0, y, SCREEN_W, XP_BOTTOM - y)) return;
     tft.fillRect(XP_BODY_X, y, XP_BODY_W, 1, STATUS_LINE);
     tft.fillRect(XP_BODY_X, y + 1, XP_BODY_W, 1, WHITE);
     tft.fillRect(XP_BODY_X, y + 2, XP_BODY_W, XP_BOTTOM - y - 2, BODY);
@@ -328,7 +349,7 @@ void groupLabel(int x, int y, const char* label, int clearW, uint16_t bg) {
 
 void groupBox(int x, int y, int w, int h, const char* label, uint16_t bg) {
     tft.drawRect(x, y, w, h, GROUP);
-    groupLabel(x, y, label, 0, bg);
+    if (Display::clipHits(x, y - 7, w, 16)) groupLabel(x, y, label, 0, bg);
 }
 
 void tabs(const char* const* labels, int n, int selected) {
@@ -336,6 +357,7 @@ void tabs(const char* const* labels, int n, int selected) {
     tft.drawRect(6, 41, 228, 169, FIELD_BORDER);
     tft.fillRect(7, 42, 226, 167, WHITE);
     tft.fillRect(6, 26, 228, 15, BODY);                    // the strip above the page
+    if (!Display::clipHits(6, 26, 228, 16)) return;        // clipped repaint inside the page
     Display::useFont("JBMono-11");
     tft.setTextDatum(TL_DATUM);
     int x = 6, selX = 6, selW = 0;
@@ -441,17 +463,24 @@ void marquee(int x, int y, int w, int h, uint32_t step) {
             tft.fillRect(b.x0 + i * (b.w + b.gap), b.y0, b.w, b.h, BAR);
 }
 
-void waitCursor(uint32_t step) {
-    static const Ink kArrowInk[] = {{'X', BLACK}, {'W', WHITE}};
+void hourglass(int frame, int x, int y) {
     static const Ink kGlass[] = {{'X', BLACK}, {'W', WHITE}, {'S', AMBER}};
+    switch (frame & 3) {
+        case 0:  drawArt(kGlass0, 9, 12, x + 10, y + 9, kGlass, 3); break;
+        case 1:  drawArt(kGlass1, 9, 12, x + 10, y + 9, kGlass, 3); break;
+        case 2:  drawArt(kGlass2, 9, 12, x + 10, y + 9, kGlass, 3); break;
+        default: drawArt(kGlass3, 12, 9, x + 8, y + 11, kGlass, 3); break;
+    }
+}
+
+// P-2026-11-27.24: in mouse mode the cursor itself turns into Working in
+// Background where it is (cursor.cpp); the fixed cell (132, 160) only without.
+void waitCursor(uint32_t step) {
+    if (Cursor::busy(millis())) return;
+    static const Ink kArrowInk[] = {{'X', BLACK}, {'W', WHITE}};
     tft.fillRect(132, 160, 21, 22, BODY);        // the cursor's cell (arrow + hourglass)
     drawArt(kArrow, 12, 19, 132, 160, kArrowInk, 2);
-    switch (XPCore::hourglassFrame(step)) {
-        case 0:  drawArt(kGlass0, 9, 12, 142, 169, kGlass, 3); break;
-        case 1:  drawArt(kGlass1, 9, 12, 142, 169, kGlass, 3); break;
-        case 2:  drawArt(kGlass2, 9, 12, 142, 169, kGlass, 3); break;
-        default: drawArt(kGlass3, 12, 9, 140, 171, kGlass, 3); break;
-    }
+    hourglass(XPCore::hourglassFrame(step), 132, 160);
 }
 
 void emptyFrame(const char* title, Icon icon, bool status) {

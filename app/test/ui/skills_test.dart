@@ -18,7 +18,7 @@ import '../../testing/fakes/fake_services.dart';
 
 const _url = 'http://192.168.1.50';
 const _all = ['agent', 'weather', 'clock'];
-const _kinds = ['agent', 'photo', 'weather', 'clock'];
+const _kinds = ['agent', 'photo', 'weather', 'clock', 'fun'];
 final _vi = lookupAppLocalizations(const Locale('vi'));
 
 /// Firmware with the dock and skill Ảnh ([photos] on the device).
@@ -77,8 +77,9 @@ void main() {
         ('photo', false, SkillRowMode.toggle, true),
         ('weather', true, SkillRowMode.toggle, true),
         ('clock', true, SkillRowMode.toggle, true),
+        ('fun', false, SkillRowMode.toggle, true), // Giải trí = Dò mìn, off by default (R-SK-1)
       ]);
-      expect(r.vm.soon, ['chat', 'music', 'social', 'fun']);
+      expect(r.vm.soon, ['chat', 'music', 'social']);
       expect((r.vm.banner, r.vm.showOrderNote), (null, true));
       r.vm.dispose();
       r.device.repo.dispose();
@@ -158,7 +159,7 @@ void main() {
       r.device.api.on(_url, 'GET', '/api/state', _state(const ['clock']));
       await r.device.repo.refresh();
       expect(r.vm.enabled, ['clock']);
-      expect(r.vm.rows.last.mode, SkillRowMode.lastOne);
+      expect(r.vm.rows.firstWhere((x) => x.id == 'clock').mode, SkillRowMode.lastOne);
       r.vm.dispose();
       r.device.repo.dispose();
     });
@@ -194,7 +195,7 @@ void main() {
       }
       expect(find.text(_vi.skillPhotoName), findsOneWidget);
       expect(find.text(_vi.skillPhotoDesc), findsOneWidget, reason: 'no photos on the device → plain description');
-      expect(find.byType(SkillSwitch), findsNWidgets(4));
+      expect(find.byType(SkillSwitch), findsNWidgets(5)); // + Giải trí (Dò mìn)
       expect(find.bySemanticsLabel(_vi.skillsToggleA11y(_vi.skillClockName)), findsOneWidget);
     });
 
@@ -235,9 +236,9 @@ void main() {
       });
       await t.pumpWidget(_app(SkillsScreen(viewModel: r.vm, onOpenDevice: () => opened++)));
       await _frames(t);
-      expect(find.text(_vi.skillsNeedFirmware), findsOneWidget);
+      expect(find.text(_vi.skillsNeedFirmware), findsNWidgets(2), reason: 'Ảnh and Giải trí');
       expect(find.byType(SkillSwitch), findsNWidgets(3));
-      await t.tap(find.text(_vi.skillsUpdateFirmware));
+      await t.tap(find.text(_vi.skillsUpdateFirmware).first);
       expect(opened, 1);
     });
 

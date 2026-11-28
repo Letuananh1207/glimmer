@@ -251,7 +251,10 @@ static void paintClawdRegion(Mode m) {
                            Display::CLAWD_SLEEP, false, BODY);
         s_zzT0 = millis(); paintZzFrame(0);
     } else {
-        s_workT0 = millis(); tickWork();
+        // A clipped repaint (cursor moving, Display::repainting()) keeps the
+        // intro / typing timeline where it is.
+        if (!Display::repainting()) s_workT0 = millis();
+        tickWork();
     }
 }
 
@@ -371,11 +374,17 @@ static Windows windowsFor(const ChannelCtx& ctx) {
 void chClaudeDraw(const ChannelCtx& ctx) {
     XP::window("Claude", XPCore::ICON_CLAWD, false);
     const ClaudeData& d = *ctx.claude;
-    s_meta = metaFor(ctx);
+    // A clipped repaint (cursor moving, Display::repainting()) keeps every
+    // cache — tick() just brought them up to date — and paints only the
+    // blocks that reach into the clip.
+    const bool rp = Display::repainting();
+    if (!rp) s_meta = metaFor(ctx);
     XP::titleMeta(s_meta.text);
-    s_heroPct = -2.f; s_secPct = -2.f;
-    s_heroReset[0] = 0; s_secSub[0] = 0;
-    s_mode = -1; s_zzShown = -1; s_clawdFrame = 0xFF; s_workSlot = -1;
+    if (!rp) {
+        s_heroPct = -2.f; s_secPct = -2.f;
+        s_heroReset[0] = 0; s_secSub[0] = 0;
+        s_mode = -1; s_zzShown = -1; s_clawdFrame = 0xFF; s_workSlot = -1;
+    }
     s_loading = false;
 
     // Nothing to show yet and something is wrong: the XP message box.
@@ -395,23 +404,30 @@ void chClaudeDraw(const ChannelCtx& ctx) {
     s_stale = Api::isStale(d.lastOk, *ctx.settings);
     s_dim = s_stale;
 
-    Display::useFont("JBMono-11");
-    tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(LABEL, BODY);
-    tft.drawString(w.weeklyHero ? "Hạn mức tuần" : "Phiên 5 giờ", kL, 28);
+    if (Display::clipHits(kL, 28, kHeroClearR - kL, 12)) {
+        Display::useFont("JBMono-11");
+        tft.setTextDatum(TL_DATUM);
+        tft.setTextColor(LABEL, BODY);
+        tft.drawString(w.weeklyHero ? "Hạn mức tuần" : "Phiên 5 giờ", kL, 28);
+    }
 
-    paintHero(w.heroPct);
-    paintClawdRegion(clawdMode());
-    paintReset(w.heroRst);
+    if (Display::clipHits(kL, kHeroY, kR + 1 - kL, kBarY + 14 - kHeroY)) paintHero(w.heroPct);
+    if (Display::clipHits(kRegX, kRegY, kRegW, kRegH)) paintClawdRegion(clawdMode());
+    if (Display::clipHits(kRegX, kResetY, kRegW, kBarY - kResetY)) paintReset(w.heroRst);
 
-    XP::groupBox(kL, kGroupY, kR + 1 - kL, kGroupH, w.weeklyHero ? "Phiên 5 giờ" : "Hạn mức tuần");
-    paintSecondary(w.secPct, w.secRst);
+    if (Display::clipHits(kL, kGroupY - 7, kR + 1 - kL, kGroupH + 7)) {
+        XP::groupBox(kL, kGroupY, kR + 1 - kL, kGroupH, w.weeklyHero ? "Phiên 5 giờ" : "Hạn mức tuần");
+        paintSecondary(w.secPct, w.secRst);
+    }
+    if (Display::clipHits(kL, kFieldY, kR + 1 - kL, kFieldH)) {
+        XP::field(kL, kFieldY, kR + 1 - kL, kFieldH);
+        paintBottomRows(d);
+    }
 
-    XP::field(kL, kFieldY, kR + 1 - kL, kFieldH);
-    paintBottomRows(d);
-
-    s_heroPct = (w.heroPct < 0) ? -2.f : w.heroPct;
-    s_secPct  = (w.secPct  < 0) ? -2.f : w.secPct;
+    if (!rp) {
+        s_heroPct = (w.heroPct < 0) ? -2.f : w.heroPct;
+        s_secPct  = (w.secPct  < 0) ? -2.f : w.secPct;
+    }
 }
 
 void chClaudeTick(const ChannelCtx& ctx) {

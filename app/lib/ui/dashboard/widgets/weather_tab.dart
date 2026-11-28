@@ -14,7 +14,7 @@ class WeatherCard extends StatelessWidget {
 
   final WeatherView view;
 
-  /// `weatherSetLocation` → tab Cài đặt.
+  /// `weatherSetLocation` → màn Vị trí thời tiết (2026-11-26.9).
   final VoidCallback onSetLocation;
 
   @override
@@ -174,7 +174,7 @@ class _NoLocation extends StatelessWidget {
         padding: const EdgeInsets.only(top: AppSpace.m, bottom: AppSpace.s),
         child: OutlinedButton.icon(
           onPressed: onSetLocation,
-          icon: const Icon(Icons.tune),
+          icon: const Icon(Icons.place),
           label: Text(l.weatherSetLocation),
         ),
       ),

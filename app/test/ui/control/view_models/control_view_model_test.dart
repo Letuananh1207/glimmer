@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:glimmer_app/domain/models/clock_view.dart';
 import 'package:glimmer_app/domain/models/control.dart';
 import 'package:glimmer_app/domain/use_cases/control_device_use_case.dart';
 import 'package:glimmer_app/domain/models/touch.dart';
@@ -33,7 +34,11 @@ void main() {
   late ControlViewModel vm;
   var now = DateTime(2026, 11, 26, 14, 32);
 
-  Future<ControlViewModel> make({Map<String, dynamic>? state, Map<String, dynamic>? settings}) async {
+  Future<ControlViewModel> make({
+    Map<String, dynamic>? state,
+    Map<String, dynamic>? settings,
+    ControlDeviceUseCase? control,
+  }) async {
     await rig.connect(_url, state ?? _state());
     rig.api.on(
       _url,
@@ -43,7 +48,7 @@ void main() {
     );
     final v = ControlViewModel(
       device: rig.repo,
-      control: ControlDeviceUseCase(device: rig.repo),
+      control: control ?? ControlDeviceUseCase(device: rig.repo),
       now: () => now,
     );
     await v.reload();
@@ -84,6 +89,28 @@ void main() {
     expect(vm.frame!.taskbar.buttons, isEmpty);
     await vm.reload();
     expect(sent(), ['Home'], reason: 'only once');
+  });
+
+  test('R-DK-7 (L-7): back on the Điều khiển tab in the same run → the windows stay, no Home sent', () async {
+    final control = ControlDeviceUseCase(device: rig.repo);
+    vm = await make(control: control);
+    rig.api.on(_url, 'POST', '/api/windows', {'ok': true});
+    answer('Weather');
+    await vm.openProgram('Weather');
+    expect(vm.windows.open, ['Weather']);
+    vm.dispose(); // another tab of the app
+    rig.api.device(_url, _state(channel: 'Weather'));
+    await rig.repo.refresh();
+    final before = sent().length;
+    vm = await make(
+      state: _state(channel: 'Weather'),
+      control: control,
+    );
+    await Future<void>.delayed(Duration.zero);
+    expect(sent().length, before, reason: 'no Home: the device keeps its window');
+    expect(vm.windows.open, ['Weather']);
+    expect(vm.windows.top, 'Weather');
+    expect(vm.channel, 'Weather');
   });
 
   test('R-DK-7 autoRotate on → off, once', () async {
@@ -244,7 +271,6 @@ void main() {
     expect(vm.tap(30, 227).kind, TouchKind.start, reason: 'Start is the app\'s');
     await vm.minimizeTop();
     await vm.closeTop();
-    await vm.toggleScreen();
     expect(rig.posts(), isEmpty);
     expect(vm.failed, isNull);
   });
@@ -298,19 +324,6 @@ void main() {
     rig.api.on(_url, 'POST', '/push/clear', {'cleared': 1});
     await vm.dismissCard();
     expect(rig.posts('/push/clear').single.body, {'id': 'c1'});
-  });
-
-  test('screen off: optimistic, frame dark; taskbar of the open windows', () async {
-    vm = await make();
-    answer('Claude');
-    await vm.openProgram('Claude');
-    rig.api.on(_url, 'POST', '/api/screen', {'ok': true, 'screen_on': false});
-    final f = vm.toggleScreen();
-    expect(vm.screenOff, isTrue);
-    expect(vm.frame!.screenOff, isTrue);
-    await f;
-    expect(vm.screenOff, isTrue);
-    expect(vm.frame!.taskbar.buttons, [TaskButton.claude]);
   });
 
   test('offline: the last picture stays, mode offline', () async {
@@ -383,34 +396,100 @@ void main() {
     expect(vm.windows.sel, isNull);
   });
 
-  group('R-DK-13 tray balloon', () {
-    Map<String, dynamic> withBalloon({String channel = 'Home', bool up = false}) =>
-        {..._state(channel: channel), 'balloon': up, 'weather_configured': true};
+  group('R-DK-13 tray weather icon (no balloon since P-2026-11-26.21)', () {
+    Map<String, dynamic> withTray({String channel = 'Home'}) => {
+      ..._state(channel: channel),
+      'balloon': false,
+      'weather_configured': true,
+    };
 
-    test('desktop: tap the tray icon → show; tap × → hide; the mirror follows the answer', () async {
-      vm = await make(state: withBalloon());
-      rig.api.on(_url, 'POST', '/api/balloon', {'ok': true, 'balloon': true});
+    test('the tray icon opens the Weather window from the desktop and from a window; no /api/balloon', () async {
+      vm = await make(state: withTray());
+      answer('Weather');
       expect(vm.tap(188, 227).kind, TouchKind.tray);
       await pumpEventQueue();
-      expect(rig.posts('/api/balloon').single.body, {'show': true});
-      expect(vm.frame!.agents.desktop.balloon, isTrue);
-      rig.api.on(_url, 'POST', '/api/balloon', {'ok': true, 'balloon': false});
-      expect(vm.tap(226, 149).kind, TouchKind.balloonClose);
-      await pumpEventQueue();
-      expect(rig.posts('/api/balloon').last.body, {'show': false});
+      expect(sent(), ['Weather']);
       expect(vm.frame!.agents.desktop.balloon, isFalse);
-    });
-
-    test('over a window the tray sends nothing; old firmware has no tray target', () async {
-      vm = await make(state: withBalloon(channel: 'Clock'));
+      vm.dispose();
+      vm = await make(state: withTray(channel: 'Clock'));
+      answer('Weather');
+      await pumpEventQueue(); // the start's "back to the desktop" (R-DK-7) has settled
       vm.tap(188, 227);
       await pumpEventQueue();
-      expect(rig.posts('/api/balloon'), isEmpty);
-      vm.dispose();
-      vm = await make(state: _state());
-      expect(vm.tap(188, 227).kind, TouchKind.none);
+      expect(sent().last, 'Weather');
       expect(rig.posts('/api/balloon'), isEmpty);
     });
+
+    test('old firmware has no tray target', () async {
+      vm = await make(state: _state());
+      expect(vm.tap(188, 227).kind, TouchKind.none);
+      expect(rig.posts(), isNot(contains(predicate((c) => (c as dynamic).path == '/api/balloon'))));
+    });
+  });
+
+  test('R-DK-15 the Start sheet opens / switches / closes the Start menu on the device', () async {
+    vm = await make();
+    rig.api.on(_url, 'POST', '/api/menu', {'ok': true});
+    await vm.startMenu(true);
+    await vm.startMenu(true, all: true);
+    await vm.startMenu(true);
+    await vm.startMenu(false);
+    expect(rig.posts('/api/menu').map((c) => c.body), [
+      {'kind': 'start', 'all': false},
+      {'kind': 'start', 'all': true},
+      {'kind': 'start', 'all': false},
+      {'kind': 'none'},
+    ]);
+    vm.dispose();
+    vm = await make(state: {..._state()}..remove('windows'));
+    await vm.startMenu(true);
+    expect(rig.posts('/api/menu'), hasLength(4), reason: 'firmware without menus: nothing more');
+  });
+
+  test(
+    'R-DK-16 touches on Ngày và Giờ: list, month, zone, sync — the view changes at once, the device follows',
+    () async {
+      vm = await make(
+        state: {..._state(), 'clock': <String, Object?>{}},
+        settings: {'brightness': 50, 'nightMode': 0, 'tzMinutes': 420},
+      );
+      rig.api.on(_url, 'POST', '/api/clock', {'ok': true});
+      rig.api.on(_url, 'POST', '/api/settings', {'ok': true});
+      answer('Clock');
+      await vm.openProgram('Clock');
+      expect(vm.clockView, ClockView.today);
+      vm.tap(40, 70); // month field → the month list
+      await pumpEventQueue();
+      expect(vm.clockView.list, ClockList.month);
+      expect(vm.frame!.clockView.list, ClockList.month);
+      expect(rig.posts('/api/clock').last.body, containsPair('list', 'month'));
+      vm.tap(30, 79 + 2); // first row
+      await pumpEventQueue();
+      expect(vm.clockView.list, ClockList.none);
+      expect(vm.clockView.month, vm.clockView.top + 1);
+      vm.tap(120, 34); // tab Múi giờ
+      vm.tap(60, 58); // zone field → list
+      await pumpEventQueue();
+      expect(vm.clockView.list, ClockList.zone);
+      vm.tap(60, 69 + 13 * (10 - vm.clockView.top) + 2); // Tokyo, Seoul (index 10)
+      await pumpEventQueue();
+      expect(rig.posts('/api/settings').last.body, {'tzMinutes': 540});
+      vm.tap(180, 34); // tab Internet
+      vm.tap(170, 108); // Cập nhật ngay
+      await pumpEventQueue();
+      expect(rig.posts('/api/clock').last.body, containsPair('sync', true));
+      expect(rig.posts('/api/clock').last.body, containsPair('tab', 2));
+    },
+  );
+
+  test('R-DK-16 firmware without clock: touches on the window send nothing to /api/clock', () async {
+    vm = await make();
+    answer('Clock');
+    await vm.openProgram('Clock');
+    vm.tap(40, 70);
+    await pumpEventQueue();
+    expect(rig.posts('/api/clock'), isEmpty);
+    expect(vm.clockView, ClockView.today);
   });
 
   group('R-DK-14 XP-Real windows', () {

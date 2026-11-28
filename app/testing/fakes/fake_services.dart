@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:glimmer_app/data/services/cursor_service.dart';
 import 'package:glimmer_app/data/services/device_api_service.dart';
 import 'package:glimmer_app/data/services/discovery_service.dart';
 import 'package:glimmer_app/data/services/local_store_service.dart';
@@ -72,6 +73,9 @@ class FakeDeviceApiService implements DeviceApiService {
   Object? uploadFileAnswer;
   Uint8List? uploadedFile;
 
+  /// Answer per upload (several uploads in one test, e.g. the library's cache sync); wins over [uploadFileAnswer].
+  Object? Function(Uint8List bytes)? uploadFileAnswerFor;
+
   @override
   Future<Map<String, dynamic>> uploadFile(String baseUrl, String path,
       {required String field,
@@ -89,7 +93,7 @@ class FakeDeviceApiService implements DeviceApiService {
     if (holdUpload != null) await holdUpload!.future;
     if (cancel?.cancelled ?? false) throw const DeviceHttpException(-1, 'cancelled');
     onProgress?.call(1);
-    final a = uploadFileAnswer ?? {'ok': true, 'name': 'p1.jpg', 'count': 1};
+    final a = uploadFileAnswerFor?.call(bytes) ?? uploadFileAnswer ?? {'ok': true, 'name': 'p1.jpg', 'count': 1};
     if (a is Exception) throw a;
     return Map<String, dynamic>.from(a as Map);
   }
@@ -128,6 +132,20 @@ class FakePhotoPickerService implements PhotoPickerService {
 
   @override
   Future<Uint8List?> retrieveLost() async => null;
+}
+
+/// Records the pointer datagrams instead of sending them (R-DK-17).
+class FakeCursorService implements CursorService {
+  final sent = <({String host, int port, Uint8List datagram})>[];
+
+  @override
+  Future<bool> send(String host, int port, Uint8List datagram) async {
+    sent.add((host: host, port: port, datagram: datagram));
+    return true;
+  }
+
+  @override
+  void close() {}
 }
 
 class FakeDiscoveryService implements DiscoveryService {

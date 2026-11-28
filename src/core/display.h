@@ -3,7 +3,12 @@
 #include "config.h"
 #include "layout.h"
 
-extern TFT_eSPI tft;
+// Where drawing goes (L-8): the panel, or — during a clipped repaint under the mouse cursor — a small off-screen
+// sprite of the clip box, pushed to the panel in one go at endRepaint() so the background a window paints first
+// (white page, window body) never shows before its text / photo is on top. Every `tft.` call goes through it;
+// the drawing calls TFT_eSprite overrides are virtual. pushImage is not: use Display::pushImage.
+extern TFT_eSPI* g_tft;
+#define tft (*g_tft)
 
 namespace Display {
     void begin();                                  // tft.init + invertDisplay + backlight
@@ -27,6 +32,7 @@ namespace Display {
     void drawConnecting(const char* ssid, int attempt);   // welcome: painted once
     void drawError(const char* title, const char* msg);
     void drawOtaProgress(uint8_t pct);             // "đang cập nhật...": painted once
+    void drawShutDown();                           // "đang tắt máy..." (P-2026-11-27.24): painted once
 
     // 16×16 glimmer spark logo — direct-blit, no FS dependency.
     void drawLogo(int x, int y, uint16_t color);
@@ -63,6 +69,21 @@ namespace Display {
     // A system screen (boot, welcome, log-on, update) painted since the last
     // resetSystemScreens(): the taskbar pixels are gone, repaint it whole.
     bool systemScreenShown();
+
+    // Clipped repaint (the mouse cursor moved; the panel can't be read back):
+    // every drawing call is limited to (x, y, w, h) by the TFT viewport, in
+    // screen coordinates. A channel's draw() checks repainting() to skip side
+    // effects (stepping a slideshow, restarting an animation) and may use
+    // clipRect() to skip work outside it (a JPEG decode stops early).
+    void beginRepaint(int x, int y, int w, int h);
+    void endRepaint();
+    bool repainting();
+    void clipRect(int& x, int& y, int& w, int& h);   // the whole panel when not repainting
+    // tft.pushImage to wherever drawing goes now (the panel or the repaint sprite; L-8).
+    void pushImage(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data);
+    // (x, y, w, h) reaches into the clip — always true outside a clipped
+    // repaint. Blocks that miss skip their work (and their font load, ~30 ms).
+    bool clipHits(int x, int y, int w, int h);
 
     // Primitives reused by channels
     void clear();

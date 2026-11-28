@@ -49,6 +49,17 @@ class SettingsViewModel extends ChangeNotifier with SafeNotifier {
     notifyListeners();
   }
 
+  /// Back from Vị trí thời tiết (2026-11-26.9): re-read only the location keys, keeping unsaved edits.
+  Future<void> refreshLocation() async {
+    final r = await _device.settings();
+    if (r is Ok<Map<String, dynamic>> && _orig != null) {
+      for (final k in const ['weatherLat', 'weatherLon', 'weatherPlace']) {
+        if (r.value.containsKey(k)) _orig![k] = r.value[k];
+      }
+      notifyListeners();
+    }
+  }
+
   /// Current value of [key] (edited, else from the device), or [d] when missing / another type.
   V value<V>(String key, V d) {
     final v = _edit.containsKey(key) ? _edit[key] : _orig?[key];

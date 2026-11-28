@@ -1,6 +1,6 @@
 # Phiếu thiết kế: Đặt vị trí thời tiết từ app (tên nơi cho thiết bị)
 
-- Trạng thái: chờ thiết kế
+- Trạng thái: đã áp (2026-11-26.9)
 - Đã vẽ: 2026-11-26.9
 - Ngày: 2026-11-26 · Nguồn: áp panel P-2026-11-26.17 — người dùng chốt "những cái liên quan địa điểm thì nên dùng vị
   trí trên app để dùng"

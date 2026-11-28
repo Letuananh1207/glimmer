@@ -48,10 +48,12 @@ void startText(int x, int y, uint16_t c) {
     }
 }
 
-void paintStart() {
+// Start button; pressed while the Start menu is open (P-2026-11-26.20): its rows go
+// xpStartHi → xpStartDark and xpStart → xpGreen.
+void paintStart(bool down = false) {
     for (int r = 0; r < Layout::TASKBAR_H; r++) {
         int edge = 67 - startInset(r);
-        uint16_t c = r <= 1 ? START_HI : r <= 22 ? START : START_DARK;
+        uint16_t c = r <= 1 ? (down ? START_DARK : START_HI) : r <= 22 ? (down ? GREEN : START) : START_DARK;
         tft.fillRect(0, kY + r, edge, 1, c);
         tft.drawPixel(edge, kY + r, START_DARK);
     }
@@ -75,11 +77,15 @@ void paintSlot(int i, const BarState& s) {
     Look look = lookOfSlot(i, s);
     uint16_t edge = look == LOOK_FLASH ? FLASH_EDGE : look == LOOK_PRESSED ? BTN_PRESSED_EDGE : BTN_EDGE;
     uint16_t fill = look == LOOK_FLASH ? FLASH      : look == LOOK_PRESSED ? BTN_PRESSED      : BTN;
+    // P-2026-11-27.24: a normal button under the mouse lights (xpTaskHi); pressed / flashing keep their look.
+    if (look != LOOK_FLASH && look != LOOK_PRESSED && XP::hot() == i) fill = TASK_HI;
     tft.fillRect(x, kBtnY, kBtnW, kBtnH, edge);
     tft.fillRect(x + 1, kBtnY + 1, kBtnW - 2, kBtnH - 2, fill);
     Icon ic = progIcon(p);
     if (ic == ICON_CLAWD) {
         XP::drawIcon(ic, x + 5, 222, 1, look == LOOK_FLASH ? WHITE : Display::CLAWD_ORANGE);
+    } else if (ic == ICON_MINES) {
+        XP::drawIcon(ic, x + 7, 220, 1, WHITE);              // XP-Mines: white mine at (button + 7, 220)
     } else {
         int w, h; XP::iconSize(ic, w, h);
         XP::drawIcon(ic, x + 14 - w / 2, 227 - h / 2, 1, WHITE);
@@ -134,7 +140,7 @@ void draw(const BarState& s, bool h24) {
     s_state = s;
     s_shown = true;
     bands(0, trayX(s.trayWeather), 0, 25);   // behind the start's rounded edge + gaps between buttons
-    paintStart();
+    paintStart(s.startDown);
     for (int i = 0; i < slotsFor(s.trayWeather); i++) if (s.prog[i] >= 0) paintSlot(i, s);
     clockText(h24, s_clock, sizeof(s_clock));
     paintTray(s.trayWeather);
@@ -144,12 +150,23 @@ void update(const BarState& s, bool h24) {
     if (!s_shown) return;
     // The weather skill turned on / off: the tray moved and a slot came or went.
     if (s.trayWeather != s_state.trayWeather) { draw(s, h24); return; }
+    if (s.startDown != s_state.startDown) paintStart(s.startDown);
     for (int i = 0; i < slotsFor(s.trayWeather); i++)
         if (slotChanged(i, s_state, s)) paintSlot(i, s);
     s_state = s;
     char c[8];
     clockText(h24, c, sizeof(c));
     if (strcmp(c, s_clock)) { memcpy(s_clock, c, sizeof(s_clock)); paintClock(); }
+}
+
+// Clipped repaint under the moving cursor: exactly what was last painted
+// (state, clock text) — update() keeps catching up from there.
+void repaint() {
+    if (!s_shown) return;
+    bands(0, trayX(s_state.trayWeather), 0, 25);
+    paintStart(s_state.startDown);
+    for (int i = 0; i < slotsFor(s_state.trayWeather); i++) if (s_state.prog[i] >= 0) paintSlot(i, s_state);
+    paintTray(s_state.trayWeather);
 }
 
 void hide() { s_shown = false; }

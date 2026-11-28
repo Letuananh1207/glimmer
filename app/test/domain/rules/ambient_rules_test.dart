@@ -126,7 +126,7 @@ void main() {
     });
     final i = infoOf(s, const {'showClaude': true, 'showInfo': true}, _now);
     expect((i.upMin, i.heapK, i.blockK, i.nextMin, i.updatedMin), (27, 21, 20, 2, 2));
-    expect((i.channelsOn, i.channelsTotal), (5, 14));
+    expect((i.channelsOn, i.channelsTotal), (5, 15)); // + Mines (P-2026-11-27.25)
     expect(infoOf(s, null, 0).updatedMin, isNull);
   });
 

@@ -83,6 +83,24 @@ namespace Theme {
         constexpr uint16_t CAPTION_OFF      = 0x7D3E;  // #7FA4F0 xpCaptionOff — □ of a window that never resizes (P-2026-11-26.14)
         constexpr uint16_t FLAG_GREEN       = 0x85E0;  // #81BC06 xpFlagGreen
         constexpr uint16_t LAPTOP           = 0x8410;  // #808080 xpLaptop — Clawd at work (P-2026-11-26.13)
+        // Dò mìn (P-2026-11-27.25, token themeXP.mines): Windows 3D grey, LED, the number colours of XP.
+        namespace Mines {
+            constexpr uint16_t FACE      = 0xC618;  // #C0C0C0 body, cells
+            constexpr uint16_t SHADE     = 0x8410;  // #808080 sunken / raised dark edge, open-cell rule
+            constexpr uint16_t SMILE     = 0xFFE0;  // #FFFF00
+            constexpr uint16_t LED_ON    = 0xF800;  // #FF0000
+            constexpr uint16_t LED_OFF   = 0x4800;  // #480000
+            constexpr uint16_t BLAST     = 0xF800;  // #FF0000 the mine clicked, wrong-flag cross
+            constexpr uint16_t N[9] = {0x0000,
+                0x001F,   // 1 #0000FF
+                0x0400,   // 2 #008000
+                0xF800,   // 3 #FF0000
+                0x0010,   // 4 #000080
+                0x8000,   // 5 #800000
+                0x0410,   // 6 #008080
+                0x0000,   // 7 black
+                0x8410};  // 8 #808080
+        }
         constexpr uint16_t SELECT_ICON      = 0x9DBC;  // #98B4E2 xpSelectIcon — selected desktop icon (P-2026-11-26.14)
         constexpr uint16_t BOOT_BLOCK_HI    = 0x9E1F;  // #9BC0FA xpBootBlockHi
         constexpr uint16_t BAND_EDGE_WARM   = 0x9B4D;  // #9C6A6A xpBandEdgeWarm
@@ -111,5 +129,12 @@ namespace Theme {
         constexpr uint16_t INFO_BAR         = 0xFFFC;  // #FFFFE1 xpInfoBar
         constexpr uint16_t WHITE            = 0xFFFF;  // #FFFFFF white
         constexpr uint16_t BLACK            = 0x0000;  // #000000 body text
+        // P-2026-11-27.24 (themeXP.hot, themeXP.turnOff): hot caption × / Tắt button lit,
+        // Chờ button lit, Hủy button (XP push button).
+        constexpr uint16_t CLOSE_HOT        = 0xF34A;  // #F06A50 xpClose hot
+        constexpr uint16_t STANDBY_HI       = 0xFF30;  // #FFE680 Chờ lit
+        constexpr uint16_t PUSH_EDGE        = 0x01EE;  // #003C74 push button edge
+        constexpr uint16_t PUSH_FACE        = 0xF79D;  // #F4F3EE push button face
+        constexpr uint16_t PUSH_SHADE       = 0xD698;  // #D6D0C5 push button bottom rows
     }
 }

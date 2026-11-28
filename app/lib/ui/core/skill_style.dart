@@ -61,6 +61,7 @@ class SkillStyle {
         'photo' => l.skillPhotoDesc,
         'weather' => l.skillWeatherDesc,
         'clock' => l.skillClockDesc,
+        'fun' => l.skillFunDesc,
         _ => '',
       };
 
@@ -75,9 +76,12 @@ class SkillStyle {
     );
   }
 
-  /// Dock pixel icon of [id] at its skill-row scale (or [scale]).
+  /// Dock pixel icon of [id] at its skill-row scale (or [scale]). A skill without a pixel icon yet (Giải trí, a pack
+  /// since 2026-11-27 — phiếu thiết kế docs/phieu_thiet_ke/2026-11-27-skill-giai-tri.md) shows its chip icon.
   static Widget dockIcon(String id, {required Color color, double? scale}) {
     final s = of(id);
-    return PixelIcon(s.dock!, scale: scale ?? s.dockScale, color: color);
+    final dock = s.dock;
+    if (dock == null) return Icon(s.icon, size: 16 * (scale ?? s.dockScale), color: color);
+    return PixelIcon(dock, scale: scale ?? s.dockScale, color: color);
   }
 }

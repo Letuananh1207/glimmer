@@ -1182,9 +1182,9 @@
   "@weatherNoLocationBody": {
     "description": "Thân trạng thái thiếu vị trí"
   },
-  "weatherSetLocation": "Đặt vị trí trong Cài đặt",
+  "weatherSetLocation": "Đặt vị trí thời tiết",
   "@weatherSetLocation": {
-    "description": "Nút viền → Cài đặt"
+    "description": "Nút ở tab Thời tiết khi chưa đặt vị trí → màn Vị trí thời tiết (đổi 2026-11-26.9)"
   },
   "clockTitle": "ĐỒNG HỒ",
   "@clockTitle": {
@@ -1592,7 +1592,7 @@
   },
   "controlScreenA11y": "Màn thiết bị đang hiện {app}. Chạm như chuột: nút cửa sổ, thanh tác vụ, start, biểu tượng",
   "@controlScreenA11y": {
-    "description": "Nhãn đọc màn hình ô màn chạm được",
+    "description": "Không dùng từ 2026-11-27.10. Nhãn đọc màn hình ô màn chạm được",
     "placeholders": {
       "app": {
         "type": "String"
@@ -1618,15 +1618,15 @@
   },
   "controlScreenOffTitle": "Màn đang tắt",
   "@controlScreenOffTitle": {
-    "description": "Dòng kênh khi màn tắt"
+    "description": "Không dùng từ 2026-11-27.10. Dòng kênh khi màn tắt"
   },
   "controlScreenOffNote": "· bấm Bật màn để mở lại",
   "@controlScreenOffNote": {
-    "description": "Dòng kênh khi màn tắt"
+    "description": "Không dùng từ 2026-11-27.10. Dòng kênh khi màn tắt"
   },
   "controlScreenOffOverlay": "MÀN ĐANG TẮT",
   "@controlScreenOffOverlay": {
-    "description": "Chữ mờ giữa ô màn tối"
+    "description": "Không dùng từ 2026-11-27.10. Chữ mờ giữa ô màn tối"
   },
   "controlNightTitle": "Chế độ đêm",
   "@controlNightTitle": {
@@ -1676,19 +1676,19 @@
   },
   "controlScreenOff": "Tắt màn",
   "@controlScreenOff": {
-    "description": "Nút tròn"
+    "description": "Không dùng từ 2026-11-27.10. Nút tròn"
   },
   "controlScreenOn": "Bật màn",
   "@controlScreenOn": {
-    "description": "Nút tròn khi màn đang tắt (amber)"
+    "description": "Không dùng từ 2026-11-27.10. Nút tròn khi màn đang tắt (amber)"
   },
   "controlNight": "Chế độ đêm",
   "@controlNight": {
-    "description": "Nút tròn (lilac khi bật)"
+    "description": "Không dùng từ 2026-11-27.10. Nút tròn (lilac khi bật)"
   },
   "controlDetails": "Số liệu",
   "@controlDetails": {
-    "description": "Nút tròn → màn Số liệu"
+    "description": "Không dùng từ 2026-11-27.10. Nút tròn → màn Số liệu"
   },
   "controlSending": "Đang gửi…",
   "@controlSending": {
@@ -1751,11 +1751,11 @@
       }
     }
   },
-  "controlOldFwTitle": "Firmware chưa nhận chạm",
+  "controlOldFwTitle": "Firmware chưa có chuột",
   "@controlOldFwTitle": {
     "description": "Thanh báo firmware cũ"
   },
-  "controlOldFwBody": "Thiết bị đang chạy {version}: chạm trên màn chưa dùng được, chỉ mở app qua Start.",
+  "controlOldFwBody": "Thiết bị đang chạy {version}: chưa nhận chuột, phím và nút nguồn từ app.",
   "@controlOldFwBody": {
     "description": "Thanh báo firmware cũ",
     "placeholders": {
@@ -1825,6 +1825,10 @@
       }
     }
   },
+  "devControlCmdDesktop": "Desktop",
+  "@devControlCmdDesktop": {
+    "description": "Điều khiển · tên lệnh trong controlFailed khi Start → Desktop (thu nhỏ hết) không được"
+  },
   "devControlCmdClose": "Tắt {app}",
   "@devControlCmdClose": {
     "description": "Điều khiển · tên lệnh trong controlFailed khi tắt app (×) không được",
@@ -1844,1041 +1848,12 @@
       }
     }
   },
-  "devXpMenuArrange": "Sắp xếp biểu tượng",
-  "@devXpMenuArrange": {
-    "description": "Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)"
-  },
-  "devXpMenuRefresh": "Làm mới",
-  "@devXpMenuRefresh": {
-    "description": "Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)"
-  },
-  "devXpMenuPaste": "Dán",
-  "@devXpMenuPaste": {
-    "description": "Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)"
-  },
-  "devXpMenuPasteShortcut": "Dán lối tắt",
-  "@devXpMenuPasteShortcut": {
-    "description": "Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)"
-  },
-  "devXpMenuNew": "Mới",
-  "@devXpMenuNew": {
-    "description": "Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)"
-  },
-  "devXpMenuProperties": "Thuộc tính",
-  "@devXpMenuProperties": {
-    "description": "Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)"
-  },
-  "devXpMenuRestore": "Khôi phục",
-  "@devXpMenuRestore": {
-    "description": "Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)"
-  },
-  "devXpMenuMove": "Di chuyển",
-  "@devXpMenuMove": {
-    "description": "Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)"
-  },
-  "devXpMenuSize": "Kích thước",
-  "@devXpMenuSize": {
-    "description": "Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)"
-  },
-  "devXpMenuMinimize": "Thu nhỏ",
-  "@devXpMenuMinimize": {
-    "description": "Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)"
-  },
-  "devXpMenuMaximize": "Phóng to",
-  "@devXpMenuMaximize": {
-    "description": "Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)"
-  },
-  "devXpMenuClose": "Đóng",
-  "@devXpMenuClose": {
-    "description": "Màn thiết bị · menu chuột phải (panel P-2026-11-26.14 XP-Menu)"
-  },
-  "devXpMenuAltF4": "Alt+F4",
-  "@devXpMenuAltF4": {
-    "description": "Màn thiết bị · phím tắt cạnh Đóng trong menu cửa sổ"
-  },
-  "devXpWeekday": "{day, select, 1{Thứ Hai} 2{Thứ Ba} 3{Thứ Tư} 4{Thứ Năm} 5{Thứ Sáu} 6{Thứ Bảy} other{Chủ Nhật}}",
-  "@devXpWeekday": {
-    "description": "Ô màn thiết bị: thứ kiểu tiêu đề như firmware ClockFmt::weekdayTitle (day = DateTime.weekday)",
+  "devXpZoneName": "{index, select, 0{Los Angeles} 1{New York} 2{Brasília} 3{London} 4{Paris, Berlin} 5{Moskva} 6{Dubai} 7{New Delhi} 8{Hà Nội} 9{Singapore} 10{Tokyo, Seoul} other{Sydney}}",
+  "@devXpZoneName": {
+    "description": "Màn thiết bị · Ngày và Giờ (panel P-2026-11-26.22)",
     "placeholders": {
-      "day": {
+      "index": {
         "type": "String"
-      }
-    }
-  },
-  "devXpTitleAi": "AI hôm nay",
-  "@devXpTitleAi": {
-    "description": "Ô màn thiết bị: tiêu đề cửa sổ XP của kênh (firmware XP::window)"
-  },
-  "devXpTitleAgents": "Tác tử",
-  "@devXpTitleAgents": {
-    "description": "Ô màn thiết bị: tiêu đề cửa sổ XP của kênh (firmware XP::window)"
-  },
-  "devXpTitleClock": "Đồng hồ",
-  "@devXpTitleClock": {
-    "description": "Ô màn thiết bị: tiêu đề cửa sổ XP của kênh (firmware XP::window)"
-  },
-  "devXpTitleForecast": "Dự báo",
-  "@devXpTitleForecast": {
-    "description": "Ô màn thiết bị: tiêu đề cửa sổ XP của kênh (firmware XP::window)"
-  },
-  "devXpTitleInfo": "Thông tin",
-  "@devXpTitleInfo": {
-    "description": "Ô màn thiết bị: tiêu đề cửa sổ XP của kênh (firmware XP::window)"
-  },
-  "devXpTitlePhoto": "Ảnh",
-  "@devXpTitlePhoto": {
-    "description": "Ô màn thiết bị: tiêu đề cửa sổ XP của kênh (firmware XP::window)"
-  },
-  "devXpTitleSetup": "Cài đặt",
-  "@devXpTitleSetup": {
-    "description": "Ô màn thiết bị: tiêu đề cửa sổ XP của kênh (firmware XP::window)"
-  },
-  "devXpTitleTrend": "Xu hướng",
-  "@devXpTitleTrend": {
-    "description": "Ô màn thiết bị: tiêu đề cửa sổ XP của kênh (firmware XP::window)"
-  },
-  "devXpTitleWeather": "Thời tiết",
-  "@devXpTitleWeather": {
-    "description": "Ô màn thiết bị: tiêu đề cửa sổ XP của kênh (firmware XP::window)"
-  },
-  "devXpCardNeedApproval": "Cần bạn duyệt",
-  "@devXpCardNeedApproval": {
-    "description": "Ô màn thiết bị: tiêu đề thẻ agent (ch_attention paintCard)",
-    "x-thiet-ke": "source/DeviceXPAttention.dc.html"
-  },
-  "devXpCardDoneTitle": "Xong rồi!",
-  "@devXpCardDoneTitle": {
-    "description": "Ô màn thiết bị: tiêu đề thẻ agent (ch_attention paintCard)"
-  },
-  "devXpCardRunningPct": "Đang chạy {pct}%",
-  "@devXpCardRunningPct": {
-    "description": "Ô màn thiết bị: tiêu đề thẻ tiến độ (ch_attention cardTitle)",
-    "placeholders": {
-      "pct": {
-        "type": "int"
-      }
-    }
-  },
-  "devXpCardFinished": "{name} đã xong",
-  "@devXpCardFinished": {
-    "description": "Ô màn thiết bị: dòng chi tiết khi agent báo xong (ch_attention bodyText)",
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpCardWaitingAnswer": "{name} đang chờ câu trả lời",
-  "@devXpCardWaitingAnswer": {
-    "description": "Ô màn thiết bị: dòng chi tiết thẻ câu hỏi (ch_attention bodyText)",
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpCardWaitStatus": "chờ bạn · {age}",
-  "@devXpCardWaitStatus": {
-    "description": "Ô màn thiết bị: trạng thái thẻ chờ bạn (ch_attention statusText)",
-    "x-thiet-ke": "source/DeviceXPAttention.dc.html",
-    "placeholders": {
-      "age": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpSeconds": "{n} giây",
-  "@devXpSeconds": {
-    "description": "Ô màn thiết bị: thời gian dưới một phút (ch_attention statusText)",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "devXpShortDur": "{n}{unit, select, minutes{P} hours{G} other{NG}}",
-  "@devXpShortDur": {
-    "description": "Ô màn thiết bị: thời lượng ngắn P phút / G giờ / NG ngày (TimeUtil::shortDuration)",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      },
-      "unit": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpRowNeedYou": "Cần bạn",
-  "@devXpRowNeedYou": {
-    "description": "Ô màn thiết bị: dòng danh sách Tác tử: thẻ cần duyệt (ch_attention listRow)"
-  },
-  "devXpRowWaitingYou": "Đang chờ bạn",
-  "@devXpRowWaitingYou": {
-    "description": "Ô màn thiết bị: dòng danh sách Tác tử: tiêu đề hook WAITING FOR YOU"
-  },
-  "devXpKindWord": "{kind, select, approval{Phê duyệt} error{Lỗi} input{Chờ bạn} progress{Tiến độ} warning{Cảnh báo} success{Xong} other{Thông tin}}",
-  "@devXpKindWord": {
-    "description": "Ô màn thiết bị: dòng danh sách Tác tử: loại thẻ khi không có tiêu đề (ch_attention kindLabel, viết hoa đầu câu)",
-    "placeholders": {
-      "kind": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpMoreItems": "+ {n} mục khác",
-  "@devXpMoreItems": {
-    "description": "Ô màn thiết bị: danh sách Tác tử: số thẻ không vẽ",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "devXpItems": "{n} mục",
-  "@devXpItems": {
-    "description": "Ô màn thiết bị: thanh trạng thái Tác tử: số thẻ",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "devXpNApprovals": "{n} cần duyệt",
-  "@devXpNApprovals": {
-    "description": "Ô màn thiết bị: thanh trạng thái Tác tử",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "devXpNInputs": "{n} lượt bạn",
-  "@devXpNInputs": {
-    "description": "Ô màn thiết bị: thanh trạng thái Tác tử",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "devXpNoneWaiting": "không mục nào chờ",
-  "@devXpNoneWaiting": {
-    "description": "Ô màn thiết bị: thanh trạng thái Tác tử khi không thẻ nào chờ bạn"
-  },
-  "devXpDeskTrash": "Thùng rác",
-  "@devXpDeskTrash": {
-    "description": "Ô màn thiết bị: nhãn biểu tượng màn desktop (ch_home)"
-  },
-  "devXpDeskNow": "{temp}° · {desc}",
-  "@devXpDeskNow": {
-    "description": "Ô màn thiết bị: bóng thời tiết màn desktop: dòng 1 (ch_home balloonText)",
-    "placeholders": {
-      "temp": {
-        "type": "int"
-      },
-      "desc": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpDeskFeels": "cảm giác {temp}°",
-  "@devXpDeskFeels": {
-    "description": "Ô màn thiết bị: bóng thời tiết màn desktop: dòng 2",
-    "placeholders": {
-      "temp": {
-        "type": "int"
-      }
-    }
-  },
-  "devXpDeskNoWeather": "chưa có thời tiết",
-  "@devXpDeskNoWeather": {
-    "description": "Ô màn thiết bị: bóng thời tiết màn desktop khi chưa có số đo"
-  },
-  "devXpSetupHead": "Hoàn tất cài đặt",
-  "@devXpSetupHead": {
-    "description": "Ô màn thiết bị: kênh Cài đặt (ch_setup)",
-    "x-thiet-ke": "source/DeviceXPSetup.dc.html"
-  },
-  "devXpSetupLeft": "Còn {n} bước nữa là xong.",
-  "@devXpSetupLeft": {
-    "description": "Ô màn thiết bị: kênh Cài đặt: số bước còn lại",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "devXpSetupClaude": "Khóa Claude",
-  "@devXpSetupClaude": {
-    "description": "Ô màn thiết bị: kênh Cài đặt: mục danh sách"
-  },
-  "devXpSetupCodex": "Token Codex",
-  "@devXpSetupCodex": {
-    "description": "Ô màn thiết bị: kênh Cài đặt: mục danh sách"
-  },
-  "devXpSetupWeather": "Thời tiết, vị trí, giờ",
-  "@devXpSetupWeather": {
-    "description": "Ô màn thiết bị: kênh Cài đặt: mục danh sách"
-  },
-  "devXpSetupOpen": "Mở trong trình duyệt",
-  "@devXpSetupOpen": {
-    "description": "Ô màn thiết bị: kênh Cài đặt: nhãn khung nhóm"
-  },
-  "devXpPhotoEmpty": "Chưa có ảnh",
-  "@devXpPhotoEmpty": {
-    "description": "Ô màn thiết bị: kênh Ảnh khi trống (ch_photo drawEmpty)"
-  },
-  "devXpPhotoSend": "Gửi ảnh từ app glimmer",
-  "@devXpPhotoSend": {
-    "description": "Ô màn thiết bị: kênh Ảnh khi trống"
-  },
-  "devXpPhotoOr": "hoặc",
-  "@devXpPhotoOr": {
-    "description": "Ô màn thiết bị: kênh Ảnh khi trống"
-  },
-  "devXpWeatherLoading": "Đang tải thời tiết...",
-  "@devXpWeatherLoading": {
-    "description": "Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)"
-  },
-  "devXpWeatherErrorHead": "Chưa có thời tiết",
-  "@devXpWeatherErrorHead": {
-    "description": "Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)"
-  },
-  "devXpWeatherErrHttp": "Máy chủ trả lỗi {code}.",
-  "@devXpWeatherErrHttp": {
-    "description": "Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)",
-    "placeholders": {
-      "code": {
-        "type": "int"
-      }
-    }
-  },
-  "devXpWeatherErrConnect": "Không kết nối được.",
-  "@devXpWeatherErrConnect": {
-    "description": "Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)"
-  },
-  "devXpWeatherErrBegin": "Không mở được kết nối.",
-  "@devXpWeatherErrBegin": {
-    "description": "Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)"
-  },
-  "devXpWeatherErrJson": "Dữ liệu lỗi.",
-  "@devXpWeatherErrJson": {
-    "description": "Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)"
-  },
-  "devXpWeatherErrNoCurrent": "Thiếu số liệu hiện tại.",
-  "@devXpWeatherErrNoCurrent": {
-    "description": "Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)"
-  },
-  "devXpWeatherErrUnknown": "Không rõ lỗi.",
-  "@devXpWeatherErrUnknown": {
-    "description": "Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)"
-  },
-  "devXpWeatherRetrying": "Đang tự thử lại...",
-  "@devXpWeatherRetrying": {
-    "description": "Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)"
-  },
-  "devXpWeatherFeels": "cảm giác {t}°",
-  "@devXpWeatherFeels": {
-    "description": "Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)",
-    "placeholders": {
-      "t": {
-        "type": "int"
-      }
-    }
-  },
-  "devXpWeatherHumidity": "ẩm {n}%",
-  "@devXpWeatherHumidity": {
-    "description": "Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "devXpWeatherWind": "gió {n}km",
-  "@devXpWeatherWind": {
-    "description": "Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "devXpDayToday": "Nay",
-  "@devXpDayToday": {
-    "description": "Ô màn thiết bị (Dự báo, ch_forecast.cpp / XP-Forecast*)"
-  },
-  "devXpDayTomorrow": "Mai",
-  "@devXpDayTomorrow": {
-    "description": "Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)"
-  },
-  "devXpDayAfter": "Kia",
-  "@devXpDayAfter": {
-    "description": "Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)"
-  },
-  "devXpWeatherSun": "{event, select, set{Mặt trời lặn} other{Mặt trời mọc}} {time}",
-  "@devXpWeatherSun": {
-    "description": "Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)",
-    "placeholders": {
-      "event": {
-        "type": "String"
-      },
-      "time": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpWeatherUpdated": "Cập nhật {age} trước",
-  "@devXpWeatherUpdated": {
-    "description": "Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)",
-    "placeholders": {
-      "age": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpStaleMeta": "cũ {age}",
-  "@devXpStaleMeta": {
-    "description": "Ô màn thiết bị (Thời tiết, ch_weather.cpp / XP-Weather*)",
-    "placeholders": {
-      "age": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpSpanShort": "{unit, select, minutes{{n}P} hours{{n}G} other{{n}NG}}",
-  "@devXpSpanShort": {
-    "description": "Ô màn thiết bị: khoảng thời gian như firmware TimeUtil::shortDuration",
-    "placeholders": {
-      "unit": {
-        "type": "String"
-      },
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "devXpSpanLong": "{unit, select, minutes{{n} phút} hours{{n} giờ} other{{n} ngày}}",
-  "@devXpSpanLong": {
-    "description": "Ô màn thiết bị: khoảng thời gian như firmware TimeUtil::shortDuration",
-    "placeholders": {
-      "unit": {
-        "type": "String"
-      },
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "devXpForecastEmpty": "Chưa có dự báo",
-  "@devXpForecastEmpty": {
-    "description": "Ô màn thiết bị (Dự báo, ch_forecast.cpp / XP-Forecast*)"
-  },
-  "devXpForecastNext3": "3 ngày tới",
-  "@devXpForecastNext3": {
-    "description": "Ô màn thiết bị (Dự báo, ch_forecast.cpp / XP-Forecast*)"
-  },
-  "devXpClockGreeting": "{slot, select, night{ngủ ngon nhé} morning{chào buổi sáng} afternoon{chào buổi chiều} evening{chào buổi tối} other{nghỉ ngơi thôi}}, {name}",
-  "@devXpClockGreeting": {
-    "description": "Ô màn thiết bị (Đồng hồ, ch_clock.cpp / XP-Clock)",
-    "placeholders": {
-      "slot": {
-        "type": "String"
-      },
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpClockYou": "bạn",
-  "@devXpClockYou": {
-    "description": "Ô màn thiết bị (Đồng hồ, ch_clock.cpp / XP-Clock)"
-  },
-  "devXpClockWeek": "Tuần {n}",
-  "@devXpClockWeek": {
-    "description": "Ô màn thiết bị (Đồng hồ, ch_clock.cpp / XP-Clock)",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "devXpInfoLabels": "{row, select, ip{IP} ssid{SSID} rssi{Sóng} up{Đã chạy} heap{Bộ nhớ} block{Khối lớn} fw{Firmware} channels{Kênh} updated{Cập nhật} other{Lần tới}}",
-  "@devXpInfoLabels": {
-    "description": "Ô màn thiết bị (Thông tin, ch_info.cpp / XP-Info)",
-    "placeholders": {
-      "row": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpInfoMinutes": "{n}P",
-  "@devXpInfoMinutes": {
-    "description": "Ô màn thiết bị (Thông tin, ch_info.cpp / XP-Info)",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "devXpInfoHeap": "{n}K trống",
-  "@devXpInfoHeap": {
-    "description": "Ô màn thiết bị (Thông tin, ch_info.cpp / XP-Info)",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "devXpInfoAgo": "{n}P trước",
-  "@devXpInfoAgo": {
-    "description": "Ô màn thiết bị (Thông tin, ch_info.cpp / XP-Info)",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "devXpInfoNext": "sau {n}P",
-  "@devXpInfoNext": {
-    "description": "Ô màn thiết bị (Thông tin, ch_info.cpp / XP-Info)",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "devXpSetupLine1": "Để bắt đầu,",
-  "@devXpSetupLine1": {
-    "description": "Ô màn thiết bị (màn hệ thống, display.cpp / XP-SetupMode, XP-OtaProgress)"
-  },
-  "devXpSetupLine2": "kết nối Wi-Fi",
-  "@devXpSetupLine2": {
-    "description": "Ô màn thiết bị (màn hệ thống, display.cpp / XP-SetupMode, XP-OtaProgress)"
-  },
-  "devXpSetupPower": "Cài đặt Wi-Fi",
-  "@devXpSetupPower": {
-    "description": "Ô màn thiết bị (màn hệ thống, display.cpp / XP-SetupMode, XP-OtaProgress)"
-  },
-  "devXpOtaWarn": "Đừng tắt hay rút điện máy.",
-  "@devXpOtaWarn": {
-    "description": "Ô màn thiết bị (màn hệ thống, display.cpp / XP-SetupMode, XP-OtaProgress)"
-  },
-  "devXpNoChannelsHead": "Chưa có kênh",
-  "@devXpNoChannelsHead": {
-    "description": "Ô màn thiết bị (chưa có kênh, xp.cpp drawNoChannels / XP-NoChannels)"
-  },
-  "devXpNoChannelsLine": "Bật kênh trên trang web:",
-  "@devXpNoChannelsLine": {
-    "description": "Ô màn thiết bị (chưa có kênh, xp.cpp drawNoChannels / XP-NoChannels)"
-  },
-  "devXpCardApproval": "Cần duyệt",
-  "@devXpCardApproval": {
-    "description": "Ô màn thiết bị: tiêu đề cửa sổ thẻ agent theo loại (ch_attention windowTitle)"
-  },
-  "devXpCardInput": "Lượt bạn",
-  "@devXpCardInput": {
-    "description": "Ô màn thiết bị: tiêu đề cửa sổ thẻ agent theo loại (ch_attention windowTitle)"
-  },
-  "devXpCardDone": "Xong",
-  "@devXpCardDone": {
-    "description": "Ô màn thiết bị: tiêu đề cửa sổ thẻ agent theo loại (ch_attention windowTitle)"
-  },
-  "devXpCardError": "Lỗi",
-  "@devXpCardError": {
-    "description": "Ô màn thiết bị: tiêu đề cửa sổ thẻ agent theo loại (ch_attention windowTitle)"
-  },
-  "devXpCardProgress": "Đang chạy",
-  "@devXpCardProgress": {
-    "description": "Ô màn thiết bị: tiêu đề cửa sổ thẻ agent theo loại (ch_attention windowTitle)"
-  },
-  "devXpCardWarning": "Cảnh báo",
-  "@devXpCardWarning": {
-    "description": "Ô màn thiết bị: tiêu đề cửa sổ thẻ agent theo loại (ch_attention windowTitle)"
-  },
-  "devXpCardInfo": "Thông tin",
-  "@devXpCardInfo": {
-    "description": "Ô màn thiết bị: tiêu đề cửa sổ thẻ agent theo loại (ch_attention windowTitle)"
-  },
-  "devXpSpanHourMin": "{h}G {m}P",
-  "@devXpSpanHourMin": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "h": {
-        "type": "int"
-      },
-      "m": {
-        "type": "int"
-      }
-    }
-  },
-  "devXpMeta": "{kind, select, keyBad{khóa lỗi} blocked{bị chặn} maintenance{bảo trì} minor{chập chờn} other{sự cố}}",
-  "@devXpMeta": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "kind": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpMetaExpiring": "hạn {left}",
-  "@devXpMetaExpiring": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "left": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpLoading": "Đang tải...",
-  "@devXpLoading": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)"
-  },
-  "devXpWindow": "{kind, select, week{Hạn mức tuần} day{Hạn mức ngày} hours{Phiên {n} giờ} minutes{Phiên {n} phút} other{Hạn mức}}",
-  "@devXpWindow": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "kind": {
-        "type": "String"
-      },
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "devXpProjState": "{state, select, approval{Cần duyệt} input{Chờ bạn} error{Lỗi} working{Đang chạy} other{Xong}}",
-  "@devXpProjState": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "state": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpNoProject": "Chưa có hoạt động project",
-  "@devXpNoProject": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)"
-  },
-  "devXpCredNoun": "{kind, select, claude{khóa} other{token}}",
-  "@devXpCredNoun": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "kind": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpCredNounCap": "{kind, select, claude{Khóa} other{Token}}",
-  "@devXpCredNounCap": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "kind": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpCredWho": "{kind, select, claude{Khóa Claude} other{Token Codex}}",
-  "@devXpCredWho": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "kind": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpCredWhoLower": "{kind, select, claude{khóa Claude} other{token Codex}}",
-  "@devXpCredWhoLower": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "kind": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpBanner": "{noun} {state, select, expired{hết hạn} other{bị từ chối}} · {host}",
-  "@devXpBanner": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "noun": {
-        "type": "String"
-      },
-      "state": {
-        "type": "String"
-      },
-      "host": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpBannerShort": "{state, select, expired{Hết hạn} other{Bị từ chối}} · {host}",
-  "@devXpBannerShort": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "state": {
-        "type": "String"
-      },
-      "host": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpBannerBlocked": "Bị chặn · {noun} vẫn tốt · thử lại",
-  "@devXpBannerBlocked": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "noun": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpBannerBlockedShort": "Bị chặn · {noun} vẫn tốt",
-  "@devXpBannerBlockedShort": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "noun": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpCredHeadRejected": "{noun} bị từ chối",
-  "@devXpCredHeadRejected": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "noun": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpCredRejectedLine": "{host} từ chối {noun}.",
-  "@devXpCredRejectedLine": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "host": {
-        "type": "String"
-      },
-      "noun": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpCredEnterNew": "Nhập {noun} mới tại:",
-  "@devXpCredEnterNew": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "noun": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpCredHeadExpired": "{noun} hết hạn",
-  "@devXpCredHeadExpired": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "noun": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpCredExpiredOn": "Hết hạn ngày {date}.",
-  "@devXpCredExpiredOn": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "date": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpCredExpired": "Đã hết hạn.",
-  "@devXpCredExpired": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)"
-  },
-  "devXpCredHeadBlocked": "Bị chặn",
-  "@devXpCredHeadBlocked": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)"
-  },
-  "devXpCredBlockedLine": "{host} chặn máy này.",
-  "@devXpCredBlockedLine": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "host": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpCredStillGood": "{noun} vẫn tốt.",
-  "@devXpCredStillGood": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "noun": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpCredRetry15": "Thử lại mỗi 15 phút.",
-  "@devXpCredRetry15": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)"
-  },
-  "devXpCredHeadNotSet": "Chưa có {noun}",
-  "@devXpCredHeadNotSet": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "noun": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpCredEnter": "Nhập {noun} tại:",
-  "@devXpCredEnter": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "noun": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpCredHeadOffline": "Mất mạng",
-  "@devXpCredHeadOffline": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)"
-  },
-  "devXpCredUnreachable": "Không tới được {host}.",
-  "@devXpCredUnreachable": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "host": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpCredUnreachableShort": "Không tới {host}.",
-  "@devXpCredUnreachableShort": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "host": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpCredCheckWifi": "Kiểm tra Wi-Fi.",
-  "@devXpCredCheckWifi": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)"
-  },
-  "devXpCredHeadUpstream": "Không đọc được",
-  "@devXpCredHeadUpstream": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)"
-  },
-  "devXpCredUpstreamLine": "{host} trả lỗi:",
-  "@devXpCredUpstreamLine": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "host": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpCredAutoRetry": "Đang tự động thử lại...",
-  "@devXpCredAutoRetry": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)"
-  },
-  "devXpCredStatusNotSet": "Chưa có {who}",
-  "@devXpCredStatusNotSet": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "who": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpCredStatusExpired": "{who} hết hạn",
-  "@devXpCredStatusExpired": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "who": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpCredStatusRejected": "{who} bị từ chối",
-  "@devXpCredStatusRejected": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "who": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpCredStatusBlocked": "{host} chặn máy này",
-  "@devXpCredStatusBlocked": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "host": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpResetIn": "đặt lại sau",
-  "@devXpResetIn": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)"
-  },
-  "devXpCredits": "tín dụng",
-  "@devXpCredits": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)"
-  },
-  "devXpUsed": "Đã dùng",
-  "@devXpUsed": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)"
-  },
-  "devXpNone": "Không có",
-  "@devXpNone": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)"
-  },
-  "devXpWeekResets": "Đặt lại tuần",
-  "@devXpWeekResets": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)"
-  },
-  "devXpNoResets": "Chưa có lượt",
-  "@devXpNoResets": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)"
-  },
-  "devXpResetsLeft": "còn {n}",
-  "@devXpResetsLeft": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "devXpResetsLeftIn": "còn {n} · {span}",
-  "@devXpResetsLeftIn": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      },
-      "span": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpResetsLeftUntil": "còn {n} · đến {date}",
-  "@devXpResetsLeftUntil": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      },
-      "date": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpPaceEmpty": "hết sau {span}",
-  "@devXpPaceEmpty": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "span": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpPaceAtReset": "~{pct}% khi đặt lại",
-  "@devXpPaceAtReset": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "pct": {
-        "type": "int"
-      }
-    }
-  },
-  "devXpAiHero": "Tín dụng Codex còn",
-  "@devXpAiHero": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)"
-  },
-  "devXpAiBad": "{kind, select, blocked{Chặn} other{Khóa}}",
-  "@devXpAiBad": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "kind": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpAiResets": "CL {cl} · CX {cx}",
-  "@devXpAiResets": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "cl": {
-        "type": "String"
-      },
-      "cx": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpAdviceUse": "Dùng {name}",
-  "@devXpAdviceUse": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpAdviceResets": "{name} có {n} lượt đặt lại",
-  "@devXpAdviceResets": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "name": {
-        "type": "String"
-      },
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "devXpAdviceBothLow": "Cả hai sắp hết",
-  "@devXpAdviceBothLow": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)"
-  },
-  "devXpTrendLabel": "7 ngày · % hạn mức tuần",
-  "@devXpTrendLabel": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)"
-  },
-  "devXpTrendToday": "Hôm nay",
-  "@devXpTrendToday": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)"
-  },
-  "devXpTrendPeak": "Đỉnh {day}",
-  "@devXpTrendPeak": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "day": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpTrendHave": "Có {n} / 7 ngày",
-  "@devXpTrendHave": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "n": {
-        "type": "int"
-      }
-    }
-  },
-  "devXpTrendCollecting": "Đang thu thập...",
-  "@devXpTrendCollecting": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)"
-  },
-  "devXpTrendLast": "cuối {d}/{m}",
-  "@devXpTrendLast": {
-    "description": "Ô màn thiết bị (kênh Claude/Codex/AI/Xu hướng, firmware ch_claude/ch_codex/ch_aidash/ch_trend/chrome.cpp)",
-    "placeholders": {
-      "d": {
-        "type": "int"
-      },
-      "m": {
-        "type": "int"
       }
     }
   },
@@ -2989,95 +1964,95 @@
   },
   "startSubtitle": "Start · mở chương trình trên thiết bị",
   "@startSubtitle": {
-    "description": "Đầu Start menu, dưới \"glimmer\""
+    "description": "Không dùng từ 2026-11-27.10. Đầu Start menu, dưới \"glimmer\""
   },
   "startA11y": "Start",
   "@startA11y": {
-    "description": "Nhãn đọc màn hình nút / bảng Start"
+    "description": "Không dùng từ 2026-11-27.10. Nhãn đọc màn hình nút / bảng Start"
   },
   "startClaudeSub": "mức dùng, project",
   "@startClaudeSub": {
-    "description": "Dòng phụ Claude trong Start"
+    "description": "Không dùng từ 2026-11-27.10. Dòng phụ Claude trong Start"
   },
   "startCodexSub": "mức dùng",
   "@startCodexSub": {
-    "description": "Dòng phụ Codex trong Start"
+    "description": "Không dùng từ 2026-11-27.10. Dòng phụ Codex trong Start"
   },
   "startDesktop": "Desktop",
   "@startDesktop": {
-    "description": "Start, cột phải"
+    "description": "Không dùng từ 2026-11-27.10. Start, cột phải"
   },
   "startDetails": "Số liệu",
   "@startDetails": {
-    "description": "Start, cột phải → màn Số liệu"
+    "description": "Không dùng từ 2026-11-27.10. Start, cột phải → màn Số liệu"
   },
   "startControlPanel": "Bảng điều khiển",
   "@startControlPanel": {
-    "description": "Start, cột phải → Cài đặt"
+    "description": "Không dùng từ 2026-11-27.10. Start, cột phải → Cài đặt"
   },
   "startControlPanelSub": "Cài đặt",
   "@startControlPanelSub": {
-    "description": "Dòng phụ"
+    "description": "Không dùng từ 2026-11-27.10. Dòng phụ"
   },
   "startAddRemove": "Thêm / gỡ",
   "@startAddRemove": {
-    "description": "Start, cột phải → Skill"
+    "description": "Không dùng từ 2026-11-27.10. Start, cột phải → Skill"
   },
   "startAddRemoveSub": "chương trình · Skill",
   "@startAddRemoveSub": {
-    "description": "Dòng phụ"
+    "description": "Không dùng từ 2026-11-27.10. Dòng phụ"
   },
   "startDevice": "Thiết bị",
   "@startDevice": {
-    "description": "Start, cột phải → Thiết bị"
+    "description": "Không dùng từ 2026-11-27.10. Start, cột phải → Thiết bị"
   },
   "startDeviceSub": "firmware, sao lưu",
   "@startDeviceSub": {
-    "description": "Dòng phụ"
+    "description": "Không dùng từ 2026-11-27.10. Dòng phụ"
   },
   "startAllPrograms": "Tất cả chương trình",
   "@startAllPrograms": {
-    "description": "Hàng cuối Start → bảng Tất cả chương trình"
+    "description": "Không dùng từ 2026-11-27.10. Hàng cuối Start → bảng Tất cả chương trình"
   },
   "startTurnOff": "Tắt màn",
   "@startTurnOff": {
-    "description": "Chân Start (amber)"
+    "description": "Không dùng từ 2026-11-27.10. Chân Start (amber)"
   },
   "startRestart": "Khởi động lại",
   "@startRestart": {
-    "description": "Chân Start (coral) → POST /api/reboot"
+    "description": "Không dùng từ 2026-11-27.10. Chân Start (coral) → POST /api/reboot"
   },
   "allProgramsTitle": "Tất cả chương trình",
   "@allProgramsTitle": {
-    "description": "Tiêu đề bảng"
+    "description": "Không dùng từ 2026-11-27.10. Tiêu đề bảng"
   },
   "allProgramsBackA11y": "Về Start",
   "@allProgramsBackA11y": {
-    "description": "Nút quay lại"
+    "description": "Không dùng từ 2026-11-27.10. Nút quay lại"
   },
   "allProgramsGroupAgent": "AGENT",
   "@allProgramsGroupAgent": {
-    "description": "Nhóm"
+    "description": "Không dùng từ 2026-11-27.10. Nhóm"
   },
   "allProgramsGroupOther": "THỜI TIẾT · ĐỒNG HỒ · ẢNH",
   "@allProgramsGroupOther": {
-    "description": "Nhóm"
+    "description": "Không dùng từ 2026-11-27.10. Nhóm"
   },
   "allProgramsGroupSystem": "HỆ THỐNG",
   "@allProgramsGroupSystem": {
-    "description": "Nhóm"
+    "description": "Không dùng từ 2026-11-27.10. Nhóm"
   },
   "allProgramsOpenLegend": "● = đang mở",
   "@allProgramsOpenLegend": {
-    "description": "Chú thích chấm mint"
+    "description": "Không dùng từ 2026-11-27.10. Chú thích chấm mint"
   },
   "allProgramsAddRemove": "Thêm / gỡ chương trình",
   "@allProgramsAddRemove": {
-    "description": "Hàng cuối bảng → Skill"
+    "description": "Không dùng từ 2026-11-27.10. Hàng cuối bảng → Skill"
   },
   "allProgramsAddRemoveSub": "bật skill mới: {names} sắp có",
   "@allProgramsAddRemoveSub": {
-    "description": "Dòng phụ",
+    "description": "Không dùng từ 2026-11-27.10. Dòng phụ",
     "placeholders": {
       "names": {
         "type": "String"
@@ -3086,162 +2061,401 @@
   },
   "appClaude": "Claude",
   "@appClaude": {
-    "description": "Tên chương trình"
+    "description": "Không dùng từ 2026-11-27.10. Tên chương trình"
   },
   "appCodex": "Codex",
   "@appCodex": {
-    "description": "Tên chương trình"
+    "description": "Không dùng từ 2026-11-27.10. Tên chương trình"
   },
   "appAi": "AI",
   "@appAi": {
-    "description": "Tên chương trình"
+    "description": "Không dùng từ 2026-11-27.10. Tên chương trình"
   },
   "appTrend": "Xu hướng",
   "@appTrend": {
-    "description": "Tên chương trình"
+    "description": "Không dùng từ 2026-11-27.10. Tên chương trình"
   },
   "appAgents": "Agents",
   "@appAgents": {
-    "description": "Tên chương trình"
+    "description": "Không dùng từ 2026-11-27.10. Tên chương trình"
   },
   "appPhoto": "Ảnh",
   "@appPhoto": {
-    "description": "Tên chương trình"
+    "description": "Không dùng từ 2026-11-27.10. Tên chương trình"
   },
   "appWeather": "Thời tiết",
   "@appWeather": {
-    "description": "Tên chương trình"
+    "description": "Không dùng từ 2026-11-27.10. Tên chương trình"
   },
   "appForecast": "Dự báo",
   "@appForecast": {
-    "description": "Tên chương trình"
+    "description": "Không dùng từ 2026-11-27.10. Tên chương trình"
   },
   "appClock": "Đồng hồ",
   "@appClock": {
-    "description": "Tên chương trình"
+    "description": "Không dùng từ 2026-11-27.10. Tên chương trình"
   },
   "appInfo": "Thông tin",
   "@appInfo": {
-    "description": "Tên chương trình"
+    "description": "Không dùng từ 2026-11-27.10. Tên chương trình"
   },
   "appChat": "Tin nhắn",
   "@appChat": {
-    "description": "Tên chương trình (skill sắp có)"
+    "description": "Không dùng từ 2026-11-27.10. Tên chương trình (skill sắp có)"
   },
-  "devXpTitleDateTime": "Ngày và Giờ",
-  "@devXpTitleDateTime": {
-    "description": "Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)"
+  "settingsSectionWeather": "THỜI TIẾT",
+  "@settingsSectionWeather": {
+    "description": "Nhóm Cài đặt"
   },
-  "devXpTabNow": "Hiện tại",
-  "@devXpTabNow": {
-    "description": "Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)"
+  "settingsWeatherLocation": "Vị trí thời tiết",
+  "@settingsWeatherLocation": {
+    "description": "Dòng Cài đặt → màn Vị trí thời tiết; phụ = tên nơi hoặc settingsWeatherLocationNone"
   },
-  "devXpTabForecast": "Dự báo",
-  "@devXpTabForecast": {
-    "description": "Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)"
+  "settingsWeatherLocationNone": "chưa đặt",
+  "@settingsWeatherLocationNone": {
+    "description": "Phụ khi thiết bị chưa có vị trí"
   },
-  "devXpTabDateTime": "Ngày và giờ",
-  "@devXpTabDateTime": {
-    "description": "Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)"
+  "weatherLocationTitle": "Vị trí thời tiết",
+  "@weatherLocationTitle": {
+    "description": "Tiêu đề thanh trên"
   },
-  "devXpTabTimeZone": "Múi giờ",
-  "@devXpTabTimeZone": {
-    "description": "Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)"
+  "weatherLocationCurrent": "THIẾT BỊ ĐANG DÙNG",
+  "@weatherLocationCurrent": {
+    "description": "Nhãn thẻ vị trí hiện tại"
   },
-  "devXpGroupDate": "Ngày",
-  "@devXpGroupDate": {
-    "description": "Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)"
-  },
-  "devXpGroupTime": "Giờ",
-  "@devXpGroupTime": {
-    "description": "Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)"
-  },
-  "devXpWeekdayShort": "{day, select, 1{T2} 2{T3} 3{T4} 4{T5} 5{T6} 6{T7} other{CN}}",
-  "@devXpWeekdayShort": {
-    "description": "Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)",
+  "weatherLocationCoords": "{lat}, {lon}",
+  "@weatherLocationCoords": {
+    "description": "Toạ độ, 2 số lẻ",
     "placeholders": {
-      "day": {
+      "lat": {
         "type": "String"
-      }
-    }
-  },
-  "devXpClockZone": "Múi giờ: {zone}",
-  "@devXpClockZone": {
-    "description": "Ô màn thiết bị (Ngày và Giờ, ch_clock.cpp / XP-Clock-Props, panel P-2026-11-26.17)",
-    "placeholders": {
-      "zone": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpRowFeels": "Cảm giác:",
-  "@devXpRowFeels": {
-    "description": "Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)"
-  },
-  "devXpRowHumidity": "Độ ẩm:",
-  "@devXpRowHumidity": {
-    "description": "Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)"
-  },
-  "devXpRowWind": "Gió:",
-  "@devXpRowWind": {
-    "description": "Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)"
-  },
-  "devXpRowUv": "Chỉ số UV:",
-  "@devXpRowUv": {
-    "description": "Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)"
-  },
-  "devXpRowHiLo": "Cao / thấp:",
-  "@devXpRowHiLo": {
-    "description": "Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)"
-  },
-  "devXpRowSun": "{event, select, set{Mặt trời lặn:} other{Mặt trời mọc:}}",
-  "@devXpRowSun": {
-    "description": "Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)",
-    "placeholders": {
-      "event": {
-        "type": "String"
-      }
-    }
-  },
-  "devXpUvValue": "{n} · {level, select, low{thấp} moderate{trung bình} high{cao} veryHigh{rất cao} other{cực cao}}",
-  "@devXpUvValue": {
-    "description": "Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)",
-    "placeholders": {
-      "n": {
-        "type": "int"
       },
-      "level": {
+      "lon": {
         "type": "String"
       }
     }
   },
-  "devXpWindValue": "{n} km/h",
-  "@devXpWindValue": {
-    "description": "Ô màn thiết bị (Thời tiết tab Hiện tại, ch_weather.cpp / XP-Weather-Props, panel P-2026-11-26.17)",
+  "weatherLocationRename": "Sửa tên",
+  "@weatherLocationRename": {
+    "description": "Nút chữ → bảng sửa tên"
+  },
+  "weatherLocationClear": "Xoá vị trí",
+  "@weatherLocationClear": {
+    "description": "Nút chữ coral → hỏi xoá"
+  },
+  "weatherLocationUnsetBody": "Thiết bị chưa lấy được thời tiết. Chọn một nơi bên dưới.",
+  "@weatherLocationUnsetBody": {
+    "description": "Thẻ khi chưa đặt (tiêu đề dùng weatherNoLocationTitle)"
+  },
+  "weatherLocationOldFwNote": "Firmware này chưa hiện tên nơi — thiết bị chỉ nhận toạ độ. Cập nhật firmware để thấy tên trên màn Thời tiết và Đồng hồ.",
+  "@weatherLocationOldFwNote": {
+    "description": "Thẻ hiện tại, firmware không có weatherPlace"
+  },
+  "weatherLocationUseGps": "Dùng vị trí hiện tại",
+  "@weatherLocationUseGps": {
+    "description": "Nút GPS"
+  },
+  "weatherLocationUseGpsSub": "Chỉ lấy khi bạn bấm, rồi hỏi lại trước khi gửi.",
+  "@weatherLocationUseGpsSub": {
+    "description": "Phụ nút GPS"
+  },
+  "weatherLocationGpsLoading": "Đang lấy vị trí…",
+  "@weatherLocationGpsLoading": {
+    "description": "Nút GPS khi đang lấy"
+  },
+  "weatherLocationGpsLoadingSub": "Chờ định vị của điện thoại, vài giây.",
+  "@weatherLocationGpsLoadingSub": {
+    "description": "Phụ khi đang lấy"
+  },
+  "weatherLocationGpsDeniedTitle": "Chưa cho phép vị trí",
+  "@weatherLocationGpsDeniedTitle": {
+    "description": "Thanh báo amber"
+  },
+  "weatherLocationGpsDeniedBody": "App cần quyền vị trí để lấy toạ độ của điện thoại. Hoặc tìm thành phố bên dưới.",
+  "@weatherLocationGpsDeniedBody": {
+    "description": "Thanh báo"
+  },
+  "weatherLocationOpenAppSettings": "Mở cài đặt điện thoại",
+  "@weatherLocationOpenAppSettings": {
+    "description": "Nút viền khi quyền bị từ chối hẳn"
+  },
+  "weatherLocationGpsOffTitle": "Định vị đang tắt",
+  "@weatherLocationGpsOffTitle": {
+    "description": "Thanh báo amber"
+  },
+  "weatherLocationGpsOffBody": "Bật định vị (GPS) của điện thoại rồi bấm lại.",
+  "@weatherLocationGpsOffBody": {
+    "description": "Thanh báo"
+  },
+  "weatherLocationTurnOnGps": "Bật định vị",
+  "@weatherLocationTurnOnGps": {
+    "description": "Nút viền → cài đặt vị trí của hệ thống"
+  },
+  "weatherLocationGpsFailTitle": "Không lấy được vị trí",
+  "@weatherLocationGpsFailTitle": {
+    "description": "Thanh báo coral"
+  },
+  "weatherLocationGpsFailBody": "Điện thoại chưa định vị được (trong nhà, sóng yếu). Thử lại hoặc tìm thành phố.",
+  "@weatherLocationGpsFailBody": {
+    "description": "Thanh báo; nút commonRetry"
+  },
+  "weatherLocationSearchSection": "HOẶC TÌM THÀNH PHỐ",
+  "@weatherLocationSearchSection": {
+    "description": "Nhãn nhóm"
+  },
+  "weatherLocationSearchHint": "Tên thành phố, vd Đà Nẵng",
+  "@weatherLocationSearchHint": {
+    "description": "Chữ mờ ô tìm"
+  },
+  "weatherLocationSearchPrivacy": "Chữ bạn gõ được gửi tới Open-Meteo để tìm (như trang web của thiết bị).",
+  "@weatherLocationSearchPrivacy": {
+    "description": "Ghi chú dưới ô tìm"
+  },
+  "weatherLocationSearchClearA11y": "Xoá chữ",
+  "@weatherLocationSearchClearA11y": {
+    "description": "Nhãn đọc màn hình nút × trong ô tìm"
+  },
+  "weatherLocationSearching": "Đang tìm…",
+  "@weatherLocationSearching": {
+    "description": "Dòng khi đang tìm"
+  },
+  "weatherLocationResultSub": "{area} · {lat}, {lon}",
+  "@weatherLocationResultSub": {
+    "description": "Dòng phụ kết quả; area = \"Tỉnh, Nước\"",
     "placeholders": {
-      "n": {
-        "type": "int"
+      "area": {
+        "type": "String"
+      },
+      "lat": {
+        "type": "String"
+      },
+      "lon": {
+        "type": "String"
       }
     }
   },
-  "devXpColDay": "Ngày",
-  "@devXpColDay": {
-    "description": "Ô màn thiết bị (Thời tiết tab Dự báo, ch_forecast.cpp / XP-Forecast-Details, panel P-2026-11-26.17)"
+  "weatherLocationNoResultsTitle": "Không thấy “{query}”",
+  "@weatherLocationNoResultsTitle": {
+    "description": "Không có kết quả",
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
   },
-  "devXpColSky": "Trời",
-  "@devXpColSky": {
-    "description": "Ô màn thiết bị (Thời tiết tab Dự báo, ch_forecast.cpp / XP-Forecast-Details, panel P-2026-11-26.17)"
+  "weatherLocationNoResultsBody": "Kiểm tra chính tả, hoặc thử tên không dấu / tên tiếng Anh.",
+  "@weatherLocationNoResultsBody": {
+    "description": "Không có kết quả"
   },
-  "devXpColLow": "Thấp",
-  "@devXpColLow": {
-    "description": "Ô màn thiết bị (Thời tiết tab Dự báo, ch_forecast.cpp / XP-Forecast-Details, panel P-2026-11-26.17)"
+  "weatherLocationSearchErrorTitle": "Không tìm được",
+  "@weatherLocationSearchErrorTitle": {
+    "description": "Lỗi mạng, coral"
   },
-  "devXpColHigh": "Cao",
-  "@devXpColHigh": {
-    "description": "Ô màn thiết bị (Thời tiết tab Dự báo, ch_forecast.cpp / XP-Forecast-Details, panel P-2026-11-26.17)"
+  "weatherLocationSearchErrorBody": "Điện thoại không tới được Open-Meteo. Kiểm tra mạng rồi thử lại.",
+  "@weatherLocationSearchErrorBody": {
+    "description": "Lỗi mạng; nút commonRetry"
   },
-  "devXpDayTodayLong": "Hôm nay",
-  "@devXpDayTodayLong": {
-    "description": "Ô màn thiết bị (Thời tiết tab Dự báo, ch_forecast.cpp / XP-Forecast-Details, panel P-2026-11-26.17)"
+  "weatherLocationConfirmTitle": "Đặt vị trí này?",
+  "@weatherLocationConfirmTitle": {
+    "description": "Tiêu đề bảng xác nhận"
+  },
+  "weatherLocationRenameTitle": "Sửa tên nơi",
+  "@weatherLocationRenameTitle": {
+    "description": "Tiêu đề bảng khi bấm Sửa tên"
+  },
+  "weatherLocationNameLabel": "TÊN HIỆN TRÊN THIẾT BỊ",
+  "@weatherLocationNameLabel": {
+    "description": "Nhãn ô tên"
+  },
+  "weatherLocationNameCount": "{n}/16",
+  "@weatherLocationNameCount": {
+    "description": "Bộ đếm ký tự",
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "weatherLocationNameHint": "Tối đa 16 ký tự để vừa khe trên màn thiết bị.",
+  "@weatherLocationNameHint": {
+    "description": "Dưới ô tên"
+  },
+  "weatherLocationPreview": "TRÊN THIẾT BỊ",
+  "@weatherLocationPreview": {
+    "description": "Nhãn khung xem trước"
+  },
+  "weatherLocationPreviewWeather": "Thời tiết: {desc} · {place}",
+  "@weatherLocationPreviewWeather": {
+    "description": "Xem trước dòng cửa sổ Thời tiết",
+    "placeholders": {
+      "desc": {
+        "type": "String"
+      },
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "weatherLocationPreviewClock": "Đồng hồ: Múi giờ: GMT{offset} · {place}",
+  "@weatherLocationPreviewClock": {
+    "description": "Xem trước dòng múi giờ",
+    "placeholders": {
+      "offset": {
+        "type": "String"
+      },
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "weatherLocationApply": "Đặt cho thiết bị",
+  "@weatherLocationApply": {
+    "description": "Nút chính bảng xác nhận"
+  },
+  "weatherLocationApplyCoords": "Đặt toạ độ cho thiết bị",
+  "@weatherLocationApplyCoords": {
+    "description": "Nút chính khi firmware cũ"
+  },
+  "weatherLocationSaveName": "Lưu tên",
+  "@weatherLocationSaveName": {
+    "description": "Nút chính bảng sửa tên"
+  },
+  "weatherLocationSending": "Đang gửi…",
+  "@weatherLocationSending": {
+    "description": "Nút chính khi đang gửi"
+  },
+  "weatherLocationRejectedTitle": "Thiết bị không nhận",
+  "@weatherLocationRejectedTitle": {
+    "description": "Thanh báo trong bảng, coral"
+  },
+  "weatherLocationRejectedBody": "Vị trí trên thiết bị chưa đổi. Kiểm tra thiết bị còn cùng mạng rồi thử lại.",
+  "@weatherLocationRejectedBody": {
+    "description": "Thanh báo; nút chính thành commonRetry"
+  },
+  "weatherLocationOldFwSheet": "Firmware này chưa hiện tên nơi: thiết bị chỉ nhận toạ độ.",
+  "@weatherLocationOldFwSheet": {
+    "description": "Bảng xác nhận, firmware cũ (thay ô tên)"
+  },
+  "weatherLocationDone": "Đã đặt {place} cho thiết bị.",
+  "@weatherLocationDone": {
+    "description": "Thông báo nhỏ sau khi thiết bị nhận",
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "weatherLocationClearTitle": "Xoá vị trí thời tiết?",
+  "@weatherLocationClearTitle": {
+    "description": "Hộp thoại"
+  },
+  "weatherLocationClearBody": "Thiết bị sẽ không lấy thời tiết và dự báo nữa, tên “{place}” cũng bỏ khỏi màn Thời tiết và Đồng hồ. Mọi điện thoại cùng thấy thay đổi này.",
+  "@weatherLocationClearBody": {
+    "description": "Hộp thoại",
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
+  "weatherLocationClearOk": "Xoá",
+  "@weatherLocationClearOk": {
+    "description": "Nút coral hộp thoại"
+  },
+  "controlTrackpadA11y": "Bàn rê: rê một ngón để di chuột trên thiết bị, chạm nhẹ để click",
+  "@controlTrackpadA11y": {
+    "description": "Nhãn đọc màn hình bàn rê"
+  },
+  "controlMouseLeft": "Trái",
+  "@controlMouseLeft": {
+    "description": "Nút chuột trái dưới bàn rê"
+  },
+  "controlMouseRight": "Phải",
+  "@controlMouseRight": {
+    "description": "Nút chuột phải dưới bàn rê"
+  },
+  "controlMouseLeftA11y": "Chuột trái",
+  "@controlMouseLeftA11y": {
+    "description": "Nhãn đọc màn hình"
+  },
+  "controlMouseRightA11y": "Chuột phải",
+  "@controlMouseRightA11y": {
+    "description": "Nhãn đọc màn hình"
+  },
+  "controlKeysA11y": "Phím",
+  "@controlKeysA11y": {
+    "description": "Nhóm phím"
+  },
+  "keyWindows": "Windows",
+  "@keyWindows": {
+    "description": "Phím Windows (lá cờ) — mở / đóng Start trên thiết bị"
+  },
+  "keyAltTab": "Alt+Tab",
+  "@keyAltTab": {
+    "description": "Phím tổ hợp có sẵn — cửa sổ kế"
+  },
+  "keyAltF4": "Alt+F4",
+  "@keyAltF4": {
+    "description": "Phím tổ hợp có sẵn — đóng cửa sổ trên cùng"
+  },
+  "keyEsc": "Esc",
+  "@keyEsc": {
+    "description": "Phím"
+  },
+  "keyTab": "Tab",
+  "@keyTab": {
+    "description": "Phím"
+  },
+  "keyEnter": "Enter",
+  "@keyEnter": {
+    "description": "Phím"
+  },
+  "keyLeft": "Trái",
+  "@keyLeft": {
+    "description": "Nhãn đọc màn hình phím mũi tên"
+  },
+  "keyUp": "Lên",
+  "@keyUp": {
+    "description": "Nhãn đọc màn hình phím mũi tên"
+  },
+  "keyDown": "Xuống",
+  "@keyDown": {
+    "description": "Nhãn đọc màn hình phím mũi tên"
+  },
+  "keyRight": "Phải",
+  "@keyRight": {
+    "description": "Nhãn đọc màn hình phím mũi tên"
+  },
+  "keyText": "Chữ",
+  "@keyText": {
+    "description": "Phím mở bàn phím chữ (chưa dùng, mờ)"
+  },
+  "keyTextSoon": "sắp có",
+  "@keyTextSoon": {
+    "description": "Dòng phụ dưới phím Chữ"
+  },
+  "powerOff": "Tắt máy",
+  "@powerOff": {
+    "description": "Nhãn đọc màn hình nút nguồn khi đang bật"
+  },
+  "powerOn": "Bật máy",
+  "@powerOn": {
+    "description": "Nút nguồn khi máy tắt; nút to giữa bàn rê"
+  },
+  "powerShutting": "Đang tắt máy",
+  "@powerShutting": {
+    "description": "Nhãn đọc màn hình nút nguồn khi đang tắt"
+  },
+  "powerBooting": "Đang khởi động",
+  "@powerBooting": {
+    "description": "Nhãn đọc màn hình nút nguồn khi đang khởi động"
+  },
+  "controlNightA11y": "Chế độ đêm",
+  "@controlNightA11y": {
+    "description": "Nút vuông chế độ đêm"
+  },
+  "controlDetailsA11y": "Số liệu",
+  "@controlDetailsA11y": {
+    "description": "Nút vuông → màn Số liệu"
   }
 }

@@ -31,6 +31,10 @@ abstract final class Routes {
   static const photoCropName = 'photo';
   static const photoCrop = '$dashboard/$photoCropName';
 
+  /// Vị trí thời tiết (2026-11-26.9): đẩy từ Cài đặt › THỜI TIẾT và từ tab Thời tiết của Số liệu, ngoài khung tab.
+  static const weatherLocationName = 'weather';
+  static const weatherLocation = '$settings/$weatherLocationName';
+
   /// Tab 2–4, dùng chung mọi skill.
   static const sharedTabs = [skills, settings, device];
 

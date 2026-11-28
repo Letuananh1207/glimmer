@@ -74,6 +74,53 @@ Mức độ: `chặn dùng` · `khó chịu` · `nhỏ` (chữ, giao diện).
 - 2026-11-26: đo `maxblk` ở 4 màn = 19 096 cả 4 (phân mảnh từ lúc khởi động). Người dùng rút điện cắm lại → vào được, `maxblk` 20 624.
 - 2026-11-26: thử 2 chưa đạt; thử nghiệm ngưỡng 12 000 đạt; bạn chốt cổng mới; thử 3 đạt trên máy.
 
+### L-5 · Claude: dự án glimmer kẹt mãi ở "Cần duyệt" từ phiên ở máy tính khác
+
+- Trạng thái: chờ thử máy · Mức độ: khó chịu (bảng dự án báo sai, che trạng thái thật của phiên đang chạy) · Phần: bảng dự án màn Claude (`projects_core.h`, `attention.cpp`) · Quy tắc: "Project board" (`CLAUDE.md`)
+- Báo: 2026-11-27 — "ở claude khi trạng thái của glimmer vẫn cứ mắc ở cần duyệt cái này là trạng thái ở lượt kết nối wifi với máy khác"
+- Các bước: 1. Thiết bị chung Wi-Fi với máy tính A, Claude Code trong glimmer hỏi duyệt (PermissionRequest). 2. Máy A rời mạng / tắt trước khi gửi sự kiện tiếp theo của phiên đó. 3. Chuyển sang máy tính B, dùng Claude Code trong glimmer (hook có gửi). 4. Khởi động lại thiết bị.
+- Mong đợi / thực tế: dòng glimmer theo phiên đang chạy ở máy B / mãi "Cần duyệt", qua cả khởi động lại.
+- Bằng chứng: chưa có ảnh; người dùng xác nhận đã khởi động lại và đã dùng Claude Code ở máy B mà vẫn kẹt.
+
+**Sửa**
+- Nguyên nhân: bảng dự án giữ một mục cho mỗi **phiên** (dự án + agent + session id); mỗi dự án hiện một dòng = phiên khẩn nhất. `Projects::shown()` giữ `P_APPROVAL` / `P_INPUT` **vô hạn** ("tới khi trả lời") — chỉ sự kiện của chính phiên đó mới đổi được. Phiên ở máy A không bao giờ gửi nữa → mục "Cần duyệt" sống mãi, và vì khẩn hơn `P_WORKING` / `P_DONE` của phiên máy B nên che dòng glimmer. Bảng lưu vào `/projects.bin` nên khởi động lại không xoá.
+- Hành vi (bạn chốt 2026-11-27): một phiên đang chờ (Cần duyệt / Chờ bạn) **nhường** khi một phiên khác cùng dự án + cùng agent có sự kiện muộn hơn lần cuối của nó ≥ 10 phút (`kSupersedeS`); và **hết hạn** khi ≥ 2 giờ không có sự kiện nào của nó (`kWaitS`). Agent khác (Codex) cùng repo không làm Claude nhường.
+- Test: `test/test_logic` `test_projects_stale_wait_released` — `(L-5)`: đỏ trước khi sửa (vẫn `P_APPROVAL`), xanh sau; `pio test` 64/64.
+- Code: `src/data/projects_core.h` — `waiting()`, `superseded()`, `visible()`; `shown()` hết hạn chờ sau `kWaitS`; `ordered()` dùng `visible()`. Màn Claude đã vẽ lại bảng mỗi phút nên dòng tự đổi. RAM không đổi (44 828 B).
+- Thử máy: nạp firmware (giữ filesystem, `/projects.bin` còn mục cũ) → mở cửa sổ Claude: mục "Cần duyệt" cũ (> 2 giờ không sự kiện) biến mất ngay; hoặc dùng Claude Code trong glimmer ở máy này ~10 phút → dòng glimmer theo phiên này (Đang chạy / Xong). Còn kẹt → gửi `/api/state` (mảng `projects`).
+- Commit: `e17fb1f`. Đã nạp lên máy 2026-11-27 (kèm filesystem): dòng glimmer theo phiên máy này ("working").
+
+**Lịch sử**
+- 2026-11-27: ghi + tìm nguyên nhân; bạn chốt "phiên mới hơn thắng + hết hạn 2 giờ"; sửa, test xanh, chờ thử máy.
+
 ## Đã xong
 
-_(chưa có)_
+### L-8 · Di chuột trên cửa sổ Ảnh, Thời tiết...: chỗ con trỏ hiện ô trắng tạm thời
+
+- Trạng thái: xong · Mức độ: khó chịu (không thấy rõ con trỏ ở các cửa sổ đó; vẫn dùng được) · Phần: con trỏ chuột
+  (`cursor.cpp`, `repaintRect` của `main.cpp`, `display.cpp`) · Quy tắc: Mouse, keyboard, power (`CLAUDE.md`, R-DK-17)
+- Báo: 2026-11-27 — "khi di chuyển con chuột ở 1 số tab như ảnh, thời tiết, ... đang bị hiện ô trắng thay cho con
+  chuột"; hỏi thêm: "Nó chỉ là ô trắng tạm thời ở vị trí con trỏ"
+- Các bước: 1. Firmware 46a1450 (P-2026-11-27.24), app ở chế độ chuột. 2. Mở cửa sổ Ảnh hoặc Thời tiết. 3. Rê con trỏ.
+- Mong đợi / thực tế: con trỏ mũi tên đi theo, nền dưới nó giữ nguyên / chỗ con trỏ chớp ô trắng (nền) trong lúc đi.
+- Bằng chứng: `/api/state` `cursor.repaint_ms` 65, `repaint_max` 271 ms; chưa có ảnh.
+
+**Sửa**
+- Nguyên nhân: màn không đọc lại được điểm ảnh, nên dời con trỏ = vẽ lại ô cũ (`repaintRect`) thẳng lên màn: tô nền
+  trước (trang trắng của Thời tiết, thân cửa sổ của Ảnh) rồi mới nạp font (~30 ms mỗi font) / giải mã JPEG (tới 271 ms)
+  để vẽ chữ / ảnh → trong lúc đó ô nền lộ ra ngay chỗ con trỏ.
+- Test: chưa khoá được bằng test (kết xuất lên màn thật; host test không có TFT). Build + `pio test -e native` 71/71.
+- Code: `src/core/display.{h,cpp}` — vẽ lại dưới con trỏ vào sprite cỡ ô cắt (tạo khi vẽ lại, ~1 KB + đối tượng
+  ~0,4 KB, xoá ngay sau), đẩy lên màn một lần; `tft` thành `(*g_tft)` (panel hoặc sprite), font của sprite riêng
+  (font của màn giữ nguyên); `Display::pushImage` cho JPEG (`photos.cpp`, `wallpaper.cpp`). Không đủ heap tạo sprite
+  → vẽ thẳng như cũ. RAM tĩnh +24 B.
+- Thử máy: nạp firmware, rút điện cắm lại; mở Ảnh, rồi Thời tiết, rê con trỏ nhanh / chậm qua chữ và ảnh: không còn
+  ô trắng, chỗ cũ trở lại đúng nền / chữ / ảnh. Con trỏ có thể đi hơi trễ ở Ảnh (giải mã JPEG). Còn lỗi → quay video
+  màn thiết bị + gửi `/api/state` `cursor`.
+- Commit: 3f4ec11
+
+**Lịch sử**
+- 2026-11-27: ghi lỗi.
+- 2026-11-27: sửa, chờ thử máy.
+- 2026-11-27: thử máy (192.168.10.51) đạt → xong.
+

@@ -15,9 +15,13 @@
 #include "xp_core.h"
 #include "photos_core.h"
 #include "control_core.h"
+#include "clock_core.h"
 #include "desk_wallpaper.h"
 #include "clawd_work_core.h"
 #include "clawd_work.h"
+#include "cursor_core.h"
+#include "mines_core.h"
+#include "pointer_core.h"
 #include <time.h>
 #include <initializer_list>
 #if defined(_WIN32)   // host tests on Windows (MinGW) lack the POSIX localtime_r
@@ -726,7 +730,7 @@ void test_taskbar_state_looks() {
 }
 
 // P-2026-11-26.15: weather skill on → tray from x 176 with the weather icon,
-// only 3 window buttons; the tray balloon shows ~10 s and pops up on weather news.
+// only 3 window buttons (P-2026-11-26.21: no balloon any more).
 void test_tray_weather_and_balloon() {
     using namespace XPCore;
     TEST_ASSERT_EQUAL(196, trayX(false));
@@ -742,29 +746,6 @@ void test_tray_weather_and_balloon() {
     TEST_ASSERT_EQUAL(PROG_NONE, s.prog[3]);
     TEST_ASSERT_EQUAL(2, s.pressed);
     TEST_ASSERT_TRUE(buttonX(2) + kBtnW <= kTrayXWeather);
-    // Balloon: 10 s from show, × hides at once, millis() wrap-safe.
-    Balloon b;
-    TEST_ASSERT_FALSE(balloonVisible(b, 1000));
-    balloonShow(b, 1000);
-    TEST_ASSERT_TRUE(balloonVisible(b, 1000));
-    TEST_ASSERT_TRUE(balloonVisible(b, 10999));
-    TEST_ASSERT_FALSE(balloonVisible(b, 11001));
-    balloonShow(b, 0xFFFFF000u);                       // across the 49-day wrap
-    TEST_ASSERT_TRUE(balloonVisible(b, 0x00000100u));
-    balloonHide(b);
-    TEST_ASSERT_FALSE(balloonVisible(b, 0x00000100u));
-    // News: another description, or ≥ 3°, or a reading appearing / going.
-    TEST_ASSERT_FALSE(weatherNews(true, true, 29.f, true, 30.9f));
-    TEST_ASSERT_TRUE(weatherNews(true, true, 29.f, true, 32.f));
-    TEST_ASSERT_TRUE(weatherNews(true, true, 29.f, true, 26.f));
-    TEST_ASSERT_TRUE(weatherNews(true, false, 29.f, true, 29.f));
-    TEST_ASSERT_TRUE(weatherNews(true, true, 29.f, false, 0.f));
-    TEST_ASSERT_TRUE(weatherNews(false, true, 0.f, true, 29.f));
-    TEST_ASSERT_FALSE(weatherNews(false, true, 0.f, false, 0.f));
-    // Erasing it repaints box + tail: x 96..235, y 138..211; an icon in column 1 row 4 is under it.
-    TEST_ASSERT_EQUAL(74, kBalAreaH);
-    TEST_ASSERT_TRUE(hits(120 - 18, 152 - 6, 36, 30, kBalAreaX, kBalAreaY, kBalAreaW, kBalAreaH));
-    TEST_ASSERT_FALSE(hits(40 - 18, 152 - 6, 36, 30, kBalAreaX, kBalAreaY, kBalAreaW, kBalAreaH));
 }
 
 // P-2026-11-26.16 (XP-Open): the title bar zooms between the taskbar button and
@@ -998,6 +979,43 @@ void test_projects_sessions_merge_per_project() {
     TEST_ASSERT_EQUAL(Projects::P_APPROVAL, b.e[ord[0]].state);
 }
 
+// (L-5) A session left waiting on another computer (it left the network, so
+// its next event never came) must not pin the project to "Cần duyệt": a newer
+// session of the same project and agent, active ≥ kSupersedeS after it, wins;
+// and any wait with no event for kWaitS is dropped.
+void test_projects_stale_wait_released() {
+    Projects::Board b; Projects::clearAll(b);
+    const uint32_t t = 3000000;
+    Attention::HookEvent oldPc = hev("Notification", "C:/src/glimmer", "permission_prompt", "Bash");
+    oldPc.session = "sess-pc-a";
+    Attention::HookEvent newPc = hev("PostToolUse", "D:/work/glimmer", "", "Edit");
+    newPc.session = "sess-pc-b";
+    Projects::noteHook(b, Attention::AGENT_CLAUDE, oldPc, t);
+    int ord[Projects::kMax];
+    // A parallel session busy a few minutes later: the approval still shows.
+    Projects::noteHook(b, Attention::AGENT_CLAUDE, newPc, t + 60);
+    TEST_ASSERT_EQUAL(1, Projects::ordered(b, ord, t + 61));
+    TEST_ASSERT_EQUAL(Projects::P_APPROVAL, b.e[ord[0]].state);
+    // The other session is still active ≥ 10 min after the wait's last event:
+    // the stale approval steps aside, the row follows the live session.
+    Projects::noteHook(b, Attention::AGENT_CLAUDE, newPc, t + Projects::kSupersedeS);
+    TEST_ASSERT_EQUAL(1, Projects::ordered(b, ord, t + Projects::kSupersedeS + 1));
+    TEST_ASSERT_EQUAL(Projects::P_WORKING, b.e[ord[0]].state);
+    // Another agent in the same repo doesn't release Claude's wait.
+    Projects::Board c; Projects::clearAll(c);
+    Projects::noteHook(c, Attention::AGENT_CLAUDE, oldPc, t);
+    Attention::HookEvent codex = hev("PostToolUse", "D:/work/glimmer", "", "Bash");
+    codex.session = "codex-1";
+    Projects::noteHook(c, Attention::AGENT_CODEX, codex, t + Projects::kSupersedeS + 5);
+    Projects::ordered(c, ord, t + Projects::kSupersedeS + 6);
+    TEST_ASSERT_EQUAL(Projects::P_APPROVAL, c.e[ord[0]].state);
+    // Alone, a wait with no event for kWaitS is dropped (survives a reboot otherwise).
+    Projects::Board d; Projects::clearAll(d);
+    Projects::noteHook(d, Attention::AGENT_CLAUDE, oldPc, t);
+    TEST_ASSERT_EQUAL(1, Projects::ordered(d, ord, t + Projects::kWaitS - 1));
+    TEST_ASSERT_EQUAL(0, Projects::ordered(d, ord, t + Projects::kWaitS));
+}
+
 void test_projects_from_pushed_cards() {
     Projects::Board b; Projects::clearAll(b);
     Attention::Item it;
@@ -1104,10 +1122,49 @@ void test_menu_geometry() {
     menuClamp(MENU_DESKTOP, x, y);
     TEST_ASSERT_EQUAL(74, x);
     TEST_ASSERT_EQUAL(87, y);
+    // Start menu (P-2026-11-26.20): covers (0, 0)–(239, 213), never moved.
+    TEST_ASSERT_EQUAL(240, menuW(MENU_START));
+    TEST_ASSERT_EQUAL(214, menuH(MENU_START));
+    x = 50; y = 40;
+    menuClamp(MENU_START, x, y);
+    TEST_ASSERT_EQUAL(0, x);
+    TEST_ASSERT_EQUAL(0, y);
     x = 71; y = 100;                                 // window menu from the Claude button
     menuClamp(MENU_WINDOW, x, y);
     TEST_ASSERT_EQUAL(71, x);
     TEST_ASSERT_EQUAL(100, y);
+}
+
+
+// P-2026-11-26.22: Ngày và Giờ touched from the app.
+void test_clock_props_core() {
+    using namespace ClockCore;
+    char b[12];
+    monthShort(11, b); TEST_ASSERT_EQUAL_STRING("Thg 11", b);
+    monthShort(3, b);  TEST_ASSERT_EQUAL_STRING("Thg 3", b);
+    gmtParen(420, b);  TEST_ASSERT_EQUAL_STRING("(GMT+07:00)", b);
+    gmtParen(-180, b); TEST_ASSERT_EQUAL_STRING("(GMT-03:00)", b);
+    gmtParen(330, b);  TEST_ASSERT_EQUAL_STRING("(GMT+05:30)", b);
+    TEST_ASSERT_EQUAL(8, zoneIndex(420));          // Hà Nội
+    TEST_ASSERT_EQUAL(-1, zoneIndex(345));         // not listed
+    TEST_ASSERT_EQUAL(21, mapColumn(420));         // round((105 + 180) / 13.33)
+    TEST_ASSERT_EQUAL(14, mapColumn(0));
+    TEST_ASSERT_EQUAL(5, mapColumn(-480));         // 4.5 rounds up
+    TEST_ASSERT_TRUE(isLand(1, 20));               // Asia
+    TEST_ASSERT_FALSE(isLand(1, 0));               // sea
+    TEST_ASSERT_TRUE(isLand(5, 21));               // the 4th span of row 5
+    TEST_ASSERT_EQUAL(3, maxTop(LIST_MONTH));
+    TEST_ASSERT_EQUAL(3, clampTop(LIST_MONTH, 9));
+    TEST_ASSERT_EQUAL(0, clampTop(LIST_NONE, 2));
+    int ty, th;
+    thumb(LIST_MONTH, 0, 89, 97, ty, th);
+    TEST_ASSERT_EQUAL(72, th);
+    TEST_ASSERT_EQUAL(89, ty);
+    thumb(LIST_MONTH, 3, 89, 97, ty, th);
+    TEST_ASSERT_EQUAL(89 + 97 - 72, ty);
+    TEST_ASSERT_EQUAL(0, wdayOf(2026, 11, 1));     // 1/11/2026 is a Sunday
+    TEST_ASSERT_EQUAL(4, wdayOf(2026, 11, 26));    // Thursday
+    TEST_ASSERT_EQUAL(4, wdayOf(2024, 2, 29));
 }
 
 // ── Photos (P-2026-11-25.7) ─────────────────────────────────────────────────
@@ -1186,6 +1243,24 @@ void test_photo_names_order_and_rotation() {
     TEST_ASSERT_EQUAL(1, nextIndex(0, 3));
     TEST_ASSERT_EQUAL(0, nextIndex(2, 3));
     TEST_ASSERT_EQUAL(0, nextIndex(5, 3));
+}
+
+// Sample photos (s<N>.jpg, like XP's Sample Pictures): their own names and
+// list, never mistaken for a user photo and vice versa.
+void test_photo_sample_names() {
+    using namespace Photos;
+    TEST_ASSERT_EQUAL_UINT32(2, idOf("s2.jpg", kSamplePrefix));
+    TEST_ASSERT_EQUAL_UINT32(0, idOf("s2.jpg"));                 // not a user photo
+    TEST_ASSERT_EQUAL_UINT32(0, idOf("p2.jpg", kSamplePrefix));
+    TEST_ASSERT_EQUAL_UINT32(0, idOf("s02.jpg", kSamplePrefix));
+    TEST_ASSERT_EQUAL_UINT32(0, idOf("s2.jpg/../x", kSamplePrefix));
+    char nm[16]; nameOf(7, nm, sizeof(nm), kSamplePrefix);
+    TEST_ASSERT_EQUAL_STRING("s7.jpg", nm);
+    uint32_t ids[kMaxSamples]; int n = 0;
+    for (uint32_t k = 1; k <= kMaxSamples + 3; k++) n = insertId(ids, n, k, kMaxSamples);
+    TEST_ASSERT_EQUAL(kMaxSamples, n);                           // capped at its own size
+    TEST_ASSERT_EQUAL_UINT32(1, ids[0]);
+    TEST_ASSERT_EQUAL_UINT32(kMaxSamples, ids[kMaxSamples - 1]);
 }
 
 void test_photo_room_limits() {
@@ -1364,6 +1439,301 @@ static void test_setup_qr_encodes_v3_with_finders() {
     TEST_ASSERT_EQUAL_INT(148, SetupQr::tileSide(4));
 }
 
+// ── Mouse cursor (R-DK-17, app = mouse, device = screen) ────────────────────
+
+template <int H>
+static void checkRows(const char* const (&rows)[H], const CursorCore::Glyph& g) {
+    TEST_ASSERT_EQUAL(H, g.h);
+    TEST_ASSERT_TRUE(H <= CursorCore::kMaxH && g.w <= CursorCore::kMaxW);
+    for (int r = 0; r < H; r++) {
+        TEST_ASSERT_EQUAL_MESSAGE(g.w, (int)strlen(rows[r]), rows[r]);    // every row the glyph's width
+        for (const char* c = rows[r]; *c; c++) TEST_ASSERT_TRUE(*c == 'B' || *c == 'W' || *c == '.');
+        TEST_ASSERT_EQUAL_UINT16(0, g.blk[r] & g.wht[r]);
+    }
+    TEST_ASSERT_TRUE(g.hx < g.w && g.hy < g.h);
+}
+
+void test_cursor_glyphs_and_packets() {
+    using namespace CursorCore;
+    checkRows(kArrowRows, kGlyphs[SHAPE_ARROW]);
+    checkRows(kHandRows,  kGlyphs[SHAPE_HAND]);
+    // P-2026-11-27.24: wait = the arrow in a 21×22 box, hotspot at the tip; the glass runs 4 × 200 ms.
+    TEST_ASSERT_EQUAL(kWaitW, kGlyphs[SHAPE_WAIT].w);
+    TEST_ASSERT_EQUAL(kWaitH, kGlyphs[SHAPE_WAIT].h);
+    TEST_ASSERT_TRUE(kWaitH <= kMaxH);
+    TEST_ASSERT_EQUAL_UINT16(kGlyphs[SHAPE_ARROW].blk[18], kGlyphs[SHAPE_WAIT].blk[18]);
+    TEST_ASSERT_EQUAL_UINT16(0, kGlyphs[SHAPE_WAIT].blk[21]);
+    TEST_ASSERT_EQUAL(0, waitFrame(199));
+    TEST_ASSERT_EQUAL(1, waitFrame(200));
+    TEST_ASSERT_EQUAL(0, waitFrame(800));
+    TEST_ASSERT_EQUAL_UINT16(0x8000, kGlyphs[SHAPE_ARROW].blk[0]);        // the tip: column 0, black
+    TEST_ASSERT_TRUE(boxOf(10, 10, kGlyphs[SHAPE_NONE]).empty());
+
+    // Round trip; anything else is dropped.
+    Packet k; k.seq = 0xBEEF; k.x = 239; k.y = 0; k.shape = SHAPE_HAND;
+    uint8_t b[kPacketLen]; encode(k, b);
+    Packet r;
+    TEST_ASSERT_TRUE(parse(b, sizeof(b), r));
+    TEST_ASSERT_EQUAL_UINT16(0xBEEF, r.seq); TEST_ASSERT_EQUAL(239, r.x); TEST_ASSERT_EQUAL(0, r.y);
+    TEST_ASSERT_EQUAL(SHAPE_HAND, r.shape);
+    TEST_ASSERT_FALSE(parse(b, 7, r));
+    b[6] = 240; TEST_ASSERT_FALSE(parse(b, sizeof(b), r));                  // off the panel
+    encode(k, b); b[3] = SHAPE_COUNT; TEST_ASSERT_FALSE(parse(b, sizeof(b), r));
+    encode(k, b); b[2] = 2; TEST_ASSERT_FALSE(parse(b, sizeof(b), r));     // another version
+    encode(k, b); b[0] = 'X'; TEST_ASSERT_FALSE(parse(b, sizeof(b), r));
+
+    // Sequence wraps; a late (reordered) packet is older.
+    TEST_ASSERT_TRUE(newer(5, 4));
+    TEST_ASSERT_TRUE(newer(2, 0xFFFE));
+    TEST_ASSERT_FALSE(newer(4, 5));
+    TEST_ASSERT_FALSE(newer(7, 7));
+    // A late packet is dropped; the app reopening (counting from 0) is taken.
+    TEST_ASSERT_FALSE(stillCurrent(4990, 5000));
+    TEST_ASSERT_TRUE(stillCurrent(0, 30000));
+    TEST_ASSERT_TRUE(stillCurrent(5001, 5000));
+}
+
+// R-DK-20: the app's power button. Off → shutting down → off; on → boot →
+// on; a press during the other transition turns around.
+void test_power_button_states() {
+    using namespace Control;
+    PowerState p;
+    TEST_ASSERT_EQUAL(POWER_ON, p.p);
+    TEST_ASSERT_FALSE(requestPower(p, true, 0));                 // already on
+    TEST_ASSERT_TRUE(requestPower(p, false, 1000));
+    TEST_ASSERT_EQUAL(POWER_SHUTTING, p.p);
+    TEST_ASSERT_FALSE(advancePower(p, 1000 + kShutMs - 1));
+    TEST_ASSERT_TRUE(advancePower(p, 1000 + kShutMs));
+    TEST_ASSERT_EQUAL(POWER_OFF, p.p);
+    TEST_ASSERT_EQUAL_STRING("off", powerName(p.p));
+    TEST_ASSERT_FALSE(requestPower(p, false, 5000));             // already off
+    TEST_ASSERT_TRUE(requestPower(p, true, 6000));
+    TEST_ASSERT_EQUAL(POWER_BOOTING, p.p);
+    TEST_ASSERT_TRUE(requestPower(p, false, 6100));              // off while booting: shuts down
+    TEST_ASSERT_EQUAL(POWER_SHUTTING, p.p);
+    TEST_ASSERT_TRUE(requestPower(p, true, 6200));               // on while shutting: boots again
+    TEST_ASSERT_TRUE(advancePower(p, 6200 + kBootMs));
+    // P-2026-11-27.24: boot screen, then the welcome screen 1 s (still "booting"), then on.
+    TEST_ASSERT_EQUAL(POWER_WELCOME, p.p);
+    TEST_ASSERT_EQUAL_STRING("booting", powerName(p.p));
+    TEST_ASSERT_TRUE(powerScreen(p.p));
+    TEST_ASSERT_FALSE(advancePower(p, 6200 + kBootMs + kWelcomeMs - 1));
+    TEST_ASSERT_TRUE(advancePower(p, 6200 + kBootMs + kWelcomeMs));
+    TEST_ASSERT_EQUAL(POWER_ON, p.p);
+    TEST_ASSERT_EQUAL_STRING("on", powerName(p.p));
+    TEST_ASSERT_FALSE(powerScreen(p.p));
+}
+
+// P-2026-11-27.24 Tắt máy tính › Khởi động lại: shutting, then the boot screen (not off).
+void test_power_restart() {
+    using namespace Control;
+    PowerState p;
+    TEST_ASSERT_TRUE(requestRestart(p, 100));
+    TEST_ASSERT_EQUAL(POWER_SHUTTING, p.p);
+    TEST_ASSERT_FALSE(requestRestart(p, 200));                   // already going down
+    TEST_ASSERT_TRUE(advancePower(p, 100 + kShutMs));
+    TEST_ASSERT_EQUAL(POWER_BOOTING, p.p);
+    TEST_ASSERT_TRUE(advancePower(p, 100 + kShutMs + kBootMs));
+    TEST_ASSERT_TRUE(advancePower(p, 100 + kShutMs + kBootMs + kWelcomeMs));
+    TEST_ASSERT_EQUAL(POWER_ON, p.p);
+    // Off pressed while restarting: it stays off.
+    TEST_ASSERT_TRUE(requestRestart(p, 10000));
+    TEST_ASSERT_TRUE(requestPower(p, false, 10100));
+    TEST_ASSERT_TRUE(advancePower(p, 10000 + kShutMs));
+    TEST_ASSERT_EQUAL(POWER_OFF, p.p);
+    TEST_ASSERT_FALSE(powerScreen(p.p));
+}
+
+// P-2026-11-27.24 XP-Pointer: Start menu rows / sub-menu / Tắt máy tính / hot buttons under the cursor.
+static PointerCore::StartInputs startIn(const char* skills, bool showAgents = false,
+                                       std::initializer_list<int> recent = {}) {
+    PointerCore::StartInputs si;
+    si.in = XPCore::installedOf(skills, showAgents);
+    int k = 0;
+    for (int p : recent) si.recent[k++] = (int8_t)p;
+    return si;
+}
+
+void test_pointer_start_menu() {
+    using namespace PointerCore;
+    StartLayout L;
+    startLayout(startIn("agent,weather,clock"), L);
+    // Claude, Codex, 3 most used (Thời tiết, Đồng hồ, AI hôm nay — filled), All, 5 right, 2 bottom.
+    TEST_ASSERT_EQUAL(13, L.n);
+    TEST_ASSERT_EQUAL(S_WEATHER, L.item[2]);
+    TEST_ASSERT_EQUAL(S_AI, L.item[4]);
+    TEST_ASSERT_EQUAL(99, L.row[2].y);                           // first row under the pinned two
+    TEST_ASSERT_EQUAL(2, startHit(L, false, 28, 105));           // "Thời tiết"
+    TEST_ASSERT_EQUAL(0, startHit(L, false, 60, 40));            // pinned Claude
+    TEST_ASSERT_EQUAL(-1, startHit(L, false, 60, 96));           // the separator under the pins
+    TEST_ASSERT_EQUAL(startIndexOf(L, S_SETTINGS), startHit(L, false, 180, 95));
+    TEST_ASSERT_EQUAL(-1, startHit(L, false, 180, 82));          // right-column separator
+    TEST_ASSERT_EQUAL(startIndexOf(L, S_TURNOFF), startHit(L, false, 190, 200));
+    TEST_ASSERT_EQUAL(startIndexOf(L, S_RESTART), startHit(L, false, 30, 200));
+    // All Programs: Claude, Codex, AI, Xu hướng, Thời tiết, Đồng hồ + Thêm / gỡ; fits at y 62.
+    TEST_ASSERT_EQUAL(7, L.subN);
+    TEST_ASSERT_EQUAL(4 + 20 * 6 + 7 + 20, L.subBox.h);
+    TEST_ASSERT_EQUAL(62, L.subBox.y);
+    TEST_ASSERT_EQUAL(144, L.subBox.x);
+    TEST_ASSERT_EQUAL(96, L.subBox.w);
+    TEST_ASSERT_EQUAL(-1, startHit(L, true, 180, 95));
+    TEST_ASSERT_EQUAL(SUB_AI, L.sub[subHit(L, true, 180, 64 + 40 + 5)]);
+    TEST_ASSERT_EQUAL(SUB_ADDREMOVE, L.sub[subHit(L, true, 180, 64 + 120 + 7 + 5)]);
+    TEST_ASSERT_EQUAL(-1, subHit(L, false, 180, 105));
+    // Agent off: programs from y 38.
+    startLayout(startIn("photo"), L);
+    TEST_ASSERT_EQUAL(S_PHOTO, L.item[0]);
+    TEST_ASSERT_EQUAL(38, L.row[0].y);
+}
+
+// P-2026-11-27.25: the 3 programs opened last; every program in All Programs, moved up when tall.
+void test_start_recent_and_full_sub_menu() {
+    using namespace XPCore;
+    using namespace PointerCore;
+    int8_t r[kRecentN] = {PROG_NONE, PROG_NONE, PROG_NONE};
+    noteRecent(r, PROG_CLAUDE);                                  // pinned: not counted
+    noteRecent(r, PROG_FORECAST);                                // = Thời tiết
+    noteRecent(r, PROG_MINES);
+    noteRecent(r, PROG_TREND);
+    noteRecent(r, PROG_MINES);                                   // again: to the front
+    TEST_ASSERT_EQUAL(PROG_MINES, r[0]);
+    TEST_ASSERT_EQUAL(PROG_TREND, r[1]);
+    TEST_ASSERT_EQUAL(PROG_WEATHER, r[2]);
+    noteRecent(r, PROG_CLOCK);                                   // the oldest falls out
+    TEST_ASSERT_EQUAL(PROG_CLOCK, r[0]);
+    TEST_ASSERT_EQUAL(PROG_MINES, r[1]);
+    TEST_ASSERT_EQUAL(PROG_TREND, r[2]);
+    // Shown: installed only (fun off → no Dò mìn), filled in order Ảnh, Thời tiết, …
+    int8_t rows[kRecentN];
+    TEST_ASSERT_EQUAL(3, recentRows(r, installedOf("agent,photo,clock", false), rows));
+    TEST_ASSERT_EQUAL(PROG_CLOCK, rows[0]);
+    TEST_ASSERT_EQUAL(PROG_TREND, rows[1]);
+    TEST_ASSERT_EQUAL(PROG_PHOTO, rows[2]);
+    TEST_ASSERT_EQUAL(1, recentRows(r, installedOf("clock", false), rows));
+    // Everything on: 9 programs → (144, 2, 96 × 211), bottom row ends at y 212.
+    StartLayout L;
+    startLayout(startIn("agent,photo,weather,clock,fun", true), L);
+    TEST_ASSERT_EQUAL(10, L.subN);
+    TEST_ASSERT_EQUAL(2, L.subBox.y);
+    TEST_ASSERT_EQUAL(211, L.subBox.h);
+    TEST_ASSERT_EQUAL(SUB_MINES, L.sub[8]);
+    TEST_ASSERT_EQUAL(4 + 20 * 8, L.subRow[8].y);
+    TEST_ASSERT_EQUAL(212, L.subBox.y + L.subBox.h - 1);          // bottom edge
+    TEST_ASSERT_EQUAL(4 + 20 * 9 + 7, L.subRow[9].y);              // Thêm / gỡ after the separator
+    TEST_ASSERT_EQUAL(PROG_MINES, progOfSub(L.sub[8]));
+    TEST_ASSERT_EQUAL(PROG_AGENTS, progOfSub(L.sub[4]));
+}
+
+// P-2026-11-27.25: Dò mìn on the desktop — column 1 before the trash, column 2 when column 1 is full.
+// P-2026-11-27.25 Dò mìn: the board the app sends, the cell under a point, the LEDs, the clock.
+void test_mines_view() {
+    using namespace Mines;
+    View v;
+    TEST_ASSERT_EQUAL('.', v.cell[80]);
+    char b[kCells + 1];
+    memset(b, '.', kCells); b[kCells] = 0;
+    b[0] = '1'; b[10] = 'F'; b[80] = 'X';
+    TEST_ASSERT_TRUE(parseBoard(b, v.cell));
+    TEST_ASSERT_EQUAL('F', v.cell[10]);
+    b[5] = '?';                                                  // XP's ? mark is dropped (P-.25)
+    TEST_ASSERT_FALSE(parseBoard(b, v.cell));
+    TEST_ASSERT_EQUAL('.', v.cell[5]);
+    TEST_ASSERT_FALSE(parseBoard("..F", v.cell));
+    TEST_ASSERT_EQUAL(FACE_COOL, faceOf("cool"));
+    TEST_ASSERT_EQUAL(-1, faceOf("sad"));
+    TEST_ASSERT_EQUAL_STRING("dead", faceName(FACE_DEAD));
+    // Cells (48 + 16c, 64 + 16r).
+    TEST_ASSERT_EQUAL(0, cellAt(48, 64));
+    TEST_ASSERT_EQUAL(10, cellAt(48 + 16 + 15, 64 + 16));
+    TEST_ASSERT_EQUAL(80, cellAt(48 + 16 * 8 + 15, 64 + 16 * 8 + 15));
+    TEST_ASSERT_EQUAL(-1, cellAt(47, 70));
+    TEST_ASSERT_EQUAL(-1, cellAt(48 + 144, 70));
+    // LEDs: 010, -01, capped 999.
+    uint8_t d[3];
+    ledDigits(10, d);
+    TEST_ASSERT_EQUAL_HEX8(0x7E, d[0]); TEST_ASSERT_EQUAL_HEX8(0x30, d[1]); TEST_ASSERT_EQUAL_HEX8(0x7E, d[2]);
+    ledDigits(-1, d);
+    TEST_ASSERT_EQUAL_HEX8(kSegMinus, d[0]); TEST_ASSERT_EQUAL_HEX8(0x7E, d[1]); TEST_ASSERT_EQUAL_HEX8(0x30, d[2]);
+    ledDigits(1500, d);
+    TEST_ASSERT_EQUAL_HEX8(0x7B, d[0]);
+    // The clock runs on from what the app sent, stops at 999, stands when not running.
+    v.secs = 12; v.run = true;
+    TEST_ASSERT_EQUAL(15, shownSecs(v, 1000, 4500));
+    v.secs = 998;
+    TEST_ASSERT_EQUAL(999, shownSecs(v, 0, 60000));
+    v.run = false;
+    TEST_ASSERT_EQUAL(998, shownSecs(v, 0, 60000));
+}
+
+void test_desk_icons_fun() {
+    using namespace XPCore;
+    DeskIcon ic[kDeskMax];
+    int n = deskIcons("agent,photo,fun", ic);
+    TEST_ASSERT_EQUAL(5, n);
+    TEST_ASSERT_EQUAL(kDeskTrash, ic[3].prog);                   // trash last of column 1
+    TEST_ASSERT_EQUAL(PROG_MINES, ic[4].prog);
+    TEST_ASSERT_EQUAL(120, ic[4].cx);
+    TEST_ASSERT_EQUAL(8, ic[4].y);
+    n = deskIcons("photo,fun", ic);
+    TEST_ASSERT_EQUAL(3, n);
+    TEST_ASSERT_EQUAL(PROG_MINES, ic[1].prog);
+    TEST_ASSERT_EQUAL(40, ic[1].cx);
+    TEST_ASSERT_EQUAL(56, ic[1].y);
+    TEST_ASSERT_EQUAL(kDeskTrash, ic[2].prog);
+    TEST_ASSERT_EQUAL(PROG_MINES, progOf("mines"));
+    TEST_ASSERT_EQUAL(ICON_MINES, iconFor("Mines"));
+}
+
+void test_pointer_turnoff_and_hot() {
+    using namespace PointerCore;
+    TEST_ASSERT_EQUAL(TO_STANDBY, turnOffHit(50, 100));
+    TEST_ASSERT_EQUAL(TO_OFF, turnOffHit(120, 100));
+    TEST_ASSERT_EQUAL(TO_RESTART, turnOffHit(190, 100));
+    TEST_ASSERT_EQUAL(TO_CANCEL, turnOffHit(190, 160));
+    TEST_ASSERT_EQUAL(-1, turnOffHit(85, 100));
+    XPCore::BarState bar;
+    bar.prog[0] = 0; bar.prog[1] = 2;
+    TEST_ASSERT_EQUAL(0, hotAt(bar, true, 80, 225));
+    TEST_ASSERT_EQUAL(1, hotAt(bar, true, 110, 225));
+    TEST_ASSERT_EQUAL(kHotNone, hotAt(bar, true, 140, 225));    // empty slot
+    TEST_ASSERT_EQUAL(kHotNone, hotAt(bar, true, 20, 225));     // start never lights
+    TEST_ASSERT_EQUAL(kHotClose, hotAt(bar, true, 228, 11));
+    TEST_ASSERT_EQUAL(kHotMin, hotAt(bar, true, 192, 11));
+    TEST_ASSERT_EQUAL(kHotNone, hotAt(bar, true, 210, 11));     // □ is off
+    TEST_ASSERT_EQUAL(kHotNone, hotAt(bar, false, 228, 11));    // desktop: no title bar
+    TEST_ASSERT_EQUAL(XPCore::kBtnY, hotRect(1).y);
+}
+
+// R-DK-18/19: another item lit is the same menu (only the menu repaints).
+void test_menu_hover_same_menu() {
+    using namespace Control;
+    Menu a; a.kind = XPCore::MENU_WINDOW; a.x = 71; a.y = 100;
+    Menu b = a; b.hover = 3;
+    TEST_ASSERT_EQUAL(-1, a.hover);
+    TEST_ASSERT_TRUE(sameMenu(a, b));
+    b.y = 90;
+    TEST_ASSERT_FALSE(sameMenu(a, b));
+    Menu c = a; c.minimized = true;
+    TEST_ASSERT_FALSE(sameMenu(a, c));
+}
+
+void test_cursor_box_clipped() {
+    using namespace CursorCore;
+    const Glyph& a = kGlyphs[SHAPE_ARROW];
+    Box m = boxOf(100, 50, a);                                   // hotspot = tip (0, 0)
+    TEST_ASSERT_EQUAL(100, m.x); TEST_ASSERT_EQUAL(50, m.y);
+    TEST_ASSERT_EQUAL(12, m.w);  TEST_ASSERT_EQUAL(19, m.h);
+    Box e = boxOf(235, 230, a);                                  // runs off the bottom-right
+    TEST_ASSERT_EQUAL(5, e.w); TEST_ASSERT_EQUAL(10, e.h);
+    const Glyph& w = kGlyphs[SHAPE_WAIT];
+    Box t = boxOf(230, 225, w);                                  // hotspot at the tip, runs off the corner
+    TEST_ASSERT_EQUAL(230, t.x); TEST_ASSERT_EQUAL(225, t.y);
+    TEST_ASSERT_EQUAL(10, t.w); TEST_ASSERT_EQUAL(15, t.h);
+    TEST_ASSERT_TRUE(overlaps(m, boxOf(105, 60, a)));
+    TEST_ASSERT_FALSE(overlaps(m, boxOf(112, 50, a)));           // side by side
+    TEST_ASSERT_FALSE(overlaps(m, Box()));
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_setup_qr_payload_is_open_wifi);
@@ -1417,18 +1787,31 @@ int main(int, char**) {
     RUN_TEST(test_projects_follow_hook_events);
     RUN_TEST(test_projects_order_idle_and_eviction);
     RUN_TEST(test_projects_sessions_merge_per_project);
+    RUN_TEST(test_projects_stale_wait_released);
     RUN_TEST(test_projects_from_pushed_cards);
     RUN_TEST(test_skill_filter_and_default);
     RUN_TEST(test_taskbar_buttons_follow_enabled_skills);
     RUN_TEST(test_windows_adopt_and_prune);
     RUN_TEST(test_desk_icons_follow_skills);
     RUN_TEST(test_menu_geometry);
+    RUN_TEST(test_clock_props_core);
     RUN_TEST(test_photo_jpeg_header_check);
     RUN_TEST(test_photo_names_order_and_rotation);
+    RUN_TEST(test_photo_sample_names);
     RUN_TEST(test_photo_room_limits);
     RUN_TEST(test_wallpaper_header_and_fallback);
     RUN_TEST(test_control_prev_and_pause);
     RUN_TEST(test_control_screen_off_wake);
     RUN_TEST(test_clawd_work_timing);
+    RUN_TEST(test_cursor_glyphs_and_packets);
+    RUN_TEST(test_cursor_box_clipped);
+    RUN_TEST(test_power_button_states);
+    RUN_TEST(test_power_restart);
+    RUN_TEST(test_pointer_start_menu);
+    RUN_TEST(test_start_recent_and_full_sub_menu);
+    RUN_TEST(test_desk_icons_fun);
+    RUN_TEST(test_mines_view);
+    RUN_TEST(test_pointer_turnoff_and_hot);
+    RUN_TEST(test_menu_hover_same_menu);
     return UNITY_END();
 }

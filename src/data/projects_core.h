@@ -22,6 +22,12 @@ enum State : uint8_t { P_APPROVAL, P_INPUT, P_ERROR, P_WORKING, P_DONE };  // di
 constexpr int      kMax       = 8;           // sessions tracked (rows shown: ≤ 3 on screen)
 constexpr uint32_t kKeepS     = 6 * 3600;   // DONE / ERROR stay this long
 constexpr uint32_t kIdleS     = 30 * 60;    // WORKING with no event this long → hidden
+// APPROVAL / INPUT (L-5): a session waiting on the user stays until answered,
+// but its next event may never come (it ran on a computer that left the
+// network). It steps aside once another session of the same project + agent
+// is active kSupersedeS after its last event, and is dropped after kWaitS.
+constexpr uint32_t kWaitS      = 2 * 3600;
+constexpr uint32_t kSupersedeS = 10 * 60;
 
 struct Entry {
     bool             used = false;
@@ -120,11 +126,27 @@ inline bool noteItem(Board& b, const Attention::Item& it, uint32_t now) {
     }
 }
 
+inline bool waiting(const Entry& x) { return x.state == P_APPROVAL || x.state == P_INPUT; }
+
 inline bool shown(const Entry& x, uint32_t now) {
     if (!x.used) return false;
     if (x.state == P_WORKING) return now - x.last < kIdleS;
     if (x.state == P_DONE || x.state == P_ERROR) return now - x.since < kKeepS;
-    return true;                       // waiting on the user: until answered
+    return now - x.last < kWaitS;      // waiting on the user: until answered, or abandoned (L-5)
+}
+
+// A wait abandoned for a newer session of the same project + agent (L-5).
+inline bool superseded(const Board& b, const Entry& x) {
+    if (!x.used || !waiting(x)) return false;
+    for (const Entry& y : b.e)
+        if (&y != &x && y.used && y.agent == x.agent && !strcmp(y.project, x.project)
+            && y.last >= x.last + kSupersedeS) return true;
+    return false;
+}
+
+// On the board: within its time and not superseded.
+inline bool visible(const Board& b, int i, uint32_t now) {
+    return shown(b.e[i], now) && !superseded(b, b.e[i]);
 }
 
 // a shows before b: more urgent state, then the newer one.
@@ -138,7 +160,7 @@ inline bool before(const Entry& a, const Entry& b) {
 inline int ordered(const Board& b, int out[kMax], uint32_t now, int sessions[kMax] = nullptr) {
     int n = 0;
     for (int i = 0; i < kMax; i++) {
-        if (!shown(b.e[i], now)) continue;
+        if (!visible(b, i, now)) continue;
         int row = -1;
         for (int k = 0; k < n; k++)
             if (!strcmp(b.e[out[k]].project, b.e[i].project)) { row = k; break; }

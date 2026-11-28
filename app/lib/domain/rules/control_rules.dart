@@ -17,7 +17,7 @@ const deviceChannels = [
   'Codex',
   'AI',
   'Trend', //
-  'Photo', 'Weather', 'Forecast', 'Clock', 'Info',
+  'Photo', 'Weather', 'Forecast', 'Clock', 'Info', 'Mines',
 ];
 
 /// Channels that belong to no skill (shown whatever skills are on).
@@ -28,6 +28,7 @@ String? channelSkill(String channel) => switch (channel) {
   'Photo' => SkillIds.photo,
   'Weather' || 'Forecast' => SkillIds.weather,
   'Clock' => SkillIds.clock,
+  'Mines' => SkillIds.fun,
   'Attention' || 'Night' || 'Info' => null,
   _ => SkillIds.agent,
 };
@@ -52,6 +53,8 @@ List<String> jumpCandidates(String skill, Map<String, dynamic>? settings) {
       return const ['Weather', 'Forecast'];
     case SkillIds.clock:
       return const ['Clock'];
+    case SkillIds.fun:
+      return const ['Mines'];
   }
   const order = ['Claude', 'Codex', 'Home', 'Agents', 'AI', 'Trend'];
   if (settings == null) return order;
@@ -93,7 +96,10 @@ ControlCaps controlCaps(DeviceState? s) => s == null
         dismissCard: s.paused != null,
         screen: s.screenOn != null,
         windows: s.windowsApi,
+        clock: s.clockApi,
         balloon: s.balloon != null,
+        mouse: s.cursorPort != null,
+        mines: s.minesApi,
       );
 
 /// The agent card holding the device screen (approval / input on the Attention channel), or null.
@@ -106,7 +112,9 @@ AttentionCard? holdingCard(DeviceState? s, List<AttentionCard> cards) {
 }
 
 /// Programs (windows) of the device: the channels that are neither the desktop nor a system screen.
-const programChannels = {'Claude', 'Codex', 'AI', 'Trend', 'Agents', 'Photo', 'Weather', 'Forecast', 'Clock', 'Info'};
+const programChannels = {
+  'Claude', 'Codex', 'AI', 'Trend', 'Agents', 'Photo', 'Weather', 'Forecast', 'Clock', 'Info', 'Mines', //
+};
 
 bool isProgram(String channel) => programChannels.contains(channel);
 
@@ -133,7 +141,7 @@ Map<ProgramGroup, List<String>> programsOf(List<String> skillsOn, Map<String, dy
           if (shown(c)) c,
     ],
     ProgramGroup.other: [
-      for (final c in const ['Weather', 'Forecast', 'Clock', 'Photo'])
+      for (final c in const ['Weather', 'Forecast', 'Clock', 'Photo', 'Mines'])
         // R-DK-14: XP-Real firmware — Dự báo is a tab of Thời tiết, not a program of its own.
         if (on.contains(channelSkill(c)) && shown(c) && !(c == 'Forecast' && xpReal(settings))) c,
     ],
@@ -154,6 +162,7 @@ String? deskProgramOf(String skill) => switch (skill) {
   SkillIds.photo => 'Photo',
   SkillIds.weather => 'Weather',
   SkillIds.clock => 'Clock',
+  SkillIds.fun => 'Mines',
   _ => null,
 };
 

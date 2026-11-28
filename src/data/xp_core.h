@@ -27,7 +27,7 @@ enum Btn : int8_t {
 constexpr int kBtnCount = 4;
 
 // Title-bar / taskbar icons.
-enum Icon : uint8_t { ICON_NONE, ICON_CLAWD, ICON_PHOTO, ICON_WEATHER, ICON_CLOCK, ICON_INFO };
+enum Icon : uint8_t { ICON_NONE, ICON_CLAWD, ICON_PHOTO, ICON_WEATHER, ICON_CLOCK, ICON_INFO, ICON_MINES };
 
 // Which button a channel presses (by kChannels[] name). Attention cards are
 // Claude windows (their button lights orange instead when the card needs you).
@@ -44,6 +44,7 @@ inline Btn buttonFor(const char* name) {
 // Title-bar icon of a channel's window (sources XP-*.dc.html): Clawd on every
 // agent window, the skill icon on Photo / Weather / Forecast / Clock, "i" on Info.
 inline Icon iconFor(const char* name) {
+    if (name && !strcmp(name, "Mines")) return ICON_MINES;   // P-2026-11-27.25
     switch (buttonFor(name)) {
         case BTN_NO_BAR:  return ICON_NONE;
         case BTN_NONE:    return ICON_INFO;
@@ -71,11 +72,12 @@ enum Prog : int8_t {
     PROG_NONE = -1,
     PROG_CLAUDE, PROG_CODEX, PROG_AI, PROG_TREND, PROG_AGENTS,
     PROG_PHOTO, PROG_WEATHER, PROG_FORECAST, PROG_CLOCK, PROG_INFO,
+    PROG_MINES,                                   // Dò mìn, skill Giải trí `fun` (P-2026-11-27.25)
     PROG_COUNT
 };
 inline const char* progName(int p) {
     static const char* const kName[PROG_COUNT] = {"Claude", "Codex", "AI", "Trend", "Agents",
-                                                  "Photo", "Weather", "Forecast", "Clock", "Info"};
+                                                  "Photo", "Weather", "Forecast", "Clock", "Info", "Mines"};
     return p >= 0 && p < PROG_COUNT ? kName[p] : nullptr;
 }
 // kChannels[] name → program (case-insensitive like /api/channel); PROG_NONE
@@ -97,6 +99,7 @@ inline Icon progIcon(int p) {
         case PROG_WEATHER: case PROG_FORECAST: return ICON_WEATHER;
         case PROG_CLOCK:                    return ICON_CLOCK;
         case PROG_INFO:                     return ICON_INFO;
+        case PROG_MINES:                    return ICON_MINES;
         case PROG_NONE:                     return ICON_NONE;
         default:                            return ICON_CLAWD;
     }
@@ -132,6 +135,7 @@ struct BarState {
     bool   flash   = false;        // a card that needs the user holds the screen
     int8_t badge   = -1;           // badgeGlyph of the agents waiting
     bool   trayWeather = false;    // weather icon in the tray (weather skill on, P-2026-11-26.15)
+    bool   startDown   = false;    // the Start menu is open: start button pressed (P-2026-11-26.20)
 };
 
 // ── Tray (P-2026-11-26.15, XP-Desk-Tray): x 196–239 with the clock; with the
@@ -166,33 +170,6 @@ inline bool slotChanged(int i, const BarState& a, const BarState& b) {
     return a.prog[i] != b.prog[i] || lookOfSlot(i, a) != lookOfSlot(i, b) || badgeOnSlot(i, a) != badgeOnSlot(i, b);
 }
 
-// ── Tray balloon (P-2026-11-26.15, XP notification balloon tip) ──
-// Shows ~10 s when the desktop comes up, when the weather changes while it is
-// up, and when the app taps the tray icon; × (or a card taking the screen)
-// hides it at once. One balloon at a time. until = millis() it hides at, 0 = hidden.
-constexpr uint32_t kBalloonMs = 10000;
-struct Balloon { uint32_t until = 0; };
-inline void balloonShow(Balloon& b, uint32_t now) { b.until = (now + kBalloonMs) | 1u; }   // never 0
-inline void balloonHide(Balloon& b) { b.until = 0; }
-inline bool balloonVisible(const Balloon& b, uint32_t now) {
-    return b.until != 0 && (int32_t)(b.until - now) > 0;
-}
-// Worth a new balloon: the description changed, or the temperature moved ≥ 3°
-// (or a reading appeared / went away).
-inline bool weatherNews(bool validA, bool sameDesc, float tempA, bool validB, float tempB) {
-    if (validA != validB) return true;
-    if (!validA) return false;
-    const float d = tempA - tempB;
-    return !sameDesc || d >= 3.0f || d <= -3.0f;
-}
-
-// Balloon geometry (token themeXP.desktop.balloon): box 140×62 at (96, 138),
-// corners stepped 2 px, black border, xpInfoBar; the tail opens the bottom at
-// x 178..190 and narrows to its tip (190, 211), right edge straight.
-constexpr int kBalX = 96, kBalY = 138, kBalW = 140, kBalH = 62;
-constexpr int kBalTailX0 = 178, kBalTailX1 = 190, kBalTailTipY = 211;
-// What erasing it repaints: the box and the tail (x 96..235, y 138..211).
-constexpr int kBalAreaX = kBalX, kBalAreaY = kBalY, kBalAreaW = kBalW, kBalAreaH = kBalTailTipY - kBalY + 1;
 inline bool hits(int ax, int ay, int aw, int ah, int bx, int by, int bw, int bh) {
     return ax < bx + bw && bx < ax + aw && ay < by + bh && by < ay + ah;
 }
@@ -230,7 +207,7 @@ inline WinFrame frameOf(const char* name) {
         {"Agents", {"Tác tử", ICON_CLAWD, true}},       {"Photo", {"Ảnh", ICON_PHOTO, false}},
         {"Weather", {"Thời tiết", ICON_WEATHER, false}}, {"Forecast", {"Thời tiết", ICON_WEATHER, false}},
         {"Clock", {"Ngày và Giờ", ICON_CLOCK, false}},       {"Info", {"Thông tin", ICON_INFO, false}},
-        {"Setup", {"Cài đặt", ICON_CLAWD, false}},
+        {"Setup", {"Cài đặt", ICON_CLAWD, false}},      {"Mines", {"Dò mìn", ICON_MINES, false}},
     };
     for (const Row& r : kRows) if (name && !strcmp(r.name, name)) return r.f;
     return {name ? name : "", iconFor(name), false};
@@ -289,29 +266,93 @@ inline void saverSpot(int oldX, int oldY, uint32_t r1, uint32_t r2, int& x, int&
 
 // ── Desktop icons (P-2026-11-26.17 XP-Desk-OneCol: as XP, only installed
 // programs) ── one column, centre x 40: Claude, Codex (agent), Ảnh (photo),
-// then the trash; cells 48 tall from y 8. Weather opens from the tray icon,
-// the clock from the tray clock (no desktop icons).
+// Dò mìn (fun, P-2026-11-27.25), then the trash — always last of column 1;
+// cells 48 tall from y 8, 4 to a column. Column 1 full → Dò mìn goes to
+// column 2 (centre x 120, y 8), as XP's Auto Arrange. Weather opens from the
+// tray icon, the clock from the tray clock (no desktop icons).
 constexpr int kDeskMax = 6;
 constexpr int kDeskTrash = -2;              // DeskIcon::prog of the trash
+constexpr int kDeskPerCol = 4;
 struct DeskIcon { int8_t prog; int16_t cx, y; };
 inline int deskIcons(const char* skillsOn, DeskIcon* out) {
+    int8_t col1[kDeskMax]; int n1 = 0;
+    if (Skill::inList(skillsOn, "agent")) { col1[n1++] = PROG_CLAUDE; col1[n1++] = PROG_CODEX; }
+    if (Skill::inList(skillsOn, "photo")) col1[n1++] = PROG_PHOTO;
+    const bool fun = Skill::inList(skillsOn, "fun");
+    const bool funCol1 = fun && n1 + 2 <= kDeskPerCol;      // room for Dò mìn and the trash
+    if (funCol1) col1[n1++] = PROG_MINES;
+    col1[n1++] = kDeskTrash;
     int n = 0;
-    auto add = [&](int8_t p) { out[n] = {p, 40, (int16_t)(8 + 48 * n)}; n++; };
-    if (Skill::inList(skillsOn, "agent")) { add(PROG_CLAUDE); add(PROG_CODEX); }
-    if (Skill::inList(skillsOn, "photo")) add(PROG_PHOTO);
-    add(kDeskTrash);
+    for (int i = 0; i < n1; i++) out[n++] = {col1[i], 40, (int16_t)(8 + 48 * i)};
+    if (fun && !funCol1) out[n++] = {PROG_MINES, 120, 8};
+    return n;
+}
+
+// ── Start's "most frequently used" (P-2026-11-27.25) ── the 3 programs opened
+// last, newest first, not the pinned Claude / Codex (nor Info, not in Start);
+// RAM only. Shown: those installed, then filled in the order below.
+constexpr int kRecentN = 3;
+struct Installed { bool agent, photo, weather, clock, fun, agents; };
+inline Installed installedOf(const char* skillsOn, bool showAgents) {
+    Installed i;
+    i.agent = Skill::inList(skillsOn, "agent");
+    i.photo = Skill::inList(skillsOn, "photo");
+    i.weather = Skill::inList(skillsOn, "weather");
+    i.clock = Skill::inList(skillsOn, "clock");
+    i.fun = Skill::inList(skillsOn, "fun");
+    i.agents = i.agent && showAgents;
+    return i;
+}
+inline bool installed(const Installed& i, int p) {
+    switch (p) {
+        case PROG_CLAUDE: case PROG_CODEX: case PROG_AI: case PROG_TREND: return i.agent;
+        case PROG_AGENTS:  return i.agents;
+        case PROG_PHOTO:   return i.photo;
+        case PROG_WEATHER: case PROG_FORECAST: return i.weather;
+        case PROG_CLOCK:   return i.clock;
+        case PROG_MINES:   return i.fun;
+        default:           return false;
+    }
+}
+// Program [p] came up: it goes to the front (Forecast counts as Weather).
+inline void noteRecent(int8_t recent[kRecentN], int p) {
+    if (p == PROG_FORECAST) p = PROG_WEATHER;
+    if (p < 0 || p == PROG_CLAUDE || p == PROG_CODEX || p == PROG_INFO) return;
+    int k = kRecentN - 1;
+    for (int i = 0; i < kRecentN; i++) if (recent[i] == p) { k = i; break; }
+    for (; k > 0; k--) recent[k] = recent[k - 1];
+    recent[0] = (int8_t)p;
+}
+// The left column's rows: up to 3 programs; returns how many.
+inline int recentRows(const int8_t recent[kRecentN], const Installed& in, int8_t out[kRecentN]) {
+    static const int8_t kFill[] = {PROG_PHOTO, PROG_WEATHER, PROG_CLOCK, PROG_MINES, PROG_AI, PROG_TREND, PROG_AGENTS};
+    int n = 0;
+    auto add = [&](int p) {
+        if (n >= kRecentN || p < 0 || !installed(in, p)) return;
+        for (int i = 0; i < n; i++) if (out[i] == p) return;
+        out[n++] = (int8_t)p;
+    };
+    for (int i = 0; i < kRecentN; i++) add(recent[i]);
+    for (int8_t p : kFill) add(p);
     return n;
 }
 
 // ── Context menus (P-2026-11-26.14, XP-Menu) ──
 // XP Luna menu: 1-px border, 1-px pad, items 17 tall, separators 7 tall.
 // Placed by the app (top-left), kept inside x 0..239, y 0..213.
-enum MenuKind : uint8_t { MENU_NONE, MENU_DESKTOP, MENU_WINDOW };
+// MENU_START (P-2026-11-26.20): the XP Start menu, (0, 0)–(239, 213), never moved.
+// MENU_TURNOFF (P-2026-11-27.24): XP's Turn off computer box over the whole screen (dotted shade
+// included), never moved — opened like a menu, closed like one.
+enum MenuKind : uint8_t { MENU_NONE, MENU_DESKTOP, MENU_WINDOW, MENU_START, MENU_TURNOFF };
 constexpr int kMenuItemH = 17, kMenuSepH = 7, kMenuPad = 2;
 constexpr int kMenuDeskW = 166, kMenuWinW = 128;
 // Desktop: 6 items, 3 separators → 127; window: 6 items, 1 separator → 113.
-inline int menuW(MenuKind k) { return k == MENU_DESKTOP ? kMenuDeskW : kMenuWinW; }
+inline int menuW(MenuKind k) {
+    return k == MENU_START || k == MENU_TURNOFF ? 240 : k == MENU_DESKTOP ? kMenuDeskW : kMenuWinW;
+}
 inline int menuH(MenuKind k) {
+    if (k == MENU_TURNOFF) return 240;
+    if (k == MENU_START) return 214;
     return k == MENU_DESKTOP ? 2 * kMenuPad + 6 * kMenuItemH + 3 * kMenuSepH
                              : 2 * kMenuPad + 6 * kMenuItemH + 1 * kMenuSepH;
 }

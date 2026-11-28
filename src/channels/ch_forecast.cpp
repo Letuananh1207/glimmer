@@ -10,7 +10,8 @@
 //   rows       24 tall from y 66 (Hôm nay, Mai, Kia): icon 16×16 (15, y+4), day TL
 //              (35, y+3), condition TL (101, y+3), low TR (189, y+3), high TR
 //              (224, y+3), JBMono-13 black; today's row xpSelect, white text
-// No status bar. No data: the empty list + "Chưa có dự báo" xpDim TL (17, 70).
+// No status bar. No data: the empty list + "Chưa có dự báo" xpMuted centred on
+// x 11–228 at y 74 (P-2026-11-26.23 XP-Forecast-Empty, as XP's empty ListView).
 
 #include "channel.h"
 #include "display.h"
@@ -37,6 +38,7 @@ bool chForecastEnabled(const ChannelCtx& ctx) {
 }
 
 static void paintHeader() {
+    if (!Display::clipHits(11, 49, 218, 17)) return;        // clipped repaint elsewhere
     tft.fillRect(11, 49, 218, 15, C::BODY);
     tft.drawFastHLine(11, 64, 218, C::GROUP);
     tft.drawFastHLine(11, 65, 218, C::DIM);
@@ -54,6 +56,7 @@ static void paintHeader() {
 static void paintRow(int i, const WeatherDay& day, bool f) {
     static const char* const kDay[kRows] = {"Hôm nay", "Mai", "Kia"};
     const int y = kRowY + i * kRowH;
+    if (!Display::clipHits(11, y, 218, kRowH)) return;      // clipped repaint elsewhere
     const bool sel = i == 0;
     const uint16_t bg = sel ? C::SELECT : C::WHITE, ink = sel ? C::WHITE : C::BLACK;
     tft.fillRect(11, y, 218, kRowH, bg);
@@ -94,9 +97,9 @@ void chForecastDraw(const ChannelCtx& ctx) {
     const WeatherData& w = Weather::snapshot();
     if (!w.valid) {
         Display::useFont("JBMono-11");
-        tft.setTextDatum(TL_DATUM);
-        tft.setTextColor(C::DIM, C::WHITE);
-        tft.drawString("Chưa có dự báo", 17, 70);
+        tft.setTextDatum(TC_DATUM);
+        tft.setTextColor(C::MUTED, C::WHITE);
+        tft.drawString("Chưa có dự báo", 120, 74);
         for (int i = 0; i < kRows; i++) { s_fcMin[i] = -999; s_fcMax[i] = -999; s_fcCode[i] = 255; }
         return;
     }

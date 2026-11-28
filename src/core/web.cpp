@@ -14,15 +14,20 @@
 //                        zooms down) | {"action":"next"|"prev"|"pause"|"resume"}
 //   POST /api/screen   — {"on":false|true} backlight off / on now (RAM only)
 //   POST /api/windows  — {"open":[…],"top":…|null,"min":[…],"sel":…|null} the app's open windows (RAM only)
-//   POST /api/menu     — {"kind":"desktop"|"window"|"none","x","y","minimized"} context menu (RAM only)
-//   POST /api/balloon  — {"show":true|false} desktop tray balloon: show 10 s / hide now (RAM only)
+//   POST /api/clock    — {"tab","year","month","day","list","top","sync"} the Clock window as touched (RAM only)
+//   POST /api/power    — {"on":false|true} the app's power button: shut down / boot; {"restart":true}
+//                        Tắt máy tính › Khởi động lại (RAM only)
+//   POST /api/menu     — {"kind":"desktop"|"window"|"start"|"turnoff"|"none","x","y","minimized","all",
+//                        "hover","sub"} menu / Start menu / Tắt máy tính (RAM only)
 //   POST /mcp          — JSON-RPC: push_card, clear_card, list_cards, get_state, show/next_channel
 //   GET  /api/photos   — photos on the device + limits; POST uploads one (multipart field
 //                        "photo", baseline JPEG 188×188); DELETE /api/photos?name=p3.jpg
+//                        (or a sample photo, s2.jpg — listed apart in "samples")
+//   UDP  :4210         — mouse cursor from the app (cursor_core.h: 'G' 'C' 1 shape seq16 x y)
 //   GET  /api/wallpaper — desktop wallpaper state + limits; POST uploads it (multipart field
 //                        "wallpaper", baseline JPEG 240×214 ≤ 40 KB); DELETE removes it
 //   The API token (when set) guards /push*, /hook, /mcp, /api/refresh, /api/channel,
-//   /api/screen, /api/windows, /api/menu, /api/balloon, photo and wallpaper upload / delete.
+//   /api/screen, /api/windows, /api/menu, photo and wallpaper upload / delete.
 //   POST /update       — OTA firmware + filesystem (ESP8266HTTPUpdateServer)
 
 #include "web.h"
@@ -34,8 +39,11 @@
 #include "attention_json.h"
 #include "skill_core.h"
 #include "photos.h"
+#include "cursor.h"
+#include "mines_core.h"
 #include "wallpaper.h"
 #include "control_core.h"
+#include "clock_core.h"
 #include <ESP8266HTTPUpdateServer.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
@@ -75,8 +83,15 @@ extern const Control::Windows& mainWindows();
 extern void        mainSetWindows(const Control::Windows& w);
 extern const Control::Menu& mainMenu();
 extern bool        mainSetMenu(const Control::Menu& m);
-extern bool        mainSetBalloon(bool show);
-extern bool        mainBalloonShown();
+extern void        mainSetPower(bool on);
+extern void        mainSetMines(const Mines::View& v);
+extern const Mines::View& chMinesView();
+extern void        mainRestart();
+extern int         mainHot();
+extern const char* mainPowerName();
+extern const ClockCore::View& mainClockView();
+extern void        mainSetClock(const ClockCore::View& v, bool sync);
+extern uint32_t    mainNtpLast();
 extern void        mainSettingsChanged();
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -200,10 +215,59 @@ static void handleApiState() {
         if (w.top >= 0) wo[F("top")] = XPCore::progName(w.top); else wo[F("top")] = nullptr;
         if (w.sel >= 0) wo[F("sel")] = XPCore::progName(w.sel); else wo[F("sel")] = nullptr;
         const XPCore::MenuKind k = mainMenu().kind;
-        d[F("menu")] = k == XPCore::MENU_DESKTOP ? "desktop" : k == XPCore::MENU_WINDOW ? "window" : "none";
-        d[F("balloon")] = mainBalloonShown();      // desktop tray balloon up now (P-2026-11-26.15)
+        d[F("menu")] = k == XPCore::MENU_DESKTOP ? "desktop" : k == XPCore::MENU_WINDOW ? "window"
+                     : k == XPCore::MENU_START ? "start" : k == XPCore::MENU_TURNOFF ? "turnoff" : "none";
+        d[F("menu_hover")] = mainMenu().hover;
+        d[F("menu_sub")] = mainMenu().sub;
+        d[F("hot")] = mainHot();   // P-2026-11-27.24: button under the cursor (slot 0.., 10 = _, 11 = ×, -1)
+        // P-2026-11-26.21: no tray balloon any more; still reported (always false) so the app knows
+        // this firmware has the weather tray icon.
+        d[F("balloon")] = false;
+    }
+    // Clock window as touched + SNTP (P-2026-11-26.22).
+    {
+        const ClockCore::View& v = mainClockView();
+        JsonObject c = d[F("clock")].to<JsonObject>();
+        c[F("tab")] = v.tab; c[F("year")] = v.year; c[F("month")] = v.month; c[F("day")] = v.day;
+        c[F("list")] = v.list == ClockCore::LIST_MONTH ? "month" : v.list == ClockCore::LIST_ZONE ? "zone" : "none";
+        c[F("top")] = v.top;
+        d[F("ntp_last")] = mainNtpLast();
+        d[F("ntp_next")] = mainNtpLast() ? mainNtpLast() + ClockCore::kSyncEveryS : 0;
     }
     d[F("photos")]              = Photos::count();
+    d[F("photo_samples")]       = Photos::samples();
+    {   // The app's library (kho ảnh trên app): none / online / offline + the place of the photo on screen.
+        const PhotoSource::Source& ps = Photos::source();
+        JsonObject o = d[F("photo_source")].to<JsonObject>();
+        o[F("state")] = PhotoSource::stateName(PhotoSource::stateOf(ps));
+        o[F("remote")] = ps.remote;
+        o[F("index")] = ps.index;
+        o[F("count")] = ps.count;
+    }
+    d[F("power")]               = mainPowerName();
+    {   // Dò mìn (P-2026-11-27.25): present = this firmware draws it; the app keeps the game.
+        const Mines::View& mv = chMinesView();
+        JsonObject mo = d[F("mines")].to<JsonObject>();
+        mo[F("face")] = Mines::faceName(mv.face);
+        mo[F("left")] = mv.left;
+        mo[F("secs")] = mv.secs;
+        mo[F("run")]  = mv.run;
+    }
+    {   // Start's "most frequently used" (P-2026-11-27.25), newest first — the app's hit rules need them.
+        extern const int8_t* mainRecent();
+        JsonArray sr = d[F("start_recent")].to<JsonArray>();
+        const int8_t* r = mainRecent();
+        for (int i = 0; i < XPCore::kRecentN; i++) if (r[i] >= 0) sr.add(XPCore::progName(r[i]));
+    }   // R-DK-20: on / shutting / off / booting
+    // Mouse (R-DK-17): the app sends the pointer over UDP to this port.
+    JsonObject cur = d[F("cursor")].to<JsonObject>();
+    cur[F("port")]  = CursorCore::kPort;
+    cur[F("x")]     = Cursor::x();
+    cur[F("y")]     = Cursor::y();
+    cur[F("shape")] = Cursor::shape();
+    cur[F("shown")] = Cursor::shown();
+    cur[F("repaint_ms")]  = Cursor::repaintMs();
+    cur[F("repaint_max")] = Cursor::repaintMax();
     d[F("wallpaper")]           = Wallpaper::present();
     d[F("next_fetch_s")]        = mainNextFetchInMs() / 1000;
     d[F("claude_configured")]   = pSettings && !pSettings->claudeKey.isEmpty();
@@ -795,6 +859,14 @@ static void handlePhotoList() {
         o[F("name")] = Photos::name(i, nm, sizeof(nm));
         o[F("size")] = Photos::size(i);
     }
+    // Sample photos (s<N>.jpg, shipped in the filesystem image): shown after
+    // the user's, outside max_count — listed apart so an app never counts them.
+    JsonArray sa = d[F("samples")].to<JsonArray>();
+    for (int i = Photos::count(); i < Photos::total(); i++) {
+        JsonObject o = sa.add<JsonObject>();
+        o[F("name")] = Photos::name(i, nm, sizeof(nm));
+        o[F("size")] = Photos::size(i);
+    }
     d[F("free")]        = Photos::fsFree();
     d[F("total")]       = Photos::fsTotal();
     d[F("max_count")]   = Photos::kMax;
@@ -848,6 +920,28 @@ static void handlePhotoUploadDone() {
     sendJson(200, d);
 }
 
+// The app's photo library (app plan 2026-11-27 kho ảnh trên app): where the app serves it — {host, port, key} —
+// or {"clear": true}. RAM only: the app says it again whenever it opens. 400 = bad host / port / key.
+static void handlePhotoSource() {
+    if (!checkAuth()) { server.send_P(401, PSTR("application/json"), PSTR("{\"error\":\"unauthorized\"}")); return; }
+    JsonDocument d;
+    if (deserializeJson(d, server.arg("plain"))) {
+        server.send_P(400, PSTR("application/json"), PSTR("{\"error\":\"bad json\"}"));
+        return;
+    }
+    PhotoSource::Source& s = Photos::source();
+    if (d[F("clear")] | false) {
+        PhotoSource::clearSource(s);
+    } else if (!PhotoSource::setSource(s, d[F("host")] | "", d[F("port")] | 0L, d[F("key")] | "")) {
+        server.send_P(400, PSTR("application/json"), PSTR("{\"error\":\"host (IPv4), port, key (8-32 letters/digits)\"}"));
+        return;
+    }
+    JsonDocument r;
+    r[F("ok")] = true;
+    r[F("state")] = PhotoSource::stateName(PhotoSource::stateOf(s));
+    sendJson(200, r);
+}
+
 static void handlePhotoDelete() {
     if (!checkAuth()) { server.send_P(401, PSTR("application/json"), PSTR("{\"error\":\"unauthorized\"}")); return; }
     if (!Photos::remove(server.arg("name").c_str())) {
@@ -855,8 +949,9 @@ static void handlePhotoDelete() {
         return;
     }
     JsonDocument d;
-    d[F("ok")]    = true;
-    d[F("count")] = Photos::count();
+    d[F("ok")]      = true;
+    d[F("count")]   = Photos::count();
+    d[F("samples")] = Photos::samples();
     sendJson(200, d);
 }
 
@@ -1007,6 +1102,54 @@ void Web::begin(Settings& settings) {
         server.send_P(200, PSTR("application/json"), PSTR("{\"ok\":true}"));
     });
 
+    // The Clock window touched from the app (P-2026-11-26.22): every field
+    // optional, the rest keep their value; "sync": true asks the time servers now.
+    // Dò mìn (P-2026-11-27.25): the app keeps the game and sends the board to draw —
+    // {"board": 81 chars ('.' 'F' 'P' '0'..'8' 'M' 'X' 'W'), "face": smile|wow|cool|dead,
+    //  "left": mines left, "secs": seconds now, "run": the clock runs on}.
+    server.on("/api/mines",          HTTP_POST, []() {
+        if (!checkAuth()) { server.send_P(401, PSTR("application/json"), PSTR("{\"error\":\"unauthorized\"}")); return; }
+        JsonDocument d;
+        if (deserializeJson(d, server.arg("plain"))) {
+            server.send_P(400, PSTR("application/json"), PSTR("{\"error\":\"bad json\"}"));
+            return;
+        }
+        Mines::View v = chMinesView();
+        if (!d[F("board")].isNull() && !Mines::parseBoard(d[F("board")] | "", v.cell)) {
+            server.send_P(400, PSTR("application/json"), PSTR("{\"error\":\"board must be 81 cells\"}"));
+            return;
+        }
+        const int f = Mines::faceOf(d[F("face")] | "");
+        if (f >= 0) v.face = (uint8_t)f;
+        if (d[F("left")].is<int>()) v.left = (int16_t)d[F("left")].as<int>();
+        if (d[F("secs")].is<int>()) { const int s = d[F("secs")]; v.secs = (uint16_t)(s < 0 ? 0 : s > Mines::kSecsMax ? Mines::kSecsMax : s); }
+        if (d[F("run")].is<bool>()) v.run = d[F("run")];
+        mainSetMines(v);
+        server.send_P(200, PSTR("application/json"), PSTR("{\"ok\":true}"));
+    });
+
+    server.on("/api/clock",          HTTP_POST, []() {
+        if (!checkAuth()) { server.send_P(401, PSTR("application/json"), PSTR("{\"error\":\"unauthorized\"}")); return; }
+        JsonDocument d;
+        if (deserializeJson(d, server.arg("plain"))) {
+            server.send_P(400, PSTR("application/json"), PSTR("{\"error\":\"bad json\"}"));
+            return;
+        }
+        ClockCore::View v = mainClockView();
+        if (d[F("tab")].is<int>())   { const int t = d[F("tab")]; v.tab = (uint8_t)(t < 0 || t >= ClockCore::TAB_COUNT ? 0 : t); }
+        if (d[F("year")].is<int>())  { const int y = d[F("year")]; v.year = (uint16_t)(y < 1970 || y > 2099 ? 0 : y); }
+        if (d[F("month")].is<int>()) { const int m = d[F("month")]; v.month = (uint8_t)(m < 1 || m > 12 ? 0 : m); }
+        if (d[F("day")].is<int>())   { const int x = d[F("day")]; v.day = (uint8_t)(x < 1 || x > 31 ? 0 : x); }
+        if (d[F("list")].is<const char*>()) {
+            const char* l = d[F("list")];
+            v.list = !strcmp(l, "month") ? ClockCore::LIST_MONTH : !strcmp(l, "zone") ? ClockCore::LIST_ZONE : ClockCore::LIST_NONE;
+        }
+        if (d[F("top")].is<int>()) v.top = ClockCore::clampTop(v.list, d[F("top")].as<int>());
+        else v.top = ClockCore::clampTop(v.list, v.top);
+        mainSetClock(v, d[F("sync")] | false);
+        server.send_P(200, PSTR("application/json"), PSTR("{\"ok\":true}"));
+    });
+
     // Context menu (P-2026-11-26.14 XP-Menu): the app places it (top-left)
     // and picks the item itself; "none" closes it. 409 on a screen without one.
     server.on("/api/menu",           HTTP_POST, []() {
@@ -1019,12 +1162,17 @@ void Web::begin(Settings& settings) {
         const char* kind = d[F("kind")] | "none";
         Control::Menu m;
         m.kind = !strcmp(kind, "desktop") ? XPCore::MENU_DESKTOP
-               : !strcmp(kind, "window")  ? XPCore::MENU_WINDOW : XPCore::MENU_NONE;
+               : !strcmp(kind, "window")  ? XPCore::MENU_WINDOW
+               : !strcmp(kind, "start")   ? XPCore::MENU_START
+               : !strcmp(kind, "turnoff") ? XPCore::MENU_TURNOFF : XPCore::MENU_NONE;
+        m.all = d["all"] | false;            // Start menu: All Programs open
         int x = d[F("x")] | 0, y = d[F("y")] | 0;
         if (m.kind != XPCore::MENU_NONE) XPCore::menuClamp(m.kind, x, y);
         m.x = (int16_t)x;
         m.y = (int16_t)y;
         m.minimized = d[F("minimized")] | false;
+        m.hover = (int8_t)(d[F("hover")] | -1);
+        m.sub = (int8_t)(d[F("sub")] | -1);   // Start › All Programs row (P-2026-11-27.24)
         if (!mainSetMenu(m)) {
             server.send_P(409, PSTR("application/json"), PSTR("{\"error\":\"no menu on this screen\"}"));
             return;
@@ -1032,27 +1180,27 @@ void Web::begin(Settings& settings) {
         server.send_P(200, PSTR("application/json"), PSTR("{\"ok\":true}"));
     });
 
-    // Tray balloon (P-2026-11-26.15): the app taps the tray icon → show for
-    // 10 s; × → hide. 409 when the desktop is not on screen / weather skill off.
-    server.on("/api/balloon",        HTTP_POST, []() {
-        if (!checkAuth()) { server.send_P(401, PSTR("application/json"), PSTR("{\"error\":\"unauthorized\"}")); return; }
-        JsonDocument d;
-        if (deserializeJson(d, server.arg("plain")) || !d[F("show")].is<bool>()) {
-            server.send_P(400, PSTR("application/json"), PSTR("{\"error\":\"body must be {show: true|false}\"}"));
-            return;
-        }
-        if (!mainSetBalloon(d[F("show")].as<bool>())) {
-            server.send_P(409, PSTR("application/json"), PSTR("{\"error\":\"no balloon on this screen\"}"));
-            return;
-        }
-        JsonDocument r;
-        r[F("ok")]      = true;
-        r[F("balloon")] = mainBalloonShown();
-        sendJson(200, r);
-    });
 
     // Backlight off / on now, whatever the night window says (RAM only; an
     // approval / question / urgent card still lights an "off" screen).
+    // The app's power button (R-DK-20): {"on": false} shuts the "computer"
+    // down (screen dark, device still running), {"on": true} boots it.
+    server.on("/api/power",          HTTP_POST, []() {
+        if (!checkAuth()) { server.send_P(401, PSTR("application/json"), PSTR("{\"error\":\"unauthorized\"}")); return; }
+        JsonDocument d;
+        // P-2026-11-27.24: {"restart": true} = Tắt máy tính › Khởi động lại (shut down, boot again).
+        if (deserializeJson(d, server.arg("plain")) || (!d[F("on")].is<bool>() && !(d[F("restart")] | false))) {
+            server.send_P(400, PSTR("application/json"), PSTR("{\"error\":\"body must be {on: true|false} or {restart: true}\"}"));
+            return;
+        }
+        if (d[F("restart")] | false) mainRestart();
+        else mainSetPower(d[F("on")].as<bool>());
+        JsonDocument r;
+        r[F("ok")]    = true;
+        r[F("power")] = mainPowerName();
+        sendJson(200, r);
+    });
+
     server.on("/api/screen",         HTTP_POST, []() {
         if (!checkAuth()) { server.send_P(401, PSTR("application/json"), PSTR("{\"error\":\"unauthorized\"}")); return; }
         JsonDocument d;
@@ -1076,6 +1224,7 @@ void Web::begin(Settings& settings) {
     server.on("/api/photos",         HTTP_GET,    handlePhotoList);
     server.on("/api/photos",         HTTP_POST,   handlePhotoUploadDone, handlePhotoUploadChunk);
     server.on("/api/photos",         HTTP_DELETE, handlePhotoDelete);
+    server.on("/api/photos/source",  HTTP_POST,   handlePhotoSource);
     server.on("/api/wallpaper",      HTTP_GET,    handleWallpaperGet);
     server.on("/api/wallpaper",      HTTP_POST,   handleWallpaperUploadDone, handleWallpaperChunk);
     server.on("/api/wallpaper",      HTTP_DELETE, handleWallpaperDelete);

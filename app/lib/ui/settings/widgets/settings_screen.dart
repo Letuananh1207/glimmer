@@ -10,9 +10,12 @@ import 'settings_tiles.dart';
 
 /// Device settings (screen_specs §3).
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key, required this.viewModel});
+  const SettingsScreen({super.key, required this.viewModel, required this.onOpenWeatherLocation});
 
   final SettingsViewModel viewModel;
+
+  /// THỜI TIẾT › Vị trí thời tiết (2026-11-26.9): pushes the screen, completes when it closes.
+  final Future<void> Function() onOpenWeatherLocation;
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -36,6 +39,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final m = vm.value<int>(key, fallback);
     final t = await showTimePicker(context: context, initialTime: TimeOfDay(hour: m ~/ 60, minute: m % 60));
     if (t != null) vm.set(key, t.hour * 60 + t.minute);
+  }
+
+  /// THỜI TIẾT row: the place name, "chưa đặt", or the coordinates (old firmware / no name).
+  String _placeSub(AppLocalizations l) {
+    final lat = vm.value<double>('weatherLat', 0), lon = vm.value<double>('weatherLon', 0);
+    if (lat == 0 && lon == 0) return l.settingsWeatherLocationNone;
+    final place = vm.value<String>('weatherPlace', '');
+    return place.isNotEmpty ? place : l.weatherLocationCoords(lat.toStringAsFixed(2), lon.toStringAsFixed(2));
   }
 
   String _secretSub(AppLocalizations l, String key) => switch (vm.secret(key)) {
@@ -139,6 +150,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         if (night == 1) slider('nightBright', l.settingsNightBright),
       ],
+      // THỜI TIẾT (2026-11-26.9): one row to Vị trí thời tiết; not part of Lưu (the screen sends on its own).
+      SettingsSection(title: l.settingsSectionWeather),
+      SettingsEditTile(
+        title: l.settingsWeatherLocation,
+        sub: _placeSub(l),
+        icon: Icons.chevron_right,
+        onTap: () async {
+          await widget.onOpenWeatherLocation();
+          await vm.refreshLocation();
+        },
+      ),
       SettingsSection(title: l.settingsSectionClaude),
       SettingsEditTile(
         title: l.settingsClaudeKey,

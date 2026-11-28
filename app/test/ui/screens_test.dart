@@ -266,7 +266,7 @@ void main() {
   group('Cài đặt', () {
     testWidgets('error: message + retry', (t) async {
       await t.runAsync(() => rig.connect(_url, _state()));
-      await t.pumpWidget(_app(rig, settingsScreen()));
+      await t.pumpWidget(_app(rig, settingsScreen(onOpenWeatherLocation: () async {})));
       await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
       await _frames(t);
       expect(find.text(_vi.devErrUnreachable('TimeoutException')), findsOneWidget);
@@ -276,7 +276,7 @@ void main() {
     testWidgets('R-CD-1 R-CD-3 a change shows the save bar; night rows follow the mode', (t) async {
       await t.runAsync(() => rig.connect(_url, _state()));
       rig.api.on(_url, 'GET', '/api/settings', {'brightness': 60, 'nightMode': 2, 'idleDim': false});
-      await t.pumpWidget(_app(rig, settingsScreen()));
+      await t.pumpWidget(_app(rig, settingsScreen(onOpenWeatherLocation: () async {})));
       await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
       await _frames(t);
       expect(find.text(_vi.devSliderValue(_vi.settingsBrightness, 60)), findsOneWidget);
@@ -394,7 +394,7 @@ void main() {
       // 4 tabs, opened on tab 1 = Điều khiển.
       expect(find.text(_vi.navControl), findsOneWidget);
       expect(find.text(_vi.navSkills), findsOneWidget);
-      expect(find.byTooltip(_vi.controlRefreshA11y), findsOneWidget);
+      expect(find.bySemanticsLabel(_vi.controlTrackpadA11y), findsOneWidget);
       rig.repo.forget();
       for (var i = 0; i < 10; i++) {
         await t.pump(const Duration(milliseconds: 100));

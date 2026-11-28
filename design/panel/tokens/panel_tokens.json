@@ -2820,6 +2820,421 @@
         "xpStartHi": "xpStartDark",
         "xpStart": "xpGreen"
       }
+    },
+    "pointer": {
+      "use": "P-2026-11-27.24 — con trỏ chuột từ app (XP Normal / Link / Working in Background)",
+      "source": "source/XP-Cursor-Sheet.dc.html",
+      "shapes": {
+        "arrow": {
+          "size": [
+            12,
+            19
+          ],
+          "hot": [
+            0,
+            0
+          ]
+        },
+        "hand": {
+          "size": [
+            16,
+            19
+          ],
+          "hot": [
+            5,
+            0
+          ]
+        },
+        "wait": {
+          "size": [
+            21,
+            22
+          ],
+          "hot": [
+            0,
+            0
+          ],
+          "hourglass": [
+            10,
+            9,
+            9,
+            12
+          ],
+          "hourglassFlat": [
+            8,
+            11,
+            12,
+            9
+          ],
+          "frames": 4,
+          "stepMs": 200
+        }
+      },
+      "colors": [
+        "black",
+        "white",
+        "xpAmber #C98A00"
+      ],
+      "shadow": false,
+      "hidden": [
+        "Night",
+        "màn hệ thống",
+        "tắt màn",
+        "tắt máy",
+        "app không ở chế độ chuột"
+      ],
+      "waitAtPointer": "con trỏ chờ của XP-Open vẽ tại chỗ con trỏ khi ở chế độ chuột"
+    },
+    "hot": {
+      "use": "P-2026-11-27.24 — mục / nút dưới con trỏ",
+      "menuItem": {
+        "bg": "xpSelect",
+        "text": "white",
+        "disabledText": "xpMenuBorder",
+        "rect": "(x+2, mục, w−4, 17)"
+      },
+      "startLeft": {
+        "bg": "xpSelect",
+        "rect": [
+          2,
+          "hàng",
+          149,
+          20
+        ],
+        "text": "white"
+      },
+      "startRight": {
+        "bg": "xpSelect",
+        "rect": [
+          154,
+          "hàng",
+          84,
+          21
+        ],
+        "text": "white"
+      },
+      "taskButton": {
+        "face": "xpTaskHi #5A9BF6",
+        "from": "xpBtn #3C81F3"
+      },
+      "close": {
+        "face": "#F06A50",
+        "from": "#E0523C"
+      },
+      "min": {
+        "face": "xpTitleHi #3D95FF",
+        "from": "#2B80F5"
+      }
+    },
+    "shutDown": {
+      "use": "P-2026-11-27.24 — màn đang tắt máy (Welcome: Windows is shutting down...)",
+      "chrome": "XP-Connecting không chữ welcome",
+      "italic": {
+        "text": "đang tắt máy...",
+        "font": "JBMono-16B",
+        "size": [
+          145,
+          18
+        ],
+        "at": [
+          20,
+          96
+        ],
+        "shadow": [
+          21,
+          97,
+          "xpWelcomeShadow"
+        ]
+      },
+      "holdMs": 1500,
+      "then": "off (đèn tắt)",
+      "boot": "XP-Splash 2,4 s → XP-Connecting 1 s → desktop trống"
+    },
+    "turnOff": {
+      "use": "P-2026-11-27.24 — hộp Tắt máy tính (Turn off computer)",
+      "source": "source/XP-TurnOff.dc.html",
+      "backdrop": "(x+y) chẵn → black",
+      "frame": [
+        13,
+        49,
+        214,
+        130
+      ],
+      "title": {
+        "rect": [
+          14,
+          50,
+          212,
+          28
+        ],
+        "bg": "xpWelcomeBand",
+        "text": "Tắt máy tính",
+        "font": "JBMono-12B",
+        "at": [
+          22,
+          57
+        ],
+        "w": 84
+      },
+      "flag": [
+        204,
+        58,
+        14,
+        12
+      ],
+      "line": [
+        14,
+        78,
+        212,
+        1,
+        "xpWelcomeLine"
+      ],
+      "body": [
+        14,
+        79,
+        212,
+        66,
+        "xpWelcome"
+      ],
+      "bottom": [
+        14,
+        145,
+        212,
+        33,
+        "xpWelcomeBand"
+      ],
+      "buttons": {
+        "size": 24,
+        "cx": [
+          50,
+          120,
+          190
+        ],
+        "y": 90,
+        "labels": [
+          [
+            "Chờ",
+            21
+          ],
+          [
+            "Tắt",
+            21
+          ],
+          [
+            "Khởi động / lại",
+            63
+          ]
+        ],
+        "labelY": [
+          117,
+          129
+        ],
+        "faces": {
+          "standby": [
+            "#F2C200",
+            "#FFE680"
+          ],
+          "off": [
+            "#D8341E",
+            "#F06A50"
+          ],
+          "restart": [
+            "#2E8A2E",
+            "#5CC15C"
+          ]
+        }
+      },
+      "cancel": {
+        "rect": [
+          164,
+          151,
+          54,
+          21
+        ],
+        "text": "Hủy",
+        "w": 21
+      },
+      "keys": "←/→ đổi nút, Enter chọn, Esc = Hủy"
+    },
+    "startAll": {
+      "use": "P-2026-11-27.25 — Tất cả chương trình đủ chương trình, dời lên khi cao",
+      "source": "source/XP-Start-All-Full.dc.html",
+      "menu": {
+        "x": 144,
+        "w": 96,
+        "maxBottom": 213,
+        "full": [
+          144,
+          2,
+          96,
+          211
+        ],
+        "border": "xpMenuBorder",
+        "bg": "white"
+      },
+      "row": {
+        "h": 20,
+        "icon": [
+          3,
+          2
+        ],
+        "text": [
+          22,
+          4
+        ],
+        "font": "JBMono-11",
+        "color": "bg"
+      },
+      "separator": {
+        "h": 7,
+        "line": [
+          4,
+          3,
+          -8,
+          1,
+          "xpMenuBorder"
+        ]
+      },
+      "order": [
+        "Claude",
+        "Codex",
+        "AI hôm nay",
+        "Xu hướng",
+        "Agents",
+        "Ảnh",
+        "Thời tiết",
+        "Đồng hồ",
+        "Dò mìn",
+        "-",
+        "Thêm / gỡ"
+      ],
+      "widths": {
+        "AI hôm nay": 70,
+        "Xu hướng": 56,
+        "Agents": 42,
+        "Dò mìn": 42
+      },
+      "recent": {
+        "use": "cột trái: 3 chương trình mở gần nhất (không kể ghim)",
+        "source": "source/XP-Start-Recent.dc.html"
+      }
+    },
+    "mines": {
+      "use": "P-2026-11-27.25 — Dò mìn (Minesweeper XP, Beginner 9×9, 10 mìn)",
+      "source": "source/XP-Mines.dc.html",
+      "colors": {
+        "face": "#C0C0C0",
+        "shadow": "#808080",
+        "light": "#FFFFFF",
+        "ledOn": "#FF0000",
+        "ledOff": "#480000",
+        "ledBg": "#000000",
+        "smiley": "#FFFF00",
+        "boom": "#FF0000",
+        "flag": "#FF0000",
+        "num": {
+          "1": "#0000FF",
+          "2": "#008000",
+          "3": "#FF0000",
+          "4": "#000080",
+          "5": "#800000",
+          "6": "#008080",
+          "7": "#000000",
+          "8": "#808080"
+        }
+      },
+      "body": [
+        2,
+        22,
+        236,
+        192,
+        "face"
+      ],
+      "counterPanel": {
+        "rect": [
+          45,
+          26,
+          150,
+          31
+        ],
+        "sunken": 2
+      },
+      "led": {
+        "box": [
+          41,
+          25
+        ],
+        "mines": [
+          51,
+          30
+        ],
+        "time": [
+          148,
+          30
+        ],
+        "digit": [
+          13,
+          23
+        ],
+        "max": 999
+      },
+      "smiley": {
+        "rect": [
+          107,
+          29,
+          26,
+          26
+        ],
+        "moods": [
+          "smile",
+          "wow",
+          "cool",
+          "dead"
+        ],
+        "circle": 17
+      },
+      "board": {
+        "rect": [
+          45,
+          61,
+          150,
+          150
+        ],
+        "sunken": 3,
+        "cell0": [
+          48,
+          64
+        ],
+        "cell": 16,
+        "cols": 9,
+        "rows": 9,
+        "mines": 10
+      },
+      "cellArt": {
+        "closed": "nổi 2 px",
+        "open": "vạch shadow trên + trái 1 px",
+        "number": "JBMono-16B, giữa ô",
+        "mine": "13×13 tại (+2, +2)",
+        "flag": "9×9 tại (+4, +3)",
+        "boom": "nền boom + mìn",
+        "wrong": "mìn + chéo đỏ 2 px"
+      },
+      "desktopIcon": {
+        "size": [
+          32,
+          23
+        ],
+        "cell": "cột 2 tâm x 120, ô y 8",
+        "label": [
+          "Dò mìn",
+          42
+        ]
+      },
+      "title": {
+        "text": "Dò mìn",
+        "font": "JBMono-12B",
+        "w": 42
+      }
     }
   }
 }
