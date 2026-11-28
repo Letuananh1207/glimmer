@@ -3661,6 +3661,138 @@
           "#E59700"
         ]
       }
+    },
+    "explorer": {
+      "xp": "Windows Explorer / Recycle Bin",
+      "body": [
+        2,
+        22,
+        236,
+        174
+      ],
+      "status": {
+        "rect": [
+          2,
+          196,
+          236,
+          18
+        ],
+        "panes": [
+          [
+            3,
+            150
+          ],
+          [
+            152,
+            236
+          ]
+        ]
+      },
+      "groupHead": {
+        "font": "JBMono-12B",
+        "color": "xpGroupLabel",
+        "line": [
+          "xpDividerFade",
+          140,
+          "xpDivider",
+          40
+        ]
+      },
+      "computer": {
+        "drive": [
+          10,
+          50
+        ],
+        "bar": [
+          48,
+          62,
+          122,
+          10
+        ],
+        "used": "xpUserSel",
+        "groups": {
+          "Ổ đĩa": 26,
+          "Thư mục": 98
+        }
+      },
+      "thumbs": {
+        "cell": [
+          57,
+          72
+        ],
+        "cols": 4,
+        "origin": [
+          6,
+          28
+        ],
+        "frame": 51,
+        "img": 47,
+        "frameEdge": "#ACA899",
+        "scale": "1/4"
+      },
+      "confirm": {
+        "box": [
+          18,
+          60,
+          204,
+          104
+        ],
+        "title": "Xác nhận xoá tệp",
+        "bands": [
+          "#3D95FF",
+          "#2B80F5",
+          "#1C6BE8",
+          "#0F5BDC"
+        ],
+        "buttons": [
+          [
+            "Có",
+            58,
+            134,
+            56
+          ],
+          [
+            "Không",
+            126,
+            134,
+            56
+          ]
+        ]
+      },
+      "trash": {
+        "bar": [
+          2,
+          22,
+          236,
+          28
+        ],
+        "buttons": [
+          [
+            "Dọn sạch Thùng rác",
+            6,
+            26,
+            136
+          ],
+          [
+            "Khôi phục",
+            146,
+            26,
+            75
+          ]
+        ],
+        "list": [
+          6,
+          52,
+          228,
+          140
+        ],
+        "cols": [
+          12,
+          110,
+          168
+        ]
+      },
+      "trashFullIcon": "bitmap 32×23 = P-.19 + 3 tờ giấy (viền #8A8A8A) — source/XP-Desk-TrashFull.dc.html"
     }
   }
 }

@@ -5,6 +5,30 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-28.32 — Máy tính, Ảnh của tôi và Thùng rác kiểu Windows XP
+
+- **Kênh mới Explorer** (`source/XP-Explorer-Computer|Photos|Confirm|Trash|TrashEmpty.dc.html`,
+  `source/XP-Desk-TrashFull.dc.html`; `screen_specs.md` §17 mục XP-Explorer; ảnh `XPExplorer*.png`, `XPDeskTrashFull.png`)
+  — theo *Windows Explorer* / *Recycle Bin*:
+  - Một cửa sổ, 3 chỗ xem; bỏ thanh công cụ / địa chỉ / khung tác vụ; thân trắng, thanh trạng thái 2 ô.
+  - Máy tính: nhóm `Ổ đĩa` (`Bộ nhớ (C:)`, thanh dung lượng, `trống 412 KB / 1 MB`), nhóm `Thư mục` (`Ảnh của tôi`,
+    `Hình nền`).
+  - Ảnh của tôi: ảnh thu nhỏ 47 px (1/4), 4 cột, tên dưới; chỉ ảnh trên máy (8 ảnh mới nhất của app + ảnh mẫu).
+  - Xoá ảnh: hộp `Xác nhận xoá tệp` (`Có` / `Không`).
+  - Thùng rác: `Dọn sạch Thùng rác` / `Khôi phục` + ListView `Tên | Cỡ | Đã xoá`; rỗng → nút mờ.
+  - Desktop: Thùng rác có mục → biểu tượng thùng đầy.
+  - Máy chưa có; biểu tượng Thùng rác chưa mở được.
+- Phiếu: `docs/phieu_panel/2026-11-27-my-computer-thung-rac.md`
+- Đổi luật: Start › `Thiết bị` (chỗ My Computer của Start XP) mở cửa sổ Máy tính; không thêm biểu tượng Máy tính lên
+  desktop (cột đã đủ 4 ô); biểu tượng Thùng rác mở Thùng rác.
+- Cần firmware: dung lượng LittleFS tổng / trống; Thùng rác (xoá = chuyển vào `/trash/`, khôi phục, dọn); giải mã ảnh
+  thu 1/4; biểu tượng thùng đầy; màu `#ACA899` (khung ảnh) đã có.
+
+**Việc cần làm trong code:**
+- Kênh `Explorer` (hệ thống): 3 chỗ xem theo lệnh app; mục chọn / mở / xoá / khôi phục / dọn do app gửi; hộp xác nhận
+  như menu; mỗi ảnh thu nhỏ vẽ riêng (an toàn khi vẽ lại dưới con trỏ).
+- Desktop: biểu tượng Thùng rác đổi bản đầy / trống theo số mục.
+
 ## P-2026-11-28.31 — Máy tính bỏ túi (Calculator) kiểu Windows XP
 
 - **Kênh mới Calc** (`source/XP-Calc.dc.html`, `XP-Calc-Down.dc.html`, `XP-Calc-Hover.dc.html`, `XP-Calc-Error.dc.html`;

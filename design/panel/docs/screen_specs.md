@@ -1844,6 +1844,8 @@ Nguồn `source/Photo-Empty.dc.html` · ảnh `screens/@2x/PhotoEmpty.png`
 
 ## 17. Kiểu XP (Luna) — giao diện toàn máy
 
+> **P-2026-11-28.32 — Máy tính / Ảnh của tôi / Thùng rác:** cửa sổ Explorer kiểu XP, hộp xác nhận xoá, biểu tượng Thùng rác đầy — xem mục XP-Explorer.
+
 > **P-2026-11-28.31 — Máy tính bỏ túi:** Calculator Standard kiểu XP (skill Giải trí) — xem mục XP-Calc.
 
 > **P-2026-11-28.30 — Thuộc tính màn hình:** hộp thoại Display Properties (Màn nền / Bảo vệ màn hình / Cài đặt) — xem mục XP-Display.
@@ -3005,6 +3007,44 @@ Giải trí (`fun`, cùng Dò mìn); có mục Start › Tất cả chương tr�
   Task Manager.
 - App giữ phép tính (trái sang phải như XP Standard, `=` lặp phép cuối, `Backspace` / `CE` / `C`, bộ nhớ); thiết bị chỉ
   vẽ. Bấm một nút: vẽ lại nút đó (lõm rồi thả) + ô hiển thị (+ ô bộ nhớ nếu đổi).
+
+### XP-Explorer — Máy tính, Ảnh của tôi, Thùng rác (kênh `Explorer`)
+
+> **P-2026-11-28.32 — Explorer kiểu XP.** Phiếu `docs/phieu_panel/2026-11-27-my-computer-thung-rac.md`.
+
+Nguồn `source/XP-Explorer-Computer|Photos|Confirm|Trash|TrashEmpty.dc.html`, `XP-Desk-TrashFull.dc.html` · ảnh
+`XPExplorerComputer.png`, `XPExplorerPhotos.png`, `XPExplorerConfirm.png`, `XPExplorerTrash.png`, `XPExplorerTrashEmpty.png`,
+`XPDeskTrashFull.png`. Token `themeXP.explorer`. Thành phần XP thật: cửa sổ *Windows Explorer* (My Computer chia nhóm,
+Thumbnails, Details), *Recycle Bin* (trống / đầy), hộp *Confirm File Delete*. Một kênh, 3 chỗ xem; bỏ thanh công cụ,
+thanh địa chỉ, khung tác vụ bên trái (không đủ chỗ) — tiêu đề cửa sổ = chỗ đang xem.
+
+- **Khung**: cửa sổ XP; thân white (2, 22, 236×174); thanh trạng thái (2, 196, 236×18) xpBody, 2 ô lõm x 3–150 / 152–236,
+  chữ `JBMono-11` TL (x+4, 199).
+- **Máy tính** (`XPExplorerComputer`; tiêu đề `Máy tính` 56, biểu tượng My Computer 16):
+  - Tiêu đề nhóm `JBMono-12B` xpGroupLabel TL (8, y) + vạch (8, y+15, 140×1) xpDividerFade + (148, y+15, 40×1) xpDivider:
+    `Ổ đĩa` y 26, `Thư mục` y 98.
+  - Ổ: biểu tượng ổ cứng 32×23 tại (10, 50); `Bộ nhớ (C:)` TL (48, 47) 77; thanh (48, 62, 122×10) viền xpFieldBorder,
+    nền white, phần đã dùng xpUserSel `#2C55C4` từ x 49, rộng = 120 × đã dùng / tổng; `trống 412 KB / 1 MB` xpLabel TL
+    (48, 75) 133.
+  - Thư mục: My Pictures 32×23 (P-.19) tại (10, 122) + `Ảnh của tôi` (48, 121) 77 + `8 tệp · 214 KB` xpLabel (48, 135);
+    thư mục vàng 32×23 tại (10, 160) + `Hình nền` (48, 159) 56 + `wallpaper.jpg` xpLabel (48, 173) 91.
+  - Trạng thái: `3 đối tượng` · `Máy tính`.
+- **Ảnh của tôi** (`XPExplorerPhotos`; tiêu đề 77, biểu tượng Ảnh 16): ô 57 × 72 px, 4 cột từ (6, 28); khung (ô.x + 3, ô.y,
+  51×51) viền `#ACA899`, nền white; ảnh thu 1/4 = 47×47 tại (+2, +2) (TJpgDec scale 2, mỗi ảnh `clipHits` riêng); tên
+  `JBMono-11` căn giữa ô tại y + 53 (`mau1.jpg` 56). Mục chọn: viền khung xpSelect + nhãn (ô.x + 1, y + 53, 55×14) xpSelect
+  chữ white. Chỉ ảnh trên máy (`p1`…`p8` = 8 ảnh mới nhất của app, rồi ảnh mẫu `mau*`). Trạng thái `8 đối tượng · 214 KB`
+  · `Ảnh của tôi`. Rỗng: thân trống, `0 đối tượng`. Mở ảnh → cửa sổ Ảnh tại ảnh đó.
+- **Xác nhận xoá** (`XPExplorerConfirm`): hộp (18, 60, 204×104) viền xpFrame 2 px; thanh tiêu đề 20 px 4 dải `#3D95FF`
+  `#2B80F5` `#1C6BE8` `#0F5BDC`, `Xác nhận xoá tệp` 12B white (24, 63) 112; nút × (204, 63, 14×14) xpClose; thân xpBody;
+  Thùng rác đầy 32×23 tại (28, 92); `Chuyển 'p3.jpg'` (68, 90) / `vào Thùng rác?` (68, 104) `JBMono-11`; `Có` (58, 134,
+  56×21) chọn sẵn (viền hot), `Không` (126, 134, 56×21).
+- **Thùng rác** (`XPExplorerTrash` / `XPExplorerTrashEmpty`; tiêu đề 63, biểu tượng thùng 16 đầy / trống): dải nút
+  (2, 22, 236×28) xpBody: `Dọn sạch Thùng rác` (6, 26, 136×21) 126 · `Khôi phục` (146, 26, 75×21) 63 — mờ khi rỗng.
+  ListView (6, 52, 228×140): tiêu đề `Tên` (12) · `Cỡ` (110) · `Đã xoá` (168), vạch cột x 104 / 162; dòng 18 từ y 70:
+  biểu tượng Ảnh 16 (10, +2), tên (30, +2), cỡ `32 KB`, giờ xoá `14:02`; dòng chọn xpSelect. Trạng thái
+  `2 đối tượng · 61 KB` / `0 đối tượng` · `Thùng rác`. `Dọn sạch` hỏi lại bằng hộp xác nhận (`Xoá hẳn N mục?`).
+- **Desktop** (`XPDeskTrashFull`): Thùng rác có mục → biểu tượng 32×23 tại (24, 152) đổi sang bản đầy (3 tờ giấy nhô khỏi
+  miệng thùng, viền `#8A8A8A`); rỗng → bản P-.19.
 
 ### XP-Start-All — Start đủ chương trình (mọi chương trình mở được từ Start)
 
