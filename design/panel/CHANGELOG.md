@@ -5,6 +5,22 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-28.29 — Alt+Tab: đổi qua lại các cửa sổ như Windows XP
+
+- **Lớp vẽ đè Alt+Tab** (`source/XP-AltTab-3|1|6.dc.html`, `screen_specs.md` §17 mục XP-AltTab; ảnh `XPAltTab3.png`,
+  `XPAltTab1.png`, `XPAltTab6.png`) — theo hộp chuyển tác vụ của XP:
+  - Hộp giữa vùng y 0–213: viền `#0A246A`, nền `#D3E5FA`; hàng biểu tượng 32 px các cửa sổ đang mở (dùng gần nhất
+    trước), ô 40×38, tối đa 5 mỗi hàng; ô chọn khung xpSelect 2 px; ô tên trắng dưới cùng, JBMono-11 căn giữa.
+  - Mở → chọn sẵn cửa sổ thứ hai; 1 cửa sổ → chính nó; không cửa sổ → không hiện hộp; Shift+Tab lùi.
+  - Máy chưa có.
+- Phiếu: `docs/phieu_panel/2026-11-27-alt-tab.md`
+- Cần firmware: menu kind `alttab` + `sel` trong `/api/menu` và `/api/state` `menu`; màu `#0A246A`, `#D3E5FA` (đã có ở
+  Start menu); biểu tượng 32 px cho Ngày và Giờ / Trình quản lý tác vụ (16 px ×2).
+
+**Việc cần làm trong code:**
+- Vẽ hộp Alt+Tab như menu (dừng `tick()` kênh dưới); đổi `sel` chỉ vẽ lại 2 ô + ô tên; `kind:none` → `draw()` lại.
+- App: giữ Alt + Tab / Shift+Tab → gửi `alttab` + `sel`; nhả Alt → mở cửa sổ đã chọn (như chạm nút thanh tác vụ).
+
 ## P-2026-11-28.28 — Trình quản lý tác vụ kiểu Windows XP
 
 - **Kênh mới TaskMgr** (`source/XP-TaskMgr-Apps|Hover|Empty|Perf|Net.dc.html`, `screen_specs.md` §17 mục XP-TaskMgr;

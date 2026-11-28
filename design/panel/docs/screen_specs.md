@@ -1844,6 +1844,8 @@ Nguồn `source/Photo-Empty.dc.html` · ảnh `screens/@2x/PhotoEmpty.png`
 
 ## 17. Kiểu XP (Luna) — giao diện toàn máy
 
+> **P-2026-11-28.29 — Alt+Tab:** hộp chuyển tác vụ kiểu XP giữa màn — xem mục XP-AltTab.
+
 > **P-2026-11-28.28 — Trình quản lý tác vụ:** cửa sổ mới kiểu Windows Task Manager (tab Ứng dụng / Hiệu năng / Mạng) — xem mục XP-TaskMgr.
 
 > **P-2026-11-26.23 — dọn thiết kế:** bỏ 76 màn lỗi thời khỏi canvas và `source/` (màn kiểu cũ trước XP, màn XP đã có bản thay); XP-Desk-All = desktop hiện hành (Claude thu nhỏ); Thời tiết lỗi / cũ / Dự báo chưa có vẽ lại theo cửa sổ có tab. Các mục đặc tả của màn đã bỏ giữ làm lịch sử.
@@ -2917,6 +2919,28 @@ không xoá khi `draw()` vẽ lại dưới con trỏ.
 - Đồ thị (40, 61, 190×72) như trên = cường độ Wi-Fi % (RSSI −100…−40 dBm → 0…100 %), 48 điểm.
 - ListView (10, 140, 220×38): tiêu đề `Mạng` (15) · `Tín hiệu` (80) · `IP` (145), vạch cột x 75 / 140; dòng y 160:
   ssid (tối đa 8 ký tự = 56 px, cắt `Utf8::copy`), `-58 dBm` 49, `192.168.1.23` 84.
+
+### XP-AltTab — ô chuyển tác vụ (Alt+Tab)
+
+> **P-2026-11-28.29 — Alt+Tab kiểu XP.** Phiếu `docs/phieu_panel/2026-11-27-alt-tab.md`.
+
+Nguồn `source/XP-AltTab-3|1|6.dc.html` (nền nhúng `XP-Weather-Props`) · ảnh `XPAltTab3.png`, `XPAltTab1.png`,
+`XPAltTab6.png`. Token `themeXP.altTab`. Thành phần XP thật: hộp chuyển tác vụ (*CoolSwitch*) — hàng biểu tượng các cửa sổ
+đang mở theo thứ tự dùng gần nhất, ô chọn có khung vuông, tên cửa sổ dưới cùng.
+
+- **Lớp vẽ đè** như menu (menu kind `alttab`, `sel`): `tick()` của kênh dưới dừng; thanh tác vụ không bị che.
+- **Hộp**: rộng `W = max(12 + 40 × cột, 160)`, cao `H = 8 + 38 × hàng + 4 + 18 + 8`; căn giữa x 0–239, y 0–213
+  (`x0 = (240 − W) / 2`, `y0 = (214 − H) / 2`). Viền `#0A246A` 1 px, góc cắt 1 px; viền trong white 1 px; nền `#D3E5FA`.
+  3 cửa sổ → (40, 69, 160×76); 6 cửa sổ → (14, 50, 212×114).
+- **Ô**: 40×38, tối đa 5 mỗi hàng (XP: 7), lưới căn giữa hộp, từ y0 + 8. Biểu tượng 32 px căn giữa ô 40×36: Claude = Clawd ×2
+  36×20, Codex / Ảnh = bitmap desktop 32×23 (P-.19), Thời tiết = `XP::weatherIcon` 32, Ngày và Giờ / Trình quản lý tác vụ =
+  biểu tượng 16 px ×2.
+- **Ô chọn**: khung xpSelect 2 px — (ô.x + 1, ô.y, 38×36) tô xpSelect rồi (ô.x + 3, ô.y + 2, 34×32) nền hộp, vẽ lại biểu tượng.
+- **Ô tên**: (x0 + 8, y0 + 8 + 38 × hàng + 4, W − 16 × 18) viền xpFieldBorder, nền white; tên `JBMono-11` black căn giữa
+  (y + 1). Tên = tiêu đề cửa sổ (dài nhất `Trình quản lý tác vụ` 140 px).
+- **Hành vi** (như XP): mở → chọn sẵn cửa sổ thứ hai (một cửa sổ → chính nó); Tab tiến, Shift+Tab lùi, vòng quanh; không
+  cửa sổ nào → không hiện hộp. Đổi ô chọn chỉ vẽ lại 2 ô + ô tên. Nhả Alt → đóng hộp (`draw()` kênh dưới) rồi mở cửa sổ đã
+  chọn như XP-Open (nút lún, khung trống + con trỏ chờ).
 
 ### XP-Start-All — Start đủ chương trình (mọi chương trình mở được từ Start)
 

@@ -3416,6 +3416,49 @@
         "grid": "#004000",
         "line": "#00FF00"
       }
+    },
+    "altTab": {
+      "xp": "CoolSwitch (Alt+Tab)",
+      "menuKind": "alttab",
+      "border": "#0A246A",
+      "inner": "#FFFFFF",
+      "fill": "#D3E5FA",
+      "cell": [
+        40,
+        38
+      ],
+      "cols": 5,
+      "minW": 160,
+      "pad": {
+        "top": 8,
+        "bottom": 8,
+        "gap": 4
+      },
+      "sel": {
+        "color": "xpSelect",
+        "width": 2,
+        "box": [
+          1,
+          0,
+          38,
+          36
+        ]
+      },
+      "nameBox": {
+        "h": 18,
+        "inset": 8,
+        "border": "xpFieldBorder",
+        "fill": "white",
+        "font": "JBMono-11",
+        "align": "center"
+      },
+      "area": [
+        0,
+        0,
+        240,
+        214
+      ],
+      "firstSel": 1
     }
   }
 }
