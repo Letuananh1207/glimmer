@@ -5,6 +5,32 @@ màn và việc cần làm — không ghi đường dẫn file hay cách code. P
 
 ---
 
+## P-2026-11-28.28 — Trình quản lý tác vụ kiểu Windows XP
+
+- **Kênh mới TaskMgr** (`source/XP-TaskMgr-Apps|Hover|Empty|Perf|Net.dc.html`, `screen_specs.md` §17 mục XP-TaskMgr;
+  ảnh `XPTaskMgrApps.png`, `XPTaskMgrHover.png`, `XPTaskMgrEmpty.png`, `XPTaskMgrPerf.png`, `XPTaskMgrNet.png`) — theo
+  *Windows Task Manager*:
+  - Tiêu đề `Trình quản lý tác vụ` (140 px), biểu tượng cửa sổ có đồ thị xanh; bỏ thanh menu; 3 tab `Ứng dụng` /
+    `Hiệu năng` / `Mạng` (bỏ Processes, Users).
+  - Ứng dụng: ListView `Tác vụ | Trạng thái` (mỗi cửa sổ đang mở một dòng, `Đang chạy`, dòng chọn xpSelect); nút
+    `Kết thúc tác vụ`, `Chuyển tới` (bỏ `Tác vụ mới...`); trống → nút mờ; con trỏ trên nút → viền cam *hot* như XP.
+  - Hiệu năng: đo CPU / Bộ nhớ (LED xanh trên đen) + đồ thị lịch sử lưới xanh; `Bộ nhớ (KB)` Còn trống / Khối lớn;
+    `Đã chạy`.
+  - Mạng: đồ thị cường độ Wi-Fi % + ListView `Mạng | Tín hiệu | IP`.
+  - Thanh trạng thái 3 ô: `Tác vụ: N` · `CPU: x%` · `Trống: yK`.
+  - Đổi chữ so với phiếu: `Khối lớn nhất` → `Khối lớn`, `Thời gian chạy` → `Đã chạy` (vừa ô).
+  - Máy chưa có.
+- Phiếu: `docs/phieu_panel/2026-11-27-task-manager.md`
+- Cần firmware: màu đồ thị XP — đen `#000000`, xanh `#00FF00`, xanh tối `#007F00`, lưới `#008040`; biểu tượng `#0A4BE0` /
+  `#004000`; CPU % (ví dụ tỷ lệ thời gian `loop()` bận); lịch sử 38 điểm CPU / heap và 48 điểm RSSI trong RAM.
+
+**Việc cần làm trong code:**
+- Kênh `TaskMgr` (hệ thống, không skill, không biểu tượng desktop): mở từ Ctrl+Alt+Del / menu thanh tác vụ của app; tab,
+  dòng chọn, nút do app gửi; Kết thúc tác vụ = app gửi danh sách cửa sổ mới.
+- Mỗi giây: cuộn đồ thị tab đang hiện + số đo + ô thanh trạng thái đổi — không vẽ lại cả cửa sổ; lịch sử không xoá khi
+  vẽ lại dưới con trỏ.
+- Menu chuột phải thanh tác vụ: thêm mục `Trình quản lý tác vụ` (như XP).
+
 ## P-2026-11-28.27 — Cửa sổ Ảnh lấy ảnh từ điện thoại
 
 - **Kênh Photo** (mới `source/XP-Photo-Phone.dc.html`, `XP-Photo-Asking.dc.html`, `XP-Photo-Offline.dc.html`; sửa

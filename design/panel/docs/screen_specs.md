@@ -1844,6 +1844,8 @@ Nguồn `source/Photo-Empty.dc.html` · ảnh `screens/@2x/PhotoEmpty.png`
 
 ## 17. Kiểu XP (Luna) — giao diện toàn máy
 
+> **P-2026-11-28.28 — Trình quản lý tác vụ:** cửa sổ mới kiểu Windows Task Manager (tab Ứng dụng / Hiệu năng / Mạng) — xem mục XP-TaskMgr.
+
 > **P-2026-11-26.23 — dọn thiết kế:** bỏ 76 màn lỗi thời khỏi canvas và `source/` (màn kiểu cũ trước XP, màn XP đã có bản thay); XP-Desk-All = desktop hiện hành (Claude thu nhỏ); Thời tiết lỗi / cũ / Dự báo chưa có vẽ lại theo cửa sổ có tab. Các mục đặc tả của màn đã bỏ giữ làm lịch sử.
 
 > **P-2026-11-26.22 — Ngày và Giờ chạm được:** 3 tab (Ngày và giờ / Múi giờ / Internet), tháng + năm tách, danh sách tháng, chọn múi giờ, đồng bộ lại — xem mục XP-Real.
@@ -2860,6 +2862,61 @@ nào mở (như XP thật: boot → Welcome → desktop).
 
 **Start menu** (`XPStartMenu`, `XPStartAll`): nút dưới phải `Tắt màn` → **`Tắt máy`** (49 px, nút đỏ giữ) = *Turn Off Computer*
 của XP, mở hộp Tắt máy tính. `Khởi động lại` bên trái giữ như P-.20.
+
+### XP-TaskMgr — Trình quản lý tác vụ (kênh `TaskMgr`)
+
+> **P-2026-11-28.28 — Task Manager kiểu XP.** Phiếu `docs/phieu_panel/2026-11-27-task-manager.md`.
+
+Nguồn `source/XP-TaskMgr-Apps|Hover|Empty|Perf|Net.dc.html` · ảnh `XPTaskMgrApps.png`, `XPTaskMgrHover.png`,
+`XPTaskMgrEmpty.png`, `XPTaskMgrPerf.png`, `XPTaskMgrNet.png`. Token `themeXP.taskMgr`. Thành phần XP thật: *Windows Task
+Manager* (tab Applications, Performance, Networking; thanh trạng thái 3 ô). Chương trình hệ thống: không thuộc skill, không
+biểu tượng desktop; mở bằng Ctrl+Alt+Del của app hoặc chuột phải thanh tác vụ › Trình quản lý tác vụ.
+
+- **Khung**: cửa sổ XP, tiêu đề `Trình quản lý tác vụ` 12B (140 px), biểu tượng 16×16 tại (4, 3): khung xpLabel, dải tiêu đề
+  `#0A4BE0`, thân đen, lưới `#004000`, đường đồ thị `#00FF00`. Không thanh menu. □ tắt như mọi cửa sổ.
+- **Tab** (y 26–41, như Đồng hồ): `Ứng dụng` (6, w 66) · `Hiệu năng` (72, w 73) · `Mạng` (145, w 38); chữ TL (x+5, 29).
+  Trang (6, 41, 228×152) viền xpFieldBorder, nền white (y 42–191).
+- **Thanh trạng thái** (2, 196, 236×18) xpBody, vạch trên xpDim; 3 ô lõm (viền trái / trên xpDim, phải / dưới white):
+  x 3–78 `Tác vụ: 3` (63), x 80–148 `CPU: 12%` (56), x 150–236 `Trống: 21K` (70); chữ JBMono-11 TL (x+4, 199).
+  Vẽ lại mỗi giây chỉ ô nào đổi số.
+
+**Ứng dụng** (`XPTaskMgrApps`):
+
+| khối | tọa độ | màu / font | chữ, rộng đo |
+|---|---|---|---|
+| ListView | (10, 46, 220×112) viền xpFieldBorder | white | — |
+| hàng tiêu đề | (11, 47, 218×15) xpBody, vạch y 62 xpGroup + y 63 xpDim; vạch cột (150, 50, 1×10) xpDim | `JBMono-11` black TL (16, 48) / (156, 48) | `Tác vụ` 42 / `Trạng thái` 70 |
+| dòng | cao 18 từ y 64; biểu tượng 16 (Start icons) tại (14, dòng+1…4); tên TL (34, dòng+2); trạng thái TL (156, dòng+2) | `JBMono-11` black | `Claude`, `Thời tiết`, `Ngày và Giờ` 77; `Đang chạy` 63 |
+| dòng chọn | (11, dòng, 218×18) xpSelect, chữ white | — | — |
+| nút | `Kết thúc tác vụ` (26, 165, 117×21) · `Chuyển tới` (147, 165, 82×21): viền `#003C74` góc cắt 1 px, nền `#F4F3EE`, 2 hàng đáy `#D6D0C5`, chữ căn giữa (y+3) | `JBMono-11` black | 105 / 70 |
+
+- Mỗi cửa sổ trong `windows.open` một dòng, theo thứ tự mở; tên = tiêu đề cửa sổ. Dòng chọn do app gửi.
+- **Không cửa sổ nào** (`XPTaskMgrEmpty`): danh sách trống, hai nút chữ xpDim (mờ), `Tác vụ: 0`.
+- **Con trỏ trên nút** (`XPTaskMgrHover`, nút *hot* của XP): viền trong cam — hàng y+1 `#FFF0CF`, y+2 và y+h−3 `#F9B348`,
+  cột x+1 / x+w−2 (y+2…y+h−3) `#F9B348`, hàng y+h−2 `#E59700`. Chỉ vẽ lại nút đó.
+
+**Hiệu năng** (`XPTaskMgrPerf`):
+
+| khối | tọa độ | màu / font | chữ |
+|---|---|---|---|
+| groupbox `CPU` | (10, 50, 52×46) | như XP-Real | `CPU` 21 |
+| đồng hồ đo CPU | nền đen (14, 56, 44×36); 6 nấc × 2 cột 6×2 px từ (29, 59), bước 3; nấc sáng `#00FF00`, tắt `#007F00`; số TC (36, 79) | `JBMono-11` `#00FF00` | `12 %` 28 |
+| groupbox `Lịch sử dùng CPU` | (66, 50, 164×46) | — | 112 |
+| đồ thị | nền đen (70, 56, 156×36); lưới `#008040` mỗi 12 px; đường `#00FF00` 1 px, mỗi điểm 4 px (1 s), 38 điểm, mới nhất ở mép phải | — | — |
+| groupbox `Bộ nhớ` + đo | (10, 104, 52×46); đo (14, 110, 44×36) = heap đã dùng / tổng; số | — | `Bộ nhớ` 42; `20K` 21 |
+| groupbox `Lịch sử bộ nhớ` + đồ thị | (66, 104, 164×46); (70, 110, 156×36) | — | 98 |
+| groupbox `Bộ nhớ (KB)` | (10, 158, 130×34); `Còn trống` TL (14, 162) + giá trị TR (136, 162); `Khối lớn` TL (14, 176) + TR (136, 176) | `JBMono-11` black | 63 / 56; `21412` / `15200` 35 (heap, maxblk) |
+| groupbox `Đã chạy` | (144, 158, 86×34); giá trị TC (187, 170) | `JBMono-11` | 49; `2NG 3G 14P` 70 (`shortDuration`) |
+
+Mỗi giây: cuộn 2 đồ thị (vẽ lại cả ô đen 156×36), số đo, 2 giá trị KB; `Đã chạy` mỗi phút. Lịch sử giữ trong RAM (38 điểm × 3),
+không xoá khi `draw()` vẽ lại dưới con trỏ.
+
+**Mạng** (`XPTaskMgrNet`):
+
+- `Wi-Fi · Đã kết nối` TL (10, 46) xpGroupLabel (126); nhãn trục `100%` TR (38, 62), `0%` TR (38, 120) xpLabel.
+- Đồ thị (40, 61, 190×72) như trên = cường độ Wi-Fi % (RSSI −100…−40 dBm → 0…100 %), 48 điểm.
+- ListView (10, 140, 220×38): tiêu đề `Mạng` (15) · `Tín hiệu` (80) · `IP` (145), vạch cột x 75 / 140; dòng y 160:
+  ssid (tối đa 8 ký tự = 56 px, cắt `Utf8::copy`), `-58 dBm` 49, `192.168.1.23` 84.
 
 ### XP-Start-All — Start đủ chương trình (mọi chương trình mở được từ Start)
 
