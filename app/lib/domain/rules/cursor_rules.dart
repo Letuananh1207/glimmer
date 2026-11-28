@@ -54,6 +54,26 @@ int menuHoverIndex(MenuView menu, MenuItem? item) =>
 Uint8List mousePacket(int seq, Cursor c, int buttons) =>
     Uint8List.fromList([0x47, 0x43, 2, buttons & 3, (seq >> 8) & 0xFF, seq & 0xFF, c.px, c.py]);
 
+/// R-DK-31: key datagram (firmware `input_core.h`): `'G' 'K' 1 seqHi seqLo mods key`; mods bit 0 Ctrl, 1 Alt, 2 Shift.
+Uint8List keyPacket(int seq, ControlKey key) {
+  final (mods, code) = keyCode(key);
+  return Uint8List.fromList([0x47, 0x4B, 1, (seq >> 8) & 0xFF, seq & 0xFF, mods, code]);
+}
+
+/// R-DK-31: the app's key → (mods, the firmware's key code).
+(int, int) keyCode(ControlKey key) => switch (key) {
+  ControlKey.tab => (0, 1),
+  ControlKey.enter => (0, 2),
+  ControlKey.escape => (0, 3),
+  ControlKey.up => (0, 4),
+  ControlKey.down => (0, 5),
+  ControlKey.left => (0, 6),
+  ControlKey.right => (0, 7),
+  ControlKey.altF4 => (2, 8),
+  ControlKey.altTab => (2, 1),
+  ControlKey.windows => (0, 11),
+};
+
 /// R-DK-30: a button change goes out this many times with one seq (UDP may drop one; the device takes it once).
 const mouseRepeats = 3;
 

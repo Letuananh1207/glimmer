@@ -134,6 +134,16 @@ inline void closeWindow(Windows& w, int p) {
         if (!(w.minMask >> w.z[i] & 1)) { w.top = w.z[i]; break; }
 }
 
+// × from a window's menu on a window not on screen: it goes from the list; what shows stays.
+inline void removeWindow(Windows& w, int p) {
+    uint8_t k = 0;
+    for (int i = 0; i < w.n; i++) if (w.open[i] != p) w.open[k++] = w.open[i];
+    w.n = k;
+    zRemove(w, p);
+    if (p >= 0 && p < XPCore::PROG_COUNT) w.minMask &= (uint16_t)~(1u << p);
+    if (w.top == p) w.top = XPCore::PROG_NONE;
+}
+
 // _ on [p]: it goes down to its taskbar button; the desktop shows (as the app did, R-DK-8).
 inline void minimizeWindow(Windows& w, int p) {
     if (p < 0 || p >= XPCore::PROG_COUNT) return;
@@ -172,6 +182,8 @@ struct Menu {
     int8_t hover = -1;
     // Start menu with All Programs open: the sub-menu row lit (pointer_core.h order), -1 = none.
     int8_t sub = -1;
+    // A window menu opened on the device (stage 3): the window it acts on.
+    int8_t prog = XPCore::PROG_NONE;
 };
 
 // ── Power (R-DK-20): the app's power button ────────────────────────────────

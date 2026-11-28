@@ -368,8 +368,12 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
   applies it with the same functions the HTTP commands use; windows keep an activation order (`Control::Windows::z`,
   `closeWindow` brings the previous one back). `/api/state` `input {mouse, stage}`; stage 1 = desktop (click selects,
   double click opens, Recycle Bin → Explorer › Thùng rác), taskbar (start, buttons, tray icon / clock), _ / ×, Start
-  (Thiết bị → Máy tính; Số liệu / Cài đặt / Thêm-gỡ do nothing until their windows are drawn), Tắt máy tính. v1
-  packets (the app works clicks out) still work.
+  (Thiết bị → Máy tính; Số liệu / Cài đặt / Thêm-gỡ do nothing until their windows are drawn), Tắt máy tính. Stage 3
+  (`input.stage` 3): right click → the device opens the desktop / window menu (`Control::Menu::prog` = its window),
+  lights the item under the pointer, acts on a click / Enter (`InputCore::menuChoose`); key datagram
+  `'G' 'K' 1 seq16 mods key` (`InputCore::keyAction`: Win, Esc, Alt+F4 — desktop = Tắt máy tính, Alt+Tab box committed
+  1 s after the last press or by another key, arrows / Tab / Enter in menus, Start, the box and the desktop,
+  Ctrl+Alt+Del → Trình quản lý tác vụ). v1 packets (the app works clicks out) still work.
 - **Mouse, keyboard, power** (app plan `app/docs/tasks/2026-11-27-app-la-chuot-ban-phim-nguon.md`,
   R-DK-17…21): the app is the mouse / keyboard / power button, the device
   only the screen. **Cursor** (`cursor_core.h` pure + glyphs, `channels/cursor.cpp`):

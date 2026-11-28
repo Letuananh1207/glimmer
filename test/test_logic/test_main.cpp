@@ -2007,10 +2007,6 @@ void test_input_caption_start_turnoff() {
     TEST_ASSERT_EQUAL(ACT_RESTART, leftClick(t, 190, 100, false).kind);
     TEST_ASSERT_EQUAL(ACT_TURNOFF_CLOSE, leftClick(t, 180, 160, false).kind);
     TEST_ASSERT_EQUAL(ACT_NONE, leftClick(t, 10, 10, false).kind);
-    // A context menu (still the app's until stage 3): the device leaves the click alone.
-    Scene m = deskScene();
-    m.menu = XPCore::MENU_DESKTOP;
-    TEST_ASSERT_EQUAL(ACT_NONE, leftClick(m, 40, 20, true).kind);
 }
 
 void test_windows_z_order() {
@@ -2035,6 +2031,116 @@ void test_windows_z_order() {
     TEST_ASSERT_EQUAL(XPCore::PROG_PHOTO, a.top);
     Control::showDesktop(a);
     TEST_ASSERT_EQUAL(XPCore::PROG_NONE, a.top);
+}
+
+// Stage 3: right-click menus and keys on the device.
+void test_input_context_menus() {
+    using namespace InputCore;
+    Scene s = deskScene();
+    // Right click: an empty spot of the desktop -> the desktop menu there (kept inside the screen).
+    Action a = rightClick(s, 200, 150, 0);
+    TEST_ASSERT_EQUAL(ACT_MENU_OPEN, a.kind);
+    TEST_ASSERT_EQUAL(XPCore::MENU_DESKTOP, a.arg);
+    TEST_ASSERT_EQUAL(240 - XPCore::kMenuDeskW, a.x);
+    TEST_ASSERT_EQUAL(214 - XPCore::menuH(XPCore::MENU_DESKTOP), a.y);
+    TEST_ASSERT_EQUAL(ACT_SELECT, rightClick(s, 40, 20, 0).kind);          // an icon: selected, no menu
+    // A taskbar button -> its window's menu rising from the button; minimized -> Khoi phuc lit.
+    s.bar.prog[0] = XPCore::PROG_WEATHER;
+    a = rightClick(s, XPCore::buttonX(0) + 5, 225, 1u << XPCore::PROG_WEATHER);
+    TEST_ASSERT_EQUAL(XPCore::MENU_WINDOW, a.arg);
+    TEST_ASSERT_EQUAL(XPCore::PROG_WEATHER, a.prog);
+    TEST_ASSERT_TRUE(a.min);
+    TEST_ASSERT_EQUAL(213 - XPCore::menuH(XPCore::MENU_WINDOW), a.y);
+    // The menu up: items by row (separators 7, items 17 from y + 2).
+    Scene m = deskScene();
+    m.menu = XPCore::MENU_WINDOW;
+    m.menuX = 50; m.menuY = 50; m.menuProg = XPCore::PROG_WEATHER; m.menuMin = true;
+    a = leftClick(m, 60, 50 + 2 + 8, false);                                // Khoi phuc (lit: minimized)
+    TEST_ASSERT_EQUAL(ACT_OPEN, a.kind);
+    TEST_ASSERT_EQUAL(XPCore::PROG_WEATHER, a.prog);
+    TEST_ASSERT_EQUAL(ACT_NONE, leftClick(m, 60, 50 + 2 + 17 + 8, false).kind);   // Di chuyen: dim
+    TEST_ASSERT_EQUAL(ACT_NONE, leftClick(m, 60, 50 + 2 + 3 * 17 + 8, false).kind); // Thu nho: dim when minimized
+    a = leftClick(m, 60, 50 + 2 + 5 * 17 + 7 + 8, false);                   // Dong
+    TEST_ASSERT_EQUAL(ACT_CLOSE, a.kind);
+    TEST_ASSERT_EQUAL(XPCore::PROG_WEATHER, a.prog);
+    TEST_ASSERT_EQUAL(ACT_MENU_CLOSE, leftClick(m, 10, 10, false).kind);   // outside: closes
+    Scene d = deskScene();
+    d.menu = XPCore::MENU_DESKTOP;
+    d.menuX = 20; d.menuY = 20;
+    TEST_ASSERT_EQUAL(ACT_MENU_CLOSE, leftClick(d, 30, 20 + 2 + 17 + 8, false).kind);   // Lam moi
+    a = leftClick(d, 30, 20 + 2 + 6 * 17 + 3 * 7 - 8, false);                           // Thuoc tinh
+    TEST_ASSERT_EQUAL(ACT_OPEN, a.kind);
+    TEST_ASSERT_EQUAL(XPCore::PROG_DISPLAY, a.prog);
+    bool inside = false;
+    TEST_ASSERT_EQUAL(-1, menuItemAt(XPCore::MENU_DESKTOP, 20, 20, 30, 20 + 2 + 2 * 17 + 3, inside));   // separator
+    TEST_ASSERT_TRUE(inside);
+}
+
+void test_input_keys() {
+    using namespace InputCore;
+    KeyPress k; k.seq = 7; k.mods = MOD_ALT; k.key = KEY_TAB;
+    uint8_t b[kKeyLen];
+    encodeKey(k, b);
+    KeyPress r;
+    TEST_ASSERT_TRUE(parseKey(b, kKeyLen, r));
+    TEST_ASSERT_EQUAL(KEY_TAB, r.key);
+    TEST_ASSERT_EQUAL(MOD_ALT, r.mods);
+    Scene s = deskScene();
+    TEST_ASSERT_EQUAL(ACT_START, keyAction(s, KEY_WIN, 0, false).kind);
+    TEST_ASSERT_EQUAL(ACT_TURNOFF_BOX, keyAction(s, KEY_F4, MOD_ALT, false).kind);     // XP: Alt+F4 on the desktop
+    {
+        Action a = keyAction(s, KEY_TAB, MOD_ALT, false);
+        TEST_ASSERT_EQUAL(ACT_ALTTAB, a.kind);
+        TEST_ASSERT_EQUAL(1, a.arg);
+        TEST_ASSERT_EQUAL(-1, keyAction(s, KEY_TAB, MOD_ALT | MOD_SHIFT, false).arg);
+        TEST_ASSERT_EQUAL(ACT_ALTTAB_CANCEL, keyAction(s, KEY_ESC, 0, true).kind);
+    }
+    TEST_ASSERT_EQUAL(XPCore::PROG_TASKMGR, keyAction(s, KEY_DELETE, MOD_CTRL | MOD_ALT, false).prog);
+    // Desktop arrows select, the Recycle Bin too; Enter opens.
+    Action a = keyAction(s, KEY_DOWN, 0, false);
+    TEST_ASSERT_EQUAL(ACT_SELECT, a.kind);
+    TEST_ASSERT_EQUAL(XPCore::PROG_CLAUDE, a.prog);
+    s.sel = XPCore::PROG_CODEX;
+    TEST_ASSERT_EQUAL(XPCore::kDeskTrash, keyAction(s, KEY_DOWN, 0, false).prog);
+    s.sel = XPCore::kDeskTrash;
+    a = keyAction(s, KEY_ENTER, 0, false);
+    TEST_ASSERT_EQUAL(XPCore::PROG_EXPLORER, a.prog);
+    TEST_ASSERT_EQUAL(kPlaceTrash, a.arg);
+    // A window: Alt+F4 closes it.
+    Scene w;
+    w.caption = true;
+    w.shown = XPCore::PROG_CLOCK;
+    a = keyAction(w, KEY_F4, MOD_ALT, false);
+    TEST_ASSERT_EQUAL(ACT_CLOSE, a.kind);
+    TEST_ASSERT_EQUAL(XPCore::PROG_CLOCK, a.prog);
+    // A window menu: arrows skip dim items, wrap; Enter chooses; Esc closes.
+    Scene m = deskScene();
+    m.menu = XPCore::MENU_WINDOW;
+    m.menuProg = XPCore::PROG_CLOCK;
+    a = keyAction(m, KEY_DOWN, 0, false);
+    TEST_ASSERT_EQUAL(ACT_HOVER, a.kind);
+    TEST_ASSERT_EQUAL(3, a.arg);                     // Thu nho (Khoi phuc dim: not minimized)
+    m.hover = 3;
+    TEST_ASSERT_EQUAL(5, keyAction(m, KEY_DOWN, 0, false).arg);   // Dong
+    m.hover = 5;
+    TEST_ASSERT_EQUAL(3, keyAction(m, KEY_DOWN, 0, false).arg);   // wraps
+    TEST_ASSERT_EQUAL(3, keyAction(m, KEY_UP, 0, false).arg);
+    TEST_ASSERT_EQUAL(ACT_CLOSE, keyAction(m, KEY_ENTER, 0, false).kind);
+    TEST_ASSERT_EQUAL(ACT_MENU_CLOSE, keyAction(m, KEY_ESC, 0, false).kind);
+    // Start: arrows walk the rows, Enter = a click on the row.
+    Scene st = deskScene();
+    st.menu = XPCore::MENU_START;
+    PointerCore::startLayout(startIn("agent,weather,clock"), st.start);
+    TEST_ASSERT_EQUAL(0, keyAction(st, KEY_DOWN, 0, false).arg);
+    st.hover = 0;
+    a = keyAction(st, KEY_ENTER, 0, false);
+    TEST_ASSERT_EQUAL(ACT_OPEN, a.kind);
+    TEST_ASSERT_EQUAL(XPCore::PROG_CLAUDE, a.prog);
+    // Tat may tinh: Enter with nothing lit = Tat (XP's default); Esc = Huy.
+    Scene t;
+    t.menu = XPCore::MENU_TURNOFF;
+    TEST_ASSERT_EQUAL(ACT_POWER_OFF, keyAction(t, KEY_ENTER, 0, false).kind);
+    TEST_ASSERT_EQUAL(ACT_TURNOFF_CLOSE, keyAction(t, KEY_ESC, 0, false).kind);
 }
 
 void test_explorer_core() {
@@ -2155,5 +2261,7 @@ int main(int, char**) {
     RUN_TEST(test_input_desktop_and_taskbar);
     RUN_TEST(test_input_caption_start_turnoff);
     RUN_TEST(test_windows_z_order);
+    RUN_TEST(test_input_context_menus);
+    RUN_TEST(test_input_keys);
     return UNITY_END();
 }

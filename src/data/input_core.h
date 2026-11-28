@@ -18,8 +18,8 @@
 namespace InputCore {
 
 constexpr uint8_t kMouseVersion = 2;
-// What the device acts on so far (`/api/state` `input.stage`): 1 = desktop, taskbar, _ / ×, Start, Tắt máy tính.
-constexpr uint8_t kStage = 1;
+// What the device acts on so far (`/api/state` `input.stage`): 1 = desktop, taskbar, _ / ×, Start, Tắt máy tính;
+constexpr uint8_t kStage = 3;   // 3 = + right-click menus, keys (Win, Esc, Alt+F4, Alt+Tab, arrows, Enter)
 constexpr uint8_t kLeft = 1, kRight = 2;
 constexpr uint32_t kDoubleMs = 500;
 constexpr int kDoubleSlop = 4;
@@ -86,6 +86,12 @@ struct Scene {
     int nIcons = 0;
     PointerCore::StartLayout start;
     bool explorer = true;          // this firmware has Máy tính (Start › Thiết bị, the Recycle Bin)
+    // Stage 3: the context menu on screen (as drawn: clamped), the item lit, the desktop's selected icon.
+    int16_t menuX = 0, menuY = 0;
+    bool menuMin = false;          // window menu of a minimized window
+    int8_t menuProg = XPCore::PROG_NONE;   // the window a window menu belongs to
+    int8_t hover = -1;             // item lit (menus: index without separators; Start: hover order; box: button)
+    int8_t sel = XPCore::PROG_NONE;        // desktop icon selected (kDeskTrash = the Recycle Bin)
 };
 
 // Taskbar parts (y 214–239): start x 0–67; tray weather icon x 176–195 (weather skill); tray clock to the right.
@@ -119,19 +125,110 @@ enum Act : uint8_t {
     ACT_POWER_OFF,     // › Tắt
     ACT_RESTART,       // › Khởi động lại
     ACT_TURNOFF_CLOSE, // › Hủy
-    ACT_MENU_CLOSE,    // a click outside a context menu (stage 3; menus are still the app's)
+    ACT_MENU_CLOSE,    // the context menu / Start / the box closes
+    ACT_MENU_OPEN,     // stage 3: a context menu [arg] = MenuKind at (x, y) for window [prog] (minimized: [min])
+    ACT_HOVER,         // stage 3: item [arg] lit (arrow keys)
+    ACT_ALTTAB,        // stage 3: Alt+Tab — the box opens / the next tile ([arg] = 1, Shift = −1)
+    ACT_ALTTAB_CANCEL, // Esc while the box is up
 };
 
 struct Action {
     Act kind = ACT_NONE;
     int8_t prog = XPCore::PROG_NONE;
     int8_t arg = -1;
+    int16_t x = 0, y = 0;          // ACT_MENU_OPEN: where
+    bool min = false;              // ACT_MENU_OPEN: the window is minimized
 };
 inline Action act(Act k, int prog = XPCore::PROG_NONE, int arg = -1) {
     Action a; a.kind = k; a.prog = (int8_t)prog; a.arg = (int8_t)arg; return a;
 }
 
 constexpr int8_t kPlaceComputer = 0, kPlaceTrash = 2;
+
+// ── Context menus (stage 3; rows as xp_menu.cpp draws them) ──
+enum MenuItemId : uint8_t {
+    MI_ARRANGE, MI_REFRESH, MI_PASTE, MI_PASTE_LINK, MI_NEW, MI_PROPS,                 // desktop
+    MI_RESTORE, MI_MOVE, MI_SIZE, MI_MIN, MI_MAX, MI_CLOSE,                           // window
+    MI_SEP = 0xFF,
+};
+// Rows top to bottom (MI_SEP = a separator); returns the count.
+inline int menuRows(XPCore::MenuKind k, uint8_t* out) {
+    static const uint8_t kDesk[] = {MI_ARRANGE, MI_REFRESH, MI_SEP, MI_PASTE, MI_PASTE_LINK, MI_SEP, MI_NEW, MI_SEP,
+                                    MI_PROPS};
+    static const uint8_t kWin[] = {MI_RESTORE, MI_MOVE, MI_SIZE, MI_MIN, MI_MAX, MI_SEP, MI_CLOSE};
+    const uint8_t* r = k == XPCore::MENU_DESKTOP ? kDesk : kWin;
+    const int n = k == XPCore::MENU_DESKTOP ? (int)sizeof(kDesk) : (int)sizeof(kWin);
+    for (int i = 0; i < n; i++) out[i] = r[i];
+    return n;
+}
+// Item [i] (separators not counted) of menu [k]; MI_SEP when out of range.
+inline uint8_t menuItem(XPCore::MenuKind k, int i) {
+    uint8_t r[9];
+    const int n = menuRows(k, r);
+    for (int j = 0, c = 0; j < n; j++) {
+        if (r[j] == MI_SEP) continue;
+        if (c++ == i) return r[j];
+    }
+    return MI_SEP;
+}
+inline int menuItems(XPCore::MenuKind k) { return k == XPCore::MENU_DESKTOP ? 6 : 6; }
+// Lit (usable) items; the others are drawn dim and do nothing (Sắp xếp biểu tượng ▸: its sub-menu is not drawn).
+inline bool menuEnabled(uint8_t id, bool minimized) {
+    switch (id) {
+        case MI_REFRESH: case MI_PROPS: case MI_CLOSE: return true;
+        case MI_RESTORE: return minimized;
+        case MI_MIN:     return !minimized;
+        default:         return false;
+    }
+}
+// The item under (x, y) of the menu drawn at (mx, my): index without separators; -1 = a separator / the border /
+// outside ([inside] says whether (x, y) is on the menu at all).
+inline int menuItemAt(XPCore::MenuKind k, int mx, int my, int x, int y, bool& inside) {
+    const int w = XPCore::menuW(k), h = XPCore::menuH(k);
+    inside = x >= mx && x < mx + w && y >= my && y < my + h;
+    if (!inside) return -1;
+    uint8_t r[9];
+    const int n = menuRows(k, r);
+    int top = my + XPCore::kMenuPad;
+    for (int j = 0, c = 0; j < n; j++) {
+        const int rh = r[j] == MI_SEP ? XPCore::kMenuSepH : XPCore::kMenuItemH;
+        if (y >= top && y < top + rh) return r[j] == MI_SEP ? -1 : c;
+        top += rh;
+        if (r[j] != MI_SEP) c++;
+    }
+    return -1;
+}
+
+// What choosing item [i] of the open context menu does (a click on it / Enter on it).
+inline Action menuChoose(const Scene& s, int i) {
+    const uint8_t id = menuItem(s.menu, i);
+    if (id == MI_SEP || !menuEnabled(id, s.menuMin)) return Action();
+    switch (id) {
+        case MI_REFRESH: return act(ACT_MENU_CLOSE);                       // the desktop repaints as the menu goes
+        case MI_PROPS:   return act(ACT_OPEN, XPCore::PROG_DISPLAY);        // Thuộc tính = Display Properties (XP)
+        case MI_RESTORE: return act(ACT_OPEN, s.menuProg);
+        case MI_MIN:     return act(ACT_MINIMIZE, s.menuProg);
+        case MI_CLOSE:   return act(ACT_CLOSE, s.menuProg);
+        default:         return Action();
+    }
+}
+
+// A click while a context menu is up: an item acts; a separator / dim item does nothing; outside, the menu closes.
+inline Action menuClick(const Scene& s, int x, int y) {
+    bool inside = false;
+    const int i = menuItemAt(s.menu, s.menuX, s.menuY, x, y, inside);
+    if (!inside) return act(ACT_MENU_CLOSE);
+    return i >= 0 ? menuChoose(s, i) : Action();
+}
+
+inline Action menuAt(XPCore::MenuKind k, int x, int y, int prog = XPCore::PROG_NONE, bool minimized = false) {
+    Action a = act(ACT_MENU_OPEN, prog, k);
+    XPCore::menuClamp(k, x, y);
+    a.x = (int16_t)x;
+    a.y = (int16_t)y;
+    a.min = minimized;
+    return a;
+}
 
 // Start open: what a click on (x, y) does.
 inline Action startClick(const Scene& s, int x, int y) {
@@ -176,8 +273,8 @@ inline Action leftClick(const Scene& s, int x, int y, bool dbl) {
         }
     }
     if (s.menu == XPCore::MENU_START) return startClick(s, x, y);
-    // Context menus / the Alt+Tab box: still the app's until stage 3 (it picks the item) — the device leaves them.
-    if (s.menu != XPCore::MENU_NONE) return Action();
+    if (s.menu == XPCore::MENU_DESKTOP || s.menu == XPCore::MENU_WINDOW) return menuClick(s, x, y);
+    if (s.menu != XPCore::MENU_NONE) return Action();            // the Alt+Tab box: keys only
     if (y >= kBarY) {
         if (x < kStartRight) return act(ACT_START);
         for (int i = 0; i < XPCore::slotsFor(s.bar.trayWeather); i++)
@@ -202,6 +299,135 @@ inline Action leftClick(const Scene& s, int x, int y, bool dbl) {
     return Action();
 }
 
+// A right click at (x, y) (XP): a taskbar button → its window's menu rising from the button; a title bar → the
+// window's menu at the point; an empty spot of the desktop → the desktop menu there; an icon → selected (its own
+// menu is not drawn). With a menu up: inside = as a left click, outside = it closes. Start / the box: nothing.
+inline Action rightClick(const Scene& s, int x, int y, uint16_t minMask) {
+    using namespace PointerCore;
+    if (s.menu == XPCore::MENU_DESKTOP || s.menu == XPCore::MENU_WINDOW) return menuClick(s, x, y);
+    if (s.menu != XPCore::MENU_NONE) return Action();
+    if (y >= kBarY) {
+        for (int i = 0; i < XPCore::slotsFor(s.bar.trayWeather); i++) {
+            const int p = s.bar.prog[i];
+            if (p >= 0 && hotRect((int8_t)i).has(x, y))
+                return menuAt(XPCore::MENU_WINDOW, XPCore::buttonX(i), 213 - XPCore::menuH(XPCore::MENU_WINDOW), p,
+                              (minMask >> p & 1) != 0);
+        }
+        return Action();
+    }
+    if (s.caption && y < 22) return menuAt(XPCore::MENU_WINDOW, x, y, s.shown, false);
+    if (s.desktop) {
+        const int i = iconAt(s, x, y);
+        if (i >= 0) return act(ACT_SELECT, s.icons[i].prog);
+        return menuAt(XPCore::MENU_DESKTOP, x, y);
+    }
+    return Action();
+}
+
+// ── Keys (stage 3) ──
+// Key datagram (7 bytes, UDP :4210): 'G' 'K' 1 seqHi seqLo mods key — sent 3 times with one seq.
+constexpr uint8_t kKeyVersion = 1;
+constexpr size_t kKeyLen = 7;
+enum Mod : uint8_t { MOD_CTRL = 1, MOD_ALT = 2, MOD_SHIFT = 4 };
+enum Key : uint8_t {
+    KEY_NONE = 0, KEY_TAB, KEY_ENTER, KEY_ESC, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_F4, KEY_DELETE,
+    KEY_BACKSPACE, KEY_WIN, KEY_COUNT
+};
+struct KeyPress { uint16_t seq = 0; uint8_t mods = 0; uint8_t key = KEY_NONE; };
+inline bool parseKey(const uint8_t* p, size_t n, KeyPress& out) {
+    if (!p || n != kKeyLen || p[0] != 'G' || p[1] != 'K' || p[2] != kKeyVersion) return false;
+    if (p[5] > (MOD_CTRL | MOD_ALT | MOD_SHIFT) || p[6] == KEY_NONE || p[6] >= KEY_COUNT) return false;
+    out.seq = (uint16_t)(p[3] << 8 | p[4]);
+    out.mods = p[5];
+    out.key = p[6];
+    return true;
+}
+inline void encodeKey(const KeyPress& k, uint8_t out[kKeyLen]) {
+    out[0] = 'G'; out[1] = 'K'; out[2] = kKeyVersion;
+    out[3] = (uint8_t)(k.seq >> 8); out[4] = (uint8_t)k.seq; out[5] = k.mods; out[6] = k.key;
+}
+
+// The next item from [i] by [d] (±1) among the usable ones (XP skips dim items), wrapping; −1 = none usable.
+inline int nextUsable(const Scene& s, int i, int d) {
+    const int n = menuItems(s.menu);
+    for (int k = 1; k <= n; k++) {
+        const int start = i < 0 ? (d > 0 ? -1 : n) : i;
+        const int j = ((start + d * k) % n + n) % n;
+        if (menuEnabled(menuItem(s.menu, j), s.menuMin)) return j;
+    }
+    return -1;
+}
+
+// What key [k] with [mods] does on [s] ([shownProg] = the window on screen, [altTabUp] = the box is up).
+inline Action keyAction(const Scene& s, uint8_t k, uint8_t mods, bool altTabUp) {
+    using namespace PointerCore;
+    if (k == KEY_TAB && (mods & MOD_ALT)) return act(ACT_ALTTAB, XPCore::PROG_NONE, (mods & MOD_SHIFT) ? -1 : 1);
+    if (altTabUp) return k == KEY_ESC ? act(ACT_ALTTAB_CANCEL) : Action();
+    if (k == KEY_DELETE && (mods & MOD_CTRL) && (mods & MOD_ALT)) return act(ACT_OPEN, XPCore::PROG_TASKMGR);
+    if (k == KEY_WIN) return act(ACT_START);
+    if (k == KEY_F4 && (mods & MOD_ALT)) {
+        if (s.menu == XPCore::MENU_TURNOFF) return act(ACT_TURNOFF_CLOSE);
+        if (s.shown >= 0 && !s.desktop) return act(ACT_CLOSE, s.shown);
+        return s.desktop ? act(ACT_TURNOFF_BOX) : Action();          // XP: Alt+F4 on the desktop = Shut Down
+    }
+    if (k == KEY_ESC) {
+        if (s.menu == XPCore::MENU_TURNOFF) return act(ACT_TURNOFF_CLOSE);
+        return s.menu != XPCore::MENU_NONE ? act(ACT_MENU_CLOSE) : Action();
+    }
+    if (s.menu == XPCore::MENU_DESKTOP || s.menu == XPCore::MENU_WINDOW) {
+        switch (k) {
+            case KEY_DOWN: case KEY_TAB: { const int j = nextUsable(s, s.hover, 1); return j < 0 ? Action() : act(ACT_HOVER, XPCore::PROG_NONE, j); }
+            case KEY_UP: { const int j = nextUsable(s, s.hover, -1); return j < 0 ? Action() : act(ACT_HOVER, XPCore::PROG_NONE, j); }
+            case KEY_ENTER: return s.hover >= 0 ? menuChoose(s, s.hover) : Action();
+            default: return Action();
+        }
+    }
+    if (s.menu == XPCore::MENU_START) {
+        const int n = s.start.n;
+        switch (k) {
+            case KEY_DOWN: case KEY_TAB: return act(ACT_HOVER, XPCore::PROG_NONE, s.hover < 0 ? 0 : (s.hover + 1) % n);
+            case KEY_UP: return act(ACT_HOVER, XPCore::PROG_NONE, s.hover <= 0 ? n - 1 : s.hover - 1);
+            case KEY_ENTER: {
+                if (s.hover < 0 || s.hover >= n) return Action();
+                const Rect r = s.start.row[s.hover];
+                Scene t = s;
+                t.all = false;                                    // the row itself, not the sub-menu over it
+                return startClick(t, r.x + r.w / 2, r.y + r.h / 2);
+            }
+            default: return Action();
+        }
+    }
+    if (s.menu == XPCore::MENU_TURNOFF) {
+        switch (k) {
+            case KEY_LEFT: return act(ACT_HOVER, XPCore::PROG_NONE, s.hover <= 0 ? 2 : s.hover - 1);
+            case KEY_RIGHT: case KEY_TAB: return act(ACT_HOVER, XPCore::PROG_NONE, s.hover < 0 ? 1 : (s.hover + 1) % 3);
+            case KEY_ENTER: {
+                const Rect r = turnOffButton(s.hover < 0 ? TO_OFF : s.hover);   // XP's default: Tắt
+                Scene t = s;
+                return leftClick(t, r.x + r.w / 2, r.y + r.h / 2, false);
+            }
+            default: return Action();
+        }
+    }
+    if (s.desktop && s.nIcons > 0) {
+        int i = -1;
+        for (int j = 0; j < s.nIcons; j++) if (s.icons[j].prog == s.sel && s.sel != XPCore::PROG_NONE) i = j;
+        switch (k) {
+            case KEY_DOWN: case KEY_RIGHT: case KEY_TAB:
+                return act(ACT_SELECT, s.icons[i < 0 ? 0 : (i + 1 < s.nIcons ? i + 1 : i)].prog);
+            case KEY_UP: case KEY_LEFT:
+                return act(ACT_SELECT, s.icons[i <= 0 ? 0 : i - 1].prog);
+            case KEY_ENTER:
+                if (i < 0) return Action();
+                if (s.icons[i].prog == XPCore::kDeskTrash)
+                    return s.explorer ? act(ACT_OPEN, XPCore::PROG_EXPLORER, kPlaceTrash) : Action();
+                return act(ACT_OPEN, s.icons[i].prog);
+            default: return Action();
+        }
+    }
+    return Action();
+}
+
 // The cursor over (x, y): XP's hand on what a click acts on (taskbar buttons, start, the tray, _ / ×, Start rows,
 // Tắt máy tính's buttons); the arrow elsewhere (XP keeps the arrow over desktop icons).
 inline CursorCore::Shape shapeAt(const Scene& s, int x, int y) {
@@ -210,6 +436,11 @@ inline CursorCore::Shape shapeAt(const Scene& s, int x, int y) {
     if (s.menu == XPCore::MENU_START) {
         const bool row = subHit(s.start, s.all, x, y) >= 0 || startHit(s.start, s.all, x, y) >= 0;
         return row || (y >= kBarY && x < kStartRight) ? CursorCore::SHAPE_HAND : CursorCore::SHAPE_ARROW;
+    }
+    if (s.menu == XPCore::MENU_DESKTOP || s.menu == XPCore::MENU_WINDOW) {
+        bool inside = false;
+        const int i = menuItemAt(s.menu, s.menuX, s.menuY, x, y, inside);
+        return i >= 0 && menuEnabled(menuItem(s.menu, i), s.menuMin) ? CursorCore::SHAPE_HAND : CursorCore::SHAPE_ARROW;
     }
     if (s.menu != XPCore::MENU_NONE) return CursorCore::SHAPE_ARROW;
     const Action a = leftClick(s, x, y, false);

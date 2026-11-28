@@ -31,6 +31,11 @@ Shape    s_devShape = SHAPE_ARROW;
 constexpr int kPressQ = 4;
 Cursor::PressAt s_press[kPressQ];
 int      s_pressN = 0;
+// Keys (stage 3): own seq (the 3 copies of a key are taken once).
+InputCore::KeyPress s_keys[kPressQ];
+int      s_keyN = 0;
+bool     s_keySeen = false;
+uint16_t s_keySeq = 0;
 
 Glyph glyphOf(uint8_t shape) {
     Glyph g;
@@ -110,6 +115,15 @@ bool poll(uint32_t) {
         if (len <= 0) break;
         const int got = s_udp.read(buf, sizeof(buf));
         if (got != len) continue;
+        InputCore::KeyPress kp;
+        if (InputCore::parseKey(buf, (size_t)got, kp)) {
+            if (s_keySeen && !stillCurrent(kp.seq, s_keySeq)) continue;
+            s_keySeen = true;
+            s_keySeq = kp.seq;
+            if (s_keyN < kPressQ) s_keys[s_keyN++] = kp;
+            changed = true;
+            continue;
+        }
         InputCore::Mouse m;
         if (InputCore::parseMouse(buf, (size_t)got, m)) {
             // v2: every new seq counts in order (a press must not be lost to a later move).
@@ -198,6 +212,14 @@ bool deviceDriven() { return s_v2; }
 void setShape(Shape s) {
     s_devShape = s;
     if (s_v2) s_want.shape = s;
+}
+
+int takeKeys(InputCore::KeyPress* out, int max) {
+    const int n = s_keyN < max ? s_keyN : max;
+    for (int i = 0; i < n; i++) out[i] = s_keys[i];
+    for (int i = n; i < s_keyN; i++) s_keys[i - n] = s_keys[i];
+    s_keyN -= n;
+    return n;
 }
 
 int takePresses(PressAt* out, int max) {

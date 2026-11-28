@@ -53,6 +53,8 @@ void    setShape(CursorCore::Shape s);   // the shape the device picked for v2 (
 // The button presses received since the last call, oldest first, with where they happened.
 struct PressAt { InputCore::Press press; uint8_t x, y; uint32_t at; };
 int     takePresses(PressAt* out, int max);
+// Keys (stage 3, 'G' 'K' datagrams) received since the last call, oldest first.
+int     takeKeys(InputCore::KeyPress* out, int max);
 
 bool    seen();                  // a packet came since boot (the app drives a cursor)
 uint8_t x();

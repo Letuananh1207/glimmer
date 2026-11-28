@@ -721,8 +721,20 @@ static InputCore::Scene inputScene() {
     s.bar = Taskbar::state();
     s.nIcons = s.desktop ? XPCore::deskIcons(g_settings.skillsOn.c_str(), s.icons) : 0;
     if (s.menu == XPCore::MENU_START) PointerCore::startLayout(mainStartInputs(), s.start);
+    if (s.menu == XPCore::MENU_DESKTOP || s.menu == XPCore::MENU_WINDOW) {
+        int mx = g_menu.x, my = g_menu.y;
+        XPCore::menuClamp(s.menu, mx, my);
+        s.menuX = (int16_t)mx;
+        s.menuY = (int16_t)my;
+    }
+    s.menuMin = g_menu.minimized;
+    s.menuProg = g_menu.prog >= 0 ? g_menu.prog : s.shown;
+    s.hover = g_menu.hover >= 0 ? g_menu.hover : g_autoHover;
+    s.sel = g_windows.sel;
     return s;
 }
+
+static uint32_t g_altCommitAt = 0;   // Alt+Tab: "Alt let go" (the app's key is one press, R-DK-25)
 
 static InputCore::ClickTrack g_clicks;
 
@@ -761,13 +773,55 @@ static void applyClick(const InputCore::Action& a) {
             }
             break;
         case ACT_MINIMIZE:
+            if (a.prog != XPCore::progOf(mainActiveChannelName())) {    // from a menu: a window not on screen
+                Control::minimizeWindow(g_windows, a.prog);
+                showMenu(XPCore::MENU_NONE);
+                break;
+            }
             Control::minimizeWindow(g_windows, a.prog);
             mainNoteMinimize();
             mainShowChannel("Home");
             break;
         case ACT_CLOSE:
+            if (a.prog != XPCore::progOf(mainActiveChannelName())) {
+                Control::removeWindow(g_windows, a.prog);
+                showMenu(XPCore::MENU_NONE);
+                break;
+            }
             Control::closeWindow(g_windows, a.prog);
             mainShowChannel(g_windows.top >= 0 ? XPCore::progName(g_windows.top) : "Home");
+            break;
+        case ACT_MENU_OPEN: {
+            Control::Menu m;
+            m.kind = (XPCore::MenuKind)a.arg;
+            m.x = a.x;
+            m.y = a.y;
+            m.minimized = a.min;
+            m.prog = a.prog;
+            mainSetMenu(m);
+            break;
+        }
+        case ACT_HOVER: {
+            Control::Menu m = g_menu;
+            m.hover = a.arg;
+            m.sub = -1;
+            mainSetMenu(m);
+            break;
+        }
+        case ACT_ALTTAB: {
+            if (!g_windows.n) break;
+            int8_t list[XPCore::PROG_COUNT];
+            const int n = XPAltTab::order(list);
+            Control::Menu m;
+            m.kind = XPCore::MENU_ALTTAB;
+            m.hover = g_menu.kind == XPCore::MENU_ALTTAB ? (int8_t)((g_menu.hover + a.arg + n) % n)
+                                                        : (int8_t)XPCore::altTabSel(a.arg < 0 ? n - 1 : -1, n);
+            mainSetMenu(m);
+            g_altCommitAt = millis() + 1000;
+            break;
+        }
+        case ACT_ALTTAB_CANCEL:
+            showMenu(XPCore::MENU_NONE);
             break;
         case ACT_START:
             showMenu(g_menu.kind == XPCore::MENU_START ? XPCore::MENU_NONE : XPCore::MENU_START);
@@ -804,15 +858,39 @@ static void applyClick(const InputCore::Action& a) {
     }
 }
 
-// The presses that came in (v2 mouse): left = a click (double click as XP); right = menus, a later stage.
+// Alt+Tab box up and Alt let go (1 s without another Alt+Tab): the window chosen comes up (XP).
+static void altTabCommit() {
+    if (g_menu.kind != XPCore::MENU_ALTTAB) return;
+    int8_t list[XPCore::PROG_COUNT];
+    const int n = XPAltTab::order(list);
+    const int sel = XPCore::altTabSel(g_menu.hover, n);
+    showMenu(XPCore::MENU_NONE);
+    if (sel >= 0 && list[sel] != XPCore::progOf(mainActiveChannelName())) mainShowChannel(XPCore::progName(list[sel]));
+}
+
+// The presses (v2 mouse: left = a click, double click as XP; right = context menus) and keys that came in.
 static void inputTick() {
     Cursor::PressAt pr[4];
     const int n = Cursor::takePresses(pr, 4);
-    if (!n || !g_activeCount || g_power.p != Control::POWER_ON || !cursorAllowed()) return;
+    InputCore::KeyPress ks[4];
+    const int nk = Cursor::takeKeys(ks, 4);
+    const bool ready = g_activeCount && g_power.p == Control::POWER_ON && cursorAllowed();
+    if (g_menu.kind == XPCore::MENU_ALTTAB && (int32_t)(millis() - g_altCommitAt) >= 0) altTabCommit();
+    if (!ready) return;
     for (int i = 0; i < n; i++) {
-        if (pr[i].press != InputCore::PRESS_LEFT) continue;
-        const bool dbl = InputCore::doubleClick(g_clicks, pr[i].at, pr[i].x, pr[i].y);
-        applyClick(InputCore::leftClick(inputScene(), pr[i].x, pr[i].y, dbl));
+        const int x = pr[i].x, y = pr[i].y;
+        if (pr[i].press == InputCore::PRESS_RIGHT) {
+            applyClick(InputCore::rightClick(inputScene(), x, y, g_windows.minMask));
+            continue;
+        }
+        const bool dbl = InputCore::doubleClick(g_clicks, pr[i].at, x, y);
+        applyClick(InputCore::leftClick(inputScene(), x, y, dbl));
+    }
+    for (int i = 0; i < nk; i++) {
+        const bool altTab = ks[i].key == InputCore::KEY_TAB && (ks[i].mods & InputCore::MOD_ALT);
+        // Another key while the box is up: Alt was let go first (Esc cancels instead).
+        if (g_menu.kind == XPCore::MENU_ALTTAB && !altTab && ks[i].key != InputCore::KEY_ESC) altTabCommit();
+        applyClick(InputCore::keyAction(inputScene(), ks[i].key, ks[i].mods, g_menu.kind == XPCore::MENU_ALTTAB));
     }
 }
 
@@ -835,10 +913,31 @@ static void pointerTick() {
         const Control::Menu was = litMenu();
         g_autoHover = hv;
         g_autoSub = sb;
+        // Stage 3: the pointer moved onto another row — it takes over from the arrow keys' pick.
+        if (Cursor::deviceDriven()) g_menu.hover = g_menu.sub = -1;
         if (g_menu.kind == XPCore::MENU_START || g_menu.kind == XPCore::MENU_TURNOFF) {
             relightMenu(was);
             Cursor::overlay();
         }
+    }
+    // Stage 3: a context menu the device opened lights the item under the pointer (dim ones too, as XP); only when
+    // the pointer moves onto another item, so an arrow key's pick stays while it rests.
+    static int8_t ptrItem = -2;
+    if (mouse && Cursor::deviceDriven() && (g_menu.kind == XPCore::MENU_DESKTOP || g_menu.kind == XPCore::MENU_WINDOW)) {
+        int mx = g_menu.x, my = g_menu.y;
+        XPCore::menuClamp(g_menu.kind, mx, my);
+        bool inside = false;
+        const int8_t it = (int8_t)InputCore::menuItemAt(g_menu.kind, mx, my, x, y, inside);
+        if (it != ptrItem) {
+            ptrItem = it;
+            if (it != g_menu.hover) {
+                g_menu.hover = it;
+                XPMenu::draw(g_menu);
+                Cursor::overlay();
+            }
+        }
+    } else {
+        ptrItem = -2;
     }
     // Hot buttons: only with no menu over the screen, on a screen with the taskbar.
     int8_t hot = PointerCore::kHotNone;

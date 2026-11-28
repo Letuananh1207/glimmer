@@ -95,7 +95,8 @@ Mở rộng gói UDP :4210 hiện có (`'G' 'C' 1 shape seq x y`, 8 byte):
    — R-DK-30; `mousePacket`, `ControlDeviceUseCase.mouse/click`, `_clickV2`, `_adoptDevice` (cửa sổ / Start / chọn từ
    `/api/state`, đọc lại 250 ms sau click), mở lại app giữ cửa sổ thiết bị. Code tính trúng cũ giữ cho firmware cũ
    (dọn ở đợt 6).
-3. Firmware: menu chuột phải (desktop, cửa sổ), bàn phím (Win, Esc, Alt+F4, Alt+Tab, mũi tên, Enter), z-order.
+3. [x] (2026-11-28; đã nạp + cài app; thử UDP: chuột phải → menu desktop, ↓ bỏ mục mờ, Esc đóng) Firmware: menu chuột phải (desktop, cửa sổ), bàn phím (Win, Esc, Alt+F4, Alt+Tab, mũi tên, Enter), z-order.
+   — + app: chuột phải / phím gửi lên thiết bị khi `input.stage` ≥ 3 (R-DK-31). 94/94 native, 449 app, RAM +64 B.
 4. Firmware: cửa sổ Thời tiết (tab), Đồng hồ (tab, lịch, múi giờ, cập nhật ngay), Dò mìn (ván trên thiết bị).
 5. Firmware: Trình quản lý tác vụ, Thuộc tính màn hình, Máy tính bỏ túi, Explorer / Thùng rác, Ctrl+Alt+Del.
 6. App: `app_request` → màn điện thoại; dọn code tính trúng cũ (sau khi bạn thử máy đạt).

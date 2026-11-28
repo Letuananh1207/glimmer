@@ -121,4 +121,32 @@ void main() {
   test('mousePacket encodes v2', () {
     expect(mousePacket(0x0102, const Cursor(x: 10, y: 20), 3), [0x47, 0x43, 2, 3, 1, 2, 10, 20]);
   });
+
+  test('R-DK-31 stage 3: a right click goes to the device (button 2), no /api/menu; keys go as G K datagrams', () async {
+    vm = await make(_state(stage: 3));
+    final menus = rig.posts('/api/menu').length;
+    final before = rig.cursor.sent.length;
+    await vm.clickRight();
+    final right = rig.cursor.sent.skip(before).map((p) => p.datagram).toList();
+    expect(right.map((d) => d[3]), [2, 2, 2, 0, 0, 0]);
+    expect(rig.posts('/api/menu').length, menus);
+    final k0 = rig.cursor.sent.length;
+    await vm.pressKey(ControlKey.altTab);
+    final keys = rig.cursor.sent.skip(k0).map((p) => p.datagram).toList();
+    expect(keys, hasLength(3));
+    expect((keys.first[0], keys.first[1], keys.first[2], keys.first[5], keys.first[6]), (0x47, 0x4B, 1, 2, 1));
+    expect(rig.posts('/api/menu').length, menus, reason: 'the device draws the Alt+Tab box itself');
+  });
+
+  test('R-DK-31 keys inside a window the app drives still act (Máy tính bỏ túi: Enter = "=")', () async {
+    vm = await make(_state(stage: 3, channel: 'Calc', windows: {'open': ['Calc'], 'min': <String>[], 'top': 'Calc'}));
+    await vm.pressKey(ControlKey.enter);
+    await Future<void>.delayed(Duration.zero);
+    expect(rig.posts('/api/calc').last.body, containsPair('display', '0.'));
+  });
+
+  test('keyPacket encodes the firmware key codes', () {
+    expect(keyPacket(5, ControlKey.altF4), [0x47, 0x4B, 1, 0, 5, 2, 8]);
+    expect(keyPacket(6, ControlKey.windows), [0x47, 0x4B, 1, 0, 6, 0, 11]);
+  });
 }

@@ -174,6 +174,12 @@ extension ControlPointer on ControlViewModel {
   Future<void> clickRight() async {
     if (!pointerUsable) return;
     if (_minesClick(left: false)) return;
+    if (_control.deviceKeys) {
+      // R-DK-31: the device opens the context menu itself (XP right-click).
+      await _control.click(_cursor, button: 2);
+      _syncSoon();
+      return;
+    }
     _lit = null;
     await hold(_cursor.px.toDouble(), _cursor.py.toDouble());
   }
@@ -181,6 +187,16 @@ extension ControlPointer on ControlViewModel {
   /// R-DK-19: a control key.
   Future<void> pressKey(ControlKey key) async {
     if (!pointerUsable) return;
+    if (_control.deviceKeys) {
+      // R-DK-31: the device takes the key (Start, menus, Alt+Tab, Alt+F4, the desktop); the app still answers the
+      // keys inside the windows it drives (stages 4–5 of the plan move those).
+      await _control.key(key);
+      if (_menu == null && !_startOpen && key != ControlKey.altTab && key != ControlKey.altF4 && key != ControlKey.windows) {
+        await _programKey(key);
+      }
+      _syncSoon();
+      return;
+    }
     if (await _programKey(key)) return; // R-DK-25…28: Alt+Tab box, keys of the XP program on screen
     final a = keyAction(
       key,

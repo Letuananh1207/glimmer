@@ -137,6 +137,23 @@ class ControlDeviceUseCase {
     return ok;
   }
 
+  /// R-DK-31: the device also opens the context menus and takes the keys (`input.stage` ≥ 3).
+  bool get deviceKeys => (_device.state?.inputStage ?? 0) >= 3 && caps.mouse;
+
+  int _keySeq = 0;
+
+  /// R-DK-31: key [key] to the device, [mouseRepeats] copies with one seq.
+  Future<bool> key(ControlKey key) async {
+    if (!caps.mouse) return false;
+    _keySeq = (_keySeq + 1) & 0xFFFF;
+    final p = keyPacket(_keySeq, key);
+    var ok = false;
+    for (var i = 0; i < mouseRepeats; i++) {
+      ok = await _device.sendCursor(p) || ok;
+    }
+    return ok;
+  }
+
   /// R-DK-30: a click of button [button] (1 left, 2 right) at [c]: pressed, then let go.
   Future<bool> click(Cursor c, {int button = 1}) async {
     final down = await mouse(c, buttons: button, change: true);
