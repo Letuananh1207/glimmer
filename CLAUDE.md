@@ -24,7 +24,10 @@ https://claude.ai/artifact/WzLqGhKvD1MYxqaiRkzq1r, exported to `design/` by a de
 - **Build**: `pio run -e nodemcuv2` (firmware), `pio run -e nodemcuv2 -t buildfs`
   (LittleFS image, `data/` → `/`), `pio test -e native` (host tests).
   Version: `-D FW_VERSION` in `platformio.ini`.
-- **mDNS** `glimmer.local`; setup AP `glimmer-setup` (open) at `192.168.4.1`.
+- **mDNS** `glimmer-<last 2 MAC bytes hex>.local` (`deviceHost()`, `src/core/host.h`, L-10 — each display its own
+  name; ≤ 0.23.0 all answered `glimmer.local` and hooks went to the wrong one). Also the Wi-Fi hostname and the NSD
+  name (app: `glimmer*`); `/api/state` `host`, `/hook` header `X-Glimmer-Host` (the hook checks it). Setup AP
+  `glimmer-setup` (open) at `192.168.4.1`.
   The log-on screen's QR (`Display::drawSetupQr`, `qr_payload.h`, R-WF-4) = `ricmoo/QRCode` built with
   `-D LOCK_VERSION=3` (else ~560 B of version tables land in RAM); native tests need `lib_compat_mode = off` +
   `tools/pio_native_cflags.py` (host gcc defaults to C23, which breaks its `typedef bool`).
@@ -429,7 +432,8 @@ glyph's w×h grayscale bytes. Runbook: `.claude/skills/regenerate-fonts/SKILL.md
   must not live forever (L-5): it yields to a newer session of the same
   project + agent ≥ 10 min later, and expires after 2 h with no event.
   Hooks are installed per computer with
-  `node tools/agents/install.mjs` (Node only, `glimmer.local` by default).
+  `node tools/agents/install.mjs` (Node only; finds the display with `tools/agents/discover.mjs` — an HTTP sweep
+  of the /24, mDNS browse from Node is dropped by Windows' firewall — and pins `http://glimmer-xxxx.local`).
 - Keep `docs/AGENTS-GLIMMER.md` in sync with `attention_json.h`,
   `attention_core.h` and the MCP schema in `web.cpp`.
 

@@ -30,6 +30,8 @@ import vlwpreview as V  # noqa: E402
 ROOT = Path(__file__).resolve().parent.parent
 W = H = 240
 DOT = "·"
+HOST = "glimmer-1a2b.local"    # deviceHost() + ".local" (L-10): glimmer-<last 2 MAC bytes>
+SAMPLE_IP = "192.168.100.40"
 
 
 def hx(s):
@@ -608,7 +610,7 @@ def draw_flag(sc, x, y, scale):
 def no_channels(sc):
     """XP::drawNoChannels (main.cpp draws the taskbar after it)."""
     window(sc, "glimmer", "clawd")
-    dialog(sc, "info", "Chưa có kênh", ["Bật kênh trên trang web:"], "glimmer.local")
+    dialog(sc, "info", "Chưa có kênh", ["Bật kênh trên trang web:"], HOST)
     taskbar(sc, active=None, badge=1)
 
 
@@ -902,12 +904,14 @@ def cred_banner_xp(sc, x, y, w, is_claude, cred):
     if cred == "blocked":
         t = f"Bị chặn {DOT} {cw.lower()} vẫn tốt {DOT} thử lại"
     else:
-        t = f"{cw} {'hết hạn' if cred == 'expired' else 'bị từ chối'} {DOT} glimmer.local"
+        t = f"{cw} {'hết hạn' if cred == 'expired' else 'bị từ chối'} {DOT} {HOST}"
     if sc.width("JBMono-11", t) > w - 17:
         if cred == "blocked":
             t = f"Bị chặn {DOT} {cw.lower()} vẫn tốt"
         else:
-            t = f"{'Hết hạn' if cred == 'expired' else 'Bị từ chối'} {DOT} glimmer.local"
+            t = f"{'Hết hạn' if cred == 'expired' else 'Bị từ chối'} {DOT} {HOST}"
+        if cred != "blocked" and sc.width("JBMono-11", t) > w - 17:   # L-10: the IP always fits
+            t = f"{'Hết hạn' if cred == 'expired' else 'Bị từ chối'} {DOT} {SAMPLE_IP}"
     info_strip(sc, x, y, w, t, X["BLACK"] if cred == "blocked" else X["RED"])
 
 
@@ -1820,7 +1824,7 @@ def setup(sc, done=(False, False, True)):
                 sc.rect(18 + i, y + ty, 1, 3, X["CHECK"])
         sc.text("JBMono-11", item, 34, y, X["MUTED"] if ok else X["BLACK"])
     group_box(sc, 10, 150, 220, 40, "Mở trong trình duyệt")
-    lw = sc.text("JBMono-12B", "glimmer.local", 18, 159, X["LINK"])
+    lw = sc.text("JBMono-12B", HOST, 18, 159, X["LINK"])
     sc.hline(18, 173, lw, X["LINK"])
     sc.text("JBMono-11", "192.168.100.40", 222, 176, X["MUTED"], "TR")
     taskbar(sc, active="claude", accent=CORAL, badge=1)
@@ -2399,7 +2403,7 @@ SCREENS_A = [
      lambda s: claude_xp(s, meta="khóa lỗi", cred="expired"), "XPClaudeKeyExpired"),
     ("Claude · khóa bị từ chối", "XP-Claude-Rejected · chưa có số",
      lambda s: cred_card_xp(s, "Claude", "khóa lỗi", "error", "Khóa bị từ chối",
-                            ["claude.ai từ chối khóa.", "Nhập khóa mới tại:"], "glimmer.local",
+                            ["claude.ai từ chối khóa.", "Nhập khóa mới tại:"], HOST,
                             "192.168.100.40"), "XPClaudeRejected"),
     ("Claude · mất mạng", "XP-Claude-Offline",
      lambda s: cred_card_xp(s, "Claude", "", "warn", "Mất mạng",
@@ -2421,7 +2425,7 @@ SCREENS_A = [
      lambda s: codex_xp(s, stale=True, meta="cũ 18P"), "XPCodexStale"),
     ("Codex · token hết hạn", "XP-Codex-Expired · chưa có số",
      lambda s: cred_card_xp(s, "Codex", "khóa lỗi", "error", "Token hết hạn",
-                            ["Hết hạn ngày 20/11.", "Nhập token mới tại:"], "glimmer.local",
+                            ["Hết hạn ngày 20/11.", "Nhập token mới tại:"], HOST,
                             "192.168.100.40", accent="Codex"), "XPCodexExpired"),
 ]
 

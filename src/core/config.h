@@ -13,8 +13,7 @@ static constexpr uint16_t BL_OFF  = 1023;
 // AP-mode setup network
 static constexpr const char* SETUP_AP_SSID = "glimmer-setup";
 
-// mDNS name (for ArduinoOTA + nice URL)
-static constexpr const char* MDNS_HOSTNAME = "glimmer";
+// mDNS / Wi-Fi name: deviceHost() in host.h — glimmer-<MAC>, one per display (L-10).
 
 // Defaults
 static constexpr uint32_t DEFAULT_REFRESH_MIN = 5;     // minutes between API fetches

@@ -1,7 +1,7 @@
 # glimmer for agents
 
-glimmer is a small desk display on the user's LAN (`http://glimmer.local`,
-or its IP). Coding agents put **cards** on it so the user notices things
+glimmer is a small desk display on the user's LAN (`http://glimmer-xxxx.local`
+— its own name, `host` in `/api/state`; `glimmer.local` on firmware ≤ 0.23.0 — or its IP). Coding agents put **cards** on it so the user notices things
 without watching the terminal:
 
 - an agent is **blocked on an approval or a question** — shown automatically
@@ -147,8 +147,9 @@ tool, a 60-char command/path, an 80-char message — to
 `POST /hook?agent=claude|codex`. **Never post the raw event**: a PostToolUse
 carries the whole tool output, far beyond the device's RAM (bodies > 2 KB are
 ignored). The script needs `curl` + `jq`, reads `GLIMMER_URL` /
-`GLIMMER_TOKEN` (the .mjs also `~/.glimmer/config.json`, default
-`http://glimmer.local`), gives up after 2 s and always exits 0; `/hook` always
+`GLIMMER_TOKEN` (the .mjs also `~/.glimmer/config.json`, written by `install.mjs`:
+the display's own `http://glimmer-xxxx.local`; the .mjs drops a cached IP whose `/hook`
+answer names another display, header `X-Glimmer-Host`), gives up after 2 s and always exits 0; `/hook` always
 answers 200, so the display can never block or decide anything.
 
 Every event also updates the **project board** (`projects_core.h`): the

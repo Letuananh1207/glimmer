@@ -37,8 +37,11 @@ const CACHE = join(homedir(), ".glimmer", "cache.json");
 const readCache = () => { try { return JSON.parse(readFileSync(CACHE, "utf8")); } catch { return {}; } };
 const writeCache = (c) => { try { writeFileSync(CACHE, JSON.stringify(c)); } catch {} };
 
-async function post(url, init, ms) {
+async function post(url, init, ms, host) {
   const r = await fetch(url, { ...init, signal: AbortSignal.timeout(ms) });
+  // L-10: the cached IP may now be another display (DHCP) — firmware with its own name says which it is.
+  const said = r.headers.get("x-glimmer-host");
+  if (host && said && `${said}.local` !== host) throw new Error(`${url} is ${said}, not ${host}`);
   return r.status;
 }
 
@@ -47,8 +50,9 @@ async function send(base, path, init) {
   if (!u.hostname.endsWith(".local")) return post(base + path, init, 4000);
   const cache = readCache();
   const viaIp = (ip) => { const x = new URL(base); x.hostname = ip; return x.origin + path; };
+  const own = u.hostname === "glimmer.local" ? null : u.hostname;   // old shared name: nothing to check
   if (cache[u.hostname]) {
-    try { return await post(viaIp(cache[u.hostname]), init, 1500); } catch {}
+    try { return await post(viaIp(cache[u.hostname]), init, 1500, own); } catch {}
   }
   const { address } = await lookup(u.hostname, { family: 4 });
   const status = await post(viaIp(address), init, 1500);

@@ -5,6 +5,7 @@
 #include "display.h"
 #include "layout.h"
 #include "config.h"
+#include "host.h"
 #include "utf8.h"
 #include "cursor.h"
 #include "pointer_core.h"
@@ -605,7 +606,7 @@ void infoStrip(int x, int y, int w, const char* text, uint16_t textColor) {
 void drawNoChannels() {
     window("glimmer", XPCore::ICON_CLAWD);
     static const char* const kLines[] = {"Bật kênh trên trang web:"};
-    char url[32]; snprintf_P(url, sizeof(url), PSTR("%s.local"), MDNS_HOSTNAME);
+    char url[32]; snprintf_P(url, sizeof(url), PSTR("%s.local"), deviceHost());
     dialog(DLG_INFO, "Chưa có kênh", kLines, 1, url);
 }
 

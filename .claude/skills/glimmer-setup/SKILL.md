@@ -10,11 +10,12 @@ nothing. It:
 
 1. installs/updates the hooks on this computer (`tools/agents/install.mjs`,
    idempotent, keeps the user's other settings);
-2. looks for the display — configured URL, `glimmer.local`, the setup AP;
+2. looks for the display — configured URL, `glimmer.local` (old firmware), a sweep of this
+   network (`tools/agents/discover.mjs`), the setup AP;
 3. if the display is not on this network: reads THIS computer's current
    Wi-Fi name and the password the OS saved for it, hops onto the display's
    open setup AP `glimmer-setup`, sends it that Wi-Fi, hops back, and waits
-   until the display shows up on `glimmer.local`.
+   until the display shows up on its own name `glimmer-xxxx.local`, then points the hooks at it.
 
 Exit code 0 = ready, 2 = needs the user (the output says what).
 
@@ -57,7 +58,8 @@ hooks, the display, and its project board (`GET /api/state` → `projects`).
 
 ## Facts (don't re-derive)
 
-- Display: `http://glimmer.local` on the shared network; after losing its
+- Display: `http://glimmer-xxxx.local` (its own name, last 2 MAC bytes; `glimmer.local` on firmware
+  ≤ 0.23.0) on the shared network; after losing its
   network it opens the open AP `glimmer-setup` (device `http://192.168.4.1`)
   ~60 s after boot and retries the saved network every 180 s. One saved
   network, 2.4 GHz only. `POST /api/settings {"wifiSSID","wifiPass","_restart":true}`.

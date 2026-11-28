@@ -21,6 +21,7 @@ import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
+import { findDisplays } from "./agents/discover.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const CFG = join(homedir(), ".glimmer", "config.json");
@@ -108,7 +109,10 @@ async function waitFor(fn, seconds, label) {
   return null;
 }
 
-// Where is the device right now? Configured URL, glimmer.local, then the AP.
+// The display's own name (L-10: glimmer-xxxx.local, the same on every network); glimmer.local on old firmware.
+const nameOf = (s) => (s?.host ? `http://${s.host}.local` : "http://glimmer.local");
+
+// Where is the device right now? Configured URL, glimmer.local, a sweep of this network, then the AP.
 async function locate() {
   const cfg = readCfg();
   const tried = [...new Set([cfg.url, "http://glimmer.local"].filter(Boolean))];
@@ -117,6 +121,11 @@ async function locate() {
     if (s) return { url, mode: "sta", state: s, token: cfg.token };
     const r = await http(`${url}/api/state`, { token: cfg.token });
     if (r.status === 401) return { url, mode: "sta", needsToken: true };
+  }
+  const found = await findDisplays({ token: cfg.token });
+  if (found.length) {
+    const s = await state(found[0].url, cfg.token) || await state(`http://${found[0].ip}`, cfg.token);
+    if (s) return { url: found[0].url, mode: "sta", state: s, token: cfg.token };
   }
   const ap = await state(AP_URL, cfg.token);
   if (ap) return { url: AP_URL, mode: "ap", state: ap, token: cfg.token };
@@ -151,9 +160,9 @@ async function newMachine() {
     return;
   }
   if (!dev) {
-    warn("Không tìm thấy thiết bị qua glimmer.local.");
+    warn("Không tìm thấy thiết bị trên mạng này.");
     console.log(dim("    Máy này phải cùng mạng Wi-Fi với thiết bị. IP xem trên màn hình thiết bị, kênh Thông tin."));
-    url = await ask("Địa chỉ thiết bị (vd http://192.168.1.50)", "http://glimmer.local");
+    url = await ask("Địa chỉ thiết bị (vd http://192.168.1.50)", "http://192.168.1.50");
     if (!/^https?:\/\//.test(url)) url = "http://" + url;
   }
   if (dev?.needsToken) token = await askSecret("Thiết bị yêu cầu API token — nhập token");
@@ -203,20 +212,21 @@ async function changeWifi() {
   if (r.status === 401) { bad("Thiết bị từ chối: sai hoặc thiếu API token."); return; }
   if (r.status !== 200 && r.status !== 0) { bad(`Thiết bị trả lỗi HTTP ${r.status}.`); return; }
   ok(`Đã gửi. Thiết bị đang khởi động lại để vào "${ssid}".`);
+  const name = nameOf(dev.state);   // its own name comes back with it on the new network
 
   console.log(`\n  Giờ cho ${bold("máy này")} kết nối lại Wi-Fi ${bold(ssid)} (cùng mạng với thiết bị).`);
   await pause();
-  const back = await waitFor(async () => state("http://glimmer.local", dev.token), 240,
+  const back = await waitFor(async () => state(name, dev.token), 240,
                              "Đang chờ thiết bị lên mạng mới (tối đa 4 phút)");
   if (back) {
     ok(`Thiết bị đã vào "${back.ssid || ssid}" — IP ${back.ip}.`);
     const cfg = readCfg();
-    if (cfg.url && cfg.url !== "http://glimmer.local") {
-      warn(`Hook đang trỏ tới ${cfg.url}. Chuyển về glimmer.local cho tiện:`);
-      spawnSync(process.execPath, [join(here, "agents", "install.mjs"), "--url", "http://glimmer.local"], { stdio: "inherit" });
+    if (cfg.url !== name) {
+      warn(`Hook đang trỏ tới ${cfg.url || "(chưa có)"}. Chuyển về tên riêng của thiết bị, ${name}:`);
+      spawnSync(process.execPath, [join(here, "agents", "install.mjs"), "--url", name], { stdio: "inherit" });
     }
   } else {
-    warn("Chưa thấy thiết bị qua glimmer.local. Có thể:");
+    warn(`Chưa thấy thiết bị qua ${name}. Có thể:`);
     console.log(dim("    • sai mật khẩu → sau ~1 phút màn hình lại hiện " + AP_SSID + ": chạy lại mục này;"));
     console.log(dim("    • mạng chặn các máy thấy nhau (Wi-Fi công ty/khách) → xem IP trên kênh Thông tin rồi"));
     console.log(dim("      chạy: node tools/agents/install.mjs --url http://<IP>;"));
@@ -236,7 +246,7 @@ async function check() {
   if (cfg.url) console.log(dim(`    hook gửi tới ${cfg.url}${cfg.token ? " (có token)" : ""}`));
 
   const dev = await locate();
-  if (!dev) bad("Không tìm thấy thiết bị (glimmer.local / " + AP_URL + "). Cùng mạng Wi-Fi chưa?");
+  if (!dev) bad("Không tìm thấy thiết bị (trên mạng này / " + AP_URL + "). Cùng mạng Wi-Fi chưa?");
   else if (dev.needsToken) warn(`Thấy thiết bị ở ${dev.url} nhưng cần API token.`);
   else if (dev.mode === "ap") warn(`Thiết bị đang ở chế độ cài đặt (${AP_SSID}) → chọn mục 2.`);
   else { ok(`Thiết bị online ở ${dev.url}.`); describe(dev.state); }
@@ -292,7 +302,7 @@ async function auto() {
   console.log(dim(`    Wi-Fi "${AP_SSID}". Máy này sẽ tạm chuyển sang đó (~1 phút mất Internet) rồi quay lại.`));
   if (cur.band5) console.log(dim(`    (máy đang ở băng 5 GHz — router cần phát "${cur.ssid}" cả ở 2,4 GHz cho thiết bị)`));
 
-  let sent = false, reason = "";
+  let sent = false, reason = "", apName = "http://glimmer.local";
   try {
     // The display opens its AP ~60 s after power-on; keep trying ~3 min.
     let onAp = null;
@@ -306,6 +316,7 @@ async function auto() {
     process.stdout.write(onAp ? green(" ✓\n") : red(" không thấy\n"));
     if (!onAp) reason = "noap";
     else {
+      apName = nameOf(onAp);
       const r = await http(`${AP_URL}/api/settings`, { method: "POST", token: readCfg().token, timeout: 8000,
         body: { wifiSSID: cur.ssid, wifiPass: sec.password, _restart: true } });
       if (r.status === 401) reason = "token";
@@ -327,9 +338,15 @@ async function auto() {
   }
   ok(`Đã gửi Wi-Fi "${cur.ssid}" cho thiết bị; máy này đang về lại "${cur.ssid}".`);
   try { rmSync(join(homedir(), ".glimmer", "cache.json"), { force: true }); } catch {}   // IP will differ
-  const back = await waitFor(async () => state("http://glimmer.local", readCfg().token, 1), 360,
+  const back = await waitFor(async () => state(apName, readCfg().token, 1), 360,
                              "Chờ thiết bị lên mạng mới (tối đa 6 phút)");
-  if (back) { ok(`Thiết bị đã online — IP ${back.ip}.`); describe(back); return finish(true); }
+  if (back) {
+    ok(`Thiết bị đã online — ${apName}, IP ${back.ip}.`);
+    describe(back);
+    if (readCfg().url !== apName)   // step 1 found no display here: point the hooks at it now
+      spawnSync(process.execPath, [join(here, "agents", "install.mjs"), "--url", apName], { stdio: "inherit" });
+    return finish(true);
+  }
   bad(`Thiết bị chưa lên "${cur.ssid}".`);
   console.log(dim("    • Mạng chỉ có 5 GHz, hoặc phải đăng nhập qua trang web (khách sạn/sân bay) → dùng"));
   console.log(dim("      hotspot điện thoại (2,4 GHz) cho cả laptop và thiết bị, rồi chạy lại."));

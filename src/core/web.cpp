@@ -47,6 +47,7 @@
 #include <ESP8266HTTPUpdateServer.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
+#include "host.h"
 #include <LittleFS.h>
 
 static ESP8266WebServer        server(80);
@@ -180,6 +181,7 @@ static void credJson(JsonObject o, Cred cred, time_t expiresAt, const ResetGrant
 static void handleApiState() {
     JsonDocument d;
     d[F("fw")]                  = FW_VERSION;
+    d[F("host")]                = deviceHost();   // mDNS name without ".local" (L-10)
     d[F("wifi")]                = WiFi.status() == WL_CONNECTED ? "connected" : "ap";
     d[F("ip")]                  = WiFi.status() == WL_CONNECTED
                                  ? WiFi.localIP().toString() : WiFi.softAPIP().toString();
@@ -705,6 +707,8 @@ static void handlePushClear() {
 // whole tool output, far beyond this device's RAM. Always answers 200 {} so
 // a hook can never block or decide anything.
 static void handleHook() {
+    // L-10: the hook checks this answer came from the display it was set up for (an IP can move to another one).
+    server.sendHeader(F("X-Glimmer-Host"), deviceHost());
     if (!checkAuth()) { server.send_P(401, PSTR("application/json"), PSTR("{\"error\":\"unauthorized\"}")); return; }
     JsonDocument d;
     if (server.arg("plain").length() > 2048 || deserializeJson(d, server.arg("plain"))) {

@@ -19,6 +19,7 @@
 #include "display.h"
 #include "theme.h"
 #include "config.h"
+#include "host.h"
 #include "weather.h"
 #include "layout.h"
 #include "xp.h"
@@ -71,7 +72,7 @@ void chSetupDraw(const ChannelCtx& ctx) {
     checkRow(116, done[2], "Thời tiết, vị trí, giờ");
 
     XP::groupBox(10, 150, 220, 40, "Mở trong trình duyệt");
-    char url[32]; snprintf_P(url, sizeof(url), PSTR("%s.local"), MDNS_HOSTNAME);
+    char url[32]; snprintf_P(url, sizeof(url), PSTR("%s.local"), deviceHost());
     Display::useFont("JBMono-12B");
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(LINK, BODY);

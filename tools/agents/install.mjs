@@ -7,9 +7,12 @@
 //
 // Run once per machine (Windows, macOS, Linux — only Node is needed). It:
 //   1. copies glimmer-hook.mjs to ~/.glimmer/
-//   2. writes ~/.glimmer/config.json ({url, token}) — default http://glimmer.local,
-//      which any machine on the display's network can reach, so moving to
-//      another computer needs nothing but this script
+//   2. writes ~/.glimmer/config.json ({url, token}) — the display's own name,
+//      http://glimmer-xxxx.local (L-10: firmware ≥ 0.23 names each display after
+//      its MAC, so two displays never share "glimmer.local"). Without --url it
+//      finds the display on this network (discover.mjs); with several, it lists
+//      them and asks for --url. An IP given is turned into the display's name,
+//      which stays the same when DHCP or the Wi-Fi changes.
 //   3. merges glimmer's hooks into ~/.claude/settings.json (Claude Code) and,
 //      if ~/.codex exists, ~/.codex/hooks.json (Codex). Other settings and
 //      other hooks are left alone; a .bak copy is kept the first time.
@@ -21,6 +24,7 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync, rmSyn
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { findDisplays } from "./discover.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const home = homedir();
@@ -76,6 +80,33 @@ async function ping(url, token) {
   } catch (e) { return e.cause?.code || e.name; }
 }
 
+// The display's own name for an address that reaches it (IP or name); the address itself on old firmware.
+async function pinned(url, token) {
+  try {
+    const r = await fetch(`${url}/api/state`, { headers: token ? { Authorization: `Bearer ${token}` } : {},
+                                               signal: AbortSignal.timeout(4000) });
+    const s = r.ok ? await r.json() : {};
+    return s.host ? `http://${s.host}.local` : url;
+  } catch { return url; }
+}
+
+// Where the hooks go: --url, else the configured one, else the one display found on this network.
+async function chooseUrl(prev, token) {
+  const given = opt("--url");
+  if (given) return pinned(given.replace(/\/+$/, ""), token);
+  if (prev.url && prev.url !== "http://glimmer.local") return pinned(prev.url, token);
+  const found = await findDisplays({ token });
+  if (found.length === 1) return found[0].url;
+  if (found.length > 1) {
+    console.error("Several glimmer displays on this network — pick one with --url:");
+    for (const d of found)
+      console.error(`  node tools/agents/install.mjs --url ${d.url}    (ip ${d.ip}, fw ${d.fw})`);
+    process.exit(2);
+  }
+  console.log("no display found on this network — using http://glimmer.local (rerun with --url http://<device-ip>)");
+  return "http://glimmer.local";
+}
+
 async function main() {
   const done = [];
   if (uninstall) {
@@ -91,9 +122,10 @@ async function main() {
   copyFileSync(join(here, "glimmer-hook.mjs"), hookDst);
   const prev = readJson(cfgPath, {});
   const cfg = {
-    url: (opt("--url") || prev.url || "http://glimmer.local").replace(/\/+$/, ""),
+    url: "",
     token: opt("--token") ?? prev.token ?? "",
   };
+  cfg.url = (await chooseUrl(prev, cfg.token)).replace(/\/+$/, "");
   writeJson(cfgPath, cfg);
 
   done.push(merge(join(home, ".claude", "settings.json"), join(here, "claude-settings.json"), "claude"));

@@ -111,6 +111,26 @@ Mức độ: `chặn dùng` · `khó chịu` · `nhỏ` (chữ, giao diện).
 **Lịch sử**
 - 2026-11-28: ghi + sửa, chờ thử máy.
 
+### L-10 · Sau khi nạp firmware, cửa sổ Claude không còn thấy các project đang chạy
+
+- Trạng thái: chờ thử máy · Mức độ: khó chịu (bảng dự án trống, thẻ duyệt không tới) · Phần: hook agent → thiết bị (`tools/agents/`, mDNS firmware) · Quy tắc: "Project board" (`CLAUDE.md`)
+- Báo: 2026-11-28 — "sau lần nạp firmware gần nhất thì vào claude lại không thấy các project đang chạy"
+- Các bước: 1. Hai thiết bị glimmer cùng một mạng (.40 bản mới, .64 bản 0.22.0). 2. Nạp firmware cho .40 (nó khởi động lại). 3. Dùng Claude Code.
+- Mong đợi / thực tế: bảng dự án trên .40 hiện glimmer Đang chạy / `projects` trống; sự kiện hook sang .64.
+- Bằng chứng: `/api/state` .40 `projects: []`; `glimmer.local` → 192.168.100.64 (fw 0.22.0); `~/.glimmer/cache.json` `{"glimmer.local":"192.168.100.64"}`.
+
+**Sửa**
+- Nguyên nhân: mọi thiết bị đều tự xưng `glimmer.local`. Hai máy cùng mạng → tên trỏ vào máy nào trả lời trước; hook nhớ IP đó (`cache.json`) và gửi mãi sang máy cũ.
+- Hành vi (bạn chốt 2026-11-28, "tên riêng tự sinh"): mỗi thiết bị một tên `glimmer-<2 byte cuối MAC>.local`; bộ cài hook tự dò thiết bị trên mạng và ghi tên riêng đó; hook bỏ IP đã nhớ nếu máy trả lời xưng tên khác.
+- Test: không khoá bằng test native (mạng thật); đã thử `node tools/agents/discover.mjs` (1,7 s, thấy .40) và gửi sự kiện thẳng tới .40 (bảng hiện glimmer Đang chạy).
+- Code: firmware `src/core/host.h` `deviceHost()` (mDNS, hostname Wi-Fi, chữ trên màn), `/api/state` `host`, `/hook` header `X-Glimmer-Host`; `chrome.cpp` dải khoá lỗi dùng IP khi tên không vừa. Máy tính: `tools/agents/discover.mjs` (dò HTTP cả /24 — tường lửa Windows chặn trả lời mDNS cho Node), `install.mjs` ghi tên riêng, `glimmer-hook.mjs` kiểm `X-Glimmer-Host`, `glimmer-setup.mjs` chờ thiết bị theo tên riêng. `tools/screens.py` vẽ `glimmer-1a2b.local`.
+- Tạm thời (trước khi nạp): `~/.glimmer/config.json` `url` = `http://192.168.100.40`.
+- Thử máy: nạp firmware → `node tools/agents/install.mjs` → `~/.glimmer/config.json` có `http://glimmer-xxxx.local` → dùng Claude Code: cửa sổ Claude hiện glimmer Đang chạy. Bật cả máy .64: vẫn đúng.
+- Commit: …
+
+**Lịch sử**
+- 2026-11-28: ghi; tạm trỏ hook vào IP; bạn chọn tên riêng tự sinh; sửa.
+
 ## Đã xong
 
 ### L-8 · Di chuột trên cửa sổ Ảnh, Thời tiết...: chỗ con trỏ hiện ô trắng tạm thời

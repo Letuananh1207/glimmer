@@ -18,6 +18,7 @@
 #include <time.h>
 
 #include "config.h"
+#include "host.h"
 #include "theme.h"
 #include "display.h"
 #include "storage.h"
@@ -1003,7 +1004,7 @@ static void prepareSta(WiFiMode_t mode) {
     WiFi.setSleepMode(WIFI_NONE_SLEEP);
     WiFi.setOutputPower(20.5);
     WiFi.setAutoReconnect(true);
-    WiFi.hostname(MDNS_HOSTNAME);
+    WiFi.hostname(deviceHost());
     delay(100);
 }
 
@@ -1045,7 +1046,7 @@ static void startAPMode() {
 
 // STA is up: mDNS, time, and every fetch job due now.
 static void onStaUp() {
-    MDNS.begin(MDNS_HOSTNAME);
+    MDNS.begin(deviceHost());
     MDNS.addService("http", "tcp", 80);      // lets the Android app find it via NSD
     // Remember each SNTP sync (the Clock window's Internet tab, P-2026-11-26.22).
     settimeofday_cb([]() { g_ntpLast = (uint32_t)time(nullptr); });
@@ -1119,7 +1120,7 @@ static bool notice(int prov, CredState::NoticeReason r, const char* title, const
 static void noticesTick() {
     if (!timeSynced() || nightNow()) return;
     time_t now = time(nullptr);
-    char sub[40]; snprintf(sub, sizeof(sub), "cập nhật tại %s.local", MDNS_HOSTNAME);
+    char sub[40]; snprintf(sub, sizeof(sub), "cập nhật tại %s.local", deviceHost());
     struct P { const char* title; Cred cred; time_t exp; const ResetGrant* g; } ps[2] = {
         {"KHÓA CLAUDE", g_claude.cred, 0,              &g_claude.resets},
         {"TOKEN CODEX", g_codex.cred,  g_codex.jwtExp, &g_codex.resets},

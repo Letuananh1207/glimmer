@@ -1,6 +1,7 @@
 #include "chrome.h"
 #include "display.h"
 #include "config.h"
+#include "host.h"
 #include "layout.h"
 #include "xp.h"
 #include "timeutil.h"
@@ -118,7 +119,7 @@ void credCard(bool isClaude, Cred cred, time_t jwtExp, const char* err) {
 
     char url[32] = "", ip[20] = "";
     if (showUrl) {
-        snprintf_P(url, sizeof(url), PSTR("%s.local"), MDNS_HOSTNAME);
+        snprintf_P(url, sizeof(url), PSTR("%s.local"), deviceHost());
         Utf8::copy(ip, sizeof(ip), WiFi.localIP().toString().c_str());
     }
     XP::dialog(kind, head, lines, n, showUrl ? url : nullptr, showUrl ? ip : nullptr);
@@ -136,13 +137,17 @@ void credBanner(int x, int y, int w, bool isClaude, Cred cred) {
         snprintf_P(t, sizeof(t), PSTR("Bị chặn \xC2\xB7 %s vẫn tốt \xC2\xB7 thử lại"), isClaude ? "khóa" : "token");
     else
         snprintf_P(t, sizeof(t), PSTR("%s %s \xC2\xB7 %s.local"), cw,
-                   cred == Cred::EXPIRED ? "hết hạn" : "bị từ chối", MDNS_HOSTNAME);
+                   cred == Cred::EXPIRED ? "hết hạn" : "bị từ chối", deviceHost());
     if (tft.textWidth(t) > w - 17) {
         if (cred == Cred::BLOCKED)
             snprintf_P(t, sizeof(t), PSTR("Bị chặn \xC2\xB7 %s vẫn tốt"), isClaude ? "khóa" : "token");
         else
             snprintf_P(t, sizeof(t), PSTR("%s \xC2\xB7 %s.local"),
-                       cred == Cred::EXPIRED ? "Hết hạn" : "Bị từ chối", MDNS_HOSTNAME);
+                       cred == Cred::EXPIRED ? "Hết hạn" : "Bị từ chối", deviceHost());
+        // L-10: glimmer-xxxx.local is 5 characters longer than glimmer.local — the IP always fits.
+        if (cred != Cred::BLOCKED && tft.textWidth(t) > w - 17)
+            snprintf_P(t, sizeof(t), PSTR("%s \xC2\xB7 %s"), cred == Cred::EXPIRED ? "Hết hạn" : "Bị từ chối",
+                       WiFi.localIP().toString().c_str());
     }
     XP::infoStrip(x, y, w, t, cred == Cred::BLOCKED ? Theme::XP::BLACK : Theme::XP::RED);
 }
@@ -150,7 +155,7 @@ void credBanner(int x, int y, int w, bool isClaude, Cred cred) {
 void credLine(bool isClaude, Cred cred, char* buf, size_t n) {
     if (n) buf[0] = '\0';
     switch (cred) {
-        case Cred::NOT_SET:  snprintf_P(buf, n, PSTR("thêm %s \xC2\xB7 %s.local"), credWord(isClaude), MDNS_HOSTNAME); break;
+        case Cred::NOT_SET:  snprintf_P(buf, n, PSTR("thêm %s \xC2\xB7 %s.local"), credWord(isClaude), deviceHost()); break;
         case Cred::EXPIRED:  snprintf_P(buf, n, PSTR("%s hết hạn \xC2\xB7 cập nhật"), credWord(isClaude)); break;
         case Cred::REJECTED: snprintf_P(buf, n, PSTR("%s bị từ chối \xC2\xB7 cập nhật"), credWord(isClaude)); break;
         case Cred::BLOCKED:  snprintf_P(buf, n, PSTR("bị chặn \xC2\xB7 thử lại")); break;
